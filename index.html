@@ -3055,13 +3055,12 @@ const netGainAfterInvestment10Y = projection10Y - top3NetCostMid;
             getResults: [
               "Vision claire de vos gaspillages financiers.",
               "Comparaison réelle aux références de votre secteur.",
-              "Top 3 leviers prioritaires (ROI 2 à 5 ans).",
-              "PDF exploitable pour arbitrer vos devis.",
-              "Option : Échange de 15 min offert avec un ingénieur.",
+              "Plan d'action chiffré (ROI entre 2 et 4 ans).",
+              "Validation par un ingénieur expert.",
             ],
             howItWorks: [
               { icon: "solar:buildings-2-linear", title: "Saisie rapide de vos données (3 min)" },
-              { icon: "solar:chart-square-linear", title: "Analyse par notre moteur d'expertise tertiaire" },
+              { icon: "solar:cpu-bolt-linear", title: "Analyse algorithmique basée sur les bases de données réelles du tertiaire" },
               { icon: "solar:document-text-linear", title: "Réception instantanée de votre plan d'action" },
             ],
             useCasesTitle: "Pourquoi faire ce diagnostic ?",
@@ -3123,12 +3122,12 @@ const netGainAfterInvestment10Y = projection10Y - top3NetCostMid;
                       {COPY.home.h1}
                     </h1>
 
-                    <p className="text-base lg:text-lg text-slate-600 leading-relaxed mb-5">
+                    <p className="text-base lg:text-lg text-slate-600 leading-relaxed mb-3">
                       {COPY.home.subtitle}
                     </p>
 
                     {/* Badges */}
-                    <div className="flex flex-wrap gap-2 mb-6">
+                    <div className="flex flex-wrap gap-2 mb-3">
                       {COPY.home.badges.map((b, i) => (
                         <span key={i} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border bg-[#EEF2FF] border-[#1E3A5F]/15 text-[#1E3A5F]">
                           <Icon icon={i === 2 ? 'solar:document-text-linear' : 'solar:check-read-linear'} className="text-sm" />
@@ -3214,11 +3213,11 @@ const netGainAfterInvestment10Y = projection10Y - top3NetCostMid;
                 </div>
               </section>
 
-              {/* CE QUE VOUS OBTENEZ */}
-              <section className="bg-[#FFFCF6] py-12 border-y border-[#F1E8D8]">
+              {/* BÉNÉFICES DÉCISIONNELS */}
+              <section className="bg-[#FDF3E3] py-12 border-y border-[#F1E8D8]">
                 <div className="max-w-6xl mx-auto px-4">
                   <div className="mb-6">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1">Ce que vous obtenez</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-amber-700 mb-1">Bénéfices Décisionnels</p>
                     <h2 className="text-xl md:text-2xl tracking-tight font-semibold text-slate-900">Un résultat orienté décision</h2>
                   </div>
                   <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -3226,9 +3225,9 @@ const netGainAfterInvestment10Y = projection10Y - top3NetCostMid;
                       { icon: "solar:chart-square-linear", color: "#1E3A5F" },
                       { icon: "solar:database-linear", color: "#0891B2" },
                       { icon: "solar:clipboard-list-linear", color: "#F39C12" },
-                      { icon: "solar:document-text-linear", color: "#2ECC71" },
+                      { icon: "solar:shield-check-linear", color: "#7C3AED" },
                     ].map((card, i) => (
-                      <div key={i} className="rounded-2xl border border-slate-200 bg-white p-4 hover:border-slate-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
+                      <div key={i} className="rounded-2xl border border-[#F1E8D8] bg-white p-4 hover:border-amber-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
                         <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3" style={{ backgroundColor: `${card.color}15` }}>
                           <Icon icon={card.icon} className="text-[20px]" style={{ color: card.color }} />
                         </div>

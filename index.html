@@ -459,6 +459,173 @@
     /* ═══════════════════════════════════════════════════════════════════════════
        SECTION 3: CONFIGURATION & HELPERS
        ═══════════════════════════════════════════════════════════════════════════ */
+
+    /* ═══════════════════════════════════════════════════════════════════════════
+       ENGINE_PRO : MOTEUR COMMUN DE CALCUL (Gratuit + SaaS)
+       ═══════════════════════════════════════════════════════════════════════════ */
+    const ENGINE_PRO = {
+      benchmarks: {
+        "Bureau": { q1: 66, med: 104, q3: 154 },
+        "Hôtel": { q1: 114, med: 151, q3: 200 },
+        "Restauration": { q1: 155, med: 307, q3: 562 },
+        "Santé": { q1: 77, med: 113, q3: 173 },
+        "Enseignement": { q1: 82, med: 105, q3: 131 },
+        "Entrepôt-Chauffé": { q1: 29, med: 61, q3: 131 },
+        "Entrepôt-NonChauffé": { q1: 15, med: 30, q3: 65 }, // Fallback
+        "Commerce_Froid": { q1: 152, med: 363, q3: 649 },
+        "Commerce_SansFroid": { q1: 93, med: 142, q3: 210 },
+        "Autre": { q1: 100, med: 150, q3: 250 }
+      },
+      prices: {
+        elec: 0.20,
+        gaz: 0.105,
+        reseau: 0.08,
+        autre: 0.12
+      },
+      actions: [
+        { id: "opti_horaires", title: "Optimisation horaires chauffage", scope: "total", gainRange: [3, 7, 12], capRange: [0, 300, 1500], capexType: "forfait" },
+        { id: "regul_chauff", title: "Régulation chauffage central", scope: "chauffage", gainRange: [8, 15, 25], capRange: [1200, 2500, 6000], capexType: "forfait" },
+        { id: "reduit_inocc", title: "Réduit hors occupation / consignes", scope: "total", gainRange: [2, 5, 10], capRange: [0, 500, 2000], capexType: "forfait" },
+        { id: "vent_modul", title: "Ventilation hors occupation / modulation", scope: "ventilation", gainRange: [10, 20, 35], capRange: [300, 1500, 5000], capexType: "forfait_zone" },
+        { id: "led", title: "Relamping LED ciblé", scope: "eclairage", gainRange: [20, 35, 55], capRange: [25, 50, 90], capexType: "point_lumineux" },
+        { id: "detect_pres", title: "Détection présence éclairage", scope: "eclairage", gainRange: [10, 20, 35], capRange: [120, 250, 500], capexType: "zone" },
+        { id: "calorifugeage", title: "Calorifugeage ECS / réseaux", scope: "ecs", gainRange: [5, 12, 25], capRange: [20, 40, 70], capexType: "ml" },
+        { id: "isotoit", title: "Isolation opportuniste toiture", scope: "total", gainRange: [5, 12, 20], capRange: [25, 60, 140], capexType: "m2" }
+      ],
+
+      compute: function (data) {
+        // Mappages depuis les IDs du form gratuit (offices, retail, etc.) ou form PRO (Bureau, Commerce, etc.)
+        let actMapping = {
+          'offices': 'Bureau',
+          'retail': 'Commerce_SansFroid',
+          'hotel': 'Hôtel',
+          'restaurant': 'Restauration',
+          'health_local': 'Santé',
+          'education': 'Enseignement',
+          'light_warehouse': 'Entrepôt-NonChauffé',
+          'mixed': 'Bureau' // Simplifié si mixte
+        };
+
+        let activityKey = actMapping[data.activity] || data.activity;
+
+        // Gestion dynamique ciblée sur les gates PRO
+        if (data.activity === 'Commerce' || data.activity === 'retail') {
+          activityKey = data.commerceFroid ? 'Commerce_Froid' : 'Commerce_SansFroid';
+        }
+        if (data.activity === 'Entrepôt' || data.activity === 'light_warehouse') {
+          activityKey = data.entrepotChauffe ? 'Entrepôt-Chauffé' : 'Entrepôt-NonChauffé';
+        }
+
+        if (!this.benchmarks[activityKey]) activityKey = 'Autre';
+        const ref = this.benchmarks[activityKey];
+        const area = parseFloat(data.surface || data.area) || 100;
+
+        let kwhTotal = 0;
+        let isKwhPrioritaire = false;
+
+        const getKwhFromInput = (valKwh, valEur, priceRef) => {
+          if (valKwh && parseFloat(valKwh) > 0) { isKwhPrioritaire = true; return parseFloat(valKwh); }
+          if (valEur && parseFloat(valEur) > 0) return parseFloat(valEur) / priceRef;
+          return 0;
+        };
+
+        // Compatibilité avec les champs index.html (elecKwh/gasKwh) et index.saaspro.html (elec/gaz kwh)
+        let kwhElec = getKwhFromInput(data.elecKwh || data.elec_kwh, data.elecEuro || data.elec_eur, this.prices.elec);
+        let kwhGaz = getKwhFromInput(data.gasKwh || data.gaz_kwh, data.gasEuro || data.gaz_eur, this.prices.gaz);
+
+        kwhTotal = kwhElec + kwhGaz;
+
+        if (kwhTotal === 0 && data._fallbackKwh) {
+          // Seulement utilisé si vraiment vide en dev local / mock initial
+          kwhTotal = data._fallbackKwh;
+        } else if (kwhTotal === 0) {
+          kwhTotal = ref.med * area;
+        }
+
+        const intensity = kwhTotal / area;
+
+        // Score OPERAT-like
+        let score = "C";
+        let positioning = "Dans la médiane";
+        if (intensity <= ref.q1) { score = "A"; positioning = "Très performant (Top 25%)"; }
+        else if (intensity > ref.q1 && intensity <= ref.med * 0.9) { score = "B"; positioning = "Performant"; }
+        else if (intensity > ref.med * 0.9 && intensity <= ref.med * 1.1) { score = "C"; positioning = "Dans la médiane"; }
+        else if (intensity > ref.med * 1.1 && intensity <= ref.q3) { score = "D"; positioning = "Surconsommation (Q3)"; }
+        else { score = "E"; positioning = "Très énergivore (Bottom 25%)"; }
+
+        // Sélection des actions pro
+        let actionPool = [...this.actions];
+
+        // Gates contextuels
+        if (!data.hasCooling && data.hasClim === false) actionPool = actionPool.filter(a => a.id !== 'vent_modul');
+
+        let remainingKwh = kwhTotal;
+        let globalSavingsKwh = 0;
+        let usedScopes = {};
+
+        let selectedActions = actionPool.slice(0, 3).map(a => {
+          let gainFactor = (a.gainRange[1] / 100);
+          if (usedScopes[a.scope]) gainFactor *= 0.5; // Recouvrement
+          usedScopes[a.scope] = true;
+
+          let scopeWeight = 1;
+          let mainHeating = data.mainHeating || data.heating || 'electric';
+          if (a.scope === 'chauffage' && mainHeating.includes('elec')) scopeWeight = 0.5;
+          if (a.scope === 'chauffage' && mainHeating.includes('gas')) scopeWeight = 0.8;
+          if (a.scope === 'eclairage') scopeWeight = 0.15;
+          if (a.scope === 'ecs') scopeWeight = 0.10;
+
+          const actionSavings = remainingKwh * scopeWeight * gainFactor;
+          remainingKwh -= actionSavings;
+          globalSavingsKwh += actionSavings;
+
+          let capex = a.capRange[1];
+          if (a.capexType === 'm2') capex *= area;
+          if (a.capexType === 'ml') capex *= 50;
+          if (a.capexType === 'point_lumineux') capex *= (area / 15);
+          if (a.capexType === 'zone') capex *= (area / 50);
+
+          const billElecUsed = parseFloat(data.elecEuro || data.elec_eur) || 0;
+          const billGazUsed = parseFloat(data.gasEuro || data.gaz_eur) || 0;
+          const totalBill = billElecUsed + billGazUsed;
+
+          let implicitElecPrice = (kwhElec > 0 && billElecUsed > 0) ? (billElecUsed / kwhElec) : this.prices.elec;
+          let implicitGazPrice = (kwhGaz > 0 && billGazUsed > 0) ? (billGazUsed / kwhGaz) : this.prices.gaz;
+
+          let mixPrice = this.prices.elec; // fallback default
+          if (kwhTotal > 0) {
+            mixPrice = (kwhElec / kwhTotal) * implicitElecPrice + (kwhGaz / kwhTotal) * implicitGazPrice;
+          }
+
+          const savEur = actionSavings * mixPrice;
+
+          return {
+            id: a.id,
+            title: a.title,
+            savingsEur: Math.round(savEur),
+            savingsKwh: Math.round(actionSavings),
+            capex: Math.round(capex),
+            roi: savEur > 0 ? (capex / savEur).toFixed(1) : 0
+          };
+        });
+
+        const billSub = parseFloat(data.elecSubscriptionYearly) || 0 + parseFloat(data.gasSubscriptionYearly) || 0;
+
+        return {
+          kwhTotal: Math.round(kwhTotal),
+          intensity: Math.round(intensity),
+          score: score,
+          positioning: positioning,
+          ref: ref,
+          isKwhPrioritaire: isKwhPrioritaire,
+          totalSavingsEur: Math.round(selectedActions.reduce((acc, a) => acc + a.savingsEur, 0)),
+          totalCapex: Math.round(selectedActions.reduce((acc, a) => acc + a.capex, 0)),
+          topActions: selectedActions.sort((a, b) => b.savingsEur - a.savingsEur),
+          estimatedBill: Math.round(kwhElec * this.prices.elec + kwhGaz * this.prices.gaz + billSub)
+        };
+      }
+    };
+
     const CTA_CALENDLY_URL = 'https://calendly.com/TON-LIEN'; // à remplacer
     const CTA_EMAIL = 'contact@diagtertiaire.fr';
 
@@ -653,7 +820,7 @@
     const PageHome = ({ navigate }) => (
       <div className="fade-in">
         {/* HERO — VERROUILLAGE FINAL */}
-        <section className="relative w-full overflow-hidden" style={{ paddingTop: '8rem', paddingBottom: '8rem', background: '#F7FAFF' }}>
+        <section className="relative w-full overflow-hidden" style={{ paddingTop: '8rem', paddingBottom: '8rem', background: '#FFFFFF' }}>
           {/* GLOW — halos structurés */}
           <div className="absolute inset-0 pointer-events-none z-0" aria-hidden="true">
             <div className="absolute top-0 left-0"
@@ -684,7 +851,7 @@
 
                 {/* Sous-titre — densité réduite par largeur */}
                 <p style={{ maxWidth: '28rem', fontSize: '1.0625rem', lineHeight: 1.85, color: '#4B5B71', marginBottom: '3.25rem' }}>
-                  En 3 minutes, estimez si un audit réglementaire à partir de 1 000 € est réellement pertinent pour votre bâtiment. Ce pré-diagnostic gratuit compare votre niveau de consommation à des références adaptées à votre activité.
+                  En 3 minutes, estimez si un audit réglementaire est pertinent pour votre bâtiment. Ce pré-diagnostic gratuit compare votre niveau de consommation à des références adaptées à votre activité.
                 </p>
 
                 {/* Zone CTA — air maximal autour */}
@@ -789,7 +956,7 @@
         </section>
 
         {/* ISSUE — moment fort, fond contrasté */}
-        <section style={{ padding: '4rem 0', background: '#F5F8FF', borderTop: '1px solid #DDE6F4', borderBottom: '1px solid #DDE6F4' }}>
+        <section style={{ padding: '4rem 0', background: '#F8FAFC', borderTop: '1px solid #F1F5F9', borderBottom: '1px solid #F1F5F9' }}>
           <div className="max-w-4xl mx-auto px-4">
             <div style={{ background: 'linear-gradient(140deg, #FFFBEB 0%, #FEFCE8 100%)', border: '1.5px solid rgba(245,158,11,0.28)', borderRadius: '18px', padding: '2.75rem 2.5rem', boxShadow: '0 4px 20px rgba(245,158,11,0.08), 0 1px 6px rgba(15,23,42,0.04)' }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1.375rem' }}>
@@ -805,7 +972,7 @@
                     {[
                       "Les usages d'un commerce, d'un bureau ou d'un cabinet n'ont rien à voir avec ceux d'un logement",
                       "Une comparaison hors contexte peut surestimer ou sous-estimer votre niveau réel de performance",
-                      "Un audit réglementaire complet coûte souvent de 1 000 € à 3 000 € TTC : mieux vaut vérifier d'abord s'il est justifié"
+                      "Le prix plancher d'un audit énergétique est souvent de 1 000 € à 3 000 € : mieux vaut vérifier d'abord s'il est justifié"
                     ].map((item, i) => (
                       <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', fontSize: '0.9375rem', color: '#475569', lineHeight: 1.65 }}>
                         <Icon icon="solar:checklist-linear" style={{ color: '#1D4ED8', flexShrink: 0, marginTop: '3px', fontSize: '1rem' }} />
@@ -856,7 +1023,7 @@
         </section>
 
         {/* EXPERT / SCALABLE BLOC — fond blue-xlight premium */}
-        <section style={{ padding: '5.5rem 0', background: '#EEF4FF' }}>
+        <section style={{ padding: '5.5rem 0', background: '#FAFAFA' }}>
           <div className="max-w-6xl mx-auto px-4">
             <div className="grid lg:grid-cols-2 gap-14 lg:gap-20 items-center">
               {/* Left: Text */}
@@ -883,43 +1050,61 @@
 
               {/* Right: Secondary visual - Carte synthèse */}
               <div className="hidden lg:flex justify-center items-center">
-                <div className="relative w-full max-w-sm">
-                  <div className="absolute inset-0 rounded-2xl" style={{ background: 'rgba(37,99,235,0.06)', filter: 'blur(20px)' }} />
-                  <div style={{ position: 'relative', background: '#FFFFFF', borderRadius: '16px', border: '1px solid #D1D9E6', boxShadow: '0 8px 28px rgba(15,23,42,0.10)', overflow: 'hidden' }}>
-                    <div style={{ background: 'linear-gradient(135deg, #1D4ED8 0%, #1E40AF 100%)', padding: '1.25rem 1.5rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <div>
-                          <p style={{ fontSize: '11px', fontWeight: 700, opacity: 0.7, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'white', marginBottom: '3px' }}>Analyse</p>
-                          <p style={{ fontSize: '1.0625rem', fontWeight: 700, color: 'white' }}>Synthèse rapide</p>
-                        </div>
-                        <Icon icon="solar:lightning-linear" style={{ fontSize: '1.5rem', color: 'rgba(255,255,255,0.45)' }} />
+                <div className="relative w-full max-w-[22rem]">
+                  {/* Effet d'ombre colorée subtile */}
+                  <div className="absolute inset-x-8 -bottom-4 h-12 bg-blue-500/20 blur-xl rounded-full" />
+
+                  <div style={{ position: 'relative', background: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 12px 32px rgba(15,23,42,0.08), 0 4px 12px rgba(15,23,42,0.03)', overflow: 'hidden' }}>
+                    {/* Header 'App' ou 'Email' */}
+                    <div style={{ background: '#F8FAFC', padding: '1.25rem 1.5rem', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                      <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#ECFDF5', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <Icon icon="solar:check-read-bold" style={{ fontSize: '1.25rem' }} />
+                      </div>
+                      <div>
+                        <p style={{ fontSize: '13px', fontWeight: 700, color: '#0F172A', marginBottom: '2px' }}>Diagnostic terminé</p>
+                        <p style={{ fontSize: '12px', color: '#64748B' }}>Rapport envoyé il y a 2 min</p>
                       </div>
                     </div>
-                    <div style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
-                      <div style={{ borderRadius: '10px', background: '#EFF6FF', border: '1px solid #BFDBFE', padding: '0.875rem 1rem' }}>
-                        <p style={{ fontSize: '10.5px', color: '#2563EB', fontWeight: 700, marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>POSITIONNEMENT ESTIMÉ</p>
-                        <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#1E3A8A' }}>Classe D</div>
-                        <p style={{ fontSize: '11px', color: '#3B82F6', marginTop: '3px' }}>vs référence sectorielle</p>
-                      </div>
-                      <div style={{ borderRadius: '10px', background: '#ECFDF5', border: '1px solid #A7F3D0', padding: '0.875rem 1rem' }}>
-                        <p style={{ fontSize: '10.5px', color: '#059669', fontWeight: 700, marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>POTENTIEL D'ÉCONOMIE</p>
-                        <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#065F46' }}>3 600 €/an</div>
-                        <p style={{ fontSize: '11px', color: '#10B981', marginTop: '3px' }}>Selon optimisations</p>
-                      </div>
-                      <div style={{ borderTop: '1px solid #E2E8F0', paddingTop: '0.875rem' }}>
-                        <p style={{ fontSize: '10.5px', fontWeight: 700, color: '#0F172A', marginBottom: '0.625rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>TROIS AXES À PRIORISER</p>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                          {['Régulation', 'Isolation toiture', 'Sys. chauffage'].map((item, i) => (
-                            <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0.75rem', borderRadius: '8px', background: '#F8FAFC', border: '1px solid #E8ECF0' }}>
-                              <span style={{ fontSize: '12px', fontWeight: 500, color: '#0F172A' }}>{item}</span>
-                              <Icon icon="solar:arrow-right-linear" style={{ color: '#2563EB', fontSize: '14px' }} />
-                            </div>
-                          ))}
+
+                    {/* Timeline & Actions */}
+                    <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem', position: 'relative' }}>
+                        {/* Ligne verticale timeline */}
+                        <div style={{ position: 'absolute', left: '11px', top: '16px', bottom: '16px', width: '2px', background: '#F1F5F9', zIndex: 0 }} />
+
+                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', position: 'relative', zIndex: 1 }}>
+                          <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#10B981', border: '4px solid #FFFFFF', flexShrink: 0, marginTop: '2px' }} />
+                          <div>
+                            <p style={{ fontSize: '12.5px', fontWeight: 600, color: '#0F172A' }}>Analyse des consommations</p>
+                            <p style={{ fontSize: '11px', color: '#94A3B8' }}>Comparaison référentiel ADEME</p>
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', position: 'relative', zIndex: 1 }}>
+                          <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#10B981', border: '4px solid #FFFFFF', flexShrink: 0, marginTop: '2px' }} />
+                          <div>
+                            <p style={{ fontSize: '12.5px', fontWeight: 600, color: '#0F172A' }}>Génération du plan d'action</p>
+                            <p style={{ fontSize: '11px', color: '#94A3B8' }}>3 leviers d'économies identifiés</p>
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', position: 'relative', zIndex: 1 }}>
+                          <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#3B82F6', border: '4px solid #F8FAFC', flexShrink: 0, marginTop: '2px', outline: '1px solid #BFDBFE' }} />
+                          <div>
+                            <p style={{ fontSize: '12.5px', fontWeight: 600, color: '#1D4ED8' }}>Rapport livré au format PDF</p>
+                            <p style={{ fontSize: '11px', color: '#64748B' }}>Prêt à être partagé en interne</p>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div style={{ background: '#F8FAFC', padding: '0.75rem 1.5rem', borderTop: '1px solid #E2E8F0', textAlign: 'center' }}>
-                      <p style={{ fontSize: '11.5px', color: '#64748B', fontWeight: 500 }}>Rapport complet par email</p>
+
+                      <div style={{ background: '#F1F5F9', borderRadius: '8px', padding: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem', border: '1px dashed #CBD5E1' }}>
+                        <Icon icon="solar:file-download-bold" style={{ color: '#1D4ED8', fontSize: '1.5rem', flexShrink: 0 }} />
+                        <div style={{ flex: 1 }}>
+                          <p style={{ fontSize: '11px', fontWeight: 700, color: '#0F172A' }}>Synthese_Immo.pdf</p>
+                          <p style={{ fontSize: '10px', color: '#64748B' }}>1.2 MB • 4 pages</p>
+                        </div>
+                        <Icon icon="solar:download-minimalistic-linear" style={{ color: '#64748B', fontSize: '1rem' }} />
+                      </div>
+
                     </div>
                   </div>
                 </div>
@@ -929,7 +1114,7 @@
         </section>
 
         {/* PROCESS - Fond bleu clair premium */}
-        <section style={{ padding: '5.5rem 0', background: '#EFF6FF' }}>
+        <section style={{ padding: '5.5rem 0', background: '#FFFFFF' }}>
           <div className="max-w-6xl mx-auto px-4">
             <div style={{ textAlign: 'center', marginBottom: '3.75rem' }}>
               <h2 style={{ fontSize: 'clamp(1.5rem, 4vw, 2rem)', fontWeight: 700, color: '#0C1F35', marginBottom: '0.875rem', letterSpacing: '-0.6px', lineHeight: 1.2 }}>Comment obtenir votre rapport</h2>
@@ -1010,34 +1195,68 @@
           </div>
         </section>
 
-        {/* CTA B2B PRO - Délicat et intégré au-dessus du footer */}
-        <section style={{ padding: '3.5rem 0 4.5rem', background: '#FFFFFF' }}>
-          <div className="max-w-4xl mx-auto px-4 text-center">
-            <div style={{ display: 'inline-flex', padding: '0.375rem 1rem', background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '999px', marginBottom: '1.25rem', alignItems: 'center', gap: '8px' }}>
-              <Icon icon="solar:buildings-2-bold" style={{ color: '#1D4ED8', fontSize: '1rem' }} />
-              <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Espace Professionnel</span>
+        {/* NOUVELLE SECTION B2B ORIENTÉE USAGES (Itération 3) */}
+        <section style={{ padding: '5rem 0 6rem', background: '#F8FAFC', borderTop: '1px solid #E2E8F0' }}>
+          <div className="max-w-6xl mx-auto px-4">
+            <div className="text-center mb-12">
+              <div style={{ display: 'inline-flex', padding: '0.375rem 1rem', background: 'white', border: '1px solid #E2E8F0', borderRadius: '999px', marginBottom: '1.25rem', alignItems: 'center', gap: '8px', boxShadow: '0 2px 4px rgba(15,23,42,0.02)' }}>
+                <Icon icon="solar:buildings-2-bold" style={{ color: '#1D4ED8', fontSize: '1rem' }} />
+                <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Espace Professionnel</span>
+              </div>
+              <h2 style={{ fontSize: 'clamp(1.75rem, 4vw, 2.5rem)', fontWeight: 800, color: '#0C1D30', marginBottom: '1.25rem', letterSpacing: '-0.5px' }}>
+                Un espace pro pour qualifier, cadrer et suivre vos dossiers
+              </h2>
+              <p style={{ fontSize: '1.125rem', color: '#4B5B71', maxWidth: '42rem', margin: '0 auto', lineHeight: 1.65 }}>
+                Une interface conçue pour structurer vos premiers échanges, visualiser vos dossiers et partager des pré-diagnostics plus crédibles.
+              </p>
             </div>
-            <h2 style={{ fontSize: 'clamp(1.5rem, 3.5vw, 2.25rem)', fontWeight: 800, color: '#0C1D30', marginBottom: '1rem', letterSpacing: '-0.5px' }}>
-              Vous êtes un professionnel de l'immobilier, un syndic, ou un broker ?
-            </h2>
-            <p style={{ fontSize: '1.0625rem', color: '#64748B', maxWidth: '36rem', margin: '0 auto 2rem', lineHeight: 1.6 }}>
-              Découvrez notre solution B2B pour générer des pré-diagnostics en marque blanche, gérer votre portefeuille de mandats et faciliter la prise de décision de vos clients et mandants.
-            </p>
-            <a
-              href="pro.html"
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: '8px',
-                background: 'white', color: '#1D4ED8', border: '1.5px solid #1D4ED8',
-                padding: '0.875rem 2rem', borderRadius: '12px',
-                fontWeight: 700, fontSize: '0.9375rem', textDecoration: 'none',
-                transition: 'all 0.2s ease', boxShadow: '0 4px 12px rgba(29,78,216,0.1)'
-              }}
-              onMouseEnter={e => { e.currentTarget.style.background = '#EFF6FF'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'white'; e.currentTarget.style.transform = 'translateY(0)'; }}
-            >
-              Découvrir DiagTertiaire Pro
-              <Icon icon="solar:arrow-right-linear" style={{ fontSize: '1.125rem' }} />
-            </a>
+
+            <div className="grid md:grid-cols-3 gap-6 mb-12">
+              {/* Bénéfice 1 */}
+              <div style={{ background: 'white', padding: '2rem', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)', transition: 'transform 0.2s, box-shadow 0.2s' }} className="hover:-translate-y-1 hover:shadow-lg">
+                <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.5rem' }}>
+                  <Icon icon="solar:folder-with-files-bold-duotone" style={{ fontSize: '1.5rem', color: '#1D4ED8' }} />
+                </div>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0C1D30', marginBottom: '0.75rem' }}>Portefeuille de dossiers</h3>
+                <p style={{ fontSize: '0.9375rem', color: '#475569', lineHeight: 1.6 }}>Centralisez vos cas, suivez leur statut et identifiez les dossiers à relancer.</p>
+              </div>
+
+              {/* Bénéfice 2 */}
+              <div style={{ background: 'white', padding: '2rem', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)', transition: 'transform 0.2s, box-shadow 0.2s' }} className="hover:-translate-y-1 hover:shadow-lg">
+                <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.5rem' }}>
+                  <Icon icon="solar:document-text-bold-duotone" style={{ fontSize: '1.5rem', color: '#1D4ED8' }} />
+                </div>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0C1D30', marginBottom: '0.75rem' }}>Rapports partageables</h3>
+                <p style={{ fontSize: '0.9375rem', color: '#475569', lineHeight: 1.6 }}>Générez des restitutions plus structurées pour cadrer une discussion avec un client ou un prestataire.</p>
+              </div>
+
+              {/* Bénéfice 3 */}
+              <div style={{ background: 'white', padding: '2rem', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)', transition: 'transform 0.2s, box-shadow 0.2s' }} className="hover:-translate-y-1 hover:shadow-lg">
+                <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.5rem' }}>
+                  <Icon icon="solar:users-group-two-rounded-bold-duotone" style={{ fontSize: '1.5rem', color: '#1D4ED8' }} />
+                </div>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0C1D30', marginBottom: '0.75rem' }}>Branding et collaboration</h3>
+                <p style={{ fontSize: '0.9375rem', color: '#475569', lineHeight: 1.6 }}>Projetez un usage cabinet avec personnalisation, partage et organisation multi-utilisateurs.</p>
+              </div>
+            </div>
+
+            <div className="text-center">
+              <a
+                href="index.saaspro.html"
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '8px',
+                  background: '#1D4ED8', color: 'white', border: 'none',
+                  padding: '1rem 2.5rem', borderRadius: '12px',
+                  fontWeight: 600, fontSize: '1rem', textDecoration: 'none',
+                  transition: 'all 0.2s ease', boxShadow: '0 4px 14px rgba(29,78,216,0.25)'
+                }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(29,78,216,0.3)'; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 14px rgba(29,78,216,0.25)'; }}
+              >
+                Découvrir l'espace pro
+                <Icon icon="solar:arrow-right-linear" style={{ fontSize: '1.25rem' }} />
+              </a>
+            </div>
           </div>
         </section>
 
@@ -4109,7 +4328,7 @@
 
               <button
                 onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                className="w-full mt-3 bg-white text-[#1D4ED8] px-6 py-3 rounded-lg font-semibold border border-[#DBEAFE] hover:bg-[#EFF6FF] transition-colors flex items-center justify-center gap-2"
+                className="w-full mt-3 bg-[#F8FAFC] text-[#1D4ED8] px-6 py-3 rounded-lg font-semibold border border-[#DBEAFE] hover:bg-[#EFF6FF] transition-colors flex items-center justify-center gap-2"
               >
                 <Icon icon="solar:arrow-up-linear" className="text-xl" />
                 Revenir en haut du rapport
@@ -4650,7 +4869,7 @@
               <button
                 type="button"
                 onClick={handleReset}
-                className="inline-flex items-center gap-2 bg-white text-[#1D4ED8] px-4 py-2 rounded-lg font-semibold border border-[#DBEAFE] hover:bg-[#EFF6FF] transition-colors shadow-sm"
+                className="inline-flex items-center gap-2 bg-[#F8FAFC] text-[#1D4ED8] px-4 py-2 rounded-lg font-semibold border border-[#DBEAFE] hover:bg-[#EFF6FF] transition-colors shadow-sm"
               >
                 <Icon icon="solar:restart-linear" className="text-lg" />
                 Recommencer une nouvelle saisie
@@ -4730,7 +4949,7 @@
         { page: 'home', label: 'Accueil' },
         { page: 'methode', label: 'Approche' },
         { page: 'exemple', label: 'Rapport' },
-        { page: 'pro', label: 'Espace Pro', external: true }
+        { page: 'index.saaspro', label: 'Espace Pro', external: true }
       ];
 
       const NavLink = ({ page, label, external = false, mobile = false }) => {
@@ -4887,7 +5106,7 @@
                   <div>
                     <h4 className="text-sm font-bold text-white mb-4">Professionnel</h4>
                     <ul className="space-y-2.5">
-                      <li><a href="pro.html" className="text-sm text-white hover:text-[#1D4ED8] transition-colors font-medium">Espace pro</a></li>
+                      <li><a href="index.saaspro.html" className="text-sm text-white hover:text-[#1D4ED8] transition-colors font-medium">Espace pro</a></li>
                       <li><button type="button" className="text-sm text-white hover:text-[#1D4ED8] transition-colors font-medium">Devenir partenaire</button></li>
                       <li><button type="button" className="text-sm text-white hover:text-[#1D4ED8] transition-colors font-medium">API & Intégrations</button></li>
                     </ul>

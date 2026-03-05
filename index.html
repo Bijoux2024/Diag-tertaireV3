@@ -1157,7 +1157,7 @@
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', background: '#F5F8FF', border: '1px solid rgba(29,78,216,0.14)', borderRadius: '14px', padding: '1.25rem 1.375rem', boxShadow: '0 2px 8px rgba(29,78,216,0.05)' }}>
               <Icon icon="solar:shield-check-linear" style={{ color: '#1D4ED8', fontSize: '1.125rem', flexShrink: 0, marginTop: '2px' }} />
               <p style={{ fontSize: '0.875rem', color: '#334455', lineHeight: 1.75 }}>
-                <strong>Note de confiance :</strong> ce pré-diagnostic est un outil d'aide à la décision, non certifiant, basé sur vos données déclaratives et des références sectorielles. Il permet d'évaluer si une étude plus complète est pertinente, mais ne remplace pas un audit réglementaire ni une visite technique sur site. Si vous souhaitez aller plus loin, une mise en relation avec notre réseau de partenaires peut être proposée avec votre accord.
+                <strong>Note de confiance :</strong> ce pré-diagnostic est un outil d'aide à la décision, non certifiant, basé sur vos données déclaratives. Il ne remplace pas un audit réglementaire ni une visite technique sur site.
               </p>
             </div>
           </div>
@@ -1242,7 +1242,7 @@
 
             <div className="text-center">
               <a
-                href="index.saaspro.html"
+                href="pro.html"
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: '8px',
                   background: '#1D4ED8', color: 'white', border: 'none',
@@ -2212,19 +2212,22 @@
 
     const NEW_DIAGNOSTIC_DEFAULT_FORM_DATA = {
       // Étape 1 : Identification
-      email: '',
+      address: '',
       role: '',
-      siteName: '',
       postalCode: '',
       activity: '',
+      mixedUsage1: '',
+      mixedUsage2: '',
+      mixOfficesPct: 50,
+      mixRetailPct: 50,
 
       // Gate questions & Bâtiment
       surface: '',
       mainHeating: '', // 'electric', 'gas', 'network', 'other'
       hasCooling: false,
       usageIntensity: 'standard', // 'low', 'standard', 'high'
-      mixOfficesPct: 50, // Si activity === 'mixed'
-      mixRetailPct: 50,  // Si activity === 'mixed'
+      ecsSameSystem: true,
+      ecsSystem: '',
 
       // Étape 3 : Énergies
       elecUsed: false,
@@ -2241,11 +2244,13 @@
       gasIncludesSubscription: false,
       gasSubscriptionYearly: '',
 
-      // Étape 4 : Travaux
+      // Étape 4 : Contact + Travaux
+      email: '',
+      phone: '',
       worksDone: [],
 
       // Méta
-      contactOptIn: false // Opt-in contact expert (facultatif)
+      contactOptIn: false
     };
 
     /* ─────────────────────────────────────────────────────────────────────────
@@ -2586,24 +2591,34 @@
     // Étape 1 : Identification
     const NewDiagnosticStep1Identification = ({ formData, setFormData, onNext }) => {
       const [errors, setErrors] = useState({});
+      const [mixedTab, setMixedTab] = useState(0); // 0 = Usage 1, 1 = Usage 2
+
+      const isMixed = formData.activity === 'mixed';
+
+      // Non-mixed activities for the mixed tabs
+      const nonMixedActivities = NEW_DIAGNOSTIC_ACTIVITIES.filter(a => a.id !== 'mixed');
 
       const validate = () => {
         const newErrors = {};
 
-        if (!formData.email || !newDiagnosticValidateEmail(formData.email)) {
-          newErrors.email = 'Veuillez saisir une adresse email valide';
+        if (!formData.address || formData.address.length < 5) {
+          newErrors.address = 'Adresse du bâtiment requise (min 5 caractères)';
         }
         if (!formData.role) {
           newErrors.role = 'Veuillez sélectionner votre rôle';
-        }
-        if (!formData.siteName || formData.siteName.length < 2) {
-          newErrors.siteName = 'Nom du bâtiment requis (min 2 caractères)';
         }
         if (!newDiagnosticValidatePostalCode(formData.postalCode)) {
           newErrors.postalCode = 'Code postal invalide (5 chiffres)';
         }
         if (!formData.activity) {
           newErrors.activity = 'Veuillez sélectionner une activité';
+        }
+        if (formData.activity === 'mixed') {
+          if (!formData.mixedUsage1) newErrors.mixedUsage1 = 'Sélectionnez un usage pour Usage 1';
+          if (!formData.mixedUsage2) newErrors.mixedUsage2 = 'Sélectionnez un usage pour Usage 2';
+          if (formData.mixedUsage1 && formData.mixedUsage2 && formData.mixedUsage1 === formData.mixedUsage2) {
+            newErrors.mixedUsage2 = 'Usage 2 doit être différent de Usage 1';
+          }
         }
 
         setErrors(newErrors);
@@ -2623,14 +2638,14 @@
           <p className="text-[#475569] mb-8">Commençons par quelques informations de base</p>
 
           <NewDiagnosticFormInput
-            label="Votre adresse email professionnelle"
-            value={formData.email}
-            onChange={(v) => setFormData({ ...formData, email: v })}
-            type="email"
-            placeholder="jean.dupont@entreprise.fr"
+            label="Adresse du bâtiment"
+            value={formData.address}
+            onChange={(v) => setFormData({ ...formData, address: v })}
+            type="text"
+            placeholder="12 rue de Rivoli, 75001 Paris"
             required
-            error={errors.email}
-            helper="Pour vous envoyer le rapport complet à la fin du diagnostic."
+            error={errors.address}
+            helper="Adresse complète du site diagnostiqué."
           />
 
           <div className="mb-4 mt-6">
@@ -2646,15 +2661,6 @@
           </div>
 
           <NewDiagnosticFormInput
-            label="Mon bâtiment tertiaire"
-            value={formData.siteName}
-            onChange={(v) => setFormData({ ...formData, siteName: v })}
-            placeholder="Mon bâtiment tertiaire"
-            required
-            error={errors.siteName}
-          />
-
-          <NewDiagnosticFormInput
             label="Code postal du bâtiment"
             value={formData.postalCode}
             onChange={(v) => setFormData({ ...formData, postalCode: v })}
@@ -2666,19 +2672,98 @@
           <NewDiagnosticFormSelect
             label="Activité principale"
             value={formData.activity}
-            onChange={(v) => setFormData({ ...formData, activity: v })}
+            onChange={(v) => setFormData({ ...formData, activity: v, mixedUsage1: '', mixedUsage2: '' })}
             options={NEW_DIAGNOSTIC_ACTIVITIES}
             required
             error={errors.activity}
             placeholder="Sélectionnez une activité"
           />
 
+          {isMixed && (
+            <div className="mb-6 border border-[#E2E8F0] rounded-xl overflow-hidden">
+              <div className="flex border-b border-[#E2E8F0]">
+                {['Usage 1', 'Usage 2'].map((tab, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setMixedTab(idx)}
+                    className={`flex-1 py-3 text-sm font-semibold transition-colors ${mixedTab === idx
+                      ? 'text-[#1D4ED8] bg-[#EFF6FF] border-b-2 border-[#1D4ED8]'
+                      : 'text-neutral-500 hover:text-neutral-900 bg-white'
+                      }`}
+                  >
+                    {tab}
+                    {idx === 0 && formData.mixedUsage1 && (
+                      <span className="ml-2 text-xs text-[#1D4ED8] font-normal">
+                        {nonMixedActivities.find(a => a.id === formData.mixedUsage1)?.label}
+                      </span>
+                    )}
+                    {idx === 1 && formData.mixedUsage2 && (
+                      <span className="ml-2 text-xs text-[#1D4ED8] font-normal">
+                        {nonMixedActivities.find(a => a.id === formData.mixedUsage2)?.label}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+              <div className="p-4 bg-white">
+                {mixedTab === 0 ? (
+                  <>
+                    <p className="text-sm text-neutral-600 mb-3">Sélectionnez le premier usage du bâtiment :</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {nonMixedActivities.map(act => (
+                        <button
+                          key={act.id}
+                          type="button"
+                          disabled={act.id === formData.mixedUsage2}
+                          onClick={() => setFormData({ ...formData, mixedUsage1: act.id })}
+                          className={`p-3 rounded-lg border-2 text-left text-sm transition-all ${formData.mixedUsage1 === act.id
+                            ? 'border-[#1D4ED8] bg-[#EFF6FF]'
+                            : act.id === formData.mixedUsage2
+                              ? 'border-neutral-100 bg-neutral-50 opacity-40 cursor-not-allowed'
+                              : 'border-[#E2E8F0] hover:border-[#1D4ED8]/40'
+                            }`}
+                        >
+                          <span className="font-medium">{act.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                    {errors.mixedUsage1 && <p className="text-xs text-red-500 mt-2">{errors.mixedUsage1}</p>}
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm text-neutral-600 mb-3">Sélectionnez le deuxième usage du bâtiment :</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {nonMixedActivities.map(act => (
+                        <button
+                          key={act.id}
+                          type="button"
+                          disabled={act.id === formData.mixedUsage1}
+                          onClick={() => setFormData({ ...formData, mixedUsage2: act.id })}
+                          className={`p-3 rounded-lg border-2 text-left text-sm transition-all ${formData.mixedUsage2 === act.id
+                            ? 'border-[#1D4ED8] bg-[#EFF6FF]'
+                            : act.id === formData.mixedUsage1
+                              ? 'border-neutral-100 bg-neutral-50 opacity-40 cursor-not-allowed'
+                              : 'border-[#E2E8F0] hover:border-[#1D4ED8]/40'
+                            }`}
+                        >
+                          <span className="font-medium">{act.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                    {errors.mixedUsage2 && <p className="text-xs text-red-500 mt-2">{errors.mixedUsage2}</p>}
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+
           <div className="flex justify-end mt-8">
             <button
               onClick={handleNext}
               className="px-8 py-3 bg-[#1D4ED8] text-white font-semibold rounded-lg hover:bg-[#1E40AF] transition-colors shadow-sm"
             >
-              Continuer →
+              Continuer
             </button>
           </div>
         </div>
@@ -2699,9 +2784,8 @@
         if (!formData.mainHeating) {
           newErrors.mainHeating = 'Veuillez sélectionner le mode de chauffage principal';
         }
-
-        if (isMixed && !newDiagnosticValidateMixUsage(formData.mixOfficesPct, formData.mixRetailPct)) {
-          newErrors.mix = 'La somme bureaux + commerce doit être égale à 100%';
+        if (!formData.ecsSameSystem && !formData.ecsSystem) {
+          newErrors.ecsSystem = 'Veuillez sélectionner le système ECS';
         }
 
         setErrors(newErrors);
@@ -2710,11 +2794,6 @@
 
       const handleNext = () => {
         if (validate()) {
-          // Normalisation mix usage si besoin
-          if (isMixed) {
-            const normalized = newDiagnosticNormalizeMixUsage(formData.mixOfficesPct, formData.mixRetailPct);
-            setFormData({ ...formData, ...normalized });
-          }
           newDiagnosticTrack('diagnostic_step2_completed');
           onNext();
         }
@@ -2736,6 +2815,25 @@
             error={errors.surface}
           />
 
+          {isMixed && (
+            <div className="mb-8 p-5 bg-white border border-[#E2E8F0] rounded-xl shadow-sm">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 bg-amber-50 rounded-lg flex items-center justify-center">
+                  <Icon icon="solar:chart-line-bold-duotone" className="text-[#F59E0B] text-2xl" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-[#102A43] mb-0">Répartition des surfaces</h3>
+                  <p className="text-xs text-neutral-500">Ajustez la part de chaque usage</p>
+                </div>
+              </div>
+              <NewDiagnosticMixSlider
+                officesPct={formData.mixOfficesPct}
+                retailPct={formData.mixRetailPct}
+                onChange={(vals) => setFormData({ ...formData, mixOfficesPct: vals.officesPct, mixRetailPct: vals.retailPct })}
+              />
+            </div>
+          )}
+
           {/* Gate Questions */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-neutral-700 mb-2">
@@ -2745,7 +2843,7 @@
               value={formData.mainHeating}
               onChange={(v) => setFormData({ ...formData, mainHeating: v })}
               options={[
-                { id: 'electric', label: 'Électrique (PAC, convecteurs...)' },
+                { id: 'electric', label: 'Electrique (PAC, convecteurs...)' },
                 { id: 'gas', label: 'Gaz (chaudière autonome)' },
                 { id: 'network', label: 'Réseau de chaleur urbain' },
                 { id: 'other', label: 'Autre (fioul, bois...)' }
@@ -2771,6 +2869,59 @@
             </label>
           </div>
 
+          {/* ECS Section */}
+          <div className="mb-8">
+            <label className="block text-sm font-medium text-neutral-700 mb-4">
+              Production d'eau chaude sanitaire (ECS) <span className="text-red-500">*</span>
+            </label>
+            <div className="grid md:grid-cols-2 gap-4 mb-4">
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, ecsSameSystem: true, ecsSystem: '' })}
+                className={`p-4 rounded-xl border-2 transition-all text-left ${formData.ecsSameSystem
+                  ? 'border-[#1D4ED8] bg-[#EFF6FF]'
+                  : 'border-[#E2E8F0] hover:border-[#1D4ED8]/40'
+                  }`}
+              >
+                <Icon icon="solar:fire-bold" className={`text-2xl mb-2 block ${formData.ecsSameSystem ? 'text-[#1D4ED8]' : 'text-neutral-500'}`} />
+                <div className="font-semibold text-neutral-900 mb-1">Même système que le chauffage</div>
+                <div className="text-xs text-neutral-600">Chaudière mixte, PAC, ou réseau urbain</div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, ecsSameSystem: false })}
+                className={`p-4 rounded-xl border-2 transition-all text-left ${!formData.ecsSameSystem
+                  ? 'border-[#1D4ED8] bg-[#EFF6FF]'
+                  : 'border-[#E2E8F0] hover:border-[#1D4ED8]/40'
+                  }`}
+              >
+                <Icon icon="solar:bath-bold" className={`text-2xl mb-2 block ${!formData.ecsSameSystem ? 'text-[#1D4ED8]' : 'text-neutral-500'}`} />
+                <div className="font-semibold text-neutral-900 mb-1">Système indépendant / dédié</div>
+                <div className="text-xs text-neutral-600">Ballon électrique, chauffe-eau gaz séparé, etc.</div>
+              </button>
+            </div>
+
+            {!formData.ecsSameSystem && (
+              <div className="fade-in">
+                <NewDiagnosticFormSelect
+                  label="Précisez le système dédié"
+                  value={formData.ecsSystem}
+                  onChange={(v) => setFormData({ ...formData, ecsSystem: v })}
+                  options={[
+                    { id: 'electric_boiler', label: 'Chauffe-eau électrique (standard)' },
+                    { id: 'gas_boiler', label: 'Chauffe-eau gaz indépendant' },
+                    { id: 'heat_pump', label: 'PAC thermodynamique' },
+                    { id: 'solar', label: 'Solaire thermique' },
+                    { id: 'network_dedicated', label: 'Réseau de chaleur (échangeur dédié)' }
+                  ]}
+                  required
+                  error={errors.ecsSystem}
+                  placeholder="Sélectionnez..."
+                />
+              </div>
+            )}
+          </div>
+
           <div className="mb-6">
             <label className="block text-sm font-medium text-neutral-700 mb-2">
               Intensité d'usage
@@ -2786,31 +2937,18 @@
             />
           </div>
 
-          {isMixed && (
-            <>
-              <NewDiagnosticMixSlider
-                officesPct={formData.mixOfficesPct}
-                retailPct={formData.mixRetailPct}
-                onChange={({ officesPct, retailPct }) =>
-                  setFormData({ ...formData, mixOfficesPct: officesPct, mixRetailPct: retailPct })
-                }
-              />
-              {errors.mix && <p className="text-xs text-red-500 mb-4">{errors.mix}</p>}
-            </>
-          )}
-
           <div className="flex justify-between mt-8">
             <button
               onClick={onBack}
               className="px-6 py-3 text-neutral-600 hover:text-neutral-900 font-semibold transition-colors"
             >
-              ← Retour
+              Retour
             </button>
             <button
               onClick={handleNext}
               className="px-8 py-3 bg-[#1D4ED8] text-white font-semibold rounded-lg hover:bg-[#1E40AF] transition-colors shadow-sm"
             >
-              Continuer →
+              Continuer
             </button>
           </div>
         </div>
@@ -3010,24 +3148,60 @@
       );
     };
 
-    // Étape 4 : Travaux déjà réalisés
+    // Étape 4 : Contact + Travaux déjà réalisés
     const NewDiagnosticStep4Works = ({ formData, setFormData, onNext, onBack }) => {
+      const [errors, setErrors] = useState({});
+
+      const validate = () => {
+        const newErrors = {};
+        if (!formData.email || !newDiagnosticValidateEmail(formData.email)) {
+          newErrors.email = 'Veuillez saisir une adresse email valide pour recevoir votre rapport';
+        }
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+      };
 
       const handleNext = () => {
-        newDiagnosticTrack('diagnostic_step4_completed', {
-          works_count: formData.worksDone.length
-        });
-        onNext();
+        if (validate()) {
+          newDiagnosticTrack('diagnostic_step4_completed', {
+            works_count: formData.worksDone.length
+          });
+          onNext();
+        }
       };
 
       return (
         <div className="max-w-2xl mx-auto">
-          <h2 className="text-2xl font-bold text-[#102A43] mb-2">Travaux déjà réalisés</h2>
+          <h2 className="text-2xl font-bold text-[#102A43] mb-2">Contact et travaux réalisés</h2>
           <p className="text-[#475569] mb-8">
-            Avez-vous déjà effectué certains de ces travaux ? (facultatif)
+            Indiquez votre email pour recevoir votre rapport
           </p>
 
-          <div className="p-6 bg-white border border-[#E2E8F0] rounded-xl shadow-sm">
+          {/* Contact fields */}
+          <div className="mb-6 p-6 bg-white border border-[#E2E8F0] rounded-xl shadow-sm">
+            <p className="text-sm font-semibold text-neutral-900 mb-4">Vos coordonnées</p>
+            <NewDiagnosticFormInput
+              label="Email"
+              value={formData.email}
+              onChange={(v) => setFormData({ ...formData, email: v })}
+              type="email"
+              placeholder="vous@entreprise.fr"
+              required
+              error={errors.email}
+              helper="Votre rapport PDF vous sera envoyé à cette adresse."
+            />
+            <NewDiagnosticFormInput
+              label="Téléphone (optionnel)"
+              value={formData.phone || ''}
+              onChange={(v) => setFormData({ ...formData, phone: v })}
+              type="tel"
+              placeholder="06 12 34 56 78"
+            />
+          </div>
+
+          {/* Works */}
+          <div className="p-6 bg-white border border-[#E2E8F0] rounded-xl shadow-sm mb-4">
+            <p className="text-sm font-semibold text-neutral-900 mb-4">Travaux déjà réalisés (facultatif)</p>
             <NewDiagnosticCheckboxGroup
               options={NEW_DIAGNOSTIC_WORKS_DONE}
               selected={formData.worksDone}
@@ -3055,7 +3229,7 @@
               onClick={onBack}
               className="px-6 py-3 text-neutral-600 hover:text-[#102A43] font-semibold transition-colors"
             >
-              ← Retour
+              Retour
             </button>
             <button
               onClick={handleNext}
@@ -3703,30 +3877,22 @@
        HELPERS : BENCHMARK & MIX USAGE
        ───────────────────────────────────────────────────────────────────────── */
 
-    const newDiagnosticGetBenchmark = (activity, mixOfficesPct, mixRetailPct) => {
-      // Si usage mixte, pondération
+    const newDiagnosticGetBenchmark = (activity, formData) => {
+      // Si usage mixte, pondération par les pourcentages du slider
       if (activity === 'mixed') {
-        const officesData = NEW_DIAGNOSTIC_BENCHMARKS_INTENSITY.offices;
-        const retailData = NEW_DIAGNOSTIC_BENCHMARKS_INTENSITY.retail;
-
-        const pOffices = parseFloat(mixOfficesPct) / 100;
-        const pRetail = parseFloat(mixRetailPct) / 100;
+        const u1 = (formData && formData.mixedUsage1) || 'offices';
+        const u2 = (formData && formData.mixedUsage2) || 'retail';
+        const p1 = (formData && formData.mixOfficesPct) / 100 || 0.5;
+        const p2 = (formData && formData.mixRetailPct) / 100 || 0.5;
+        const data1 = NEW_DIAGNOSTIC_BENCHMARKS_INTENSITY[u1] || NEW_DIAGNOSTIC_BENCHMARKS_INTENSITY.offices;
+        const data2 = NEW_DIAGNOSTIC_BENCHMARKS_INTENSITY[u2] || NEW_DIAGNOSTIC_BENCHMARKS_INTENSITY.retail;
 
         return {
-          median_kwh_m2_an: Math.round(
-            officesData.median_kwh_m2_an * pOffices +
-            retailData.median_kwh_m2_an * pRetail
-          ),
-          low_kwh_m2_an: Math.round(
-            officesData.low_kwh_m2_an * pOffices +
-            retailData.low_kwh_m2_an * pRetail
-          ),
-          high_kwh_m2_an: Math.round(
-            officesData.high_kwh_m2_an * pOffices +
-            retailData.high_kwh_m2_an * pRetail
-          ),
+          median_kwh_m2_an: Math.round(data1.median_kwh_m2_an * p1 + data2.median_kwh_m2_an * p2),
+          low_kwh_m2_an: Math.round(data1.low_kwh_m2_an * p1 + data2.low_kwh_m2_an * p2),
+          high_kwh_m2_an: Math.round(data1.high_kwh_m2_an * p1 + data2.high_kwh_m2_an * p2),
           source_level: 'hypothesis',
-          source_ref: 'Pondération offices + retail',
+          source_ref: `Pondération ${Math.round(p1 * 100)}/${Math.round(p2 * 100)} : ${u1} + ${u2}`,
           is_mixed: true
         };
       }
@@ -3747,25 +3913,26 @@
       return { ...benchmark, is_mixed: false };
     };
 
-    const newDiagnosticGetUsageBreakdown = (activity, mixOfficesPct, mixRetailPct) => {
-      // Si usage mixte, pondération
+    const newDiagnosticGetUsageBreakdown = (activity, formData) => {
+      // Si usage mixte, pondération par les pourcentages du slider
       if (activity === 'mixed') {
-        const officesData = NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.offices;
-        const retailData = NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.retail;
-
-        const pOffices = parseFloat(mixOfficesPct) / 100;
-        const pRetail = parseFloat(mixRetailPct) / 100;
+        const u1 = (formData && formData.mixedUsage1) || 'offices';
+        const u2 = (formData && formData.mixedUsage2) || 'retail';
+        const p1 = (formData && formData.mixOfficesPct) / 100 || 0.5;
+        const p2 = (formData && formData.mixRetailPct) / 100 || 0.5;
+        const data1 = NEW_DIAGNOSTIC_USAGE_BREAKDOWNS[u1] || NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.offices;
+        const data2 = NEW_DIAGNOSTIC_USAGE_BREAKDOWNS[u2] || NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.retail;
 
         return {
-          heating_pct: Math.round(officesData.heating_pct * pOffices + retailData.heating_pct * pRetail),
-          cooling_pct: Math.round(officesData.cooling_pct * pOffices + retailData.cooling_pct * pRetail),
-          vent_aux_pct: Math.round(officesData.vent_aux_pct * pOffices + retailData.vent_aux_pct * pRetail),
-          lighting_pct: Math.round(officesData.lighting_pct * pOffices + retailData.lighting_pct * pRetail),
-          dhw_pct: Math.round(officesData.dhw_pct * pOffices + retailData.dhw_pct * pRetail),
-          cooking_pct: Math.round(officesData.cooking_pct * pOffices + retailData.cooking_pct * pRetail),
-          other_specific_pct: Math.round(officesData.other_specific_pct * pOffices + retailData.other_specific_pct * pRetail),
+          heating_pct: Math.round(data1.heating_pct * p1 + data2.heating_pct * p2),
+          cooling_pct: Math.round(data1.cooling_pct * p1 + data2.cooling_pct * p2),
+          vent_aux_pct: Math.round(data1.vent_aux_pct * p1 + data2.vent_aux_pct * p2),
+          lighting_pct: Math.round(data1.lighting_pct * p1 + data2.lighting_pct * p2),
+          dhw_pct: Math.round(data1.dhw_pct * p1 + data2.dhw_pct * p2),
+          cooking_pct: Math.round(data1.cooking_pct * p1 + data2.cooking_pct * p2),
+          other_specific_pct: Math.round(data1.other_specific_pct * p1 + data2.other_specific_pct * p2),
           source_level: 'hypothesis',
-          source_ref: 'Pondération offices + retail',
+          source_ref: `Pondération ${Math.round(p1 * 100)}/${Math.round(p2 * 100)} : ${u1} + ${u2}`,
           breakdown_mode: 'coarse_statistical'
         };
       }
@@ -3949,16 +4116,7 @@
       });
 
       // Warning mix usage (ne devrait pas arriver car validation formulaire)
-      if (formData.activity === 'mixed') {
-        const total = parseFloat(formData.mixOfficesPct || 0) + parseFloat(formData.mixRetailPct || 0);
-        if (Math.abs(total - 100) > 0.5) {
-          warnings.push({
-            code: 'MIX_SUM_NOT_100',
-            severity: 'error',
-            message: 'Mix usage ne totalise pas 100%'
-          });
-        }
-      }
+      // (Supprimé car le mix est maintenant géré via mixedUsage1/mixedUsage2 en Step1)
 
       return warnings;
     };
@@ -3982,7 +4140,7 @@
       if (conversionResults.gas?.method === 'kwh_provided') score += 5;
 
       // Pénalité si pending_expert sur activité
-      const benchmark = newDiagnosticGetBenchmark(formData.activity, formData.mixOfficesPct, formData.mixRetailPct);
+      const benchmark = newDiagnosticGetBenchmark(formData.activity, formData);
       if (benchmark.source_level === 'pending_expert') score -= 20;
 
       score = Math.max(0, Math.min(100, score));
@@ -4012,8 +4170,6 @@
       // ──────────────────────────────────────────────────────────────────────
       const surface = parseFloat(formData.surface) || 0;
       const activity = formData.activity || 'offices';
-      const mixOfficesPct = activity === 'mixed' ? (formData.mixOfficesPct || 50) : 0;
-      const mixRetailPct = activity === 'mixed' ? (formData.mixRetailPct || 50) : 0;
 
       // Garde-fou surface
       if (surface <= 0) {
@@ -4041,7 +4197,7 @@
       // ──────────────────────────────────────────────────────────────────────
       // 4. BENCHMARK
       // ──────────────────────────────────────────────────────────────────────
-      const benchmark = newDiagnosticGetBenchmark(activity, mixOfficesPct, mixRetailPct);
+      const benchmark = newDiagnosticGetBenchmark(activity, formData);
 
       let benchmarkPosition = 'in_range';
       if (intensity_kwh_m2_an < benchmark.low_kwh_m2_an) benchmarkPosition = 'below_range';
@@ -4051,7 +4207,7 @@
       // ──────────────────────────────────────────────────────────────────────
       // 5. RÉPARTITION POSTES
       // ──────────────────────────────────────────────────────────────────────
-      const breakdown = newDiagnosticGetUsageBreakdown(activity, mixOfficesPct, mixRetailPct);
+      const breakdown = newDiagnosticGetUsageBreakdown(activity, formData);
 
       const breakdownKwh = {
         heating: Math.round(totalKwh * breakdown.heating_pct / 100),
@@ -4128,14 +4284,17 @@
           email: formData.email,
           address: formData.address,
           role: formData.role,
-          site_name: formData.siteName,
+          site_name: formData.address ? formData.address.split(',')[0].trim() : 'Bâtiment tertiaire',
           postal_code: formData.postalCode,
           activity: activity,
+          mixedUsage1: activity === 'mixed' ? formData.mixedUsage1 : null,
+          mixedUsage2: activity === 'mixed' ? formData.mixedUsage2 : null,
           surface: { value: surface, unit: 'm²' },
           levels: { value: parseInt(formData.levels) || 1, unit: 'niveaux' },
-          mix_offices_pct: activity === 'mixed' ? mixOfficesPct : null,
-          mix_retail_pct: activity === 'mixed' ? mixRetailPct : null,
-          works_done: formData.worksDone || []
+          works_done: formData.worksDone || [],
+          phone: formData.phone || null,
+          ecsSameSystem: formData.ecsSameSystem,
+          ecsSystem: formData.ecsSystem || null
         },
 
         // Calculation results
@@ -4215,6 +4374,144 @@
       };
     };
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // COMPOSANTS GRAPHIQUES RAPPORT
+    // ─────────────────────────────────────────────────────────────────────────
+
+    const {
+      LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area
+    } = window.Recharts;
+
+    const NewDiagnosticInactionGraph = ({ annualSavingsEuro, totalCostEuroAn }) => {
+      const data = [];
+      let cumulativeInaction = 0;
+      let cumulativeAction = 0;
+      const ACTION_COST = annualSavingsEuro * 3; // Hypothèse CAPEX = 3 ans d'économies
+
+      for (let year = 0; year <= 10; year++) {
+        const inaction = cumulativeInaction;
+        const action = cumulativeAction;
+        const savings = cumulativeInaction - cumulativeAction;
+
+        data.push({
+          year: `Année ${year}`,
+          inaction: Math.round(inaction),
+          action: Math.round(action),
+          savings: Math.round(savings)
+        });
+
+        cumulativeInaction += totalCostEuroAn * Math.pow(1.03, year);
+        cumulativeAction += (totalCostEuroAn - annualSavingsEuro) * Math.pow(1.03, year);
+      }
+
+      return (
+        <div className="h-[350px] w-full mt-6">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={data} margin={{ top: 10, right: 30, left: 10, bottom: 0 }}>
+              <defs>
+                <linearGradient id="colorInaction" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#EF4444" stopOpacity={0.1} />
+                  <stop offset="95%" stopColor="#EF4444" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="colorAction" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#10B981" stopOpacity={0.1} />
+                  <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+              <XAxis dataKey="year" fontSize={12} tickLine={false} axisLine={false} />
+              <YAxis fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k€`} />
+              <Tooltip
+                formatter={(v) => [`${v.toLocaleString()} €`, '']}
+                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+              />
+              <Legend verticalAlign="top" height={36} />
+              <Area
+                type="monotone"
+                dataKey="inaction"
+                name="Coût cumulé (Statu Quo)"
+                stroke="#EF4444"
+                strokeWidth={3}
+                fillOpacity={0.1}
+                fill="#EF4444"
+              />
+              <Area
+                type="monotone"
+                dataKey="action"
+                name="Coût avec travaux"
+                stroke="#10B981"
+                strokeWidth={3}
+                fillOpacity={0.1}
+                fill="#10B981"
+              />
+              <Area
+                type="monotone"
+                dataKey="savings"
+                name="Économies nettes"
+                stroke="#3B82F6"
+                strokeWidth={3}
+                fillOpacity={0.1}
+                fill="#3B82F6"
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      );
+    };
+
+    const NewDiagnosticPositioningGauge = ({ intensity, low, median, high, targetIntensity }) => {
+      // Normalisation 0-100 sur la plage [low*0.5, high*1.5]
+      const min = low * 0.5;
+      const max = high * 1.5;
+      const getPos = (val) => Math.min(100, Math.max(0, ((val - min) / (max - min)) * 100));
+
+      const posCurrent = getPos(intensity);
+      const posTarget = getPos(targetIntensity);
+
+      const labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
+
+      return (
+        <div className="relative pt-10 pb-14 px-4">
+          {/* Track background */}
+          <div className="h-4 w-full bg-gradient-to-r from-green-500 via-yellow-400 to-red-500 rounded-full relative shadow-inner">
+            {/* Markers A-G */}
+            <div className="absolute -top-7 inset-0 flex justify-between px-1">
+              {labels.map((l, i) => (
+                <span key={l} className="text-[10px] font-bold text-neutral-400">{l}</span>
+              ))}
+            </div>
+
+            {/* Current Position Marker */}
+            <div
+              className="absolute top-1/2 -translate-y-1/2 w-1 h-12 bg-neutral-900 z-20"
+              style={{ left: `${posCurrent}%` }}
+            >
+              <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-neutral-900 text-white text-[10px] px-2 py-0.5 rounded font-bold whitespace-nowrap">
+                ACTUEL: {Math.round(intensity)}
+              </div>
+              <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-3 h-3 bg-neutral-900 rotate-45"></div>
+            </div>
+
+            {/* Target Position Marker */}
+            <div
+              className="absolute top-1/2 -translate-y-1/2 w-1 h-10 border-l-2 border-dashed border-green-600 z-10"
+              style={{ left: `${posTarget}%` }}
+            >
+              <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-green-700 text-[10px] font-bold whitespace-nowrap flex flex-col items-center">
+                <Icon icon="solar:check-circle-bold" className="text-sm" />
+                CIBLE: {Math.round(targetIntensity)}
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-8 flex justify-between text-[10px] text-neutral-400 font-medium">
+            <span>Performant</span>
+            <span>Énergivore</span>
+          </div>
+        </div>
+      );
+    };
+
     const NewDiagnosticReportScreen = ({ reportPayload, userEmail }) => {
       const [isPDFGenerating, setIsPDFGenerating] = useState(false);
 
@@ -4242,11 +4539,11 @@
 
       // Helper : formater les nombres avec unités (guard NaN/Infinity)
       const formatValue = (obj) => {
-        if (!obj || typeof obj !== 'object') return obj ?? '—';
+        if (!obj || typeof obj !== 'object') return obj ?? 'N/A';
         const v = obj.value;
         const safe = (v !== null && v !== undefined && !isNaN(v) && isFinite(v))
           ? v.toLocaleString('fr-FR')
-          : '—';
+          : 'N/A';
         return `${safe} ${obj.unit || ''}`.trim();
       };
 
@@ -4275,7 +4572,7 @@
             <div className="mb-6 px-5 py-3 bg-[#FFF8EE] border border-[#F59E0B]/40 rounded-xl flex items-center gap-3">
               <Icon icon="solar:info-circle-bold" className="text-[#F59E0B] text-2xl flex-shrink-0" />
               <p className="text-sm text-[#78350F] font-medium">
-                <strong>Pré-diagnostic indicatif</strong> — Ce rapport est basé sur des références observées sectorielles et des estimations. Il n'a pas valeur d'audit réglementaire. Les résultats sont à confirmer par un professionnel certifié.
+                <strong>Pré-diagnostic indicatif</strong> : Ce rapport est basé sur des références observées sectorielles et des estimations. Il n'a pas valeur d'audit réglementaire. Les résultats sont à confirmer par un professionnel certifié.
               </p>
             </div>
 
@@ -4288,7 +4585,7 @@
                   </h1>
                   <p className="text-sm text-[#F59E0B] font-semibold uppercase tracking-wide mb-2">Estimations à confirmer par audit</p>
                   <p className="text-[#475569]">
-                    {reportPayload.inputs_summary.site_name} • {formatValue(reportPayload.inputs_summary.surface)}
+                    {reportPayload.inputs_summary.site_name || 'Bâtiment tertiaire'} - {formatValue(reportPayload.inputs_summary.surface)}
                   </p>
                   {(reportPayload.inputs_summary.address || reportPayload.inputs_summary.postal_code) && (
                     <p className="text-sm text-[#475569] mt-2">
@@ -4365,45 +4662,93 @@
 
             {/* Section 2 : Benchmark */}
             <div className="report-card p-8 mb-8">
-              <h2 className="text-2xl font-bold text-neutral-900 mb-6">Positionnement</h2>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-neutral-900">Positionnement sectoriel</h2>
+                <div className={`px-3 py-1 rounded-full text-xs font-bold ${benchmarkInfo.bg} ${benchmarkInfo.color}`}>
+                  {benchmarkInfo.label}
+                </div>
+              </div>
 
-              <div className={`p-6 rounded-xl ${benchmarkInfo.bg} mb-6`}>
-                <div className="flex items-center gap-3 mb-4">
-                  <Icon icon="solar:chart-2-bold" className={`text-3xl ${benchmarkInfo.color}`} />
+              <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6 mb-6 shadow-sm">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
+                    <Icon icon="solar:chart-2-bold" className={`text-2xl ${benchmarkInfo.color}`} />
+                  </div>
                   <div>
-                    <p className={`text-lg font-bold ${benchmarkInfo.color}`}>{benchmarkInfo.label}</p>
-                    <p className="text-sm text-neutral-600">
-                      Votre site : {formatValue(benchmark.site_intensity)} vs Médiane : {formatValue(benchmark.benchmark_median)}
-                    </p>
+                    <p className="text-sm text-neutral-500 font-medium">Par rapport aux bâtiments de type <span className="text-neutral-900 font-bold capitalize">{reportPayload.inputs_summary.activity}</span></p>
+                    <p className="text-xs text-neutral-400 italic">Source : {benchmark.source_ref}</p>
                   </div>
                 </div>
 
-                {/* Barre de positionnement */}
-                <div className="relative h-12 bg-gradient-to-r from-green-400 via-yellow-400 to-red-400 rounded-lg overflow-hidden">
-                  <div className="absolute inset-0 flex items-center justify-between px-4 text-xs font-bold text-white">
-                    <span>{formatValue(benchmark.benchmark_low)}</span>
-                    <span>{formatValue(benchmark.benchmark_median)}</span>
-                    <span>{formatValue(benchmark.benchmark_high)}</span>
-                  </div>
+                <NewDiagnosticPositioningGauge
+                  intensity={benchmark.site_intensity.value}
+                  low={benchmark.benchmark_low.value}
+                  median={benchmark.benchmark_median.value}
+                  high={benchmark.benchmark_high.value}
+                  targetIntensity={benchmark.site_intensity.value * (1 - (reportPayload.composite_savings.total_pct.value / 100))}
+                />
 
-                  {/* Curseur position */}
-                  <div
-                    className="absolute top-0 bottom-0 w-1 bg-neutral-900"
-                    style={{
-                      left: `${Math.min(100, Math.max(0,
-                        ((benchmark.site_intensity.value - benchmark.benchmark_low.value) /
-                          (benchmark.benchmark_high.value - benchmark.benchmark_low.value)) * 100
-                      ))}%`
-                    }}
-                  >
-                    <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-neutral-900 rounded-full"></div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
+                  <div className="p-3 bg-neutral-50 rounded-xl">
+                    <p className="text-[10px] text-neutral-500 uppercase font-bold mb-1">Votre Intensité</p>
+                    <p className="text-lg font-bold text-neutral-900">{formatValue(benchmark.site_intensity)}</p>
+                  </div>
+                  <div className="p-3 bg-neutral-50 rounded-xl border-l-4 border-green-500">
+                    <p className="text-[10px] text-green-600 uppercase font-bold mb-1">Performance Top 25%</p>
+                    <p className="text-lg font-bold text-neutral-900">{formatValue(benchmark.benchmark_low)}</p>
+                  </div>
+                  <div className="p-3 bg-neutral-50 rounded-xl border-l-4 border-blue-500">
+                    <p className="text-[10px] text-blue-600 uppercase font-bold mb-1">Médiane Marché</p>
+                    <p className="text-lg font-bold text-neutral-900">{formatValue(benchmark.benchmark_median)}</p>
+                  </div>
+                  <div className="p-3 bg-neutral-50 rounded-xl border-l-4 border-red-500">
+                    <p className="text-[10px] text-red-600 uppercase font-bold mb-1">Performance Faible</p>
+                    <p className="text-lg font-bold text-neutral-900">{formatValue(benchmark.benchmark_high)}</p>
                   </div>
                 </div>
               </div>
 
-              <p className="text-xs text-neutral-500">
-                Référence observée sectorielle : {benchmark.source_ref}
-              </p>
+              <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl">
+                <div className="flex gap-3">
+                  <Icon icon="solar:magic-stick-3-bold" className="text-blue-600 text-xl flex-shrink-0" />
+                  <p className="text-sm text-blue-800">
+                    <strong>Objectif suggéré</strong> : Atteindre <span className="font-bold underline">{Math.round(benchmark.site_intensity.value * (1 - (reportPayload.composite_savings.total_pct.value / 100)))} kWh/m²/an</span> après mise en place des actions recommandées.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Section GRAPH : Coût de l'inaction */}
+            <div className="report-card p-8 mb-8 overflow-hidden">
+              <div className="flex items-center justify-between mb-2">
+                <h2 className="text-2xl font-bold text-neutral-900">Coût de l'inaction sur 10 ans</h2>
+                <div className="hidden md:flex items-center gap-2">
+                  <span className="inline-block w-3 h-3 rounded-full bg-[#EF4444]"></span>
+                  <span className="text-[10px] font-bold text-neutral-500 uppercase">Statu Quo</span>
+                  <span className="inline-block w-3 h-3 rounded-full bg-[#10B981] ml-2"></span>
+                  <span className="text-[10px] font-bold text-neutral-500 uppercase">Avec Travaux</span>
+                </div>
+              </div>
+              <p className="text-sm text-neutral-600 mb-6">Projection cumulative du coût de l'énergie (basée sur une inflation annuelle de 3%) vs trajectoire de performance.</p>
+
+              <NewDiagnosticInactionGraph
+                annualSavingsEuro={reportPayload.composite_savings.annual_euro.value}
+                totalCostEuroAn={reportPayload.calculation_results.total_cost_euro_an.value}
+              />
+
+              <div className="mt-8 p-5 bg-green-50 rounded-2xl border border-green-100 flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-sm text-green-800 font-semibold mb-1">Économies cumulées potentielles à 10 ans</p>
+                  <p className="text-3xl font-black text-green-600">
+                    ~ {Math.round(reportPayload.composite_savings.annual_euro.value * 11).toLocaleString('fr-FR')} €
+                  </p>
+                </div>
+                <div className="hidden sm:block">
+                  <div className="w-16 h-16 bg-green-600 text-white rounded-full flex items-center justify-center">
+                    <Icon icon="solar:round-alt-arrow-up-bold" className="text-3xl rotate-45" />
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Section 3 : Répartition par postes */}
@@ -4504,8 +4849,8 @@
                             : 'bg-neutral-100 text-neutral-500'
                             }`}>
                             {action.aid_tags && action.aid_tags.includes('CEE')
-                              ? '✓ Aide CEE potentielle : Oui (à confirmer avec devis)'
-                              : '— Pas d\'aide CEE identifiée'
+                              ? 'Aide CEE potentielle : Oui (a confirmer avec devis)'
+                              : 'Pas d\'aide CEE identifiée'
                             }
                           </span>
                         </div>
@@ -4597,7 +4942,7 @@
             {/* Footer rapport */}
             <div className="bg-neutral-50 rounded-xl p-6 text-center border border-neutral-200">
               <p className="text-sm font-semibold text-[#102A43] mb-1">
-                Pré-diagnostic indicatif — Résultats à confirmer par audit énergétique professionnel
+                Pré-diagnostic indicatif. Résultats à confirmer par audit énergétique professionnel
               </p>
               <p className="text-xs text-neutral-500 mb-2">
                 Références observées sectorielles (ADEME, CEREN). Non substituable à une étude réglementaire.
@@ -4666,7 +5011,7 @@
 
       // Titre
       addText('PRÉ-DIAGNOSTIC ÉNERGÉTIQUE INDICATIF', margin, { fontSize: 18, bold: true, color: [37, 99, 235] });
-      addText('Références observées sectorielles — Estimations à confirmer par audit', margin, { fontSize: 9, color: [120, 53, 15] });
+      addText('Références observées sectorielles. Estimations à confirmer par audit', margin, { fontSize: 9, color: [120, 53, 15] });
       y += 3;
       y += 5;
 
@@ -4728,7 +5073,7 @@
         addText(`${i + 1}. ${action.name}`, margin + 5, { bold: true });
         addText(`   Gain annuel estimé : ${action.gain_kwh_an.value.toLocaleString('fr-FR')} ${action.gain_kwh_an.unit} (${action.gain_euro_an.value.toLocaleString('fr-FR')} ${action.gain_euro_an.unit})`, margin + 5);
         addText(`   Investissement indicatif : ${action.capex.value.toLocaleString('fr-FR')} ${action.capex.unit}`, margin + 5);
-        addText(`   ROI indicatif : ${action.roi_years.value !== null ? action.roi_years.value + ' ' + action.roi_years.unit : '—'}`, margin + 5);
+        addText(`   ROI indicatif : ${action.roi_years.value !== null ? action.roi_years.value + ' ' + action.roi_years.unit : 'N/A'}`, margin + 5);
 
         const hasCEE = action.aid_tags && action.aid_tags.includes('CEE');
         addText(`   Aide CEE potentielle : ${hasCEE ? 'Oui (à confirmer avec devis)' : 'Non identifiée'}`, margin + 5, { color: hasCEE ? [29, 78, 216] : [100, 100, 100] });
@@ -4749,7 +5094,7 @@
       addText(`Soit ${composite.annual_kwh.value.toLocaleString('fr-FR')} ${composite.annual_kwh.unit} (${composite.total_pct.value}${composite.total_pct.unit})`, margin + 5);
       y += 5;
 
-      addText(`Économies cumulées sur 3 ans (prix constants) : ${reportPayload.projection_3y ? reportPayload.projection_3y.savings_euro.toLocaleString('fr-FR') : '—'} €`, margin + 5);
+      addText(`Economies cumulées sur 3 ans (prix constants) : ${reportPayload.projection_3y ? reportPayload.projection_3y.savings_euro.toLocaleString('fr-FR') : 'N/A'} EUR`, margin + 5);
       addText('Estimations indicatives – à confirmer par devis professionnel.', margin + 5, { fontSize: 8, color: [120, 53, 15] });
       y += 10;
 
@@ -4946,10 +5291,8 @@
 
       const isLandingPage = currentPage === 'home';
       const headerPages = [
-        { page: 'home', label: 'Accueil' },
-        { page: 'methode', label: 'Approche' },
         { page: 'exemple', label: 'Rapport' },
-        { page: 'index.saaspro', label: 'Espace Pro', external: true }
+        { page: 'pro', label: 'Espace Pro', external: true }
       ];
 
       const NavLink = ({ page, label, external = false, mobile = false }) => {
@@ -4958,7 +5301,7 @@
           : `inline-flex items-center h-10 px-3 rounded-lg text-sm font-semibold transition-colors ${currentPage === page ? 'text-[#1D4ED8] bg-[#EEF2FF]' : 'text-[#475569] hover:text-[#102A43] hover:bg-[#F8FAFC]'}`;
 
         if (external) {
-          return <a href={`${page}.html`} className={classes}>{label}</a>;
+          return <a href="pro.html" className={classes}>{label}</a>;
         }
 
         return (
@@ -4973,66 +5316,64 @@
 
       return (
         <div className="min-h-screen flex flex-col">
-          {(
-            <nav className={`sticky top-0 z-50 backdrop-blur border-b border-[#E2E8F0] ${isLandingPage ? 'bg-white/80 shadow-[0_2px_12px_rgba(15,23,42,0.04)]' : 'bg-white/95 shadow-[0_6px_20px_rgba(15,23,42,0.06)]'}`}>
-              <div className="max-w-6xl mx-auto px-4 sm:px-6">
-                <div className="h-[74px] flex items-center justify-between gap-4">
+          <nav className={`sticky top-0 z-50 backdrop-blur border-b border-[#E2E8F0] ${isLandingPage ? 'bg-white/80 shadow-[0_2px_12px_rgba(15,23,42,0.04)]' : 'bg-white/95 shadow-[0_6px_20px_rgba(15,23,42,0.06)]'}`}>
+            <div className="max-w-6xl mx-auto px-4 sm:px-6">
+              <div className="h-[74px] flex items-center justify-between gap-4">
+                <button
+                  type="button"
+                  onClick={() => navigate('home')}
+                  className="inline-flex items-center gap-2 text-[#102A43] hover:text-[#1D4ED8] transition-colors"
+                >
+                  <Icon icon="solar:buildings-2-linear" className="text-xl" />
+                  <span className="font-bold text-lg tracking-tight">DiagTertiaire</span>
+                </button>
+
+                <div className="hidden md:flex items-center gap-1">
+                  {headerPages.map((item) => (
+                    <NavLink key={item.page} page={item.page} label={item.label} />
+                  ))}
+                </div>
+
+                <div className="hidden md:block">
                   <button
                     type="button"
-                    onClick={() => navigate('home')}
-                    className="inline-flex items-center gap-2 text-[#102A43] hover:text-[#1D4ED8] transition-colors"
+                    onClick={() => navigate('diagnostic')}
+                    className="btn-primary inline-flex items-center justify-center px-5 py-2.5 text-sm font-bold rounded-xl"
                   >
-                    <Icon icon="solar:buildings-2-linear" className="text-xl" />
-                    <span className="font-bold text-lg tracking-tight">DiagTertiaire</span>
+                    Lancer mon diagnostic gratuit
                   </button>
+                </div>
 
-                  <div className="hidden md:flex items-center gap-1">
+                <button
+                  type="button"
+                  className="md:hidden text-[#102A43] hover:text-[#1D4ED8] transition-colors"
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                  aria-label={isMobileMenuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
+                >
+                  <Icon icon={isMobileMenuOpen ? "solar:close-square-linear" : "solar:hamburger-menu-linear"} className="text-2xl" />
+                </button>
+              </div>
+            </div>
+
+            {isMobileMenuOpen && (
+              <div className="md:hidden border-t border-[#E2E8F0] bg-white">
+                <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4">
+                  <div className="flex flex-col gap-2">
                     {headerPages.map((item) => (
-                      <NavLink key={item.page} page={item.page} label={item.label} />
+                      <NavLink key={`mobile-${item.page}`} page={item.page} label={item.label} external={item.external} mobile />
                     ))}
                   </div>
-
-                  <div className="hidden md:block">
-                    <button
-                      type="button"
-                      onClick={() => navigate('diagnostic')}
-                      className="btn-primary inline-flex items-center justify-center px-5 py-2.5 text-sm font-bold rounded-xl"
-                    >
-                      Lancer mon diagnostic gratuit
-                    </button>
-                  </div>
-
                   <button
                     type="button"
-                    className="md:hidden text-[#102A43] hover:text-[#1D4ED8] transition-colors"
-                    onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                    aria-label={isMobileMenuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
+                    onClick={() => navigate('diagnostic')}
+                    className="btn-primary mt-3 w-full inline-flex items-center justify-center px-5 py-3 text-sm font-bold rounded-xl"
                   >
-                    <Icon icon={isMobileMenuOpen ? "solar:close-square-linear" : "solar:hamburger-menu-linear"} className="text-2xl" />
+                    Lancer mon diagnostic gratuit
                   </button>
                 </div>
               </div>
-
-              {isMobileMenuOpen && (
-                <div className="md:hidden border-t border-[#E2E8F0] bg-white">
-                  <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4">
-                    <div className="flex flex-col gap-2">
-                      {headerPages.map((item) => (
-                        <NavLink key={`mobile-${item.page}`} page={item.page} label={item.label} external={item.external} mobile />
-                      ))}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => navigate('diagnostic')}
-                      className="btn-primary mt-3 w-full inline-flex items-center justify-center px-5 py-3 text-sm font-bold rounded-xl"
-                    >
-                      Lancer mon diagnostic gratuit
-                    </button>
-                  </div>
-                </div>
-              )}
-            </nav>
-          )}
+            )}
+          </nav>
 
           <main className="flex-1">
             {currentPage === 'home' && <PageHome navigate={navigate} />}
@@ -5058,9 +5399,7 @@
               </div>
             )}
 
-            {currentPage === 'methode' && <PageMethod navigate={navigate} />}
             {currentPage === 'exemple' && <PageExample navigate={navigate} />}
-            {currentPage === 'pro' && <PageProDemo navigate={navigate} />}
           </main>
 
           {currentPage !== 'diagnostic' && (
@@ -5077,38 +5416,38 @@
                     </div>
                     <p className="text-sm text-[#475569] leading-relaxed mb-4">Pré-diagnostic énergétique tertiaire orienté décision, basé sur références sectorielles.</p>
                     <div className="space-y-2">
-                      <button type="button" onClick={() => navigate('home')} className="block text-sm text-white hover:text-[#1D4ED8] transition-colors font-medium">À propos</button>
-                      <button type="button" className="block text-sm text-white hover:text-[#1D4ED8] transition-colors font-medium">Notre méthodologie</button>
-                      <a href="mailto:contact@diagtertiaire.fr" className="block text-sm text-white hover:text-[#1D4ED8] transition-colors font-medium">Contact</a>
+                      <button type="button" onClick={() => navigate('home')} className="block text-sm text-slate-400 hover:text-white transition-colors font-medium">A propos</button>
+                      <button type="button" className="block text-sm text-slate-400 hover:text-white transition-colors font-medium">Notre méthodologie</button>
+                      <a href="mailto:contact@diagtertiaire.fr" className="block text-sm text-slate-400 hover:text-white transition-colors font-medium">Contact</a>
                     </div>
                   </div>
 
                   <div>
                     <h4 className="text-sm font-bold text-white mb-4">Ressources</h4>
                     <ul className="space-y-2.5">
-                      <li><button type="button" className="text-sm text-white hover:text-[#1D4ED8] transition-colors font-medium">Guide du décret tertiaire</button></li>
-                      <li><button type="button" className="text-sm text-white hover:text-[#1D4ED8] transition-colors font-medium">Références sectorielles</button></li>
-                      <li><button type="button" className="text-sm text-white hover:text-[#1D4ED8] transition-colors font-medium">Blog</button></li>
-                      <li><button type="button" onClick={() => navigate('exemple')} className="text-sm text-white hover:text-[#1D4ED8] transition-colors font-medium">Exemple de rapport</button></li>
+                      <li><button type="button" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Guide du décret tertiaire</button></li>
+                      <li><button type="button" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Références sectorielles</button></li>
+                      <li><button type="button" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Blog</button></li>
+                      <li><button type="button" onClick={() => navigate('exemple')} className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Exemple de rapport</button></li>
                     </ul>
                   </div>
 
                   <div>
                     <h4 className="text-sm font-bold text-white mb-4">Légal</h4>
                     <ul className="space-y-2.5">
-                      <li><button type="button" className="text-sm text-white hover:text-[#1D4ED8] transition-colors font-medium">Mentions légales</button></li>
-                      <li><button type="button" className="text-sm text-white hover:text-[#1D4ED8] transition-colors font-medium">Politique de confidentialité</button></li>
-                      <li><button type="button" className="text-sm text-white hover:text-[#1D4ED8] transition-colors font-medium">CGU</button></li>
-                      <li><button type="button" className="text-sm text-white hover:text-[#1D4ED8] transition-colors font-medium">Gestion des cookies</button></li>
+                      <li><button type="button" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Mentions légales</button></li>
+                      <li><button type="button" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Politique de confidentialité</button></li>
+                      <li><button type="button" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">CGU</button></li>
+                      <li><button type="button" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Gestion des cookies</button></li>
                     </ul>
                   </div>
 
                   <div>
                     <h4 className="text-sm font-bold text-white mb-4">Professionnel</h4>
                     <ul className="space-y-2.5">
-                      <li><a href="index.saaspro.html" className="text-sm text-white hover:text-[#1D4ED8] transition-colors font-medium">Espace pro</a></li>
-                      <li><button type="button" className="text-sm text-white hover:text-[#1D4ED8] transition-colors font-medium">Devenir partenaire</button></li>
-                      <li><button type="button" className="text-sm text-white hover:text-[#1D4ED8] transition-colors font-medium">API & Intégrations</button></li>
+                      <li><a href="pro.html" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Espace pro</a></li>
+                      <li><button type="button" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Devenir partenaire</button></li>
+                      <li><button type="button" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">API et Intégrations</button></li>
                     </ul>
                   </div>
                 </div>

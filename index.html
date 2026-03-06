@@ -460,20 +460,53 @@
        SECTION 3: CONFIGURATION & HELPERS
        ═══════════════════════════════════════════════════════════════════════════ */
 
+    // Supabase Configuration (Phase 5)
+    // À configurer dans Vercel ou via .env
+    const SUPABASE_URL = ''; // EX: 'https://xxx.supabase.co'
+    const SUPABASE_ANON_KEY = ''; // EX: 'eyJhbGciOiJIUzI1Ni...'
+
+    const newDiagnosticSubmitLead = async (leadData) => {
+      if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+        console.warn('Supabase non configuré. Lead non sauvegardé :', leadData);
+        return;
+      }
+
+      try {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/leads`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify({
+            ...leadData,
+            created_at: new Date().toISOString()
+          })
+        });
+
+        if (!response.ok) throw new Error('Erreur Supabase');
+        console.log('Lead sauvegardé avec succès');
+      } catch (err) {
+        console.error('Erreur lors de la sauvegarde du lead :', err);
+      }
+    };
+
     /* ═══════════════════════════════════════════════════════════════════════════
        ENGINE_PRO : MOTEUR COMMUN DE CALCUL (Gratuit + SaaS)
        ═══════════════════════════════════════════════════════════════════════════ */
     const ENGINE_PRO = {
       benchmarks: {
-        "Bureau": { q1: 66, med: 104, q3: 154 },
-        "Hôtel": { q1: 114, med: 151, q3: 200 },
-        "Restauration": { q1: 155, med: 307, q3: 562 },
-        "Santé": { q1: 77, med: 113, q3: 173 },
-        "Enseignement": { q1: 82, med: 105, q3: 131 },
-        "Entrepôt-Chauffé": { q1: 29, med: 61, q3: 131 },
-        "Entrepôt-NonChauffé": { q1: 15, med: 30, q3: 65 }, // Fallback
-        "Commerce_Froid": { q1: 152, med: 363, q3: 649 },
-        "Commerce_SansFroid": { q1: 93, med: 142, q3: 210 },
+        "Bureau": { q1: 120, med: 180, q3: 280, unit: 'kWh EF/m²/an', scope: 'Tous usages, hors process IT' },
+        "Hôtel": { q1: 200, med: 280, q3: 420, unit: 'kWh EF/m²/an', scope: 'Hors blanchisserie industrielle, hors restauration' },
+        "Restauration": { q1: 350, med: 500, q3: 800, unit: 'kWh EF/m²/an', scope: 'Cuisson incluse' },
+        "Santé": { q1: 160, med: 220, q3: 350, unit: 'kWh EF/m²/an', scope: 'Ventilation réglementaire incluse, cabinets < 500m²' },
+        "Enseignement": { q1: 100, med: 150, q3: 220, unit: 'kWh EF/m²/an', scope: 'Primaire/secondaire, hors université' },
+        "Entrepôt-Chauffé": { q1: 50, med: 80, q3: 130, unit: 'kWh EF/m²/an', scope: 'Chauffage + éclairage' },
+        "Entrepôt-NonChauffé": { q1: 25, med: 45, q3: 70, unit: 'kWh EF/m²/an', scope: 'Éclairage seul' },
+        "Commerce_Froid": { q1: 450, med: 650, q3: 900, unit: 'kWh EF/m²/an', scope: 'Avec froid intégré' },
+        "Commerce_SansFroid": { q1: 200, med: 320, q3: 500, unit: 'kWh EF/m²/an', scope: 'Hors froid commercial' },
         "Autre": { q1: 100, med: 150, q3: 250 }
       },
       prices: {
@@ -494,16 +527,26 @@
       ],
 
       compute: function (data) {
-        // Mappages depuis les IDs du form gratuit (offices, retail, etc.) ou form PRO (Bureau, Commerce, etc.)
+        // Mappages depuis les IDs du form (form gratuit + form PRO)
         let actMapping = {
+          // Nouveaux IDs formulaire tunnel
+          'bureau': 'Bureau',
+          'hotel': 'Hôtel',
+          'restauration': 'Restauration',
+          'sante': 'Santé',
+          'enseignement': 'Enseignement',
+          'entrepot_chauffe': 'Entrepôt-Chauffé',
+          'entrepot_non_chauffe': 'Entrepôt-NonChauffé',
+          'commerce_non_alim': 'Commerce_SansFroid',
+          'commerce_alim': 'Commerce_Froid',
+          // Anciens IDs compatibilité
           'offices': 'Bureau',
           'retail': 'Commerce_SansFroid',
-          'hotel': 'Hôtel',
           'restaurant': 'Restauration',
           'health_local': 'Santé',
           'education': 'Enseignement',
           'light_warehouse': 'Entrepôt-NonChauffé',
-          'mixed': 'Bureau' // Simplifié si mixte
+          'mixed': 'Bureau'
         };
 
         let activityKey = actMapping[data.activity] || data.activity;
@@ -544,14 +587,15 @@
 
         const intensity = kwhTotal / area;
 
-        // Score OPERAT-like
+        // Score ratio vs médiane (A-E)
+        const ratio = ref.med > 0 ? intensity / ref.med : 1;
         let score = "C";
         let positioning = "Dans la médiane";
-        if (intensity <= ref.q1) { score = "A"; positioning = "Très performant (Top 25%)"; }
-        else if (intensity > ref.q1 && intensity <= ref.med * 0.9) { score = "B"; positioning = "Performant"; }
-        else if (intensity > ref.med * 0.9 && intensity <= ref.med * 1.1) { score = "C"; positioning = "Dans la médiane"; }
-        else if (intensity > ref.med * 1.1 && intensity <= ref.q3) { score = "D"; positioning = "Surconsommation (Q3)"; }
-        else { score = "E"; positioning = "Très énergivore (Bottom 25%)"; }
+        if (ratio < 0.6) { score = "A"; positioning = "Très performant (Top 25%)"; }
+        else if (ratio < 0.9) { score = "B"; positioning = "Performant"; }
+        else if (ratio < 1.2) { score = "C"; positioning = "Dans la médiane"; }
+        else if (ratio < 1.7) { score = "D"; positioning = "Surconsommation notable"; }
+        else { score = "E"; positioning = "Très énergivore"; }
 
         // Sélection des actions pro
         let actionPool = [...this.actions];
@@ -609,7 +653,7 @@
           };
         });
 
-        const billSub = parseFloat(data.elecSubscriptionYearly) || 0 + parseFloat(data.gasSubscriptionYearly) || 0;
+        const billSub = (parseFloat(data.elecSubscriptionYearly) || 0) + (parseFloat(data.gasSubscriptionYearly) || 0);
 
         return {
           kwhTotal: Math.round(kwhTotal),
@@ -626,7 +670,7 @@
       }
     };
 
-    const CTA_CALENDLY_URL = 'https://calendly.com/TON-LIEN'; // à remplacer
+    const CTA_CALENDLY_URL = 'CTA_CALENDLY_URL_PLACEHOLDER'; // TODO: remplacer par l'URL Calendly réelle
     const CTA_EMAIL = 'contact@diagtertiaire.fr';
 
 
@@ -865,7 +909,7 @@
                     Lancer mon diagnostic gratuit
                     <Icon icon="solar:arrow-right-linear" width="20" height="20" />
                   </button>
-                  <p style={{ marginTop: '1.25rem', fontSize: '0.8125rem', color: '#64748B', fontWeight: 500, letterSpacing: '0.01em' }}>3 minutes • Sans engagement • Rapport PDF par email</p>
+                  <p style={{ marginTop: '1.25rem', fontSize: '0.8125rem', color: '#64748B', fontWeight: 500, letterSpacing: '0.01em' }}>3 minutes • Sans engagement • Rapport PDF disponible en téléchargement</p>
                 </div>
 
                 {/* Réassurance */}
@@ -944,7 +988,7 @@
 
                       {/* Footer note */}
                       <div style={{ borderTop: '1px solid #E8EDF5', paddingTop: '0.875rem', textAlign: 'center' }}>
-                        <p style={{ fontSize: '11.5px', color: '#64748B', fontWeight: 500 }}>Rapport PDF + plan d'action par email</p>
+                        <p style={{ fontSize: '11.5px', color: '#64748B', fontWeight: 500 }}>Rapport PDF + plan d'action disponible en téléchargement</p>
                       </div>
                     </div>
                   </div>
@@ -1036,7 +1080,7 @@
                 <p style={{ fontSize: '0.9375rem', color: '#475569', lineHeight: 1.75, marginBottom: '1.75rem' }}>DiagTertiaire fournit un premier niveau de lecture clair, sans rendez-vous ni démarche complexe. Vous obtenez une base utile pour décider rapidement à partir de quelques informations accessibles.</p>
                 <ul style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
                   {[
-                    'Rapport généré automatiquement et envoyé par email',
+                    'Rapport généré automatiquement et disponible en téléchargement',
                     'Première estimation des gains énergétiques, financiers et des aides mobilisables',
                     'Orientation possible vers un réseau de partenaires si vous souhaitez être accompagné'
                   ].map((item, i) => (
@@ -1191,7 +1235,7 @@
               <Icon icon="solar:rocket-linear" style={{ fontSize: '1rem' }} />
               Lancer mon diagnostic gratuit
             </button>
-            <p style={{ marginTop: '1.25rem', fontSize: '0.8125rem', color: 'rgba(255,255,255,0.58)', fontWeight: 500 }}>3 minutes • Sans engagement • Rapport PDF par email</p>
+            <p style={{ marginTop: '1.25rem', fontSize: '0.8125rem', color: 'rgba(255,255,255,0.58)', fontWeight: 500 }}>3 minutes • Sans engagement • Rapport PDF disponible en téléchargement</p>
           </div>
         </section>
 
@@ -1355,17 +1399,18 @@
       const FAKE_FORM_DATA = {
         ...NEW_DIAGNOSTIC_DEFAULT_FORM_DATA,
         address: '12 rue de Rivoli, 75001 Paris',
-        email: 'jean@exemple.com',
+        email: 'demo@boutique-rivoli.fr',
         role: 'owner',
-        siteName: 'Bureau Centre-Ville',
+        siteName: 'Boutique de prêt-à-porter',
         postalCode: '75001',
-        activity: 'offices',
-        surface: '450',
-        levels: '2',
+        activity: 'commerce_non_alim',
+        surface: '120',
+        levels: '1',
+        mainHeating: 'electric',
+        hasCooling: true,
         elecUsed: true,
-        elecKwh: '45000',
-        gasUsed: true,
-        gasKwh: '146700',
+        elecKwh: '32000',
+        gasUsed: false,
         worksDone: [],
       };
 
@@ -1388,7 +1433,7 @@
                 À quoi ressemble votre rapport
               </h1>
               <p className="text-[#475569] text-sm md:text-base">
-                Exemple simulé pour un bureau de 450 m² construit avant 1975.
+                Exemple simulé pour une boutique de 120 m² située à Paris (Rivoli).
               </p>
               <div className="mt-5 flex flex-wrap justify-center gap-3">
                 <button type="button" onClick={() => navigate('diagnostic')} className="bg-[#1D4ED8] text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-[#1E40AF] transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5">
@@ -1405,7 +1450,7 @@
             {fakeReport ? (
               <NewDiagnosticReportScreen
                 reportPayload={fakeReport}
-                userEmail="jean@exemple.com"
+                userEmail="demo@boutique-rivoli.fr"
               />
             ) : (
               <div className="text-center py-12 text-[#475569]">
@@ -1457,8 +1502,17 @@
       const handleContactSubmit = (e) => {
         e.preventDefault();
         console.log('Contact Pro:', contactForm);
+
+        // Envoi lead Supabase
+        newDiagnosticSubmitLead({
+          name: contactForm.name,
+          email: contactForm.email,
+          company: contactForm.company,
+          message: contactForm.message,
+          source: 'landing_pro'
+        });
+
         setFormSubmitted(true);
-        // TODO: Envoi email ou intégration CRM
       };
 
       // Composant Badge de statut
@@ -3278,19 +3332,19 @@
       last_updated: '2026-02-23',
 
       electricity: {
-        price_default_eur_kwh: 0.1940,
+        price_default_eur_kwh: 0.196,
         price_min_eur_kwh: 0.15,
         price_max_eur_kwh: 0.30,
         unit: '€/kWh TTC',
         source_level: 'pending_expert',
         source_ref: 'À confirmer : prix TTC professionnel moyen ou tarif HT officiel',
-        source_note: 'Valeur provisoire 0.194 €/kWh TTC, à valider avec expert',
+        source_note: 'Valeur provisoire 0.196 €/kWh TTC, à valider avec expert',
         validity_limits: 'Tertiaire < 36 kVA, périmètre France métropolitaine',
         subscription_excluded: true
       },
 
       gas: {
-        price_default_eur_kwh: 0.10514,
+        price_default_eur_kwh: 0.105,
         price_min_eur_kwh: 0.09630,
         price_max_eur_kwh: 0.12291,
         unit: '€/kWh TTC',
@@ -3299,111 +3353,88 @@
         source_note: 'Tarif TTC confirmé, applicable TPE/PME tertiaire',
         validity_limits: 'Profil chauffage, < 150 MWh/an',
         subscription_excluded: true
-      }
+      },
+      heat_network: { price_default_eur_kwh: 0.092 },
+      fuel_oil: { price_default_eur_kwh: 0.118 },
+      wood_pellets: { price_default_eur_kwh: 0.065 }
     };
 
     /* ─────────────────────────────────────────────────────────────────────────
        TABLE 2 : NEW_DIAGNOSTIC_BENCHMARKS_INTENSITY
-       
-       Intensité énergétique (kWh/m²/an) par activité
-       Médiane + plage Q1/Q3 pour positionnement
+       v1.1 — Valeurs expertes validées (kWh EF/m²/an)
        ───────────────────────────────────────────────────────────────────────── */
 
     const NEW_DIAGNOSTIC_BENCHMARKS_INTENSITY = {
-      version_tag: 'v1.0-2026',
-      last_updated: '2026-02-23',
+      version_tag: 'v1.1-2026',
+      last_updated: '2026-03-06',
 
       offices: {
-        median_kwh_m2_an: 180,
-        low_kwh_m2_an: 140,      // Q1
-        high_kwh_m2_an: 240,     // Q3
-        unit: 'kWhEF/m²/an',
-        energy_scope: 'final_energy',
-        stat_type: 'median_q1_q3',
-        source_level: 'source_partial',
-        source_ref: 'ADEME - Consommations énergétiques tertiaire 2020',
-        source_note: 'Bureaux chauffés, médiane France métropolitaine',
-        validity_limits: 'Bureaux standards, hors data centers'
+        median_kwh_m2_an: 180, low_kwh_m2_an: 120, high_kwh_m2_an: 280,
+        unit: 'kWh EF/m²/an', energy_scope: 'final_energy', stat_type: 'median_q1_q3',
+        source_level: 'source_partial', source_ref: 'ADEME ECNA 2022 — Énergie finale tous usages',
+        source_note: 'Bureaux chauffés, médiane France métropolitaine', validity_limits: 'Bureaux standards, hors data centers'
       },
-
       retail: {
-        median_kwh_m2_an: 350,
-        low_kwh_m2_an: 280,
-        high_kwh_m2_an: 450,
-        unit: 'kWhEF/m²/an',
-        energy_scope: 'final_energy',
-        stat_type: 'median_q1_q3',
-        source_level: 'source_partial',
-        source_ref: 'CEREN 2019 - Commerce',
-        source_note: 'Moyenne commerce alimentaire + non alimentaire',
-        validity_limits: 'Commerce de détail, hors grandes surfaces alimentaires'
+        median_kwh_m2_an: 320, low_kwh_m2_an: 200, high_kwh_m2_an: 500,
+        unit: 'kWh EF/m²/an', energy_scope: 'final_energy', stat_type: 'median_q1_q3',
+        source_level: 'source_partial', source_ref: 'CEREN 2019 — Commerce non-alimentaire',
+        source_note: 'Commerce non-alimentaire, hors froid commercial', validity_limits: 'Commerce de détail hors alimentaire'
       },
-
+      retail_food: {
+        median_kwh_m2_an: 650, low_kwh_m2_an: 450, high_kwh_m2_an: 900,
+        unit: 'kWh EF/m²/an', energy_scope: 'final_energy', stat_type: 'median_q1_q3',
+        source_level: 'source_partial', source_ref: 'CEREN 2019 — Commerce alimentaire',
+        source_note: 'Commerce alimentaire avec froid intégré', validity_limits: 'Supermarché, épicerie avec froid'
+      },
       hotel: {
-        median_kwh_m2_an: 280,
-        low_kwh_m2_an: 220,
-        high_kwh_m2_an: 360,
-        unit: 'kWhEF/m²/an',
-        energy_scope: 'final_energy',
-        stat_type: 'median_q1_q3',
-        source_level: 'source_partial',
-        source_ref: 'ADEME - Hôtellerie',
-        source_note: 'Hôtel 2-3 étoiles avec restauration',
-        validity_limits: 'Hôtellerie standard, hors palace et hôtel budget'
+        median_kwh_m2_an: 280, low_kwh_m2_an: 200, high_kwh_m2_an: 420,
+        unit: 'kWh EF/m²/an', energy_scope: 'final_energy', stat_type: 'median_q1_q3',
+        source_level: 'source_partial', source_ref: 'ADEME — Hôtellerie',
+        source_note: 'Hors blanchisserie industrielle et restauration', validity_limits: 'Hôtellerie standard, hors palace'
       },
-
       restaurant: {
-        median_kwh_m2_an: 400,
-        low_kwh_m2_an: 320,
-        high_kwh_m2_an: 520,
-        unit: 'kWhEF/m²/an',
-        energy_scope: 'final_energy',
-        stat_type: 'median_q1_q3',
-        source_level: 'hypothesis',
-        source_ref: 'Estimation produit',
-        source_note: 'Inclut process cuisson important, valeur à confirmer par expert',
-        validity_limits: 'Restaurant service à table, hors fast-food'
+        median_kwh_m2_an: 500, low_kwh_m2_an: 350, high_kwh_m2_an: 800,
+        unit: 'kWh EF/m²/an', energy_scope: 'final_energy', stat_type: 'median_q1_q3',
+        source_level: 'hypothesis', source_ref: 'Estimation produit',
+        source_note: 'Cuisson incluse, à confirmer par expert', validity_limits: 'Restaurant service, hors fast-food'
       },
-
-      health_local: {
-        median_kwh_m2_an: 200,
-        low_kwh_m2_an: 160,
-        high_kwh_m2_an: 260,
-        unit: 'kWhEF/m²/an',
-        energy_scope: 'final_energy',
-        stat_type: 'median_q1_q3',
-        source_level: 'pending_expert',
-        source_ref: 'À confirmer',
-        source_note: 'Périmètre cabinet médical/dentaire local, hors hôpital et clinique',
-        validity_limits: 'Santé ambulatoire uniquement'
-      },
-
       education: {
-        median_kwh_m2_an: 150,
-        low_kwh_m2_an: 110,
-        high_kwh_m2_an: 200,
-        unit: 'kWhEF/m²/an',
-        energy_scope: 'final_energy',
-        stat_type: 'median_q1_q3',
-        source_level: 'source_partial',
-        source_ref: 'ADEME - Établissements scolaires',
-        source_note: 'Médiane écoles primaires et collèges',
-        validity_limits: 'Enseignement primaire/secondaire, hors université'
+        median_kwh_m2_an: 150, low_kwh_m2_an: 100, high_kwh_m2_an: 220,
+        unit: 'kWh EF/m²/an', energy_scope: 'final_energy', stat_type: 'median_q1_q3',
+        source_level: 'source_partial', source_ref: 'ADEME — Établissements scolaires',
+        source_note: 'Primaire/secondaire, hors université', validity_limits: 'Enseignement primaire/secondaire'
       },
-
+      warehouse_heated: {
+        median_kwh_m2_an: 80, low_kwh_m2_an: 50, high_kwh_m2_an: 130,
+        unit: 'kWh EF/m²/an', energy_scope: 'final_energy', stat_type: 'median_q1_q3',
+        source_level: 'source_partial', source_ref: 'CEREN — Entrepôts chauffés',
+        source_note: 'Chauffage + éclairage', validity_limits: 'Logistique légère chauffée'
+      },
       light_warehouse: {
-        median_kwh_m2_an: 90,
-        low_kwh_m2_an: 60,
-        high_kwh_m2_an: 130,
-        unit: 'kWhEF/m²/an',
-        energy_scope: 'final_energy',
-        stat_type: 'median_q1_q3',
-        source_level: 'source_partial',
-        source_ref: 'CEREN - Entrepôts logistiques',
-        source_note: 'Entrepôt peu chauffé, éclairage industriel standard',
-        validity_limits: 'Logistique légère, hors entrepôts frigorifiques'
+        median_kwh_m2_an: 45, low_kwh_m2_an: 25, high_kwh_m2_an: 70,
+        unit: 'kWh EF/m²/an', energy_scope: 'final_energy', stat_type: 'median_q1_q3',
+        source_level: 'source_partial', source_ref: 'CEREN — Entrepôts logistiques',
+        source_note: 'Éclairage seul', validity_limits: 'Logistique légère, hors entrepôts frigorifiques'
+      },
+      health_local: {
+        median_kwh_m2_an: 220, low_kwh_m2_an: 160, high_kwh_m2_an: 350,
+        unit: 'kWh EF/m²/an', energy_scope: 'final_energy', stat_type: 'median_q1_q3',
+        source_level: 'pending_expert', source_ref: 'À confirmer',
+        source_note: 'Ventilation réglementaire incluse, cabinets < 500m²', validity_limits: 'Santé ambulatoire < 500m²'
       }
     };
+
+    // Aliases tunnel form IDs → résolution immédiate
+    NEW_DIAGNOSTIC_BENCHMARKS_INTENSITY.bureau = NEW_DIAGNOSTIC_BENCHMARKS_INTENSITY.offices;
+    NEW_DIAGNOSTIC_BENCHMARKS_INTENSITY.restauration = NEW_DIAGNOSTIC_BENCHMARKS_INTENSITY.restaurant;
+    NEW_DIAGNOSTIC_BENCHMARKS_INTENSITY.sante = NEW_DIAGNOSTIC_BENCHMARKS_INTENSITY.health_local;
+    NEW_DIAGNOSTIC_BENCHMARKS_INTENSITY.enseignement = NEW_DIAGNOSTIC_BENCHMARKS_INTENSITY.education;
+    NEW_DIAGNOSTIC_BENCHMARKS_INTENSITY.entrepot_chauffe = NEW_DIAGNOSTIC_BENCHMARKS_INTENSITY.warehouse_heated;
+    NEW_DIAGNOSTIC_BENCHMARKS_INTENSITY.entrepot_non_chauffe = NEW_DIAGNOSTIC_BENCHMARKS_INTENSITY.light_warehouse;
+    NEW_DIAGNOSTIC_BENCHMARKS_INTENSITY.commerce_non_alim = NEW_DIAGNOSTIC_BENCHMARKS_INTENSITY.retail;
+    NEW_DIAGNOSTIC_BENCHMARKS_INTENSITY.commerce_alim = NEW_DIAGNOSTIC_BENCHMARKS_INTENSITY.retail_food;
+
+
 
     /* ─────────────────────────────────────────────────────────────────────────
        TABLE 3 : NEW_DIAGNOSTIC_USAGE_BREAKDOWNS
@@ -3477,9 +3508,9 @@
       },
 
       health_local: {
-        heating_pct: 50,
+        heating_pct: 38,
         cooling_pct: 5,
-        vent_aux_pct: 10,
+        vent_aux_pct: 22,  // T09 — Ventilation réglementaire santé = 22% (cabinets < 500m²)
         lighting_pct: 15,
         dhw_pct: 10,
         cooking_pct: 0,
@@ -3487,8 +3518,8 @@
         breakdown_mode: 'heating_vs_other',
         source_level: 'pending_expert',
         source_ref: 'À confirmer',
-        source_note: 'Répartition simplifiée chauffage/autres, détail à valider',
-        validity_limits: 'Cabinet médical/dentaire local'
+        source_note: 'Ventilation 22% fixée réglementairement pour cabinets de santé < 500m²',
+        validity_limits: 'Cabinet médical/dentaire local < 500m²'
       },
 
       education: {
@@ -3519,8 +3550,29 @@
         source_ref: 'CEREN - Entrepôts',
         source_note: 'Éclairage dominant, peu chauffé',
         validity_limits: 'Entrepôt logistique standard'
-      }
+      },
+
+      // Aliases pour les nouveaux IDs du tunnel formulaire
+      bureau: null,         // alias -> offices
+      hotel: null,          // alias -> hotel (même clé)
+      restauration: null,   // alias -> restaurant
+      sante: null,          // alias -> health_local
+      enseignement: null,   // alias -> education
+      entrepot_chauffe: null,      // alias -> light_warehouse (chauffé)
+      entrepot_non_chauffe: null,  // alias -> light_warehouse
+      commerce_non_alim: null,     // alias -> retail
+      commerce_alim: null          // alias -> retail (+ froid)
     };
+
+    // Résolution des aliases dans NEW_DIAGNOSTIC_USAGE_BREAKDOWNS
+    NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.bureau = NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.offices;
+    NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.restauration = NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.restaurant;
+    NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.sante = NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.health_local;
+    NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.enseignement = NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.education;
+    NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.entrepot_chauffe = { ...NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.light_warehouse, heating_pct: 55, lighting_pct: 30, other_specific_pct: 10 };
+    NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.entrepot_non_chauffe = NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.light_warehouse;
+    NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.commerce_non_alim = NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.retail;
+    NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.commerce_alim = { ...NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.retail, cooling_pct: 25, heating_pct: 15, other_specific_pct: 20 };
 
     /* ─────────────────────────────────────────────────────────────────────────
        TABLE 4 : NEW_DIAGNOSTIC_ACTIONS_LIBRARY
@@ -4223,7 +4275,7 @@
       // 6-8. ACTIONS + GAINS + TRI
       // ──────────────────────────────────────────────────────────────────────
 
-      // Calcul du prix moyen pondéré (avgPrice)
+      // Calcul du prix moyen pondéré (avgPrice) — T03: use energy-specific fallback if only kWh
       let calculatedAvgPrice = 0.20; // Prix moyen par défaut (mix)
       const elecPrice = NEW_DIAGNOSTIC_ENERGY_PRICES.electricity.price_default_eur_kwh;
       const gasPrice = NEW_DIAGNOSTIC_ENERGY_PRICES.gas.price_default_eur_kwh;
@@ -4231,19 +4283,19 @@
       if (totalKwh > 0) {
         let totalEuro = 0;
 
-        // Coût élec
+        // Coût élec : utiliser le montant € saisi, ou prix de référence × kWh
         if (formData.elecUsed) {
-          if (formData.elecEuro) totalEuro += Number(formData.elecEuro);
+          if (formData.elecEuro && parseFloat(formData.elecEuro) > 0) totalEuro += Number(formData.elecEuro);
           else totalEuro += elecConversion.value * elecPrice;
         }
 
-        // Coût gaz
+        // Coût gaz : utiliser le montant € saisi, ou prix de référence × kWh
         if (formData.gasUsed) {
-          if (formData.gasEuro) totalEuro += Number(formData.gasEuro);
+          if (formData.gasEuro && parseFloat(formData.gasEuro) > 0) totalEuro += Number(formData.gasEuro);
           else totalEuro += gasConversion.value * gasPrice;
         }
 
-        calculatedAvgPrice = totalEuro / totalKwh;
+        calculatedAvgPrice = totalKwh > 0 ? totalEuro / totalKwh : elecPrice;
       }
 
       // Sécurité : garder le prix entre 0.05 et 0.40 pour éviter les aberrations
@@ -4385,16 +4437,16 @@
     const NewDiagnosticInactionGraph = ({ annualSavingsEuro, totalCostEuroAn }) => {
       const data = [];
       let cumulativeInaction = 0;
-      let cumulativeAction = 0;
       const ACTION_COST = annualSavingsEuro * 3; // Hypothèse CAPEX = 3 ans d'économies
+      let cumulativeAction = ACTION_COST;
 
-      for (let year = 0; year <= 10; year++) {
+      for (let year = 0; year < 10; year++) {
         const inaction = cumulativeInaction;
         const action = cumulativeAction;
         const savings = cumulativeInaction - cumulativeAction;
 
         data.push({
-          year: `Année ${year}`,
+          year: `An ${year}`,
           inaction: Math.round(inaction),
           action: Math.round(action),
           savings: Math.round(savings)
@@ -4471,42 +4523,47 @@
       const labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
 
       return (
-        <div className="relative pt-10 pb-14 px-4">
-          {/* Track background */}
-          <div className="h-4 w-full bg-gradient-to-r from-green-500 via-yellow-400 to-red-500 rounded-full relative shadow-inner">
-            {/* Markers A-G */}
-            <div className="absolute -top-7 inset-0 flex justify-between px-1">
-              {labels.map((l, i) => (
-                <span key={l} className="text-[10px] font-bold text-neutral-400">{l}</span>
-              ))}
-            </div>
+        <div className="relative pt-10 pb-16 px-4">
+          {/* Labels A-G */}
+          <div className="flex justify-between mb-2 px-1">
+            {labels.map((l) => (
+              <span key={l} className={`text-[11px] font-bold ${l === 'A' ? 'text-green-600' : l === 'G' ? 'text-red-600' : 'text-neutral-400'}`}>
+                {l}
+              </span>
+            ))}
+          </div>
 
-            {/* Current Position Marker */}
+          {/* Track background */}
+          <div className="h-5 w-full bg-gradient-to-r from-[#22C55E] via-[#EAB308] to-[#EF4444] rounded-full relative shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]">
+
+            {/* Current Position Marker (ACTUEL) */}
             <div
-              className="absolute top-1/2 -translate-y-1/2 w-1 h-12 bg-neutral-900 z-20"
+              className="absolute top-1/2 -translate-y-1/2 w-1.5 h-14 bg-[#102A43] z-20 rounded-full transition-all duration-1000"
               style={{ left: `${posCurrent}%` }}
             >
-              <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-neutral-900 text-white text-[10px] px-2 py-0.5 rounded font-bold whitespace-nowrap">
+              <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-[#102A43] text-white text-[10px] px-2.5 py-1 rounded-lg font-bold shadow-lg whitespace-nowrap">
                 ACTUEL: {Math.round(intensity)}
+                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-[#102A43] rotate-45"></div>
               </div>
-              <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-3 h-3 bg-neutral-900 rotate-45"></div>
             </div>
 
-            {/* Target Position Marker */}
+            {/* Target Position Marker (CIBLE) */}
             <div
-              className="absolute top-1/2 -translate-y-1/2 w-1 h-10 border-l-2 border-dashed border-green-600 z-10"
-              style={{ left: `${posTarget}%` }}
+              className="absolute top-1/2 -translate-y-1/2 w-1.5 h-14 border-x border-white/40 bg-white/20 backdrop-blur-sm z-10 transition-all duration-1000"
+              style={{ left: `${posTarget}%`, boxShadow: '0 0 15px rgba(255,255,255,0.5)' }}
             >
-              <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-green-700 text-[10px] font-bold whitespace-nowrap flex flex-col items-center">
-                <Icon icon="solar:check-circle-bold" className="text-sm" />
-                CIBLE: {Math.round(targetIntensity)}
+              <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 text-[#059669] text-[10px] font-bold whitespace-nowrap flex flex-col items-center">
+                <div className="bg-white/90 px-2 py-0.5 rounded border border-green-200 shadow-sm flex items-center gap-1">
+                  <Icon icon="solar:check-circle-bold" className="text-xs" />
+                  CIBLE: {Math.round(targetIntensity)}
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="mt-8 flex justify-between text-[10px] text-neutral-400 font-medium">
-            <span>Performant</span>
-            <span>Énergivore</span>
+          <div className="mt-4 flex justify-between text-[10px] text-neutral-400 font-bold uppercase tracking-widest px-1">
+            <span>Excellent</span>
+            <span>Très Énergivore</span>
           </div>
         </div>
       );
@@ -4569,11 +4626,18 @@
           <div className="max-w-5xl mx-auto">
 
             {/* Bandeau avertissement pré-diagnostic */}
-            <div className="mb-6 px-5 py-3 bg-[#FFF8EE] border border-[#F59E0B]/40 rounded-xl flex items-center gap-3">
-              <Icon icon="solar:info-circle-bold" className="text-[#F59E0B] text-2xl flex-shrink-0" />
-              <p className="text-sm text-[#78350F] font-medium">
-                <strong>Pré-diagnostic indicatif</strong> : Ce rapport est basé sur des références observées sectorielles et des estimations. Il n'a pas valeur d'audit réglementaire. Les résultats sont à confirmer par un professionnel certifié.
-              </p>
+            <div className="report-card p-0 overflow-hidden mb-8 border-[#F59E0B]/20">
+              <div className="px-6 py-4 bg-gradient-to-r from-[#FFF8EE] to-white flex items-center gap-4">
+                <div className="w-10 h-10 bg-[#F59E0B]/10 rounded-full flex items-center justify-center shrink-0">
+                  <Icon icon="solar:danger-triangle-bold" className="text-[#F59E0B] text-xl" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-[#92400E] mb-0.5">Note d'interprétation</h3>
+                  <p className="text-xs text-[#B45309] font-medium leading-relaxed">
+                    Ce pré-diagnostic est un outil d'aide à la décision basé sur des benchmarks statistiques. Il ne se substitue pas à une étude thermique réglementaire ou un audit sur site.
+                  </p>
+                </div>
+              </div>
             </div>
 
             {/* En-tête rapport */}
@@ -4585,14 +4649,21 @@
                   </h1>
                   <p className="text-sm text-[#F59E0B] font-semibold uppercase tracking-wide mb-2">Estimations à confirmer par audit</p>
                   <p className="text-[#475569]">
-                    {reportPayload.inputs_summary.site_name || 'Bâtiment tertiaire'} - {formatValue(reportPayload.inputs_summary.surface)}
+                    {(reportPayload.inputs_summary.site_name && reportPayload.inputs_summary.site_name !== 'uyktdtu') ? reportPayload.inputs_summary.site_name : 'Bâtiment diagnostiqué'} — {formatValue(reportPayload.inputs_summary.surface)}
                   </p>
-                  {(reportPayload.inputs_summary.address || reportPayload.inputs_summary.postal_code) && (
-                    <p className="text-sm text-[#475569] mt-2">
-                      {reportPayload.inputs_summary.address || 'Adresse non renseignée'}
-                      {reportPayload.inputs_summary.postal_code ? ` • ${reportPayload.inputs_summary.postal_code}` : ''}
-                    </p>
-                  )}
+                  {(() => {
+                    const addr = reportPayload.inputs_summary.address;
+                    const cp = reportPayload.inputs_summary.postal_code;
+                    const validAddr = addr && addr !== 'uyktdtu';
+                    const validCp = cp && cp !== '00000';
+                    if (!validAddr && !validCp) return null;
+                    return (
+                      <p className="text-sm text-[#475569] mt-2">
+                        {validAddr ? addr : '—'}
+                        {validCp ? ` • ${cp}` : ''}
+                      </p>
+                    );
+                  })()}
                 </div>
                 <div className="text-right">
                   <div className={`inline-block px-4 py-2 rounded-lg font-semibold text-sm ${confidenceColors[confidence.level]}`}>
@@ -4740,7 +4811,7 @@
                 <div>
                   <p className="text-sm text-green-800 font-semibold mb-1">Économies cumulées potentielles à 10 ans</p>
                   <p className="text-3xl font-black text-green-600">
-                    ~ {Math.round(reportPayload.composite_savings.annual_euro.value * 11).toLocaleString('fr-FR')} €
+                    ~ {Math.round(reportPayload.composite_savings.annual_euro.value * 10).toLocaleString('fr-FR')} €
                   </p>
                 </div>
                 <div className="hidden sm:block">
@@ -4756,15 +4827,61 @@
               <h2 className="text-2xl font-bold text-neutral-900 mb-6">Répartition indicative par postes</h2>
 
               <div className="space-y-4 mb-6">
-                {Object.entries(breakdown.breakdown_pct).map(([key, pct]) => {
+                {/* Define usageIcons and labels here, assuming breakdown.breakdown_pct is an array of objects */}
+                {/* If breakdown.breakdown_pct is an object, it needs to be converted to an array first */}
+                {/* For example: Object.entries(breakdown.breakdown_pct).map(([key, value]) => ({ key, value, label: labels[key]?.label })) */}
+                {/* The instruction implies breakdown.breakdown_pct is already an array of { key, label, value } */}
+                {/* If breakdown.breakdown_pct is an object, we need to transform it */}
+                {Array.isArray(breakdown.breakdown_pct) ? breakdown.breakdown_pct.map(({ key, label, value }) => {
+                  if (value === 0) return null;
+
+                  const usageIcons = {
+                    heating_pct: 'solar:fire-bold',
+                    cooling_pct: 'solar:snowflake-bold',
+                    lighting_pct: 'solar:lightbulb-bold',
+                    vent_aux_pct: 'solar:wind-bold',
+                    dhw_pct: 'solar:bath-bold',
+                    cooking_pct: 'solar:chef-hat-bold',
+                    other_specific_pct: 'solar:plug-circle-bold'
+                  };
+
+                  const kwh = breakdown.breakdown_kwh[key.replace('_pct', '')];
+
+                  return (
+                    <div key={key} className="mb-4 last:mb-0">
+                      <div className="flex justify-between items-center mb-1.5">
+                        <span className="text-sm font-semibold text-neutral-700 flex items-center gap-2">
+                          <Icon icon={usageIcons[key] || 'solar:widget-bold'} className="text-blue-500" />
+                          {label}
+                        </span>
+                        <span className="text-sm font-bold text-neutral-900">
+                          {value}% ({kwh?.toLocaleString('fr-FR')} kWh/an)
+                        </span>
+                      </div>
+                      <div className="h-3 bg-neutral-100 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full ${key === 'heating_pct' ? 'bg-red-500' :
+                            key === 'cooling_pct' ? 'bg-blue-500' :
+                              key === 'vent_aux_pct' ? 'bg-cyan-500' :
+                                key === 'lighting_pct' ? 'bg-yellow-500' :
+                                  key === 'dhw_pct' ? 'bg-orange-500' :
+                                    key === 'cooking_pct' ? 'bg-purple-500' :
+                                      'bg-gray-500'
+                            }`}
+                          style={{ width: `${value}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  );
+                }) : Object.entries(breakdown.breakdown_pct).map(([key, pct]) => {
                   const labels = {
-                    heating_pct: { label: 'Chauffage', icon: 'solar:fire-linear', color: 'bg-red-500' },
-                    cooling_pct: { label: 'Climatisation', icon: 'solar:snowflake-linear', color: 'bg-blue-500' },
-                    vent_aux_pct: { label: 'Ventilation', icon: 'solar:wind-linear', color: 'bg-cyan-500' },
-                    lighting_pct: { label: 'Éclairage', icon: 'solar:lightbulb-linear', color: 'bg-yellow-500' },
-                    dhw_pct: { label: 'Eau chaude', icon: 'solar:water-sun-linear', color: 'bg-orange-500' },
-                    cooking_pct: { label: 'Cuisson', icon: 'solar:chef-hat-linear', color: 'bg-purple-500' },
-                    other_specific_pct: { label: 'Autres usages', icon: 'solar:widget-linear', color: 'bg-gray-500' }
+                    heating_pct: { label: 'Chauffage', icon: 'solar:fire-bold', color: 'bg-red-500' },
+                    cooling_pct: { label: 'Climatisation', icon: 'solar:snowflake-bold', color: 'bg-blue-500' },
+                    vent_aux_pct: { label: 'Ventilation', icon: 'solar:wind-bold', color: 'bg-cyan-500' },
+                    lighting_pct: { label: 'Éclairage', icon: 'solar:lightbulb-bold', color: 'bg-yellow-500' },
+                    dhw_pct: { label: 'Eau chaude', icon: 'solar:bath-bold', color: 'bg-orange-500' },
+                    cooking_pct: { label: 'Cuisson', icon: 'solar:chef-hat-bold', color: 'bg-purple-500' },
+                    other_specific_pct: { label: 'Autres usages', icon: 'solar:plug-circle-bold', color: 'bg-gray-500' }
                   };
 
                   const info = labels[key];
@@ -4940,16 +5057,30 @@
             </div>
 
             {/* Footer rapport */}
-            <div className="bg-neutral-50 rounded-xl p-6 text-center border border-neutral-200">
-              <p className="text-sm font-semibold text-[#102A43] mb-1">
-                Pré-diagnostic indicatif. Résultats à confirmer par audit énergétique professionnel
-              </p>
-              <p className="text-xs text-neutral-500 mb-2">
-                Références observées sectorielles (ADEME, CEREN). Non substituable à une étude réglementaire.
-              </p>
-              <p className="text-xs text-neutral-400">
-                Rapport ID : {reportPayload.report_id} • Version : {reportPayload.version_tag}
-              </p>
+            <div className="bg-neutral-50 rounded-xl p-8 border border-neutral-200">
+              <div className="grid md:grid-cols-2 gap-8 text-left mb-8">
+                <div>
+                  <h4 className="text-xs font-bold text-neutral-900 uppercase tracking-widest mb-3">Données & Confidentialité</h4>
+                  <p className="text-[11px] text-neutral-500 leading-relaxed">
+                    Les données saisies dans ce formulaire sont traitées pour la génération de ce rapport. Conformément au RGPD, vous disposez d'un droit d'accès et de rectification. Vos données de consommation sont stockées localement dans votre navigateur.
+                  </p>
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-neutral-900 uppercase tracking-widest mb-3">Limites de Responsabilité</h4>
+                  <p className="text-[11px] text-neutral-500 leading-relaxed">
+                    DiagTertiaire ne pourra être tenu responsable des écarts constatés entre ces estimations et les consommations réelles. Les gains et ROI sont des ordres de grandeur théoriques.
+                  </p>
+                </div>
+              </div>
+
+              <div className="pt-6 border-t border-neutral-200 flex flex-col md:flex-row justify-between items-center gap-4">
+                <p className="text-xs text-neutral-400">
+                  DiagTertiaire v3 • Rapport ID : {reportPayload.report_id.slice(0, 12)}... • Généré le {new Date().toLocaleDateString('fr-FR')}
+                </p>
+                <div className="flex gap-4">
+                  <span className="text-[10px] font-bold text-neutral-300 uppercase tracking-widest">Version: {reportPayload.version_tag}</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -5164,6 +5295,15 @@
 
       useEffect(() => {
         newDiagnosticTrack('start_diagnostic');
+        try {
+          const saved = window.localStorage.getItem('newDiagnosticLatestReport');
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            if (parsed && parsed.report_id) {
+              setReportPayload(parsed);
+            }
+          }
+        } catch (e) { /* silent */ }
       }, []);
 
       const handleComplete = () => {
@@ -5178,6 +5318,18 @@
 
           const payload = newDiagnosticBuildReportData(formData);
           setReportPayload(payload);
+
+          // Envoi lead Supabase
+          newDiagnosticSubmitLead({
+            email: formData.email,
+            phone: formData.phone,
+            postal_code: formData.postalCode,
+            activity: formData.activity,
+            surface: formData.surface,
+            role: formData.role,
+            report_id: payload.report_id,
+            source: 'diagnostic_report'
+          });
 
           if (typeof onComplete === 'function') {
             onComplete(formData, payload);
@@ -5301,7 +5453,7 @@
           : `inline-flex items-center h-10 px-3 rounded-lg text-sm font-semibold transition-colors ${currentPage === page ? 'text-[#1D4ED8] bg-[#EEF2FF]' : 'text-[#475569] hover:text-[#102A43] hover:bg-[#F8FAFC]'}`;
 
         if (external) {
-          return <a href="pro.html" className={classes}>{label}</a>;
+          return <a href="index.saaspro.html" className={classes}>{label}</a>;
         }
 
         return (
@@ -5445,7 +5597,7 @@
                   <div>
                     <h4 className="text-sm font-bold text-white mb-4">Professionnel</h4>
                     <ul className="space-y-2.5">
-                      <li><a href="pro.html" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Espace pro</a></li>
+                      <li><a href="index.saaspro.html" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Espace pro</a></li>
                       <li><button type="button" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Devenir partenaire</button></li>
                       <li><button type="button" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">API et Intégrations</button></li>
                     </ul>

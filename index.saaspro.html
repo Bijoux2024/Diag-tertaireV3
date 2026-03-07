@@ -22,7 +22,8 @@
 
         body {
             font-family: 'Inter', system-ui, sans-serif;
-            background: #F1F5F9; border-top: 1px solid #E2E8F0;
+            background: #F1F5F9;
+            border-top: 1px solid #E2E8F0;
             color: #0F172A;
             -webkit-font-smoothing: antialiased;
             margin: 0;
@@ -99,7 +100,8 @@
         }
 
         .nav-item:hover {
-            background: #F1F5F9; border-top: 1px solid #E2E8F0;
+            background: #F1F5F9;
+            border-top: 1px solid #E2E8F0;
             color: #0F172A;
         }
 
@@ -150,7 +152,8 @@
         }
 
         .pro-btn-secondary:not(:disabled):hover {
-            background: #F1F5F9; border-top: 1px solid #E2E8F0;
+            background: #F1F5F9;
+            border-top: 1px solid #E2E8F0;
             border-color: #CBD5E1;
         }
 
@@ -250,20 +253,26 @@
         }
 
         .status-clos {
-            background: #F1F5F9; border-top: 1px solid #E2E8F0;
+            background: #F1F5F9;
+            border-top: 1px solid #E2E8F0;
             color: #64748B;
         }
 
         /* ===== INPUTS & CARDS ===== */
-        .kpi-card { 
+        .kpi-card {
             background: white;
             border-radius: 16px;
             padding: 1.5rem;
             border: 1px solid #E2E8F0;
             box-shadow: 0 4px 20px rgba(15, 23, 42, 0.03);
             transition: transform 0.2s, box-shadow 0.2s;
-         }
-    .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06), 0 4px 10px rgba(15, 23, 42, 0.03); border-color: #CBD5E1; }
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06), 0 4px 10px rgba(15, 23, 42, 0.03);
+            border-color: #CBD5E1;
+        }
 
         .kpi-card:hover {
             transform: translateY(-2px);
@@ -309,7 +318,8 @@
             font-weight: 700;
             padding: 12px 16px;
             border-bottom: 1px solid #E2E8F0;
-            background: #F1F5F9; border-top: 1px solid #E2E8F0;
+            background: #F1F5F9;
+            border-top: 1px solid #E2E8F0;
             text-align: left;
         }
 
@@ -325,7 +335,8 @@
         }
 
         .pro-table tbody tr:hover {
-            background: #F1F5F9; border-top: 1px solid #E2E8F0;
+            background: #F1F5F9;
+            border-top: 1px solid #E2E8F0;
         }
 
         /* ===== MODALS ===== */
@@ -363,7 +374,8 @@
             width: 56px;
             height: 56px;
             border-radius: 50%;
-            background: #0B162C; border-right: 1px solid #1E293B;
+            background: #0B162C;
+            border-right: 1px solid #1E293B;
             color: white;
             border: none;
             cursor: pointer;
@@ -450,7 +462,8 @@
 
         .step-option:hover {
             border-color: #94A3B8;
-            background: #F1F5F9; border-top: 1px solid #E2E8F0;
+            background: #F1F5F9;
+            border-top: 1px solid #E2E8F0;
         }
 
         .step-option.selected {
@@ -510,15 +523,15 @@
            ═══════════════════════════════════════════════════════════════════════════ */
         const ENGINE_PRO = {
             benchmarks: {
-                "Bureau": { q1: 66, med: 104, q3: 154 },
-                "Hôtel": { q1: 114, med: 151, q3: 200 },
-                "Restauration": { q1: 155, med: 307, q3: 562 },
-                "Santé": { q1: 77, med: 113, q3: 173 },
-                "Enseignement": { q1: 82, med: 105, q3: 131 },
-                "Entrepôt-Chauffé": { q1: 29, med: 61, q3: 131 },
-                "Entrepôt-NonChauffé": { q1: 15, med: 30, q3: 65 }, // Fallback
-                "Commerce_Froid": { q1: 152, med: 363, q3: 649 },
-                "Commerce_SansFroid": { q1: 93, med: 142, q3: 210 },
+                "Bureau": { q1: 120, med: 180, q3: 280, unit: 'kWh EF/m²/an', scope: 'Tous usages, hors process IT' },
+                "Hôtel": { q1: 200, med: 280, q3: 420, unit: 'kWh EF/m²/an', scope: 'Hors blanchisserie industrielle, hors restauration' },
+                "Restauration": { q1: 350, med: 500, q3: 800, unit: 'kWh EF/m²/an', scope: 'Cuisson incluse' },
+                "Santé": { q1: 160, med: 220, q3: 350, unit: 'kWh EF/m²/an', scope: 'Ventilation réglementaire incluse, cabinets < 500m²' },
+                "Enseignement": { q1: 100, med: 150, q3: 220, unit: 'kWh EF/m²/an', scope: 'Primaire/secondaire, hors université' },
+                "Entrepôt-Chauffé": { q1: 50, med: 80, q3: 130, unit: 'kWh EF/m²/an', scope: 'Chauffage + éclairage' },
+                "Entrepôt-NonChauffé": { q1: 25, med: 45, q3: 70, unit: 'kWh EF/m²/an', scope: 'Éclairage seul' },
+                "Commerce_Froid": { q1: 450, med: 650, q3: 900, unit: 'kWh EF/m²/an', scope: 'Avec froid intégré' },
+                "Commerce_SansFroid": { q1: 200, med: 320, q3: 500, unit: 'kWh EF/m²/an', scope: 'Hors froid commercial' },
                 "Autre": { q1: 100, med: 150, q3: 250 }
             },
             prices: {
@@ -539,16 +552,26 @@
             ],
 
             compute: function (data) {
-                // Mappages depuis les IDs du form gratuit (offices, retail, etc.) ou form PRO (Bureau, Commerce, etc.)
+                // Mappages depuis les IDs du form (gratuit + PRO)
                 let actMapping = {
+                    // Nouveaux IDs tunnel formulaire
+                    'bureau': 'Bureau',
+                    'hotel': 'Hôtel',
+                    'restauration': 'Restauration',
+                    'sante': 'Santé',
+                    'enseignement': 'Enseignement',
+                    'entrepot_chauffe': 'Entrepôt-Chauffé',
+                    'entrepot_non_chauffe': 'Entrepôt-NonChauffé',
+                    'commerce_non_alim': 'Commerce_SansFroid',
+                    'commerce_alim': 'Commerce_Froid',
+                    // Anciens IDs compatibilité
                     'offices': 'Bureau',
                     'retail': 'Commerce_SansFroid',
-                    'hotel': 'Hôtel',
                     'restaurant': 'Restauration',
                     'health_local': 'Santé',
                     'education': 'Enseignement',
                     'light_warehouse': 'Entrepôt-NonChauffé',
-                    'mixed': 'Bureau' // Simplifié si mixte
+                    'mixed': 'Bureau'
                 };
 
                 let activityKey = actMapping[data.activity] || data.activity;
@@ -589,14 +612,15 @@
 
                 const intensity = kwhTotal / area;
 
-                // Score OPERAT-like
+                // Score ratio vs médiane (A-E)
+                const ratio = ref.med > 0 ? intensity / ref.med : 1;
                 let score = "C";
                 let positioning = "Dans la médiane";
-                if (intensity <= ref.q1) { score = "A"; positioning = "Très performant (Top 25%)"; }
-                else if (intensity > ref.q1 && intensity <= ref.med * 0.9) { score = "B"; positioning = "Performant"; }
-                else if (intensity > ref.med * 0.9 && intensity <= ref.med * 1.1) { score = "C"; positioning = "Dans la médiane"; }
-                else if (intensity > ref.med * 1.1 && intensity <= ref.q3) { score = "D"; positioning = "Surconsommation (Q3)"; }
-                else { score = "E"; positioning = "Très énergivore (Bottom 25%)"; }
+                if (ratio < 0.6) { score = "A"; positioning = "Très performant (Top 25%)"; }
+                else if (ratio < 0.9) { score = "B"; positioning = "Performant"; }
+                else if (ratio < 1.2) { score = "C"; positioning = "Dans la médiane"; }
+                else if (ratio < 1.7) { score = "D"; positioning = "Surconsommation notable"; }
+                else { score = "E"; positioning = "Très énergivore"; }
 
                 // Sélection des actions pro
                 let actionPool = [...this.actions];
@@ -654,7 +678,7 @@
                     };
                 });
 
-                const billSub = parseFloat(data.elecSubscriptionYearly) || 0 + parseFloat(data.gasSubscriptionYearly) || 0;
+                const billSub = (parseFloat(data.elecSubscriptionYearly) || 0) + (parseFloat(data.gasSubscriptionYearly) || 0);
 
                 return {
                     kwhTotal: Math.round(kwhTotal),
@@ -718,7 +742,7 @@
                 providerQuestions: ["Quel poste explique l'essentiel du gain annoncé ?", "Le gain porte-t-il sur le total ou sur un poste précis ?", "Quelles hypothèses d'occupation avez-vous retenues ?", "Le chiffrage inclut-il fourniture, pose et mise en service ?", "Qu'est-ce qui est exclu de votre périmètre ?"]
             };
         }
-const proCasesRaw = [
+        const proCasesRaw = [
             { id: "P-1001", clientName: "Cabinet Nova Conseil", city: "Lyon", postalCode: "69003", activity: "Bureau", surfaceLabel: "220 m²", score: "C", reliability: "élevé", attention: "faible", status: "nouveau", annualEnergyCostLabel: "7 200 EUR / an", annualSavingsLabel: "1 400 à 2 400 EUR / an", summary: "Niveau de performance correct mais améliorable sur le pilotage et les consignes." },
             { id: "P-1002", clientName: "Immo Centre 8e", city: "Marseille", postalCode: "13008", activity: "Services", surfaceLabel: "110 m²", score: "B", reliability: "moyen", attention: "faible", status: "à relancer", annualEnergyCostLabel: "5 800 EUR / an", annualSavingsLabel: "700 à 1 600 EUR / an", summary: "Site plutôt performant avec un gain modéré possible sur les réglages." },
             { id: "P-1003", clientName: "Boutique Rivoli Sélection", city: "Paris", postalCode: "75001", activity: "Commerce", surfaceLabel: "160 m²", score: "D", reliability: "moyen", attention: "modéré", status: "nouveau", annualEnergyCostLabel: "11 500 EUR / an", annualSavingsLabel: "1 800 à 3 800 EUR / an", summary: "Surconsommation probable avec un premier levier sur l'exploitation et l'éclairage." },
@@ -743,6 +767,64 @@ const proCasesRaw = [
         ];
         // Application du template
         const allCases = proCasesRaw.map(c => ({ ...c, ...getTemplateForCase(c) }));
+
+        /* ===== CAS FICTIFS V2 (3 dossiers riches — clé localStorage : proCasesRaw) ===== */
+        const MOCK_PRO_CASES_V2 = [
+            {
+                id: 'case_001', projectName: 'Boutique Rivoli Sélection', clientName: 'Rivoli Sélection SARL',
+                activity: 'Commerce', address: '12 rue de Rivoli, 75001 Paris',
+                status: 'completed', completionPercent: 100,
+                buildingArea: 600, annualConsumption: 73129, annualCost: 15500, intensityPerSqm: 122,
+                score: 'C', scoreConfidence: 'Moyen',
+                benchmark: { q1: 200, median: 320, q3: 500 },
+                estimatedSavingsPerYear: 6500, estimatedSavingsPercent: 42, totalCapex: 19500,
+                actions: [
+                    { name: 'Relamping LED complet', savingsEuro: 2265, capex: 15000, roi: 6.6, eligCEE: true },
+                    { name: 'Détection présence éclairage', savingsEuro: 850, capex: 3000, roi: 3.5, eligCEE: true },
+                    { name: 'Optimisation horaires chauffage', savingsEuro: 565, capex: 500, roi: 0.9, eligCEE: false }
+                ],
+                createdAt: '28/02/2026', lastUpdated: '05/03/2026', reportGeneratedAt: '05/03/2026',
+                contact: { name: 'Marthe Dupont', phone: '06 12 34 56 78', role: 'Directrice' }
+            },
+            {
+                id: 'case_002', projectName: 'Bureau Montparnasse Tech', clientName: 'Montparnasse Tech SAS',
+                activity: 'Bureau', address: '42 rue du Faubourg Montparnasse, 75014 Paris',
+                status: 'in-progress', completionPercent: 40,
+                buildingArea: 1200, annualConsumption: 140000, annualCost: 30000, intensityPerSqm: 117,
+                score: 'D', scoreConfidence: 'Moyen',
+                benchmark: { q1: 120, median: 180, q3: 280 },
+                estimatedSavingsPerYear: 22000, estimatedSavingsPercent: 48, totalCapex: 22500,
+                actions: [
+                    { name: 'Régulation chauffage central', savingsEuro: 12000, capex: 6000, roi: 0.5, eligCEE: true },
+                    { name: 'Ventilation hors occupation', savingsEuro: 7200, capex: 5000, roi: 0.7, eligCEE: true },
+                    { name: 'Relamping LED ciblé', savingsEuro: 2800, capex: 9000, roi: 3.2, eligCEE: false }
+                ],
+                createdAt: '04/03/2026', lastUpdated: '04/03/2026', reportGeneratedAt: null,
+                contact: { name: 'Jean Martin', phone: '06 98 76 54 32', role: 'Directeur' }
+            },
+            {
+                id: 'case_003', projectName: 'Hôtel Convention Paris', clientName: 'Convention Paris SARL',
+                activity: 'Hôtel', address: '89 avenue Jean Jaurès, 75019 Paris',
+                status: 'completed', completionPercent: 100,
+                buildingArea: 4500, annualConsumption: 540000, annualCost: 110000, intensityPerSqm: 120,
+                score: 'B', scoreConfidence: 'Fort',
+                benchmark: { q1: 200, median: 280, q3: 420 },
+                estimatedSavingsPerYear: 18000, estimatedSavingsPercent: 16, totalCapex: 85000,
+                actions: [
+                    { name: 'Calorifugeage ECS / réseaux', savingsEuro: 8000, capex: 15000, roi: 1.9, eligCEE: true },
+                    { name: 'Isolation opportuniste toiture', savingsEuro: 6500, capex: 60000, roi: 9.2, eligCEE: false },
+                    { name: 'Relamping LED complet', savingsEuro: 3500, capex: 10000, roi: 2.9, eligCEE: true }
+                ],
+                createdAt: '28/02/2026', lastUpdated: '01/03/2026', reportGeneratedAt: '01/03/2026',
+                contact: { name: 'Sophie Bresson', phone: '06 45 67 89 01', role: 'Directrice' }
+            }
+        ];
+
+        function initializeMockProCases() {
+            if (!localStorage.getItem('proCasesRaw')) {
+                localStorage.setItem('proCasesRaw', JSON.stringify(MOCK_PRO_CASES_V2));
+            }
+        }
 
         const planCards = [
             { key: "essentiel", title: "Essentiel", subtitle: "Pour démarrer rapidement sur un périmètre simple.", features: ["Génération illimitée de rapports", "Mise en page standardisée", "Téléchargement PDF intégré", "Idéal usage mono-site"], cta: "Être recontacté pour une démo" },
@@ -937,7 +1019,7 @@ const proCasesRaw = [
                                             <input type="text" className="pro-input" placeholder="Ex: Marie Dupont" required />
                                         </div>
                                         <div>
-                                            <label className="pro-label">Sociétà/ Cabinet</label>
+                                            <label className="pro-label">Société/ Cabinet</label>
                                             <input type="text" className="pro-input" placeholder="Ex: Nexity" required />
                                         </div>
                                     </div>
@@ -1111,34 +1193,110 @@ const proCasesRaw = [
         );
 
 
-        /* ===== DASHBOARD PRO V1 ===== */
-        const ProDashboard = ({ setPage, openDemo }) => {
-            const [cases, setCases] = useState(() => {
-                const saved = localStorage.getItem('proCases');
-                return saved ? JSON.parse(saved) : [];
-            });
-            const [searchQuery, setSearchQuery] = useState("");
-
-            const stats = {
-                total: cases.length,
-                scores: { A: 0, B: 0, C: 0, D: 0, E: 0 }
-            };
-            cases.forEach(c => { if (c.report && c.report.score && stats.scores[c.report.score] !== undefined) stats.scores[c.report.score]++; });
-
-            const filteredCases = cases.filter(c => {
-                if (searchQuery) {
-                    const q = searchQuery.toLowerCase();
-                    return c.clientName.toLowerCase().includes(q) || c.activity.toLowerCase().includes(q);
+        /* ===== PLANS & TARIFICATION ===== */
+        const ProPlans = ({ onDemoClick }) => {
+            const plans = [
+                {
+                    key: 'essentiel', title: 'Essentiel', price: '49', subtitle: 'Pour démarrer rapidement sur un périmètre simple.',
+                    features: ['3 diagnostics / mois', 'Dossiers illimités', 'Export PDF', 'Branding basique (couleur)', 'Support email'],
+                    cta: "S'abonner"
+                },
+                {
+                    key: 'equipe', title: 'Équipe', price: '149', subtitle: "L'offre idéale pour structurer et partager les dossiers.",
+                    features: ['Diagnostics illimités', 'Dossiers illimités', 'Export PDF + CSV', 'Branding complet (logo + couleurs)', '3 utilisateurs', 'Support prioritaire', 'API incluse'],
+                    cta: "S'abonner", featured: true
+                },
+                {
+                    key: 'reseau', title: 'Réseau', price: '399', subtitle: 'Pour standardiser la lecture de parcs à grande échelle.',
+                    features: ['Diagnostics illimités', 'White-label complet', 'Utilisateurs illimités', 'Dashboard équipe', 'API + Webhooks', 'Intégration CRM', 'Account Manager dédié'],
+                    cta: 'Nous contacter'
                 }
-                return true;
+            ];
+
+            return (
+                <div className="p-8 max-w-6xl mx-auto fade-in">
+                    <div className="mb-10 text-center">
+                        <h2 className="text-3xl font-bold text-slate-800 tracking-tight mb-3">Plans & Tarification</h2>
+                        <p className="text-slate-500 max-w-xl mx-auto">Choisissez la formule adaptée à votre volume et vos besoins de personnalisation.</p>
+                    </div>
+
+                    <div className="grid md:grid-cols-3 gap-6 mb-12">
+                        {plans.map(plan => (
+                            <div key={plan.key} className={`plan-card ${plan.featured ? 'featured' : ''}`}>
+                                {plan.featured && (
+                                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-[11px] font-bold uppercase tracking-wider py-1 px-4 rounded-full shadow-sm">
+                                        Recommandé
+                                    </div>
+                                )}
+                                <h4 className="text-xl font-extrabold text-slate-800 mb-1">{plan.title}</h4>
+                                <div className="mb-3 flex items-end gap-1">
+                                    <span className="text-4xl font-black text-slate-900">{plan.price}€</span>
+                                    <span className="text-slate-500 text-sm font-medium pb-1">/mois</span>
+                                </div>
+                                <p className="text-sm text-slate-500 mb-8 min-h-[40px]">{plan.subtitle}</p>
+                                <ul className="space-y-3 mb-8 flex-1">
+                                    {plan.features.map((feat, i) => (
+                                        <li key={i} className="flex items-start gap-3">
+                                            <Icon icon="solar:check-circle-bold" className={`mt-0.5 shrink-0 ${plan.featured ? 'text-blue-600' : 'text-slate-400'}`} style={{ fontSize: '18px' }} />
+                                            <span className="text-[14px] text-slate-700 font-medium leading-snug">{feat}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                                <button type="button" onClick={onDemoClick} className={`pro-btn w-full justify-center ${plan.featured ? 'pro-btn-primary' : 'pro-btn-secondary bg-slate-50'}`}>
+                                    {plan.cta}
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="bg-slate-50 rounded-2xl border border-slate-200 p-8">
+                        <h3 className="text-lg font-bold text-slate-800 mb-6">Questions fréquentes</h3>
+                        <div className="grid md:grid-cols-2 gap-6 text-sm">
+                            <div>
+                                <p className="font-bold text-slate-700 mb-1">Les diagnostics sont-ils limités sur Essentiel ?</p>
+                                <p className="text-slate-500">Oui, 3/mois. Les plans Équipe et Réseau sont illimités.</p>
+                            </div>
+                            <div>
+                                <p className="font-bold text-slate-700 mb-1">Peut-on changer de plan à tout moment ?</p>
+                                <p className="text-slate-500">Oui, les changements prennent effet au prochain cycle mensuel.</p>
+                            </div>
+                            <div>
+                                <p className="font-bold text-slate-700 mb-1">Le white-label est-il disponible sur Essentiel ?</p>
+                                <p className="text-slate-500">Un branding basique (couleur) est disponible. Le white-label complet est réservé aux plans Équipe et Réseau.</p>
+                            </div>
+                            <div>
+                                <p className="font-bold text-slate-700 mb-1">Où sont hébergées mes données ?</p>
+                                <p className="text-slate-500">En Europe (Vercel + Supabase EU), conformément au RGPD.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        /* ===== DASHBOARD PRO V2 (KPI + Timeline) ===== */
+        const ProDashboard = ({ setPage, openDemo }) => {
+            const [cases] = useState(() => {
+                try { return JSON.parse(localStorage.getItem('proCasesRaw') || '[]'); } catch { return MOCK_PRO_CASES_V2; }
             });
+
+            const totalSavings = cases.reduce((acc, c) => acc + (c.estimatedSavingsPerYear || 0), 0);
+            const completedCount = cases.filter(c => c.status === 'completed').length;
+            const completionRate = cases.length ? Math.round((completedCount / cases.length) * 100) : 0;
+            const scoreDistrib = { A: 0, B: 0, C: 0, D: 0, E: 0 };
+            cases.forEach(c => { if (scoreDistrib[c.score] !== undefined) scoreDistrib[c.score]++; });
+
+            const timeline = [
+                ...cases.filter(c => c.reportGeneratedAt).map(c => ({ date: c.reportGeneratedAt, label: `Rapport généré : ${c.projectName}`, icon: 'solar:document-text-bold' })),
+                ...cases.filter(c => c.status === 'in-progress').map(c => ({ date: c.lastUpdated, label: `En cours : ${c.projectName} (${c.completionPercent}%)`, icon: 'solar:refresh-circle-bold' }))
+            ].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
 
             return (
                 <div className="p-8 max-w-7xl mx-auto fade-in">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
                         <div>
-                            <h2 className="text-3xl font-bold text-slate-800 tracking-tight">Vue d'ensemble</h2>
-                            <p className="text-slate-500 mt-1">Supervisez l'état de votre parc et vos mandats en cours.</p>
+                            <h2 className="text-3xl font-bold text-slate-800 tracking-tight">Vue globale du parc</h2>
+                            <p className="text-slate-500 mt-1">Synthèse de votre activité diagnostics.</p>
                         </div>
                         <button type="button" onClick={() => setPage('new')} className="pro-btn pro-btn-primary shadow-lg shadow-blue-500/20">
                             <Icon icon="solar:add-square-bold" style={{ fontSize: '18px' }} />
@@ -1146,71 +1304,189 @@ const proCasesRaw = [
                         </button>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-                        <div className="kpi-card flex flex-col justify-between relative overflow-hidden bg-white">
-                            <div className="flex items-center gap-3 text-slate-600 font-semibold text-sm mb-4">
-                                <Icon icon="solar:folder-with-files-bold" className="text-blue-600 text-xl" />
-                                Total dossiers générés
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-10">
+                        <div className="kpi-card">
+                            <div className="flex items-center gap-2 text-slate-500 font-semibold text-sm mb-4">
+                                <Icon icon="solar:folder-with-files-bold" className="text-blue-600 text-xl" /> Total diagnostics
                             </div>
-                            <div className="text-4xl font-extrabold text-slate-900">{stats.total}</div>
+                            <div className="text-4xl font-extrabold text-slate-900">{cases.length}</div>
+                            <div className="text-xs text-slate-400 mt-2 font-medium">{completedCount} rapport{completedCount > 1 ? 's' : ''} généré{completedCount > 1 ? 's' : ''}</div>
                         </div>
-                        <div className="kpi-card flex flex-col justify-between col-span-2 relative overflow-hidden bg-white">
-                            <div className="flex items-center gap-3 text-slate-600 font-semibold text-sm mb-4">
-                                <Icon icon="solar:chart-square-bold" className="text-indigo-500 text-xl" />
-                                Répartition des scores
+                        <div className="kpi-card">
+                            <div className="flex items-center gap-2 text-slate-500 font-semibold text-sm mb-4">
+                                <Icon icon="solar:chart-square-bold" className="text-indigo-500 text-xl" /> Répartition scores
                             </div>
-                            <div className="flex gap-4">
-                                {Object.keys(stats.scores).map(s => (
+                            <div className="flex gap-3">
+                                {Object.keys(scoreDistrib).map(s => (
                                     <div key={s} className="flex flex-col items-center">
                                         <ScoreBadge score={s} />
-                                        <span className="text-sm font-bold text-slate-600 mt-1">{stats.scores[s]}</span>
+                                        <span className="text-sm font-bold text-slate-600 mt-1">{scoreDistrib[s]}</span>
                                     </div>
                                 ))}
                             </div>
                         </div>
+                        <div className="kpi-card">
+                            <div className="flex items-center gap-2 text-slate-500 font-semibold text-sm mb-4">
+                                <Icon icon="solar:wallet-bold" className="text-green-600 text-xl" /> Économies potentielles
+                            </div>
+                            <div className="text-3xl font-extrabold text-slate-900">{totalSavings.toLocaleString('fr-FR')} €</div>
+                            <div className="text-xs text-slate-400 mt-2 font-medium">estimées / an (tous dossiers)</div>
+                        </div>
+                        <div className="kpi-card">
+                            <div className="flex items-center gap-2 text-slate-500 font-semibold text-sm mb-4">
+                                <Icon icon="solar:check-circle-bold" className="text-emerald-600 text-xl" /> Taux de complétion
+                            </div>
+                            <div className="text-4xl font-extrabold text-slate-900">{completionRate}%</div>
+                            <div className="text-xs text-slate-400 mt-2 font-medium">{completedCount}/{cases.length} dossiers complétés</div>
+                        </div>
                     </div>
 
-                    <div className="bg-white rounded-2xl shadow-sm shadow-slate-200/40 border border-slate-200 overflow-hidden mb-12">
-                        <div className="p-6 border-b border-slate-100 flex flex-col md:flex-row gap-4 justify-between bg-slate-50/50">
-                            <div className="relative w-full md:w-80">
-                                <Icon icon="solar:magnifer-linear" className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                                <input type="text" placeholder="Rechercher un dossier..." className="pro-input pl-10 bg-white" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+                    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 mb-8">
+                        <h3 className="text-base font-bold text-slate-800 mb-6 flex items-center gap-2">
+                            <Icon icon="solar:history-bold" className="text-blue-600" /> Activité récente
+                        </h3>
+                        <div className="space-y-1">
+                            {timeline.map((item, i) => (
+                                <div key={i} className="timeline-line">
+                                    <div className="timeline-dot"><Icon icon={item.icon} style={{ fontSize: '11px' }} /></div>
+                                    <div className="font-semibold text-slate-800 text-sm leading-snug">{item.label}</div>
+                                    <div className="text-xs text-slate-400 mt-0.5">{item.date}</div>
+                                </div>
+                            ))}
+                            {timeline.length === 0 && <p className="text-slate-400 text-sm py-4 text-center">Aucune activité récente.</p>}
+                        </div>
+                    </div>
+
+                    <div className="text-center">
+                        <button type="button" onClick={() => setPage('cases')} className="pro-btn pro-btn-secondary">
+                            <Icon icon="solar:folder-with-files-bold" /> Voir tous les dossiers
+                        </button>
+                    </div>
+                </div>
+            );
+        };
+        /* ===== DOSSIERS CLIENTS (Table enrichie V2) ===== */
+        const ProCases = ({ setPage }) => {
+            const [cases, setCases] = useState(() => {
+                try { return JSON.parse(localStorage.getItem('proCasesRaw') || '[]'); } catch { return MOCK_PRO_CASES_V2; }
+            });
+            const [searchQuery, setSearchQuery] = useState('');
+            const [filterActivity, setFilterActivity] = useState('');
+
+            const activities = [...new Set(cases.map(c => c.activity))];
+            const filtered = cases.filter(c => {
+                const q = searchQuery.toLowerCase();
+                return (!q || c.projectName.toLowerCase().includes(q) || c.clientName.toLowerCase().includes(q))
+                    && (!filterActivity || c.activity === filterActivity);
+            });
+
+            const deleteCase = (id) => {
+                if (!window.confirm('Supprimer ce dossier définitivement ?')) return;
+                const updated = cases.filter(c => c.id !== id);
+                setCases(updated);
+                localStorage.setItem('proCasesRaw', JSON.stringify(updated));
+            };
+
+            const StatusCell = ({ c }) => {
+                if (c.status === 'completed') return (
+                    <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-green-50 text-green-700 text-xs font-bold">
+                        <Icon icon="solar:check-circle-bold" style={{ fontSize: '12px' }} /> Complété
+                    </span>
+                );
+                if (c.status === 'in-progress') return (
+                    <div>
+                        <div className="flex items-center gap-2 mb-1">
+                            <div className="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                                <div style={{ width: `${c.completionPercent}%`, height: '100%', background: '#1D4ED8', borderRadius: '3px' }}></div>
                             </div>
+                            <span className="text-xs font-bold text-slate-500">{c.completionPercent}%</span>
+                        </div>
+                        <span className="text-xs text-slate-400">Étape {Math.ceil(c.completionPercent / 25)}/4</span>
+                    </div>
+                );
+                return <span className="text-xs text-slate-400">En attente</span>;
+            };
+
+            return (
+                <div className="p-8 max-w-7xl mx-auto fade-in">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+                        <div>
+                            <h2 className="text-3xl font-bold text-slate-800 tracking-tight">Dossiers clients</h2>
+                            <p className="text-slate-500 mt-1">{cases.length} dossier{cases.length > 1 ? 's' : ''} dans votre espace</p>
+                        </div>
+                        <button type="button" onClick={() => setPage('new')} className="pro-btn pro-btn-primary shadow-lg shadow-blue-500/20">
+                            <Icon icon="solar:add-square-bold" style={{ fontSize: '18px' }} /> Nouveau diagnostic
+                        </button>
+                    </div>
+
+                    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div className="p-5 border-b border-slate-100 flex flex-col sm:flex-row gap-4 bg-slate-50/50">
+                            <div className="relative flex-1">
+                                <Icon icon="solar:magnifer-linear" className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                                <input type="text" placeholder="Rechercher un dossier..." className="pro-input pl-9 bg-white" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+                            </div>
+                            <select className="pro-input bg-white w-full sm:w-48" value={filterActivity} onChange={e => setFilterActivity(e.target.value)}>
+                                <option value="">Toutes activités</option>
+                                {activities.map(a => <option key={a} value={a}>{a}</option>)}
+                            </select>
                         </div>
 
                         <div className="overflow-x-auto">
-                            <table className="w-full pro-table min-w-[900px]">
+                            <table className="w-full pro-table min-w-[960px]">
                                 <thead>
                                     <tr>
-                                        <th style={{ width: '20%' }}>Date & ID</th>
-                                        <th style={{ width: '30%' }}>Client / Site</th>
-                                        <th style={{ width: '20%' }}>Activité & Surface</th>
-                                        <th style={{ width: '15%' }}>Score</th>
-                                        <th style={{ width: '15%', textAlign: 'right' }}>Actions</th>
+                                        <th>Projet / Client</th>
+                                        <th>Activité</th>
+                                        <th>Surface</th>
+                                        <th>Score</th>
+                                        <th>Consommation</th>
+                                        <th>Économies est.</th>
+                                        <th>Statut</th>
+                                        <th style={{ textAlign: 'right' }}>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {filteredCases.map(c => (
+                                    {filtered.map(c => (
                                         <tr key={c.id} className="group transition-colors">
                                             <td>
-                                                <div className="font-mono text-xs text-slate-500 font-medium">{c.id}</div>
-                                                <div className="text-xs text-slate-400 mt-0.5">{c.date}</div>
+                                                <div className="font-bold text-slate-800 leading-tight">{c.projectName}</div>
+                                                <div className="text-xs text-slate-400 mt-0.5">{c.clientName}</div>
                                             </td>
-                                            <td><div className="font-bold text-slate-800">{c.clientName}</div></td>
+                                            <td><span className="text-sm text-slate-600 font-medium">{c.activity}</span></td>
                                             <td>
-                                                <div className="font-medium text-slate-700">{c.activity}</div>
-                                                <div className="text-xs text-slate-400">{c.surface} m²</div>
+                                                <span className="font-semibold text-slate-700">{c.buildingArea.toLocaleString('fr-FR')}</span>
+                                                <span className="text-xs text-slate-400 ml-1">m²</span>
                                             </td>
-                                            <td><ScoreBadge score={c.report?.score || "C"} /></td>
+                                            <td><ScoreBadge score={c.score} /></td>
+                                            <td>
+                                                <div className="font-semibold text-slate-700">{c.annualConsumption.toLocaleString('fr-FR')} kWh</div>
+                                                <div className="text-xs text-slate-400">{c.intensityPerSqm} kWh/m²</div>
+                                            </td>
+                                            <td>
+                                                <div className="font-bold text-green-600">{c.estimatedSavingsPerYear.toLocaleString('fr-FR')} €/an</div>
+                                                <div className="text-xs text-slate-400">{c.estimatedSavingsPercent}% de réduction</div>
+                                            </td>
+                                            <td><StatusCell c={c} /></td>
                                             <td className="text-right">
-                                                <button type="button" onClick={() => setPage('report-' + c.id)} className="pro-btn pro-btn-secondary px-3 py-1.5 text-xs bg-white rounded-lg hover:border-blue-300 hover:text-blue-700">
-                                                    Ouvrir
-                                                </button>
+                                                <div className="flex items-center justify-end gap-2">
+                                                    {c.status === 'completed' ? (
+                                                        <button type="button" onClick={() => setPage('case-report-' + c.id)} className="pro-btn pro-btn-secondary px-3 py-1.5 text-xs hover:border-blue-300 hover:text-blue-700">
+                                                            <Icon icon="solar:document-text-bold" style={{ fontSize: '13px' }} /> Voir rapport
+                                                        </button>
+                                                    ) : (
+                                                        <button type="button" onClick={() => setPage('new')} className="pro-btn pro-btn-secondary px-3 py-1.5 text-xs hover:border-blue-300 hover:text-blue-700">
+                                                            <Icon icon="solar:refresh-circle-bold" style={{ fontSize: '13px' }} /> Continuer
+                                                        </button>
+                                                    )}
+                                                    <button type="button" onClick={() => deleteCase(c.id)} className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors">
+                                                        <Icon icon="solar:trash-bin-minimalistic-bold" style={{ fontSize: '14px' }} />
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}
-                                    {filteredCases.length === 0 && (
-                                        <tr><td colSpan="5" className="text-center py-12 text-slate-500">Aucun dossier trouvé. Créez un nouveau diagnostic pour commencer.</td></tr>
+                                    {filtered.length === 0 && (
+                                        <tr><td colSpan="8" className="text-center py-12 text-slate-400">Aucun dossier trouvé. Créez votre premier diagnostic.</td></tr>
                                     )}
                                 </tbody>
                             </table>
@@ -1219,6 +1495,109 @@ const proCasesRaw = [
                 </div>
             );
         };
+
+        /* ===== RAPPORT DOSSIER V2 (pour les 3 cas riches) ===== */
+        const ProCaseReport = ({ caseId, setPage }) => {
+            const [cases] = useState(() => {
+                try { return JSON.parse(localStorage.getItem('proCasesRaw') || '[]'); } catch { return MOCK_PRO_CASES_V2; }
+            });
+            const c = cases.find(x => x.id === caseId);
+            if (!c) return <div className="p-10 text-center text-red-500 font-bold fade-in">Dossier introuvable.</div>;
+
+            const kpis = [
+                { label: 'Consommation', value: c.annualConsumption.toLocaleString('fr-FR') + ' kWh/an', icon: 'solar:bolt-bold', color: 'text-blue-600' },
+                { label: 'Coût annuel', value: c.annualCost.toLocaleString('fr-FR') + ' €/an', icon: 'solar:wallet-bold', color: 'text-slate-600' },
+                { label: 'Économies estimées', value: c.estimatedSavingsPerYear.toLocaleString('fr-FR') + ' €/an', icon: 'solar:graph-up-bold', color: 'text-green-600' },
+                { label: 'Investissement total', value: c.totalCapex.toLocaleString('fr-FR') + ' €', icon: 'solar:money-bag-bold', color: 'text-indigo-600' }
+            ];
+
+            return (
+                <div className="pb-20 fade-in">
+                    <div className="bg-slate-900 pt-10 pb-20 px-4 md:px-8 relative overflow-hidden">
+                        <div className="max-w-5xl mx-auto relative z-10">
+                            <button type="button" onClick={() => setPage('cases')} className="text-blue-300 hover:text-white flex items-center gap-2 text-sm font-semibold mb-6 transition-colors group">
+                                <Icon icon="solar:alt-arrow-left-linear" className="group-hover:-translate-x-1 transition-transform" /> Retour aux dossiers
+                            </button>
+                            <h1 className="text-3xl md:text-4xl font-extrabold text-white mb-2 tracking-tight">{c.projectName}</h1>
+                            <div className="flex flex-wrap items-center gap-3 text-slate-300 text-sm font-medium mb-4">
+                                <span className="flex items-center gap-1.5"><Icon icon="solar:buildings-bold" /> {c.activity}</span>
+                                <span>·</span>
+                                <span className="flex items-center gap-1.5"><Icon icon="solar:maximize-square-2-bold" /> {c.buildingArea.toLocaleString('fr-FR')} m²</span>
+                                <span>·</span>
+                                <span className="flex items-center gap-1.5"><Icon icon="solar:map-point-bold" /> {c.address}</span>
+                            </div>
+                            <div className="flex items-center gap-4">
+                                <ScoreBadge score={c.score} size="lg" />
+                                <div className="text-slate-300 text-sm">
+                                    <div className="font-bold text-white">{c.intensityPerSqm} kWh/m²/an — Confiance : {c.scoreConfidence}</div>
+                                    <div>Médiane secteur {c.activity} : {c.benchmark.median} kWh/m²/an</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="max-w-5xl mx-auto px-4 md:px-8 -mt-8 relative z-20 space-y-6">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            {kpis.map((kpi, i) => (
+                                <div key={i} className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+                                    <div className={`flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider mb-2 ${kpi.color}`}>
+                                        <Icon icon={kpi.icon} style={{ fontSize: '13px' }} /> {kpi.label}
+                                    </div>
+                                    <div className="text-lg font-extrabold text-slate-800">{kpi.value}</div>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+                            <h3 className="text-lg font-bold text-slate-800 mb-5 flex items-center gap-2">
+                                <Icon icon="solar:target-bold" className="text-blue-600" /> Actions recommandées
+                            </h3>
+                            <div className="overflow-x-auto">
+                                <table className="w-full pro-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Action</th>
+                                            <th>Économies / an</th>
+                                            <th>CAPEX estimé</th>
+                                            <th>Retour (ans)</th>
+                                            <th>CEE</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {c.actions.map((a, i) => (
+                                            <tr key={i}>
+                                                <td className="font-semibold text-slate-800">{a.name}</td>
+                                                <td className="font-bold text-green-600">{a.savingsEuro.toLocaleString('fr-FR')} €</td>
+                                                <td className="text-slate-600">{a.capex.toLocaleString('fr-FR')} €</td>
+                                                <td className="text-slate-600">{a.roi} ans</td>
+                                                <td>{a.eligCEE ? <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">Éligible</span> : <span className="text-xs text-slate-400">—</span>}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex items-center gap-4">
+                            <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-sm shrink-0">
+                                {c.contact.name.split(' ').map(n => n[0]).join('')}
+                            </div>
+                            <div>
+                                <div className="font-bold text-slate-800">{c.contact.name}</div>
+                                <div className="text-sm text-slate-500">{c.contact.role} · {c.contact.phone}</div>
+                            </div>
+                        </div>
+
+                        <div className="text-center pt-2">
+                            <button type="button" onClick={() => setPage('cases')} className="pro-btn pro-btn-secondary">
+                                <Icon icon="solar:alt-arrow-left-linear" /> Retour aux dossiers
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
         /* ===== NOUVEAU DIAGNOSTIC (Wizard premium 5 étapes avec data localStorage) ===== */
         const ProNewDiag = ({ setPage }) => {
             const initialForm = { step: 1, contactName: '', company: '', email: '', isMulti: false, postalCode: '', activity: '', surface: '', constructionYear: '', heating: '', dpe: '', invoice: '', specificIssue: '', timeHorizon: '', budget: '', mainGoal: '' };
@@ -1276,11 +1655,11 @@ const proCasesRaw = [
                                 <h3 className="text-xl font-bold text-slate-800 mb-8 border-b pb-4">1. Identification du dossier</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
-                                        <label className="pro-label">Nom du prospect / Contact</label>
+                                        <label className="pro-label">Nom du contact</label>
                                         <input type="text" className="pro-input" placeholder="Ex: Jean Martin" value={form.contactName} onChange={e => updateField('contactName', e.target.value)} />
                                     </div>
                                     <div>
-                                        <label className="pro-label">Sociétà/ Raison sociale</label>
+                                        <label className="pro-label">Société/ Raison sociale</label>
                                         <input type="text" className="pro-input" placeholder="Ex: Dubois Logistics" value={form.company} onChange={e => updateField('company', e.target.value)} />
                                     </div>
                                     <div className="md:col-span-2">
@@ -1393,7 +1772,8 @@ const proCasesRaw = [
                                 </div>
                                 <h3 className="text-2xl font-bold text-slate-800 mb-4">Dossier prêt à l'analyse</h3>
                                 <p className="text-slate-500 max-w-md mx-auto mb-8 leading-relaxed">
-                                    Un pré-score va être généré sur la base des ratios de l'observatoire de l'immobilier tertiaire, croisés avec vos inputs ({form.company || "Client"}).
+                                    Un pré-score va être généré sur la base des ratios de l'observatoire de l'immobilier tertiaire, croisés avec vos informations sasies
+                                    ({form.company || "Client"}).
                                 </p>
 
                                 <div className="bg-slate-50 rounded-xl p-5 border border-slate-200 text-left max-w-md mx-auto mb-10">
@@ -1745,7 +2125,7 @@ const proCasesRaw = [
                                 <div className="p-4 bg-orange-50 border border-orange-100 rounded-xl mb-6 flex items-start gap-3">
                                     <Icon icon="solar:shield-warning-bold" className="text-orange-500 text-xl shrink-0 mt-0.5" />
                                     <p className="text-xs text-orange-800 font-medium leading-relaxed">
-                                        Dans cet environnement MVP, vos données saisies restent en local dans votre navigateur (LocalStorage). Elles ne sont pas transmises à des tiers.
+                                        Vos données saisies restent en local dans votre navigateur (LocalStorage). Elles ne sont pas transmises à des tiers.
                                     </p>
                                 </div>
 
@@ -1835,6 +2215,7 @@ const proCasesRaw = [
                 { id: 'dashboard', label: 'Vue globale', icon: 'solar:pie-chart-2-bold' },
                 { id: 'cases', label: 'Dossiers clients', icon: 'solar:folder-with-files-bold' },
                 { id: 'new', label: 'Nouveau diagnostic', icon: 'solar:add-square-bold' },
+                { id: 'plans', label: 'Plans & Tarifs', icon: 'solar:star-bold' },
                 { id: 'settings', label: 'Configuration', icon: 'solar:settings-bold' }
             ];
 
@@ -1858,7 +2239,7 @@ const proCasesRaw = [
 
                         <nav className="flex-1 flex flex-col gap-1 overflow-y-auto px-2">
                             {navs.map(n => {
-                                const isActive = curPage === n.id || (curPage.startsWith('report') && n.id === 'cases');
+                                const isActive = curPage === n.id || ((curPage.startsWith('report-') || curPage.startsWith('case-report-')) && n.id === 'cases');
                                 return (
                                     <div key={n.id} className={`nav-item ${isActive ? 'active' : ''}`} onClick={() => { setPage(n.id); closeMobile(); }}>
                                         <Icon icon={n.icon} style={{ fontSize: '20px' }} />
@@ -1926,6 +2307,7 @@ const proCasesRaw = [
                 setLoading(true);
                 setTimeout(() => {
                     localStorage.setItem('proAuth', 'true');
+                    initializeMockProCases();
                     onLogin();
                 }, 800);
             };
@@ -2012,7 +2394,10 @@ const proCasesRaw = [
 
             useEffect(() => {
                 const isAuth = localStorage.getItem('proAuth') === 'true';
-                if (isAuth) setAuth(true);
+                if (isAuth) {
+                    setAuth(true);
+                    initializeMockProCases();
+                }
             }, []);
 
             const openDemoModal = () => setIsDemoModalOpen(true);
@@ -2037,9 +2422,11 @@ const proCasesRaw = [
 
             const renderPage = () => {
                 if (page === 'dashboard') return <ProDashboard setPage={setPage} openDemo={openDemoModal} />;
-                if (page === 'cases') return <ProDashboard setPage={setPage} openDemo={openDemoModal} />;
+                if (page === 'cases') return <ProCases setPage={setPage} />;
                 if (page === 'new') return <ProNewDiag setPage={setPage} />;
                 if (page === 'settings') return <ProSettings />;
+                if (page === 'plans') return <ProPlans onDemoClick={openDemoModal} />;
+                if (page.startsWith('case-report-')) return <ProCaseReport caseId={page.replace('case-report-', '')} setPage={setPage} />;
                 if (page.startsWith('report-')) return <ProReport cId={page.replace('report-', '')} setPage={setPage} openDemo={openDemoModal} />;
                 return <ProDashboard setPage={setPage} openDemo={openDemoModal} />;
             };
@@ -2048,9 +2435,10 @@ const proCasesRaw = [
                 dashboard: "Vue globale du parc",
                 cases: "Dossiers clients",
                 new: "Nouveau diagnostic",
-                settings: "Configuration"
+                settings: "Configuration",
+                plans: "Plans & Tarification"
             };
-            const currentTitle = page.startsWith('report-') ? "Rapport détaillé" : titles[page];
+            const currentTitle = (page.startsWith('report-') || page.startsWith('case-report-')) ? "Rapport détaillé" : (titles[page] || "");
 
             return (
                 <div className="flex bg-[#F8FAFC]">

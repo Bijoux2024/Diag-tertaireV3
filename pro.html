@@ -542,15 +542,15 @@
            ═══════════════════════════════════════════════════════════════════════════ */
         const ENGINE_PRO = {
             benchmarks: {
-                "Bureau": { q1: 66, med: 104, q3: 154 },
-                "Hôtel": { q1: 114, med: 151, q3: 200 },
-                "Restauration": { q1: 155, med: 307, q3: 562 },
-                "Santé": { q1: 77, med: 113, q3: 173 },
-                "Enseignement": { q1: 82, med: 105, q3: 131 },
-                "Entrepôt-Chauffé": { q1: 29, med: 61, q3: 131 },
-                "Entrepôt-NonChauffé": { q1: 15, med: 30, q3: 65 }, // Fallback
-                "Commerce_Froid": { q1: 152, med: 363, q3: 649 },
-                "Commerce_SansFroid": { q1: 93, med: 142, q3: 210 },
+                "Bureau": { q1: 120, med: 180, q3: 280, unit: 'kWh EF/m²/an', scope: 'Tous usages, hors process IT' },
+                "Hôtel": { q1: 200, med: 280, q3: 420, unit: 'kWh EF/m²/an', scope: 'Hors blanchisserie industrielle, hors restauration' },
+                "Restauration": { q1: 350, med: 500, q3: 800, unit: 'kWh EF/m²/an', scope: 'Cuisson incluse' },
+                "Santé": { q1: 160, med: 220, q3: 350, unit: 'kWh EF/m²/an', scope: 'Ventilation réglementaire incluse, cabinets < 500m²' },
+                "Enseignement": { q1: 100, med: 150, q3: 220, unit: 'kWh EF/m²/an', scope: 'Primaire/secondaire, hors université' },
+                "Entrepôt-Chauffé": { q1: 50, med: 80, q3: 130, unit: 'kWh EF/m²/an', scope: 'Chauffage + éclairage' },
+                "Entrepôt-NonChauffé": { q1: 25, med: 45, q3: 70, unit: 'kWh EF/m²/an', scope: 'Éclairage seul' },
+                "Commerce_Froid": { q1: 450, med: 650, q3: 900, unit: 'kWh EF/m²/an', scope: 'Avec froid intégré' },
+                "Commerce_SansFroid": { q1: 200, med: 320, q3: 500, unit: 'kWh EF/m²/an', scope: 'Hors froid commercial' },
                 "Autre": { q1: 100, med: 150, q3: 250 }
             },
             prices: {
@@ -686,7 +686,7 @@
                     };
                 });
 
-                const billSub = parseFloat(data.elecSubscriptionYearly) || 0 + parseFloat(data.gasSubscriptionYearly) || 0;
+                const billSub = (parseFloat(data.elecSubscriptionYearly) || 0) + (parseFloat(data.gasSubscriptionYearly) || 0);
 
                 return {
                     kwhTotal: Math.round(kwhTotal),

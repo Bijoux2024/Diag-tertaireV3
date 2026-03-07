@@ -1,0 +1,1670 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DiagTertiaire Pro Alpha — Diagnostic Énergétique Professionnel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            syne: ['Syne', 'sans-serif'],
+            dm: ['DM Sans', 'sans-serif'],
+          },
+          colors: {
+            alpha: {
+              50: '#f0f4ff',
+              100: '#e0e9ff',
+              200: '#c7d7fe',
+              300: '#a4bcfd',
+              400: '#8098fb',
+              500: '#6272f8',
+              600: '#4650ed',
+              700: '#3a3fd1',
+              800: '#3135aa',
+              900: '#2e3286',
+            }
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'DM Sans', sans-serif; background: #0f0f14; color: #f0f0f5; margin: 0; }
+    h1, h2, h3, h4 { font-family: 'Syne', sans-serif; }
+    .glass { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(12px); }
+    .glass-light { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); }
+    .score-a { background: #065f46; color: #6ee7b7; border-color: #059669; }
+    .score-b { background: #14532d; color: #86efac; border-color: #16a34a; }
+    .score-c { background: #713f12; color: #fcd34d; border-color: #d97706; }
+    .score-d { background: #7c2d12; color: #fca5a5; border-color: #dc2626; }
+    .score-e { background: #450a0a; color: #fca5a5; border-color: #b91c1c; }
+    .tile-active { border-color: #6272f8 !important; background: rgba(98,114,248,0.12) !important; }
+    .progress-bar { height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, #6272f8, #8098fb); border-radius: 2px; transition: width 0.4s ease; }
+    @media print {
+      .no-print { display: none !important; }
+      body { background: white !important; color: black !important; }
+      .glass, .glass-light { background: white !important; border: 1px solid #e5e7eb !important; }
+      h1, h2, h3, h4 { color: #111 !important; font-family: Georgia, serif !important; }
+    }
+    .recharts-text { fill: #9ca3af !important; font-family: 'DM Sans', sans-serif !important; }
+    .recharts-cartesian-grid-horizontal line,
+    .recharts-cartesian-grid-vertical line { stroke: rgba(255,255,255,0.06) !important; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useCallback, useRef } = React;
+const {
+  BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+  ResponsiveContainer, ReferenceLine
+} = Recharts;
+
+/* ═══════════════════════════════════════════════════
+   CONSTANTES MOTEUR EXPERT — NE PAS MODIFIER
+═══════════════════════════════════════════════════ */
+
+const BENCHMARKS = {
+  bureau:                { q1: 120, median: 180, q3: 280 },
+  commerce_non_alim:     { q1: 200, median: 320, q3: 500 },
+  commerce_alim:         { q1: 450, median: 650, q3: 900 },
+  hotel:                 { q1: 200, median: 280, q3: 420 },
+  restauration:          { q1: 350, median: 500, q3: 800 },
+  enseignement:          { q1: 100, median: 150, q3: 220 },
+  entrepot_chauffe:      { q1: 50,  median: 80,  q3: 130 },
+  entrepot_non_chauffe:  { q1: 25,  median: 45,  q3: 70  },
+  sante:                 { q1: 160, median: 220, q3: 350 },
+};
+
+const ACTIVITY_LABELS = {
+  bureau:               'Bureaux et services',
+  commerce_non_alim:    'Commerce non-alimentaire',
+  commerce_alim:        'Commerce alimentaire',
+  hotel:                'Hôtellerie',
+  restauration:         'Restauration',
+  enseignement:         'Enseignement',
+  entrepot_chauffe:     'Entrepôt chauffé',
+  entrepot_non_chauffe: 'Entrepôt non chauffé',
+  sante:                'Cabinet de santé',
+};
+
+const PRIX_ENERGIE = {
+  electricite:     0.196,
+  gaz:             0.105,
+  reseau_chaleur:  0.092,
+  fioul:           0.118,
+  bois:            0.065,
+};
+
+const CO2_FACTEURS = {
+  electricite:    0.079,
+  gaz:            0.227,
+  reseau_chaleur: 0.110,
+  fioul:          0.324,
+  bois:           0.030,
+};
+
+const POSTES_VENTILATION = {
+  bureau:               { chauffage:40, clim:15, eclairage:25, ecs:5, autres:15 },
+  commerce_non_alim:    { chauffage:30, clim:20, eclairage:35, ecs:3, autres:12 },
+  commerce_alim:        { chauffage:20, clim:25, eclairage:30, ecs:5, autres:20 },
+  hotel:                { chauffage:35, clim:15, eclairage:20, ecs:20, autres:10 },
+  restauration:         { chauffage:20, clim:10, eclairage:20, ecs:15, autres:35 },
+  enseignement:         { chauffage:50, clim:5,  eclairage:30, ecs:5,  autres:10 },
+  entrepot_chauffe:     { chauffage:60, clim:5,  eclairage:25, ecs:2,  autres:8  },
+  entrepot_non_chauffe: { chauffage:20, clim:2,  eclairage:65, ecs:1,  autres:12 },
+  sante:                { chauffage:35, clim:15, eclairage:25, ecs:10, autres:15 },
+};
+
+const CORRECTIFS_ZONE = { H1: 1.10, H2: 1.0, H3: 0.88 };
+const CORRECTIFS_AGE = {
+  'avant_1975': 1.20,
+  '1975_2000':  1.08,
+  '2000_2012':  0.98,
+  'apres_2012': 0.88,
+};
+const CORRECTIFS_SYSTEMES = {
+  chauffage: { chaudiere_condensation: -0.10, pompe_chaleur: -0.18, radiateurs_electriques: 0.05, reseau_chaleur_urbain: -0.08, autre: 0 },
+  clim:      { vrf_inverter: -0.12, split_fixe: 0, sans_clim: -0.05, autre: 0 },
+  ventilation: { double_flux: -0.06, simple_flux: 0, naturelle: 0.04, autre: 0 },
+  eclairage: { led_detecteurs: -0.15, led_seul: -0.10, fluo: 0, incandescent: 0.10, autre: 0 },
+};
+
+const PLAFONDS_GAINS = {
+  bureau:              0.45,
+  commerce_non_alim:   0.40,
+  commerce_alim:       0.35,
+  hotel:               0.40,
+  restauration:        0.30,
+  enseignement:        0.45,
+  entrepot_chauffe:    0.50,
+  entrepot_non_chauffe:0.40,
+  sante:               0.42,
+};
+
+const ACTIONS_LIBRARY = [
+  { id:'isol_toiture',   label:'Isolation toiture / combles',      poste:'chauffage', gain_pct:0.12, capex_low:40,  capex_high:80,  cee_fiche:'BATEN-EN-101', prerequis:[], temps_retour_indicatif:'5-8 ans'  },
+  { id:'isol_facades',   label:'Isolation façades par l\'extérieur',poste:'chauffage', gain_pct:0.10, capex_low:80,  capex_high:160, cee_fiche:'BATEN-EN-102', prerequis:[], temps_retour_indicatif:'8-12 ans' },
+  { id:'isol_plancher',  label:'Isolation plancher bas',            poste:'chauffage', gain_pct:0.07, capex_low:25,  capex_high:55,  cee_fiche:'BATEN-EN-103', prerequis:[], temps_retour_indicatif:'4-7 ans'  },
+  { id:'vitrage_perf',   label:'Remplacement vitrages performants', poste:'chauffage', gain_pct:0.08, capex_low:120, capex_high:250, cee_fiche:'BATEN-EN-104', prerequis:[], temps_retour_indicatif:'10-15 ans'},
+  { id:'chaudiere_cond', label:'Chaudière à condensation gaz',      poste:'chauffage', gain_pct:0.15, capex_low:8,   capex_high:18,  cee_fiche:'BATEN-SE-109', prerequis:['gaz'], temps_retour_indicatif:'3-5 ans'  },
+  { id:'pac_air_eau',    label:'Pompe à chaleur air/eau',           poste:'chauffage', gain_pct:0.22, capex_low:25,  capex_high:60,  cee_fiche:'BATEN-SE-103', prerequis:[], temps_retour_indicatif:'5-9 ans'  },
+  { id:'led_gestion',    label:'LED + gestion présence/lumière',    poste:'eclairage', gain_pct:0.18, capex_low:15,  capex_high:40,  cee_fiche:'BATEN-SE-110', prerequis:[], temps_retour_indicatif:'2-4 ans'  },
+  { id:'double_flux',    label:'Ventilation double flux VMC',       poste:'ventilation',gain_pct:0.08, capex_low:30,  capex_high:70,  cee_fiche:'BATEN-SE-111', prerequis:[], temps_retour_indicatif:'4-7 ans'  },
+  { id:'gtr',            label:'GTR / Gestion Technique Bâtiment',  poste:'autres',    gain_pct:0.10, capex_low:20,  capex_high:50,  cee_fiche:'BATEN-SE-113', prerequis:[], temps_retour_indicatif:'3-5 ans'  },
+  { id:'froid_econo',    label:'Optimisation groupe froid / free-cooling', poste:'clim', gain_pct:0.12, capex_low:10, capex_high:30,  cee_fiche:'BATEN-SE-109', prerequis:[], temps_retour_indicatif:'2-4 ans'  },
+  { id:'ecs_solaire',    label:'Chauffe-eau solaire collectif',     poste:'ecs',       gain_pct:0.40, capex_low:20,  capex_high:60,  cee_fiche:'BATEN-SE-105', prerequis:[], temps_retour_indicatif:'6-10 ans' },
+  { id:'enveloppe_air',  label:'Traitement étanchéité à l\'air',    poste:'chauffage', gain_pct:0.05, capex_low:5,   capex_high:15,  cee_fiche:null,           prerequis:[], temps_retour_indicatif:'2-3 ans'  },
+];
+
+/* ═══════════════════════════════════════════════════
+   FONCTIONS UTILITAIRES
+═══════════════════════════════════════════════════ */
+
+function getZoneClimatique(cp) {
+  const dept = parseInt((cp || '75').substring(0, 2), 10);
+  if ([13, 30, 34, 83, 84, 2, 4, 5, 6, 66, 11, 48, 07, 26].includes(dept)) return 'H3';
+  if ([29, 22, 35, 56, 44, 17, 33, 40, 64, 65, 09, 31, 32, 12, 81, 82, 47].includes(dept)) return 'H2';
+  return 'H1';
+}
+
+function scoreLettre(ratio) {
+  if (ratio < 0.60) return 'A';
+  if (ratio < 0.90) return 'B';
+  if (ratio < 1.20) return 'C';
+  if (ratio < 1.70) return 'D';
+  return 'E';
+}
+
+function scoreColor(l) {
+  return { A:'#059669', B:'#16a34a', C:'#d97706', D:'#dc2626', E:'#b91c1c' }[l] || '#6b7280';
+}
+
+function scoreBgClass(l) {
+  return { A:'score-a', B:'score-b', C:'score-c', D:'score-d', E:'score-e' }[l] || '';
+}
+
+function fmt(n, decimals=0) {
+  if (n == null || isNaN(n)) return '—';
+  return new Intl.NumberFormat('fr-FR', { maximumFractionDigits: decimals }).format(n);
+}
+
+function fmtEuro(n) {
+  if (n == null || isNaN(n)) return '—';
+  return new Intl.NumberFormat('fr-FR', { style:'currency', currency:'EUR', maximumFractionDigits:0 }).format(n);
+}
+
+function selectActions(activite, systemesChauffage, energiePrincipale, surface, annualCost) {
+  return ACTIONS_LIBRARY.filter(a => {
+    if (a.prerequis.includes('gaz') && energiePrincipale !== 'gaz') return false;
+    return true;
+  }).map(a => {
+    const capexMid = ((a.capex_low + a.capex_high) / 2) * surface;
+    const gainEuro = annualCost * a.gain_pct;
+    const roi = gainEuro > 0 ? capexMid / gainEuro : null;
+    return { ...a, capexEstime: capexMid, gainEuroAnnuel: gainEuro, roiAns: roi };
+  }).sort((a, b) => (a.roiAns || 999) - (b.roiAns || 999)).slice(0, 6);
+}
+
+function projection10ans(annualSavings, totalCapex) {
+  const points = [];
+  for (let y = 0; y <= 10; y++) {
+    const savings = y === 0 ? 0 : annualSavings * y;
+    const cumAction = y === 0 ? -totalCapex : -totalCapex + savings;
+    const cumInaction = -(annualSavings * 0.03 * y * (y+1) / 2); // dérive coût
+    points.push({ annee: `A${y}`, avecTravaux: Math.round(cumAction), sansTravaux: Math.round(cumInaction), economie: Math.round(savings) });
+  }
+  return points;
+}
+
+/* ═══════════════════════════════════════════════════
+   MOTEUR DE CALCUL PRINCIPAL
+═══════════════════════════════════════════════════ */
+
+function runEngine(formData) {
+  const {
+    activite, surface, anneeConstruction, codePostal,
+    energiePrincipale, elecKwh, elecEuro, gasKwh, gasEuro,
+    autresKwh, autresEuro, energieSecondaire,
+    systemeChauffage, systemeClim, systemeVentilation, systemeEclairage,
+    nbOccupants, heuresOuverture, joursOuverture,
+    travauxRecents,
+  } = formData;
+
+  const surf = parseFloat(surface) || 1;
+  const benchmark = BENCHMARKS[activite] || BENCHMARKS.bureau;
+  const zone = getZoneClimatique(codePostal);
+  const corrZone = CORRECTIFS_ZONE[zone] || 1.0;
+  const corrAge = CORRECTIFS_AGE[anneeConstruction] || 1.0;
+
+  // Correctifs systèmes
+  let corrSyst = 0;
+  if (systemeChauffage && CORRECTIFS_SYSTEMES.chauffage[systemeChauffage] != null)
+    corrSyst += CORRECTIFS_SYSTEMES.chauffage[systemeChauffage];
+  if (systemeClim && CORRECTIFS_SYSTEMES.clim[systemeClim] != null)
+    corrSyst += CORRECTIFS_SYSTEMES.clim[systemeClim];
+  if (systemeVentilation && CORRECTIFS_SYSTEMES.ventilation[systemeVentilation] != null)
+    corrSyst += CORRECTIFS_SYSTEMES.ventilation[systemeVentilation];
+  if (systemeEclairage && CORRECTIFS_SYSTEMES.eclairage[systemeEclairage] != null)
+    corrSyst += CORRECTIFS_SYSTEMES.eclairage[systemeEclairage];
+
+  // Intensité réelle
+  const prixElec = parseFloat(elecEuro) && parseFloat(elecKwh) ?
+    (parseFloat(elecEuro) / parseFloat(elecKwh)) : PRIX_ENERGIE.electricite;
+  const prixGaz = parseFloat(gasEuro) && parseFloat(gasKwh) ?
+    (parseFloat(gasEuro) / parseFloat(gasKwh)) : PRIX_ENERGIE[energiePrincipale] || PRIX_ENERGIE.gaz;
+
+  const totalKwh = (parseFloat(elecKwh) || 0) + (parseFloat(gasKwh) || 0) + (parseFloat(autresKwh) || 0);
+  const totalEuro = (parseFloat(elecEuro) || 0) + (parseFloat(gasEuro) || 0) + (parseFloat(autresEuro) || 0);
+
+  let intensiteReelle;
+  let consoEstimee = false;
+  if (totalKwh > 0) {
+    intensiteReelle = totalKwh / surf;
+  } else {
+    // Estimation benchmark + correctifs
+    intensiteReelle = benchmark.median * corrZone * corrAge * (1 + corrSyst);
+    consoEstimee = true;
+  }
+
+  const annualCost = totalEuro > 0 ? totalEuro :
+    intensiteReelle * surf * (PRIX_ENERGIE[energiePrincipale] || PRIX_ENERGIE.electricite);
+
+  // CO2
+  const co2Factor = CO2_FACTEURS[energiePrincipale] || CO2_FACTEURS.electricite;
+  const co2Annual = (totalKwh > 0 ? totalKwh : intensiteReelle * surf) * co2Factor / 1000; // tCO2
+
+  // Score
+  const ratio = intensiteReelle / benchmark.median;
+  const lettre = scoreLettre(ratio);
+
+  // Score confiance
+  let confiance = 'Élevée';
+  let confianceScore = 3;
+  if (consoEstimee) { confiance = 'Faible'; confianceScore = 1; }
+  else if (!gasKwh && !elecEuro) { confiance = 'Moyenne'; confianceScore = 2; }
+
+  // Postes ventilation
+  const postes = POSTES_VENTILATION[activite] || POSTES_VENTILATION.bureau;
+
+  // Actions prioritaires
+  const actions = selectActions(activite, systemeChauffage, energiePrincipale, surf, annualCost);
+  const totalGainPct = Math.min(actions.reduce((s, a) => s + a.gain_pct, 0), PLAFONDS_GAINS[activite] || 0.40);
+  const economiesAnnuelles = annualCost * totalGainPct;
+  const capexTotal = actions.reduce((s, a) => s + (a.capexEstime || 0), 0);
+  const roiMoyen = economiesAnnuelles > 0 ? capexTotal / economiesAnnuelles : null;
+
+  // Score maturité pro (qualification interne)
+  let maturite = 0;
+  if (travauxRecents === 'oui_recents') maturite += 2;
+  if (travauxRecents === 'planifies') maturite += 3;
+  if (travauxRecents === 'non') maturite += 1;
+  if (lettre === 'D' || lettre === 'E') maturite += 3;
+  if (lettre === 'C') maturite += 2;
+  if (surf > 1000) maturite += 2;
+  if (nbOccupants > 20) maturite += 1;
+  maturite = Math.min(maturite, 10);
+
+  const scoreMaturiteLabel = maturite >= 8 ? 'Prioritaire' : maturite >= 5 ? 'Qualifié' : maturite >= 3 ? 'À nurture' : 'Froid';
+  const scoreMaturiteColor = maturite >= 8 ? '#059669' : maturite >= 5 ? '#d97706' : maturite >= 3 ? '#6272f8' : '#6b7280';
+
+  // Projection 10 ans
+  const projData = projection10ans(economiesAnnuelles, capexTotal);
+
+  return {
+    intensiteReelle: Math.round(intensiteReelle),
+    medianeRef: benchmark.median,
+    ratio: Math.round(ratio * 100) / 100,
+    lettre,
+    annualCost: Math.round(annualCost),
+    co2Annual: Math.round(co2Annual * 10) / 10,
+    totalKwh: Math.round(totalKwh > 0 ? totalKwh : intensiteReelle * surf),
+    consoEstimee,
+    confiance,
+    confianceScore,
+    postes,
+    actions,
+    economiesAnnuelles: Math.round(economiesAnnuelles),
+    capexTotal: Math.round(capexTotal),
+    roiMoyen: roiMoyen ? Math.round(roiMoyen * 10) / 10 : null,
+    totalGainPct: Math.round(totalGainPct * 100),
+    zone,
+    maturite,
+    scoreMaturiteLabel,
+    scoreMaturiteColor,
+    projData,
+  };
+}
+
+/* ═══════════════════════════════════════════════════
+   CONSTANTES UI
+═══════════════════════════════════════════════════ */
+
+const ENERGIE_OPTIONS = [
+  { id:'electricite', label:'Électricité', icon:'⚡' },
+  { id:'gaz',         label:'Gaz naturel', icon:'🔥' },
+  { id:'reseau_chaleur', label:'Réseau de chaleur', icon:'♨️' },
+  { id:'fioul',       label:'Fioul',      icon:'🛢️' },
+  { id:'bois',        label:'Bois/granulés', icon:'🪵' },
+];
+
+const ACTIVITE_OPTIONS = [
+  { id:'bureau',               label:'Bureaux',          icon:'🏢' },
+  { id:'commerce_non_alim',    label:'Commerce',         icon:'🛍️' },
+  { id:'commerce_alim',        label:'Alimentation',     icon:'🛒' },
+  { id:'hotel',                label:'Hôtellerie',       icon:'🏨' },
+  { id:'restauration',         label:'Restauration',     icon:'🍽️' },
+  { id:'enseignement',         label:'Enseignement',     icon:'🎓' },
+  { id:'entrepot_chauffe',     label:'Entrepôt chauffé', icon:'🏭' },
+  { id:'entrepot_non_chauffe', label:'Entrepôt froid',   icon:'❄️' },
+  { id:'sante',                label:'Santé',            icon:'🏥' },
+];
+
+const CHAUFFAGE_OPTIONS = [
+  { id:'chaudiere_condensation', label:'Chaudière condensation' },
+  { id:'pompe_chaleur',          label:'Pompe à chaleur' },
+  { id:'radiateurs_electriques', label:'Radiateurs électriques' },
+  { id:'reseau_chaleur_urbain',  label:'Réseau de chaleur' },
+  { id:'autre',                  label:'Autre / Inconnu' },
+];
+
+const CLIM_OPTIONS = [
+  { id:'vrf_inverter',  label:'VRF / Inverter' },
+  { id:'split_fixe',    label:'Split fixe' },
+  { id:'sans_clim',     label:'Pas de climatisation' },
+  { id:'autre',         label:'Autre' },
+];
+
+const VENTILATION_OPTIONS = [
+  { id:'double_flux', label:'Double flux récupération' },
+  { id:'simple_flux', label:'Simple flux' },
+  { id:'naturelle',   label:'Naturelle / aucune VMC' },
+  { id:'autre',       label:'Autre' },
+];
+
+const ECLAIRAGE_OPTIONS = [
+  { id:'led_detecteurs', label:'LED + détecteurs présence' },
+  { id:'led_seul',       label:'LED sans gestion' },
+  { id:'fluo',           label:'Fluorescent / néon' },
+  { id:'incandescent',   label:'Incandescent / halogène' },
+  { id:'autre',          label:'Autre' },
+];
+
+/* ═══════════════════════════════════════════════════
+   COMPOSANT : SURFACE GATE
+═══════════════════════════════════════════════════ */
+
+function SurfaceGate({ onChoose }) {
+  const [surface, setSurface] = useState('');
+  const [error, setError] = useState('');
+
+  function handleSubmit() {
+    const s = parseFloat(surface);
+    if (!s || s < 50) { setError('Veuillez saisir une surface valide (min. 50 m²).'); return; }
+    onChoose(s > 1000 ? 'decret' : 'standard', s);
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-16">
+      <div className="max-w-lg w-full text-center">
+        <div className="mb-8">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium mb-6"
+               style={{background:'rgba(98,114,248,0.15)', border:'1px solid rgba(98,114,248,0.3)', color:'#8098fb'}}>
+            DiagTertiaire Pro Alpha
+          </div>
+          <h1 className="text-4xl font-bold mb-4" style={{fontFamily:'Syne,sans-serif'}}>
+            Diagnostic énergétique<br/>professionnel
+          </h1>
+          <p className="text-gray-400 text-lg">
+            Moteur expert validé — Résultats en 5 minutes
+          </p>
+        </div>
+
+        <div className="glass rounded-2xl p-8 text-left mb-6">
+          <label className="block text-sm font-medium text-gray-300 mb-2">
+            Surface totale du bâtiment (m²)
+          </label>
+          <input
+            type="number"
+            placeholder="Ex : 850"
+            value={surface}
+            onChange={e => { setSurface(e.target.value); setError(''); }}
+            onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+            className="w-full px-4 py-3 rounded-xl text-white text-lg font-medium outline-none focus:ring-2 focus:ring-alpha-500"
+            style={{background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.12)'}}
+          />
+          {error && <p className="mt-2 text-red-400 text-sm">{error}</p>}
+          {parseFloat(surface) > 1000 && !error && (
+            <div className="mt-3 flex items-start gap-2 text-sm text-amber-400">
+              <span>⚠️</span>
+              <span>Surface &gt; 1 000 m² — module Décret Tertiaire disponible (OPERAT + objectifs 2030/2040/2050)</span>
+            </div>
+          )}
+        </div>
+
+        <button
+          onClick={handleSubmit}
+          className="w-full py-4 rounded-xl font-semibold text-white text-lg transition-all hover:opacity-90 active:scale-98"
+          style={{background:'linear-gradient(135deg, #6272f8, #4650ed)'}}>
+          Commencer le diagnostic →
+        </button>
+
+        <p className="mt-4 text-xs text-gray-500">
+          Données traitées localement · Résultats indicatifs · Non opposables OPERAT
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════
+   COMPOSANT : DÉCRET TERTIAIRE MODULE (bêta)
+═══════════════════════════════════════════════════ */
+
+function DecretTertiaire({ surface, onBack }) {
+  const OBJECTIFS_DECRET = { 2030: 0.40, 2040: 0.50, 2050: 0.60 };
+  const [anneeRef, setAnneeRef] = useState('2010');
+  const [consoRef, setConsoRef] = useState('');
+  const [consoActuelle, setConsoActuelle] = useState('');
+  const [result, setResult] = useState(null);
+
+  function calculate() {
+    const ref = parseFloat(consoRef) || 0;
+    const actuel = parseFloat(consoActuelle) || 0;
+    if (!ref || !actuel) return;
+    const reduction2030 = ref * OBJECTIFS_DECRET[2030];
+    const reduction2040 = ref * OBJECTIFS_DECRET[2040];
+    const reduction2050 = ref * OBJECTIFS_DECRET[2050];
+    const ecart2030 = actuel - (ref - reduction2030);
+    const ecart2040 = actuel - (ref - reduction2040);
+    const ecart2050 = actuel - (ref - reduction2050);
+    setResult({ ref, actuel, reduction2030, reduction2040, reduction2050, ecart2030, ecart2040, ecart2050 });
+  }
+
+  return (
+    <div className="min-h-screen px-4 py-12 max-w-3xl mx-auto">
+      <button onClick={onBack} className="flex items-center gap-2 text-gray-400 hover:text-white mb-8 transition-colors">
+        ← Retour
+      </button>
+      <div className="mb-8">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium mb-4"
+             style={{background:'rgba(251,191,36,0.15)', border:'1px solid rgba(251,191,36,0.3)', color:'#fbbf24'}}>
+          Décret Tertiaire — Module bêta
+        </div>
+        <h1 className="text-3xl font-bold mb-2">Trajectoire OPERAT</h1>
+        <p className="text-gray-400">Surface : {fmt(surface)} m² — Calcul des objectifs 2030 / 2040 / 2050</p>
+      </div>
+
+      <div className="glass rounded-2xl p-6 mb-6 space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">Année de référence</label>
+            <select value={anneeRef} onChange={e => setAnneeRef(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg text-white"
+              style={{background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.12)'}}>
+              {['2010','2011','2012','2013','2014','2015','2016','2017','2018','2019'].map(y =>
+                <option key={y} value={y}>{y}</option>
+              )}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">Conso référence (kWh/m²/an)</label>
+            <input type="number" placeholder="Ex : 220" value={consoRef}
+              onChange={e => setConsoRef(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg text-white"
+              style={{background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.12)'}} />
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm text-gray-400 mb-1">Consommation actuelle (kWh/m²/an)</label>
+          <input type="number" placeholder="Ex : 165" value={consoActuelle}
+            onChange={e => setConsoActuelle(e.target.value)}
+            className="w-full px-3 py-2 rounded-lg text-white"
+            style={{background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.12)'}} />
+        </div>
+        <button onClick={calculate}
+          className="w-full py-3 rounded-xl font-semibold text-white transition-all hover:opacity-90"
+          style={{background:'linear-gradient(135deg, #6272f8, #4650ed)'}}>
+          Calculer la trajectoire
+        </button>
+      </div>
+
+      {result && (
+        <div className="space-y-4">
+          {[{year:2030, target: result.ref - result.reduction2030, ecart: result.ecart2030},
+            {year:2040, target: result.ref - result.reduction2040, ecart: result.ecart2040},
+            {year:2050, target: result.ref - result.reduction2050, ecart: result.ecart2050}].map(obj => (
+            <div key={obj.year} className="glass rounded-xl p-5 flex items-center justify-between">
+              <div>
+                <div className="text-sm text-gray-400 mb-1">Objectif {obj.year}</div>
+                <div className="text-2xl font-bold" style={{fontFamily:'Syne,sans-serif'}}>
+                  {fmt(Math.round(obj.target))} kWh/m²/an
+                </div>
+              </div>
+              <div className="text-right">
+                <div className={`text-lg font-semibold ${obj.ecart > 0 ? 'text-red-400' : 'text-emerald-400'}`}>
+                  {obj.ecart > 0 ? `+${fmt(Math.round(obj.ecart))}` : fmt(Math.round(obj.ecart))} kWh/m²
+                </div>
+                <div className="text-sm text-gray-500">{obj.ecart > 0 ? 'Dépassement objectif' : 'Objectif atteint ✓'}</div>
+              </div>
+            </div>
+          ))}
+          <div className="glass rounded-xl p-5">
+            <div className="text-sm text-gray-400 mb-3">Trajectoire de réduction</div>
+            <ResponsiveContainer width="100%" height={180}>
+              <LineChart data={[
+                { an: anneeRef, conso: result.ref },
+                { an: '2024', conso: result.actuel },
+                { an: '2030', cible: Math.round(result.ref - result.reduction2030), conso: result.ecart2030 > 0 ? null : result.actuel },
+                { an: '2040', cible: Math.round(result.ref - result.reduction2040) },
+                { an: '2050', cible: Math.round(result.ref - result.reduction2050) },
+              ]}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="an" tick={{fill:'#9ca3af', fontSize:11}} />
+                <YAxis tick={{fill:'#9ca3af', fontSize:11}} />
+                <Tooltip contentStyle={{background:'#1a1a2e', border:'1px solid rgba(255,255,255,0.1)', borderRadius:'8px'}} />
+                <Line type="monotone" dataKey="cible" stroke="#6272f8" strokeWidth={2} strokeDasharray="5 5" name="Objectif réglementaire" dot={{ fill:'#6272f8' }} />
+                <Line type="monotone" dataKey="conso" stroke="#f59e0b" strokeWidth={2} name="Consommation réelle" dot={{ fill:'#f59e0b' }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="glass rounded-xl p-5 text-sm text-amber-300">
+            ⚠️ Module bêta — Vérifier les données avec votre déclaration OPERAT officielle.
+            Ce calcul est indicatif et ne remplace pas l'accompagnement d'un AMO Décret Tertiaire.
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════
+   COMPOSANT : FORMULAIRE 7 MODULES
+═══════════════════════════════════════════════════ */
+
+const MODULES = [
+  { id:1, label:'Identification',      short:'Identité'   },
+  { id:2, label:'Profil bâtiment',     short:'Bâtiment'   },
+  { id:3, label:'Enveloppe thermique', short:'Enveloppe'  },
+  { id:4, label:'Systèmes techniques', short:'Systèmes'   },
+  { id:5, label:'Consommations réelles', short:'Énergie'  },
+  { id:6, label:'Usage et occupation', short:'Usage'      },
+  { id:7, label:'Contexte et travaux', short:'Travaux'    },
+];
+
+const DEFAULT_FORM = {
+  nomBatiment: '', nomContact: '', emailContact: '', telephoneContact: '', societe: '',
+  activite: '', surface: '', codePostal: '', ville: '', anneeConstruction: '',
+  typeConstruction: '', certificationEnv: '',
+  isolationToiture: '', isolationFacade: '', isolationPlancher: '', typeVitrage: '',
+  systemeChauffage: '', systemeClim: '', systemeVentilation: '', systemeEclairage: '',
+  energiePrincipale: '', energieSecondaire: '',
+  elecKwh: '', elecEuro: '', gasKwh: '', gasEuro: '', autresKwh: '', autresEuro: '',
+  sansFactures: false,
+  nbOccupants: '', heuresOuverture: '', joursOuverture: '5',
+  activiteNuit: false, activiteWeekend: false,
+  travauxRecents: '', budgetTravaux: '', horizonDecision: '',
+  objectif: '',
+};
+
+function DiagForm({ surface: surfaceInit, onComplete }) {
+  const [step, setStep] = useState(1);
+  const [form, setForm] = useState({ ...DEFAULT_FORM, surface: String(Math.round(surfaceInit)) });
+  const [errors, setErrors] = useState({});
+
+  function set(field, value) {
+    setForm(f => ({ ...f, [field]: value }));
+    setErrors(e => { const n = {...e}; delete n[field]; return n; });
+  }
+
+  function validate(s) {
+    const e = {};
+    if (s === 1) {
+      if (!form.nomContact.trim()) e.nomContact = 'Requis';
+      if (!form.activite) e.activite = 'Requis';
+    }
+    if (s === 2) {
+      if (!form.surface || parseFloat(form.surface) < 50) e.surface = 'Surface min. 50 m²';
+      if (!form.anneeConstruction) e.anneeConstruction = 'Requis';
+    }
+    if (s === 5) {
+      if (!form.energiePrincipale) e.energiePrincipale = 'Requis';
+    }
+    if (s === 7) {
+      if (!form.emailContact.trim()) e.emailContact = 'Requis';
+    }
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  }
+
+  function next() {
+    if (!validate(step)) return;
+    if (step === 7) { onComplete(form); return; }
+    setStep(s => s + 1);
+  }
+
+  const progress = ((step - 1) / 6) * 100;
+
+  return (
+    <div className="min-h-screen px-4 py-8 max-w-2xl mx-auto">
+      {/* Header progress */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-sm text-gray-400">Module {step}/{MODULES.length}</span>
+          <span className="text-sm font-medium text-alpha-400">{MODULES[step-1].label}</span>
+        </div>
+        <div className="progress-bar">
+          <div className="progress-fill" style={{width:`${progress}%`}} />
+        </div>
+        <div className="flex mt-2 gap-1">
+          {MODULES.map(m => (
+            <button key={m.id} onClick={() => m.id < step && setStep(m.id)}
+              className={`flex-1 text-xs py-1 rounded transition-colors ${step === m.id ? 'text-alpha-400 font-semibold' : m.id < step ? 'text-gray-400 cursor-pointer hover:text-gray-200' : 'text-gray-600 cursor-default'}`}>
+              {m.short}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Module 1 — Identification */}
+      {step === 1 && (
+        <div className="space-y-6">
+          <h2 className="text-2xl font-bold">Identification</h2>
+          <div>
+            <label className="block text-sm text-gray-400 mb-2">Nom du bâtiment / projet (optionnel)</label>
+            <input value={form.nomBatiment} onChange={e => set('nomBatiment', e.target.value)}
+              placeholder="Ex : Bureaux Haussmann" className="form-input w-full px-4 py-3 rounded-xl text-white"
+              style={{background:'rgba(255,255,255,0.07)', border:`1px solid ${errors.nomBatiment ? '#f87171' : 'rgba(255,255,255,0.12)'}`}} />
+          </div>
+          <div>
+            <label className="block text-sm text-gray-400 mb-2">Votre nom *</label>
+            <input value={form.nomContact} onChange={e => set('nomContact', e.target.value)}
+              placeholder="Prénom Nom"
+              className="form-input w-full px-4 py-3 rounded-xl text-white"
+              style={{background:'rgba(255,255,255,0.07)', border:`1px solid ${errors.nomContact ? '#f87171' : 'rgba(255,255,255,0.12)'}`}} />
+            {errors.nomContact && <p className="text-red-400 text-xs mt-1">{errors.nomContact}</p>}
+          </div>
+          <div>
+            <label className="block text-sm text-gray-400 mb-2">Société (optionnel)</label>
+            <input value={form.societe} onChange={e => set('societe', e.target.value)}
+              placeholder="Raison sociale"
+              className="form-input w-full px-4 py-3 rounded-xl text-white"
+              style={{background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.12)'}} />
+          </div>
+          <div>
+            <label className="block text-sm text-gray-400 mb-3">Type d'activité *</label>
+            <div className="grid grid-cols-3 gap-3">
+              {ACTIVITE_OPTIONS.map(opt => (
+                <button key={opt.id} onClick={() => set('activite', opt.id)}
+                  className={`p-3 rounded-xl border text-left transition-all ${form.activite === opt.id ? 'tile-active' : 'glass hover:border-gray-500'}`}
+                  style={{borderColor: form.activite === opt.id ? '#6272f8' : errors.activite ? '#f87171' : 'rgba(255,255,255,0.08)'}}>
+                  <div className="text-xl mb-1">{opt.icon}</div>
+                  <div className="text-xs font-medium leading-tight">{opt.label}</div>
+                </button>
+              ))}
+            </div>
+            {errors.activite && <p className="text-red-400 text-xs mt-2">{errors.activite}</p>}
+          </div>
+        </div>
+      )}
+
+      {/* Module 2 — Profil bâtiment */}
+      {step === 2 && (
+        <div className="space-y-6">
+          <h2 className="text-2xl font-bold">Profil bâtiment</h2>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm text-gray-400 mb-2">Surface (m²) *</label>
+              <input type="number" value={form.surface} onChange={e => set('surface', e.target.value)}
+                placeholder="850" className="w-full px-4 py-3 rounded-xl text-white"
+                style={{background:'rgba(255,255,255,0.07)', border:`1px solid ${errors.surface ? '#f87171' : 'rgba(255,255,255,0.12)'}`}} />
+              {errors.surface && <p className="text-red-400 text-xs mt-1">{errors.surface}</p>}
+            </div>
+            <div>
+              <label className="block text-sm text-gray-400 mb-2">Code postal</label>
+              <input value={form.codePostal} onChange={e => set('codePostal', e.target.value)}
+                placeholder="75001" className="w-full px-4 py-3 rounded-xl text-white"
+                style={{background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.12)'}} />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm text-gray-400 mb-2">Ville</label>
+            <input value={form.ville} onChange={e => set('ville', e.target.value)}
+              placeholder="Paris" className="w-full px-4 py-3 rounded-xl text-white"
+              style={{background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.12)'}} />
+          </div>
+          <div>
+            <label className="block text-sm text-gray-400 mb-2">Période de construction *</label>
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { id:'avant_1975', label:'Avant 1975' },
+                { id:'1975_2000',  label:'1975 – 2000' },
+                { id:'2000_2012',  label:'2000 – 2012' },
+                { id:'apres_2012', label:'Après 2012 (RT 2012)' },
+              ].map(opt => (
+                <button key={opt.id} onClick={() => set('anneeConstruction', opt.id)}
+                  className={`p-3 rounded-xl border text-left text-sm transition-all ${form.anneeConstruction === opt.id ? 'tile-active' : 'glass hover:border-gray-500'}`}
+                  style={{borderColor: form.anneeConstruction === opt.id ? '#6272f8' : errors.anneeConstruction ? '#f87171' : 'rgba(255,255,255,0.08)'}}>
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+            {errors.anneeConstruction && <p className="text-red-400 text-xs mt-1">{errors.anneeConstruction}</p>}
+          </div>
+          <div>
+            <label className="block text-sm text-gray-400 mb-2">Type de construction</label>
+            <div className="grid grid-cols-3 gap-3">
+              {[{id:'individuel',label:'Individuel'},{id:'collectif',label:'Collectif'},{id:'mitoyen',label:'Mitoyen'}].map(opt => (
+                <button key={opt.id} onClick={() => set('typeConstruction', opt.id)}
+                  className={`p-3 rounded-xl border text-sm text-center transition-all ${form.typeConstruction === opt.id ? 'tile-active' : 'glass hover:border-gray-500'}`}
+                  style={{borderColor: form.typeConstruction === opt.id ? '#6272f8' : 'rgba(255,255,255,0.08)'}}>
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm text-gray-400 mb-2">Certification environnementale (si applicable)</label>
+            <div className="grid grid-cols-3 gap-3">
+              {[{id:'none',label:'Aucune'},{id:'hqe',label:'HQE'},{id:'breeam',label:'BREEAM'},{id:'leed',label:'LEED'},{id:'bepos',label:'BEPOS'},{id:'autre',label:'Autre'}].map(opt => (
+                <button key={opt.id} onClick={() => set('certificationEnv', opt.id)}
+                  className={`p-3 rounded-xl border text-sm text-center transition-all ${form.certificationEnv === opt.id ? 'tile-active' : 'glass hover:border-gray-500'}`}
+                  style={{borderColor: form.certificationEnv === opt.id ? '#6272f8' : 'rgba(255,255,255,0.08)'}}>
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Module 3 — Enveloppe thermique */}
+      {step === 3 && (
+        <div className="space-y-6">
+          <h2 className="text-2xl font-bold">Enveloppe thermique</h2>
+          <p className="text-gray-400 text-sm">Ces informations affinent l'estimation de 8 à 20%. Passez à la suite si vous ne disposez pas des données.</p>
+
+          {[
+            { field:'isolationToiture', label:'Isolation toiture / combles',
+              options:[{id:'performante',label:'Performante (R≥5)'},{id:'standard',label:'Standard (R 3-5)'},{id:'faible',label:'Faible (R<3)'},{id:'aucune',label:'Aucune'},{id:'inconnu',label:'Inconnu'}]},
+            { field:'isolationFacade', label:'Isolation façades',
+              options:[{id:'ite',label:'ITE / Bardage'},{id:'iti',label:'ITI'},{id:'aucune',label:'Aucune'},{id:'inconnu',label:'Inconnu'}]},
+            { field:'isolationPlancher', label:'Isolation plancher bas',
+              options:[{id:'performante',label:'Oui, performante'},{id:'partielle',label:'Partielle'},{id:'aucune',label:'Aucune'},{id:'inconnu',label:'Inconnu'}]},
+            { field:'typeVitrage', label:'Type de vitrage',
+              options:[{id:'triple',label:'Triple vitrage'},{id:'double_perf',label:'Double vitrage perf.'},{id:'double_std',label:'Double vitrage std'},{id:'simple',label:'Simple vitrage'},{id:'inconnu',label:'Inconnu'}]},
+          ].map(({ field, label, options }) => (
+            <div key={field}>
+              <label className="block text-sm text-gray-400 mb-2">{label}</label>
+              <div className="flex flex-wrap gap-2">
+                {options.map(opt => (
+                  <button key={opt.id} onClick={() => set(field, opt.id)}
+                    className={`px-4 py-2 rounded-lg border text-sm transition-all ${form[field] === opt.id ? 'tile-active' : 'glass hover:border-gray-500'}`}
+                    style={{borderColor: form[field] === opt.id ? '#6272f8' : 'rgba(255,255,255,0.08)'}}>
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Module 4 — Systèmes techniques */}
+      {step === 4 && (
+        <div className="space-y-6">
+          <h2 className="text-2xl font-bold">Systèmes techniques</h2>
+
+          {[
+            { field:'systemeChauffage', label:'Système de chauffage', options: CHAUFFAGE_OPTIONS },
+            { field:'systemeClim',      label:'Climatisation',        options: CLIM_OPTIONS },
+            { field:'systemeVentilation', label:'Ventilation',        options: VENTILATION_OPTIONS },
+            { field:'systemeEclairage', label:'Éclairage',            options: ECLAIRAGE_OPTIONS },
+          ].map(({ field, label, options }) => (
+            <div key={field}>
+              <label className="block text-sm text-gray-400 mb-2">{label}</label>
+              <div className="grid grid-cols-2 gap-2">
+                {options.map(opt => (
+                  <button key={opt.id} onClick={() => set(field, opt.id)}
+                    className={`px-4 py-2.5 rounded-xl border text-sm text-left transition-all ${form[field] === opt.id ? 'tile-active' : 'glass hover:border-gray-500'}`}
+                    style={{borderColor: form[field] === opt.id ? '#6272f8' : 'rgba(255,255,255,0.08)'}}>
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Module 5 — Consommations réelles */}
+      {step === 5 && (
+        <div className="space-y-6">
+          <h2 className="text-2xl font-bold">Consommations réelles</h2>
+          <div className="flex items-center gap-3 p-3 rounded-xl"
+               style={{background:'rgba(98,114,248,0.1)', border:'1px solid rgba(98,114,248,0.2)'}}>
+            <label className="flex items-center gap-2 cursor-pointer text-sm">
+              <input type="checkbox" checked={form.sansFactures} onChange={e => set('sansFactures', e.target.checked)}
+                className="w-4 h-4 rounded" />
+              <span>Je n'ai pas mes factures — estimer à partir du benchmark</span>
+            </label>
+          </div>
+
+          <div>
+            <label className="block text-sm text-gray-400 mb-2">Énergie principale *</label>
+            <div className="grid grid-cols-3 gap-3">
+              {ENERGIE_OPTIONS.map(opt => (
+                <button key={opt.id} onClick={() => set('energiePrincipale', opt.id)}
+                  className={`p-3 rounded-xl border text-center transition-all ${form.energiePrincipale === opt.id ? 'tile-active' : 'glass hover:border-gray-500'}`}
+                  style={{borderColor: form.energiePrincipale === opt.id ? '#6272f8' : errors.energiePrincipale ? '#f87171' : 'rgba(255,255,255,0.08)'}}>
+                  <div className="text-xl mb-1">{opt.icon}</div>
+                  <div className="text-xs font-medium">{opt.label}</div>
+                </button>
+              ))}
+            </div>
+            {errors.energiePrincipale && <p className="text-red-400 text-xs mt-1">{errors.energiePrincipale}</p>}
+          </div>
+
+          {!form.sansFactures && (
+            <div className="space-y-4">
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-sm font-medium text-gray-300">⚡ Électricité</span>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">kWh/an</label>
+                    <input type="number" value={form.elecKwh} onChange={e => set('elecKwh', e.target.value)}
+                      placeholder="Ex : 45 000" className="w-full px-3 py-2.5 rounded-lg text-white text-sm"
+                      style={{background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.12)'}} />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">€ TTC/an</label>
+                    <input type="number" value={form.elecEuro} onChange={e => set('elecEuro', e.target.value)}
+                      placeholder="Ex : 8 800" className="w-full px-3 py-2.5 rounded-lg text-white text-sm"
+                      style={{background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.12)'}} />
+                  </div>
+                </div>
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-sm font-medium text-gray-300">🔥 Gaz naturel</span>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">kWh/an</label>
+                    <input type="number" value={form.gasKwh} onChange={e => set('gasKwh', e.target.value)}
+                      placeholder="Ex : 32 000" className="w-full px-3 py-2.5 rounded-lg text-white text-sm"
+                      style={{background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.12)'}} />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">€ TTC/an</label>
+                    <input type="number" value={form.gasEuro} onChange={e => set('gasEuro', e.target.value)}
+                      placeholder="Ex : 3 400" className="w-full px-3 py-2.5 rounded-lg text-white text-sm"
+                      style={{background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.12)'}} />
+                  </div>
+                </div>
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-sm font-medium text-gray-300">♨️ Autres énergies</span>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">kWh/an</label>
+                    <input type="number" value={form.autresKwh} onChange={e => set('autresKwh', e.target.value)}
+                      placeholder="0" className="w-full px-3 py-2.5 rounded-lg text-white text-sm"
+                      style={{background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.12)'}} />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">€ TTC/an</label>
+                    <input type="number" value={form.autresEuro} onChange={e => set('autresEuro', e.target.value)}
+                      placeholder="0" className="w-full px-3 py-2.5 rounded-lg text-white text-sm"
+                      style={{background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.12)'}} />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {form.sansFactures && (
+            <div className="glass rounded-xl p-4 text-sm text-amber-300">
+              ⚠️ En l'absence de factures, l'estimation se base sur les médianes sectorielles.
+              Le score de confiance sera "Faible". Privilégiez la saisie de factures pour un résultat fiable.
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Module 6 — Usage et occupation */}
+      {step === 6 && (
+        <div className="space-y-6">
+          <h2 className="text-2xl font-bold">Usage et occupation</h2>
+          <div>
+            <label className="block text-sm text-gray-400 mb-2">Nombre d'occupants / employés habituels</label>
+            <input type="number" value={form.nbOccupants} onChange={e => set('nbOccupants', e.target.value)}
+              placeholder="Ex : 35" className="w-full px-4 py-3 rounded-xl text-white"
+              style={{background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.12)'}} />
+          </div>
+          <div>
+            <label className="block text-sm text-gray-400 mb-2">Heures d'ouverture par jour</label>
+            <div className="flex flex-wrap gap-2">
+              {['6','8','10','12','16','24'].map(h => (
+                <button key={h} onClick={() => set('heuresOuverture', h)}
+                  className={`px-4 py-2 rounded-lg border text-sm transition-all ${form.heuresOuverture === h ? 'tile-active' : 'glass hover:border-gray-500'}`}
+                  style={{borderColor: form.heuresOuverture === h ? '#6272f8' : 'rgba(255,255,255,0.08)'}}>
+                  {h}h
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm text-gray-400 mb-2">Jours d'ouverture par semaine</label>
+            <div className="flex flex-wrap gap-2">
+              {['5','6','7'].map(d => (
+                <button key={d} onClick={() => set('joursOuverture', d)}
+                  className={`px-4 py-2 rounded-lg border text-sm transition-all ${form.joursOuverture === d ? 'tile-active' : 'glass hover:border-gray-500'}`}
+                  style={{borderColor: form.joursOuverture === d ? '#6272f8' : 'rgba(255,255,255,0.08)'}}>
+                  {d} jours
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="flex flex-col gap-3">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input type="checkbox" checked={form.activiteNuit} onChange={e => set('activiteNuit', e.target.checked)}
+                className="w-4 h-4 rounded" />
+              <span className="text-sm">Activité nocturne (après 22h)</span>
+            </label>
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input type="checkbox" checked={form.activiteWeekend} onChange={e => set('activiteWeekend', e.target.checked)}
+                className="w-4 h-4 rounded" />
+              <span className="text-sm">Ouvert le week-end</span>
+            </label>
+          </div>
+        </div>
+      )}
+
+      {/* Module 7 — Contexte et travaux */}
+      {step === 7 && (
+        <div className="space-y-6">
+          <h2 className="text-2xl font-bold">Contexte et travaux</h2>
+
+          <div>
+            <label className="block text-sm text-gray-400 mb-2">Travaux énergétiques récents ou planifiés</label>
+            <div className="space-y-2">
+              {[
+                {id:'oui_recents', label:'Oui, travaux réalisés dans les 3 dernières années'},
+                {id:'planifies',   label:'Oui, travaux planifiés (budget défini)'},
+                {id:'en_reflexion',label:'En réflexion (pas encore planifiés)'},
+                {id:'non',         label:'Non, aucun travaux prévu'},
+              ].map(opt => (
+                <button key={opt.id} onClick={() => set('travauxRecents', opt.id)}
+                  className={`w-full px-4 py-3 rounded-xl border text-sm text-left transition-all ${form.travauxRecents === opt.id ? 'tile-active' : 'glass hover:border-gray-500'}`}
+                  style={{borderColor: form.travauxRecents === opt.id ? '#6272f8' : 'rgba(255,255,255,0.08)'}}>
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm text-gray-400 mb-2">Horizon décision investissement</label>
+            <div className="flex flex-wrap gap-2">
+              {[{id:'immediat',label:'Immédiat'},{id:'6mois',label:'< 6 mois'},{id:'1an',label:'1 an'},{id:'2ans_plus',label:'2 ans+'}].map(opt => (
+                <button key={opt.id} onClick={() => set('horizonDecision', opt.id)}
+                  className={`px-4 py-2 rounded-lg border text-sm transition-all ${form.horizonDecision === opt.id ? 'tile-active' : 'glass hover:border-gray-500'}`}
+                  style={{borderColor: form.horizonDecision === opt.id ? '#6272f8' : 'rgba(255,255,255,0.08)'}}>
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm text-gray-400 mb-2">Objectif principal</label>
+            <div className="grid grid-cols-3 gap-3">
+              {[{id:'conformite',label:'Conformité réglementaire',icon:'⚖️'},{id:'charges',label:'Réduction charges',icon:'💶'},{id:'valorisation',label:'Valorisation bien',icon:'📈'}].map(opt => (
+                <button key={opt.id} onClick={() => set('objectif', opt.id)}
+                  className={`p-3 rounded-xl border text-center transition-all ${form.objectif === opt.id ? 'tile-active' : 'glass hover:border-gray-500'}`}
+                  style={{borderColor: form.objectif === opt.id ? '#6272f8' : 'rgba(255,255,255,0.08)'}}>
+                  <div className="text-xl mb-1">{opt.icon}</div>
+                  <div className="text-xs font-medium leading-tight">{opt.label}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm text-gray-400 mb-2">Email de contact (pour recevoir le rapport) *</label>
+            <input type="email" value={form.emailContact} onChange={e => set('emailContact', e.target.value)}
+              placeholder="vous@example.com" className="w-full px-4 py-3 rounded-xl text-white"
+              style={{background:'rgba(255,255,255,0.07)', border:`1px solid ${errors.emailContact ? '#f87171' : 'rgba(255,255,255,0.12)'}`}} />
+            {errors.emailContact && <p className="text-red-400 text-xs mt-1">{errors.emailContact}</p>}
+          </div>
+
+          <div>
+            <label className="block text-sm text-gray-400 mb-2">Téléphone (optionnel)</label>
+            <input type="tel" value={form.telephoneContact} onChange={e => set('telephoneContact', e.target.value)}
+              placeholder="06 xx xx xx xx" className="w-full px-4 py-3 rounded-xl text-white"
+              style={{background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.12)'}} />
+            <p className="text-xs text-gray-500 mt-1">✓ Pour être rappelé par un expert RGE près de chez vous</p>
+          </div>
+
+          <div className="p-4 rounded-xl" style={{background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)'}}>
+            <p className="text-xs text-gray-400 leading-relaxed">
+              Données traitées de manière sécurisée pour produire cette estimation indicative.
+              Ne remplace pas un audit réglementaire complet. Conservation 18 mois · Droits RGPD : diagtertiaire.fr/rgpd
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Navigation */}
+      <div className="flex gap-3 mt-10">
+        {step > 1 && (
+          <button onClick={() => setStep(s => s - 1)}
+            className="flex-1 py-3 rounded-xl border text-sm font-medium transition-all hover:border-gray-400"
+            style={{border:'1px solid rgba(255,255,255,0.15)', color:'#9ca3af'}}>
+            ← Précédent
+          </button>
+        )}
+        <button onClick={next}
+          className="flex-1 py-3 rounded-xl font-semibold text-white transition-all hover:opacity-90"
+          style={{background:'linear-gradient(135deg, #6272f8, #4650ed)'}}>
+          {step === 7 ? 'Générer le rapport →' : 'Suivant →'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════
+   RAPPORT CLIENT — 8 SECTIONS
+═══════════════════════════════════════════════════ */
+
+const CHART_COLORS = ['#6272f8','#8098fb','#f59e0b','#10b981','#ef4444','#8b5cf6'];
+const TOOLTIP_STYLE = { background:'#1a1a2e', border:'1px solid rgba(255,255,255,0.1)', borderRadius:'8px', color:'#f0f0f5', fontFamily:'DM Sans, sans-serif', fontSize:'13px' };
+
+function RapportClient({ formData, result, onDashboard, onReset }) {
+  const secteur = BENCHMARKS[formData.activite] || BENCHMARKS.bureau;
+  const activiteLabel = ACTIVITY_LABELS[formData.activite] || formData.activite;
+
+  const repartitionData = Object.entries(result.postes).map(([k, v]) => ({
+    name: k.charAt(0).toUpperCase() + k.slice(1),
+    value: v,
+    kwh: Math.round((result.totalKwh * v) / 100),
+  }));
+
+  const benchmarkData = [
+    { name: 'Q1', valeur: secteur.q1, fill: '#059669' },
+    { name: 'Médiane', valeur: secteur.median, fill: '#d97706' },
+    { name: 'Q3', valeur: secteur.q3, fill: '#dc2626' },
+    { name: formData.nomBatiment || 'Votre bâtiment', valeur: result.intensiteReelle, fill: '#6272f8' },
+  ];
+
+  const economiesData = result.actions.slice(0, 5).map(a => ({
+    name: a.label.length > 28 ? a.label.substring(0, 26) + '…' : a.label,
+    economie: Math.round(a.gainEuroAnnuel),
+    capex: Math.round(a.capexEstime),
+    roi: a.roiAns ? Math.round(a.roiAns * 10) / 10 : null,
+  }));
+
+  function exportPrint() { window.print(); }
+
+  function exportShare() {
+    try {
+      const payload = { f: formData, r: result, ts: Date.now() };
+      const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+      const url = window.location.href.split('#')[0] + '#rapport=' + b64;
+      navigator.clipboard.writeText(url).then(() => alert('Lien copié dans le presse-papiers !'));
+    } catch(e) { alert('Impossible de générer le lien.'); }
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto px-4 py-8" id="rapport-client">
+      {/* Actions header */}
+      <div className="flex items-center justify-between mb-8 no-print">
+        <button onClick={onReset} className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm">
+          ← Nouveau diagnostic
+        </button>
+        <div className="flex gap-3">
+          <button onClick={onDashboard}
+            className="px-4 py-2 rounded-lg text-sm font-medium transition-all hover:opacity-80"
+            style={{background:'rgba(98,114,248,0.2)', border:'1px solid rgba(98,114,248,0.3)', color:'#8098fb'}}>
+            Dashboard Pro
+          </button>
+          <button onClick={exportShare}
+            className="px-4 py-2 rounded-lg text-sm font-medium transition-all hover:opacity-80"
+            style={{background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.12)'}}>
+            Partager
+          </button>
+          <button onClick={exportPrint}
+            className="px-4 py-2 rounded-lg text-sm font-medium text-white transition-all hover:opacity-90"
+            style={{background:'linear-gradient(135deg, #6272f8, #4650ed)'}}>
+            Télécharger PDF
+          </button>
+        </div>
+      </div>
+
+      {/* Section 1 — Hero band */}
+      <div className="rounded-2xl p-8 mb-6"
+           style={{background:'linear-gradient(135deg, #1a1a3e 0%, #0f0f2e 100%)', border:'1px solid rgba(98,114,248,0.3)'}}>
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div>
+            <div className="text-xs font-medium text-alpha-400 uppercase tracking-wider mb-2">Rapport DiagTertiaire Pro Alpha</div>
+            <h1 className="text-3xl font-bold mb-2" style={{fontFamily:'Syne,sans-serif'}}>
+              {formData.nomBatiment || 'Bâtiment diagnostiqué'}
+            </h1>
+            <div className="flex flex-wrap gap-4 text-sm text-gray-300">
+              <span>📍 {formData.ville || '—'} {formData.codePostal && `(${formData.codePostal})`}</span>
+              <span>🏢 {activiteLabel}</span>
+              <span>📐 {fmt(parseFloat(formData.surface))} m²</span>
+              <span>🗓️ {new Date().toLocaleDateString('fr-FR')}</span>
+            </div>
+            {result.consoEstimee && (
+              <div className="mt-3 text-xs text-amber-300 flex items-center gap-1">
+                ⚠️ Consommation estimée par benchmark sectoriel — saisir les factures pour affiner
+              </div>
+            )}
+          </div>
+          <div className={`flex flex-col items-center justify-center w-28 h-28 rounded-2xl border-2 font-bold flex-shrink-0 ${scoreBgClass(result.lettre)}`}
+               style={{borderColor: scoreColor(result.lettre)}}>
+            <div className="text-5xl" style={{fontFamily:'Syne,sans-serif'}}>{result.lettre}</div>
+            <div className="text-xs mt-1 opacity-70">Indice DiagT.</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Section 2 — KPIs */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        {[
+          { label:'Intensité', value:`${fmt(result.intensiteReelle)} kWh/m²/an`, sub:`Médiane : ${fmt(result.medianeRef)}`, color:'#6272f8' },
+          { label:'Coût énergie', value: fmtEuro(result.annualCost), sub:'/ an TTC', color:'#f59e0b' },
+          { label:'Émissions CO₂', value:`${fmt(result.co2Annual, 1)} t', sub:'CO₂/an', color:'#10b981' },
+          { label:'Confiance', value: result.confiance, sub:`Score ${result.confianceScore}/3`, color: result.confianceScore === 3 ? '#059669' : result.confianceScore === 2 ? '#d97706' : '#dc2626' },
+        ].map((kpi, i) => (
+          <div key={i} className="glass rounded-xl p-4">
+            <div className="text-xs text-gray-400 mb-2">{kpi.label}</div>
+            <div className="text-xl font-bold mb-0.5" style={{color: kpi.color, fontFamily:'Syne,sans-serif'}}>{kpi.value}</div>
+            <div className="text-xs text-gray-500">{kpi.sub}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Section 3 — Positionnement sectoriel */}
+      <div className="glass rounded-2xl p-6 mb-6">
+        <h2 className="text-xl font-bold mb-4">Positionnement sectoriel — {activiteLabel}</h2>
+        <div className="flex flex-col md:flex-row gap-6">
+          <div className="flex-1">
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={benchmarkData} margin={{top:5, right:5, bottom:5, left:5}}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" tick={{fill:'#9ca3af', fontSize:11}} />
+                <YAxis tick={{fill:'#9ca3af', fontSize:11}} unit=" kWh" />
+                <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v) => [`${fmt(v)} kWh/m²/an`, 'Intensité']} />
+                <Bar dataKey="valeur" radius={[4,4,0,0]}>
+                  {benchmarkData.map((entry, i) => (
+                    <Cell key={i} fill={entry.fill} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="md:w-56">
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">Votre intensité</span>
+                <span className="font-semibold">{fmt(result.intensiteReelle)} kWh/m²</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">Ratio / médiane</span>
+                <span className="font-semibold" style={{color: scoreColor(result.lettre)}}>×{result.ratio}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">Zone climatique</span>
+                <span className="font-semibold">{result.zone}</span>
+              </div>
+              <div className="mt-4 p-3 rounded-xl text-center text-sm"
+                   style={{background:`${scoreColor(result.lettre)}22`, border:`1px solid ${scoreColor(result.lettre)}55`}}>
+                <div className="text-xs text-gray-400 mb-1">Classe estimée</div>
+                <div className="text-3xl font-bold" style={{color: scoreColor(result.lettre), fontFamily:'Syne,sans-serif'}}>{result.lettre}</div>
+                <div className="text-xs text-gray-500 mt-1">Indicatif — non opposable</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Section 4 — Répartition postes */}
+      <div className="glass rounded-2xl p-6 mb-6">
+        <h2 className="text-xl font-bold mb-4">Répartition estimée par poste</h2>
+        <div className="flex flex-col md:flex-row gap-6">
+          <div className="flex-shrink-0">
+            <ResponsiveContainer width={200} height={200}>
+              <PieChart>
+                <Pie data={repartitionData} dataKey="value" cx="50%" cy="50%"
+                     innerRadius={55} outerRadius={85} paddingAngle={3}>
+                  {repartitionData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+                </Pie>
+                <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v, n, p) => [`${v}% — ${fmt(p.payload.kwh)} kWh`, p.payload.name]} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="flex-1 grid grid-cols-2 gap-3">
+            {repartitionData.map((p, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <div className="w-3 h-3 rounded-full flex-shrink-0" style={{background: CHART_COLORS[i % CHART_COLORS.length]}} />
+                <div>
+                  <div className="text-sm font-medium">{p.name}</div>
+                  <div className="text-xs text-gray-400">{p.value}% · {fmt(p.kwh)} kWh</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Section 5 — Actions prioritaires */}
+      <div className="glass rounded-2xl p-6 mb-6">
+        <h2 className="text-xl font-bold mb-2">Actions prioritaires</h2>
+        <p className="text-sm text-gray-400 mb-4">
+          Potentiel global estimé : {result.totalGainPct}% de réduction — {fmtEuro(result.economiesAnnuelles)}/an
+        </p>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b" style={{borderColor:'rgba(255,255,255,0.08)'}}>
+                <th className="text-left py-2 pr-4 text-gray-400 font-medium">Action</th>
+                <th className="text-right py-2 pr-4 text-gray-400 font-medium">Gain €/an</th>
+                <th className="text-right py-2 pr-4 text-gray-400 font-medium">CAPEX est.</th>
+                <th className="text-right py-2 pr-4 text-gray-400 font-medium">Retour</th>
+                <th className="text-right py-2 text-gray-400 font-medium">CEE</th>
+              </tr>
+            </thead>
+            <tbody>
+              {result.actions.map((a, i) => (
+                <tr key={i} className="border-b hover:bg-white/5 transition-colors"
+                    style={{borderColor:'rgba(255,255,255,0.05)'}}>
+                  <td className="py-3 pr-4">
+                    <div className="font-medium">{a.label}</div>
+                    <div className="text-xs text-gray-500">{a.temps_retour_indicatif}</div>
+                  </td>
+                  <td className="py-3 pr-4 text-right font-semibold text-emerald-400">{fmtEuro(a.gainEuroAnnuel)}</td>
+                  <td className="py-3 pr-4 text-right text-gray-300">{fmtEuro(a.capexEstime)}</td>
+                  <td className="py-3 pr-4 text-right">
+                    {a.roiAns ? <span className="font-medium">{a.roiAns} ans</span> : '—'}
+                  </td>
+                  <td className="py-3 text-right">
+                    {a.cee_fiche ?
+                      <span className="px-2 py-0.5 rounded text-xs font-medium" style={{background:'rgba(98,114,248,0.2)', color:'#8098fb'}}>{a.cee_fiche}</span>
+                      : <span className="text-gray-600">—</span>}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="mt-4 p-3 rounded-xl text-xs text-gray-500"
+             style={{background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.06)'}}>
+          CAPEX estimé sur base de {fmt(parseFloat(formData.surface))} m² · Prix de référence marché 2024 · Hors aides et subventions
+        </div>
+      </div>
+
+      {/* Section 6 — Projection ROI 10 ans */}
+      <div className="glass rounded-2xl p-6 mb-6">
+        <h2 className="text-xl font-bold mb-2">Projection financière 10 ans</h2>
+        <p className="text-sm text-gray-400 mb-4">
+          CAPEX total estimé : {fmtEuro(result.capexTotal)} · ROI moyen : {result.roiMoyen ? `${result.roiMoyen} ans` : '—'}
+        </p>
+        <ResponsiveContainer width="100%" height={240}>
+          <LineChart data={result.projData} margin={{top:5, right:20, bottom:5, left:10}}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="annee" tick={{fill:'#9ca3af', fontSize:11}} />
+            <YAxis tick={{fill:'#9ca3af', fontSize:11}} tickFormatter={v => `${(v/1000).toFixed(0)}k€`} />
+            <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v) => [fmtEuro(v)]} />
+            <ReferenceLine y={0} stroke="rgba(255,255,255,0.3)" strokeDasharray="3 3" />
+            <Line type="monotone" dataKey="avecTravaux" stroke="#6272f8" strokeWidth={2} name="Avec travaux (cumul)" dot={false} />
+            <Line type="monotone" dataKey="sansTravaux" stroke="#ef4444" strokeWidth={2} strokeDasharray="5 5" name="Sans travaux (dérive coût)" dot={false} />
+          </LineChart>
+        </ResponsiveContainer>
+        <div className="flex gap-6 justify-center mt-3 text-xs text-gray-400">
+          <span className="flex items-center gap-1"><span style={{display:'inline-block',width:16,height:2,background:'#6272f8',borderRadius:1}} /> Avec travaux</span>
+          <span className="flex items-center gap-1"><span style={{display:'inline-block',width:16,height:2,background:'#ef4444',borderRadius:1,opacity:0.7}} /> Sans travaux (dérive)</span>
+        </div>
+      </div>
+
+      {/* Section 7 — Économies par poste */}
+      <div className="glass rounded-2xl p-6 mb-6">
+        <h2 className="text-xl font-bold mb-4">Économies potentielles par action</h2>
+        <ResponsiveContainer width="100%" height={220}>
+          <BarChart data={economiesData} layout="vertical" margin={{top:0, right:60, bottom:0, left:10}}>
+            <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+            <XAxis type="number" tick={{fill:'#9ca3af', fontSize:10}} tickFormatter={v => `${(v/1000).toFixed(0)}k`} />
+            <YAxis type="category" dataKey="name" tick={{fill:'#9ca3af', fontSize:10}} width={160} />
+            <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v) => [fmtEuro(v)]} />
+            <Bar dataKey="economie" fill="#10b981" radius={[0,4,4,0]} name="Économie annuelle" />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Section 8 — Hypothèses et avertissements */}
+      <div className="glass rounded-2xl p-6 mb-6">
+        <h2 className="text-xl font-bold mb-3">Hypothèses et références</h2>
+        <div className="grid md:grid-cols-2 gap-4 text-sm text-gray-400">
+          <div>
+            <p className="font-medium text-gray-300 mb-1">Prix de référence (CRE T3 2024)</p>
+            <ul className="space-y-0.5 text-xs">
+              <li>⚡ Électricité : 0,196 €/kWh TTC</li>
+              <li>🔥 Gaz naturel : 0,105 €/kWh TTC</li>
+              <li>♨️ Réseau chaleur : 0,092 €/kWh TTC</li>
+              <li>🛢️ Fioul : 0,118 €/kWh TTC</li>
+              <li>🪵 Bois/granulés : 0,065 €/kWh TTC</li>
+            </ul>
+          </div>
+          <div>
+            <p className="font-medium text-gray-300 mb-1">Benchmarks (Énergie Finale tous usages)</p>
+            <ul className="space-y-0.5 text-xs">
+              <li>Secteur : {activiteLabel}</li>
+              <li>Q1 : {fmt(secteur.q1)} · Médiane : {fmt(secteur.median)} · Q3 : {fmt(secteur.q3)} kWh/m²/an</li>
+              <li>Zone climatique : {result.zone}</li>
+              <li>Facteur CO₂ ADEME Base Carbone v23</li>
+            </ul>
+          </div>
+        </div>
+        <div className="mt-4 p-3 rounded-xl text-xs text-amber-300"
+             style={{background:'rgba(251,191,36,0.08)', border:'1px solid rgba(251,191,36,0.2)'}}>
+          Ce rapport est un pré-diagnostic indicatif. Les résultats ne sont pas opposables légalement et ne remplacent pas
+          un audit énergétique réglementaire (NF EN 16247-1). Indice DiagTertiaire — hors cadre OPERAT.
+        </div>
+      </div>
+
+      {/* Footer rapport */}
+      <div className="text-center text-xs text-gray-600 mt-8">
+        DiagTertiaire Pro Alpha · {new Date().toLocaleDateString('fr-FR')} · Données traitées localement · Résultats indicatifs
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════
+   DASHBOARD PRO — DONNÉES DE QUALIFICATION
+═══════════════════════════════════════════════════ */
+
+function DashboardPro({ formData, result, allCases, onBack, onReset }) {
+  function exportCSV() {
+    const cases = allCases || [{ formData, result, ts: Date.now() }];
+    const headers = ['Date','Nom','Email','Société','Activité','Surface','Ville','Score','Intensité','Coût/an','Économies/an','CAPEX','ROI','Maturité','Label maturité','Objectif','Horizon'];
+    const rows = cases.map(c => {
+      const f = c.formData; const r = c.result;
+      return [
+        new Date(c.ts).toLocaleDateString('fr-FR'),
+        f.nomContact, f.emailContact, f.societe,
+        ACTIVITY_LABELS[f.activite] || f.activite,
+        f.surface, f.ville,
+        r.lettre, r.intensiteReelle, r.annualCost,
+        r.economiesAnnuelles, r.capexTotal,
+        r.roiMoyen || '',
+        r.maturite, r.scoreMaturiteLabel,
+        f.objectif, f.horizonDecision,
+      ].map(v => `"${v || ''}"`).join(',');
+    });
+    const csv = [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url;
+    a.download = `leads-diagtertiaire-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click(); URL.revokeObjectURL(url);
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <button onClick={onBack} className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm mb-2">
+            ← Retour au rapport client
+          </button>
+          <h1 className="text-2xl font-bold" style={{fontFamily:'Syne,sans-serif'}}>Dashboard Pro</h1>
+          <p className="text-sm text-gray-400">Données de qualification — usage interne uniquement</p>
+        </div>
+        <button onClick={exportCSV}
+          className="px-4 py-2 rounded-lg text-sm font-medium transition-all hover:opacity-90"
+          style={{background:'rgba(16,185,129,0.2)', border:'1px solid rgba(16,185,129,0.3)', color:'#10b981'}}>
+          Exporter CSV
+        </button>
+      </div>
+
+      {/* Score maturité */}
+      <div className="glass rounded-2xl p-6 mb-6">
+        <h2 className="text-lg font-bold mb-4">Score de maturité prospect</h2>
+        <div className="flex items-center gap-6">
+          <div className="flex flex-col items-center justify-center w-28 h-28 rounded-2xl border-2 flex-shrink-0"
+               style={{borderColor: result.scoreMaturiteColor, background:`${result.scoreMaturiteColor}22`}}>
+            <div className="text-4xl font-bold" style={{color: result.scoreMaturiteColor, fontFamily:'Syne,sans-serif'}}>{result.maturite}</div>
+            <div className="text-xs mt-1" style={{color: result.scoreMaturiteColor}}>/10</div>
+          </div>
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-3">
+              <span className="text-xl font-bold" style={{color: result.scoreMaturiteColor, fontFamily:'Syne,sans-serif'}}>{result.scoreMaturiteLabel}</span>
+            </div>
+            <div className="space-y-1 text-sm text-gray-400">
+              <div>Score énergie (lettre {result.lettre}) : {result.lettre === 'D' || result.lettre === 'E' ? '+3' : result.lettre === 'C' ? '+2' : '+1'} pts</div>
+              {formData.travauxRecents === 'planifies' && <div>Travaux planifiés : +3 pts</div>}
+              {formData.travauxRecents === 'oui_recents' && <div>Travaux récents : +2 pts</div>}
+              {parseFloat(formData.surface) > 1000 && <div>Surface &gt; 1000 m² : +2 pts</div>}
+              {parseInt(formData.nbOccupants) > 20 && <div>Organisation &gt; 20 pers. : +1 pt</div>}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Données prospect */}
+      <div className="grid md:grid-cols-2 gap-4 mb-6">
+        <div className="glass rounded-2xl p-5">
+          <h3 className="text-base font-semibold mb-3">Contact</h3>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-gray-400">Nom</span>
+              <span>{formData.nomContact || '—'}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">Email</span>
+              <span className="text-alpha-400">{formData.emailContact || '—'}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">Téléphone</span>
+              <span>{formData.telephoneContact || '—'}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">Société</span>
+              <span>{formData.societe || '—'}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="glass rounded-2xl p-5">
+          <h3 className="text-base font-semibold mb-3">Qualification</h3>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-gray-400">Objectif</span>
+              <span>{formData.objectif ? {conformite:'Conformité',charges:'Réduction charges',valorisation:'Valorisation'}[formData.objectif] : '—'}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">Horizon décision</span>
+              <span>{formData.horizonDecision ? {immediat:'Immédiat',['6mois']:'< 6 mois',['1an']:'1 an',['2ans_plus']:'2 ans+'}[formData.horizonDecision] : '—'}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">Travaux</span>
+              <span>{formData.travauxRecents ? {oui_recents:'Réalisés',planifies:'Planifiés',en_reflexion:'En réflexion',non:'Non prévu'}[formData.travauxRecents] : '—'}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">Confiance données</span>
+              <span style={{color: result.confianceScore === 3 ? '#10b981' : result.confianceScore === 2 ? '#d97706' : '#dc2626'}}>{result.confiance}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* KPIs financiers */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        {[
+          { label:'Économies potentielles', value: fmtEuro(result.economiesAnnuelles), sub:'/an', color:'#10b981' },
+          { label:'CAPEX total estimé', value: fmtEuro(result.capexTotal), sub:'investissement', color:'#6272f8' },
+          { label:'ROI moyen', value: result.roiMoyen ? `${result.roiMoyen} ans` : '—', sub:'retour sur investissement', color:'#f59e0b' },
+          { label:'Gain potentiel', value: `${result.totalGainPct}%`, sub:'de réduction conso.', color:'#8b5cf6' },
+        ].map((kpi, i) => (
+          <div key={i} className="glass rounded-xl p-4">
+            <div className="text-xs text-gray-400 mb-1">{kpi.label}</div>
+            <div className="text-xl font-bold" style={{color: kpi.color, fontFamily:'Syne,sans-serif'}}>{kpi.value}</div>
+            <div className="text-xs text-gray-500 mt-0.5">{kpi.sub}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Données techniques complètes */}
+      <div className="glass rounded-2xl p-5 mb-6">
+        <h3 className="text-base font-semibold mb-3">Données techniques saisies</h3>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-2 text-sm">
+          {[
+            ['Activité', ACTIVITY_LABELS[formData.activite] || '—'],
+            ['Surface', `${fmt(parseFloat(formData.surface))} m²`],
+            ['Construction', formData.anneeConstruction || '—'],
+            ['Zone climatique', result.zone],
+            ['Energie principale', formData.energiePrincipale || '—'],
+            ['Chauffage', formData.systemeChauffage || '—'],
+            ['Climatisation', formData.systemeClim || '—'],
+            ['Ventilation', formData.systemeVentilation || '—'],
+            ['Éclairage', formData.systemeEclairage || '—'],
+            ['Occupants', formData.nbOccupants || '—'],
+            ['Heures ouverture', formData.heuresOuverture ? `${formData.heuresOuverture}h/j` : '—'],
+            ['Jours ouverture', formData.joursOuverture ? `${formData.joursOuverture}j/sem` : '—'],
+          ].map(([k, v]) => (
+            <div key={k} className="flex justify-between py-1 border-b" style={{borderColor:'rgba(255,255,255,0.05)'}}>
+              <span className="text-gray-400">{k}</span>
+              <span className="font-medium">{v}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="text-center">
+        <button onClick={onReset}
+          className="px-6 py-3 rounded-xl font-semibold text-white transition-all hover:opacity-90"
+          style={{background:'linear-gradient(135deg, #6272f8, #4650ed)'}}>
+          Nouveau diagnostic
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════
+   APP ROOT
+═══════════════════════════════════════════════════ */
+
+const LS_KEY = 'diagtertiaire_pro_alpha_v1';
+
+function App() {
+  const [screen, setScreen] = useState('gate'); // gate | decret | form | rapport | dashboard
+  const [surface, setSurface] = useState(null);
+  const [formData, setFormData] = useState(null);
+  const [result, setResult] = useState(null);
+  const [allCases, setAllCases] = useState([]);
+
+  // Charger depuis localStorage + vérifier hash URL
+  useEffect(() => {
+    try {
+      const hash = window.location.hash;
+      if (hash && hash.startsWith('#rapport=')) {
+        const b64 = hash.replace('#rapport=', '');
+        const payload = JSON.parse(decodeURIComponent(escape(atob(b64))));
+        if (payload && payload.f && payload.r) {
+          setFormData(payload.f);
+          setResult(payload.r);
+          setSurface(parseFloat(payload.f.surface));
+          setScreen('rapport');
+          return;
+        }
+      }
+    } catch(e) { /* invalid hash */ }
+
+    try {
+      const saved = localStorage.getItem(LS_KEY);
+      if (saved) {
+        const data = JSON.parse(saved);
+        if (data.cases) setAllCases(data.cases);
+      }
+    } catch(e) {}
+  }, []);
+
+  function handleGateChoose(type, s) {
+    setSurface(s);
+    setScreen(type === 'decret' ? 'decret' : 'form');
+  }
+
+  function handleFormComplete(data) {
+    const engineResult = runEngine(data);
+    setFormData(data);
+    setResult(engineResult);
+    setScreen('rapport');
+
+    // Sauvegarder en localStorage
+    try {
+      const entry = { formData: data, result: engineResult, ts: Date.now() };
+      const newCases = [entry, ...allCases].slice(0, 100);
+      setAllCases(newCases);
+      localStorage.setItem(LS_KEY, JSON.stringify({ cases: newCases, lastUpdated: Date.now() }));
+    } catch(e) {}
+  }
+
+  function handleReset() {
+    setScreen('gate');
+    setFormData(null);
+    setResult(null);
+    setSurface(null);
+    window.location.hash = '';
+  }
+
+  return (
+    <div>
+      {screen === 'gate' && <SurfaceGate onChoose={handleGateChoose} />}
+      {screen === 'decret' && <DecretTertiaire surface={surface} onBack={() => setScreen('gate')} />}
+      {screen === 'form' && <DiagForm surface={surface} onComplete={handleFormComplete} />}
+      {screen === 'rapport' && formData && result && (
+        <RapportClient
+          formData={formData}
+          result={result}
+          onDashboard={() => setScreen('dashboard')}
+          onReset={handleReset}
+        />
+      )}
+      {screen === 'dashboard' && formData && result && (
+        <DashboardPro
+          formData={formData}
+          result={result}
+          allCases={allCases}
+          onBack={() => setScreen('rapport')}
+          onReset={handleReset}
+        />
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

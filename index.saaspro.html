@@ -1344,6 +1344,52 @@
                     horizon_decision: 'immediat',
                     objectif_principal: 'conformite'
                 }
+            },
+            {
+                id: 'case_004',
+                projectName: 'Entrepôt Logistique Nord',
+                createdAt: '2026-03-05',
+                lastUpdated: '2026-03-07',
+                formData: {
+                    clientName: 'Entrepôt Logistique Nord',
+                    activity: 'entrepot_chauffe',
+                    surface: 3200,
+                    postalCode: '59000',
+                    constructionYear: '1975-1988',
+                    heating: 'fioul',
+                    chauffage_age: 'plus_20_ans',
+                    elecKwh: 250000,
+                    gasKwh: 966400,
+                    elecEuro: 49000,
+                    gasEuro: 101000,
+                    budget: '20k_50k',
+                    horizon: 'moyen',
+                    objectif: 'facture',
+                }
+            },
+            {
+                id: 'case_005',
+                projectName: 'Résidence Hôtelière Gambetta',
+                createdAt: '2026-03-06',
+                lastUpdated: '2026-03-08',
+                formData: {
+                    clientName: 'Résidence Hôtelière Gambetta',
+                    activity: 'hotel',
+                    surface: 890,
+                    postalCode: '69003',
+                    constructionYear: '1948-1974',
+                    heating: 'chaudiere_gaz_standard',
+                    chauffage_age: 'entre_10_20_ans',
+                    vmc_type: 'simple_auto',
+                    eclairage_type: 'fluorescent_neon',
+                    elecKwh: 100000,
+                    gasKwh: 362800,
+                    elecEuro: 19600,
+                    gasEuro: 38000,
+                    budget: '20k_50k',
+                    horizon: 'immediat',
+                    objectif: 'conformite',
+                }
             }
         ];
 
@@ -2073,7 +2119,7 @@
 
             const timeline = casesComputed
                 .filter(c => c.createdAt || c.lastUpdated)
-                .map(c => ({ date: c.createdAt || c.lastUpdated, label: `Rapport : ${c.projectName || c.formData?.clientName || c.id}`, icon: 'solar:document-text-bold' }))
+                .map(c => ({ date: c.createdAt || c.lastUpdated, label: `Rapport : ${c.projectName || c.formData?.clientName || c.id}`, icon: 'solar:document-text-bold', id: c.id }))
                 .sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
 
             return (
@@ -2132,7 +2178,7 @@
                         </h3>
                         <div className="space-y-1">
                             {timeline.map((item, i) => (
-                                <div key={i} className="timeline-line">
+                                <div key={i} className="timeline-line" style={item.id ? { cursor: 'pointer' } : {}} onClick={item.id ? () => setPage('case-report-' + item.id) : undefined}>
                                     <div className="timeline-dot"><Icon icon={item.icon} style={{ fontSize: '11px' }} /></div>
                                     <div className="font-semibold text-slate-800 text-sm leading-snug">{item.label}</div>
                                     <div className="text-xs text-slate-400 mt-0.5">{item.date}</div>
@@ -2257,7 +2303,7 @@
                                                 <td><span className="text-xs text-slate-400">{c.createdAt || c.lastUpdated || '—'}</span></td>
                                                 <td className="text-right">
                                                     <div className="flex items-center justify-end gap-2">
-                                                        <button type="button" onClick={() => setPage((c.id.startsWith('PRO-') ? 'case-report-' : 'report-') + c.id)} className="pro-btn pro-btn-secondary px-3 py-1.5 text-xs hover:border-blue-300 hover:text-blue-700">
+                                                        <button type="button" onClick={() => setPage('case-report-' + c.id)} className="pro-btn pro-btn-secondary px-3 py-1.5 text-xs hover:border-blue-300 hover:text-blue-700">
                                                             <Icon icon="solar:document-text-bold" style={{ fontSize: '13px' }} /> Voir rapport
                                                         </button>
                                                         <button type="button" onClick={() => deleteCase(c.id)} className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors">
@@ -2374,6 +2420,75 @@
                             ))}
                         </div>
                     )}
+
+                    {/* Étiquettes DiagTertiaire — avant/après travaux */}
+                    {r && (() => {
+                        const SCORE_CONFIG = {
+                            A: { color: '#00A651', bg: '#D4F5E3', label: 'A', text: 'Très performant' },
+                            B: { color: '#4CAF50', bg: '#E8F5E9', label: 'B', text: 'Performant' },
+                            C: { color: '#F59E0B', bg: '#FEF3C7', label: 'C', text: 'Dans la médiane' },
+                            D: { color: '#F97316', bg: '#FFF7ED', label: 'D', text: 'Surconsommation' },
+                            E: { color: '#EF4444', bg: '#FEF2F2', label: 'E', text: 'Très énergivore' },
+                        };
+                        // Score après travaux : calculer la nouvelle intensité
+                        const savingsPct = r.kwhTotal > 0 ? r.totalSavingsKwh / r.kwhTotal : 0;
+                        const intensiteApres = Math.round(r.intensity * (1 - savingsPct));
+                        const ratioApres = r.ref?.med > 0 ? intensiteApres / r.ref.med : 1;
+                        let scoreApres = 'E';
+                        if (ratioApres < 0.6) scoreApres = 'A';
+                        else if (ratioApres < 0.9) scoreApres = 'B';
+                        else if (ratioApres < 1.2) scoreApres = 'C';
+                        else if (ratioApres < 1.7) scoreApres = 'D';
+                        const cfgAvant = SCORE_CONFIG[r.score] || SCORE_CONFIG['C'];
+                        const cfgApres = SCORE_CONFIG[scoreApres] || SCORE_CONFIG['C'];
+
+                        const EtiquetteBande = ({ score, intensite, label }) => {
+                            const ORDER = ['A','B','C','D','E'];
+                            return (
+                                <div className="rounded-xl overflow-hidden border border-slate-200 shadow-sm w-full max-w-xs">
+                                    <div className="bg-slate-800 text-white text-xs font-bold px-3 py-1.5 tracking-wider uppercase">{label}</div>
+                                    {ORDER.map(s => {
+                                        const cfg = SCORE_CONFIG[s];
+                                        const isActive = s === score;
+                                        return (
+                                            <div key={s} className="flex items-center gap-2 px-3 py-1"
+                                                style={{ background: isActive ? cfg.color : 'transparent', transition: 'all 0.2s' }}>
+                                                <div className="w-7 h-7 rounded flex items-center justify-center font-extrabold text-base shrink-0"
+                                                    style={{ background: cfg.color, color: 'white', opacity: isActive ? 1 : 0.25 }}>{s}</div>
+                                                {isActive && (
+                                                    <div className="text-white">
+                                                        <div className="text-sm font-bold">{intensite} kWh/m²/an</div>
+                                                        <div className="text-xs opacity-80">{cfg.text}</div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                    <div className="bg-slate-50 px-3 py-1 text-xs text-slate-400 italic border-t border-slate-100">
+                                        Indice DiagTertiaire — indicatif
+                                    </div>
+                                </div>
+                            );
+                        };
+
+                        if (r.score === scoreApres) return null;
+                        return (
+                            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 mb-8">
+                                <h3 className="text-lg font-bold text-slate-800 mb-1 flex items-center gap-2">
+                                    <Icon icon="solar:tag-price-bold" className="text-blue-600" /> Indice DiagTertiaire — avant / après travaux
+                                </h3>
+                                <p className="text-xs text-slate-400 mb-6">Indicateur indicatif — non opposable, hors cadre OPERAT réglementaire.</p>
+                                <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+                                    <EtiquetteBande score={r.score} intensite={r.intensity} label="Étiquette actuelle" />
+                                    <div className="flex flex-col items-center gap-1 text-slate-400">
+                                        <Icon icon="solar:arrow-right-bold" className="text-3xl text-emerald-500" />
+                                        <span className="text-xs font-bold text-emerald-600">-{Math.round(savingsPct * 100)}%</span>
+                                    </div>
+                                    <EtiquetteBande score={scoreApres} intensite={intensiteApres} label="Après travaux estimés" />
+                                </div>
+                            </div>
+                        );
+                    })()}
 
                     {/* GRAPHIQUES */}
                     {r && (() => {
@@ -2672,6 +2787,22 @@
             });
             const [isGenerating, setIsGenerating] = React.useState(false);
 
+            const [showResume, setShowResume] = React.useState(() => {
+                try {
+                    const draft = localStorage.getItem('proDiagDraft');
+                    if (!draft) return false;
+                    const parsed = JSON.parse(draft);
+                    // Montrer le bandeau seulement s'il y a des données non triviales
+                    return !!(parsed.contactName || parsed.company || parsed.activity || parsed.surface);
+                } catch { return false; }
+            });
+            const handleResume = () => setShowResume(false); // garde le form chargé tel quel
+            const handleRestart = () => {
+                localStorage.removeItem('proDiagDraft');
+                setForm(INITIAL);
+                setShowResume(false);
+            };
+
             React.useEffect(() => {
                 localStorage.setItem('proDiagDraft', JSON.stringify(form));
             }, [form]);
@@ -2681,8 +2812,35 @@
                 ...p,
                 [field]: p[field].includes(val) ? p[field].filter(x => x !== val) : [...p[field], val],
             }));
-            const next = () => { if (form.step < 7) setForm(p => ({ ...p, step: p.step + 1 })); window.scrollTo(0,0); };
-            const prev = () => { if (form.step > 1) setForm(p => ({ ...p, step: p.step - 1 })); window.scrollTo(0,0); };
+            const REQUIRED_BY_STEP = {
+                1: [{ field: 'contactName', label: 'Nom du contact', check: v => v && v.trim() !== '', alt: 'company' }],
+                2: [
+                    { field: 'activity', label: 'Activité principale', check: v => v && v !== '' },
+                    { field: 'surface', label: 'Surface utile', check: v => v && parseFloat(v) > 0 },
+                ],
+            };
+            const [validationError, setValidationError] = React.useState('');
+
+            const next = () => {
+                const reqs = REQUIRED_BY_STEP[form.step] || [];
+                for (const r of reqs) {
+                    const val = form[r.field];
+                    const valid = r.check(val);
+                    const altValid = r.alt ? r.check(form[r.alt]) : false;
+                    if (!valid && !altValid) {
+                        setValidationError(r.label + ' est obligatoire.');
+                        return;
+                    }
+                }
+                setValidationError('');
+                if (form.step < 7) setForm(p => ({ ...p, step: p.step + 1 }));
+                window.scrollTo(0, 0);
+            };
+            const prev = () => {
+                setValidationError('');
+                if (form.step > 1) setForm(p => ({ ...p, step: p.step - 1 }));
+                window.scrollTo(0, 0);
+            };
 
             const handleGenerate = () => {
                 setIsGenerating(true);
@@ -2770,6 +2928,25 @@
 
             return (
                 <div className="p-4 md:p-10 max-w-3xl mx-auto fade-in">
+                    {showResume && (
+                        <div className="mb-6 bg-blue-50 border border-blue-200 rounded-xl px-5 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                            <div className="flex items-center gap-2 text-sm text-blue-800 font-medium">
+                                <Icon icon="solar:disk-bold" className="text-blue-500 shrink-0" />
+                                Vous avez un diagnostic en cours (étape {form.step}/7).
+                            </div>
+                            <div className="flex gap-2 shrink-0">
+                                <button type="button" onClick={handleResume}
+                                    className="px-3 py-1.5 text-xs font-bold bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                                    Reprendre
+                                </button>
+                                <button type="button" onClick={handleRestart}
+                                    className="px-3 py-1.5 text-xs font-semibold text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
+                                    Recommencer
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="mb-8 text-center">
                         <h2 className="text-3xl font-extrabold text-slate-900 mb-4 tracking-tight">Nouveau diagnostic assisté</h2>
                         <div className="max-w-lg mx-auto">
@@ -2797,11 +2974,11 @@
                                     <Icon icon="solar:user-id-bold" className="text-blue-600" /> Identification du dossier
                                 </h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                    <div><label className="pro-label">Nom du contact *</label><input className="pro-input" placeholder="Jean Martin" value={form.contactName} onChange={e => set('contactName', e.target.value)} /></div>
-                                    <div><label className="pro-label">Société / Raison sociale *</label><input className="pro-input" placeholder="Dupont & Associés" value={form.company} onChange={e => set('company', e.target.value)} /></div>
+                                    <div><label className="pro-label">Nom du contact <span className="text-red-500">*</span></label><input className="pro-input" placeholder="Jean Martin" value={form.contactName} onChange={e => set('contactName', e.target.value)} /></div>
+                                    <div><label className="pro-label">Société / Raison sociale <span className="text-red-500">*</span></label><input className="pro-input" placeholder="Dupont & Associés" value={form.company} onChange={e => set('company', e.target.value)} /></div>
                                     <div><label className="pro-label">Email</label><input type="email" className="pro-input" placeholder="j.martin@exemple.fr" value={form.email} onChange={e => set('email', e.target.value)} /></div>
                                     <div><label className="pro-label">Téléphone</label><input type="tel" className="pro-input" placeholder="06 12 34 56 78" value={form.phone} onChange={e => set('phone', e.target.value)} /></div>
-                                    <div><label className="pro-label">Code postal du bâtiment *</label><input className="pro-input" placeholder="75001" maxLength={5} value={form.postalCode} onChange={e => set('postalCode', e.target.value)} /></div>
+                                    <div><label className="pro-label">Code postal du bâtiment <span className="text-red-500">*</span></label><input className="pro-input" placeholder="75001" maxLength={5} value={form.postalCode} onChange={e => set('postalCode', e.target.value)} /></div>
                                     <div><label className="pro-label">Statut occupant</label>
                                         <select className="pro-input" value={form.statut} onChange={e => set('statut', e.target.value)}>
                                             <option value="">Sélectionner</option>
@@ -2845,7 +3022,7 @@
                                     <Icon icon="solar:buildings-bold" className="text-blue-600" /> Profil du bâtiment
                                 </h3>
                                 <div>
-                                    <label className="pro-label mb-3 block">Activité principale *</label>
+                                    <label className="pro-label mb-3 block">Activité principale <span className="text-red-500">*</span></label>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                         <Opt label="Bureaux / Services" field="activity" value="bureau" icon="solar:laptop-bold" />
                                         <Opt label="Commerce (sans froid)" field="activity" value="commerce_non_alim" icon="solar:shop-bold" />
@@ -2859,7 +3036,7 @@
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                                    <div><label className="pro-label">Surface utile (m²) *</label><input type="number" className="pro-input" placeholder="Ex: 500" value={form.surface} onChange={e => set('surface', e.target.value)} /></div>
+                                    <div><label className="pro-label">Surface utile (m²) <span className="text-red-500">*</span></label><input type="number" className="pro-input" placeholder="Ex: 500" value={form.surface} onChange={e => set('surface', e.target.value)} /></div>
                                     <div><label className="pro-label">Année de construction</label>
                                         <select className="pro-input" value={form.constructionYear} onChange={e => set('constructionYear', e.target.value)}>
                                             <option value="">Sélectionner</option>
@@ -3165,14 +3342,28 @@
                             </div>
                         )}
 
-                        {/* Navigation */}
+                        {/* Navigation wizard */}
+                        {validationError && (
+                            <div className="mt-4 px-4 py-2 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 font-medium">
+                                ⚠️ {validationError}
+                            </div>
+                        )}
                         {form.step < 7 && (
                             <div className="mt-10 flex items-center justify-between border-t border-slate-100 pt-6">
-                                <button type="button" onClick={prev} disabled={form.step === 1} className="pro-btn pro-btn-ghost">
+                                <button type="button" onClick={prev} disabled={form.step === 1}
+                                    className={`pro-btn pro-btn-ghost ${form.step === 1 ? 'opacity-0 pointer-events-none' : ''}`}>
                                     <Icon icon="solar:alt-arrow-left-linear" /> Retour
                                 </button>
+                                <span className="text-xs text-slate-400">* Champ obligatoire</span>
                                 <button type="button" onClick={next} className="pro-btn pro-btn-primary">
                                     Suivant <Icon icon="solar:alt-arrow-right-linear" />
+                                </button>
+                            </div>
+                        )}
+                        {form.step === 7 && (
+                            <div className="mt-6 flex items-center justify-start border-t border-slate-100 pt-4">
+                                <button type="button" onClick={prev} className="pro-btn pro-btn-ghost text-sm">
+                                    <Icon icon="solar:alt-arrow-left-linear" /> Retour
                                 </button>
                             </div>
                         )}

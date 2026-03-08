@@ -20,5 +20,8 @@
   "homepage": "https://github.com/Bijoux2024/Diag-tertaireV3#readme",
   "devDependencies": {
     "puppeteer": "^24.38.0"
+  },
+  "dependencies": {
+    "@vercel/analytics": "^1.6.1"
   }
 }

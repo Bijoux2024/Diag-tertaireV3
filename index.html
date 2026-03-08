@@ -1014,9 +1014,9 @@
                                     </p>
                                     <ul style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                                         {[
-                                            "Les usages d'un commerce, d'un bureau ou d'un cabinet n'ont rien à voir avec ceux d'un logement",
-                                            "Une comparaison hors contexte peut surestimer ou sous-estimer votre niveau réel de performance",
-                                            "Le prix plancher d'un audit énergétique est souvent de 1 000 € à 3 000 € : mieux vaut vérifier d'abord s'il est justifié"
+                                            "Des données enfin adaptées : Ne risquez plus de surestimer ou sous-estimer vos performances avec des comparaisons hors contexte.",
+                                            "Le bon timing pour agir : Évitez d'engager des travaux ou un audit au mauvais moment.",
+                                            "Sécurisez votre budget : Un audit énergétique classique coûte souvent entre 1 000 € et 3 000 €. Vérifiez d'abord gratuitement s'il est réellement justifié pour votre local."
                                         ].map((item, i) => (
                                             <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', fontSize: '0.9375rem', color: '#475569', lineHeight: 1.65 }}>
                                                 <Icon icon="solar:checklist-linear" style={{ color: '#1D4ED8', flexShrink: 0, marginTop: '3px', fontSize: '1rem' }} />
@@ -1439,9 +1439,7 @@
                                 <button type="button" onClick={() => navigate('diagnostic')} className="bg-[#1D4ED8] text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-[#1E40AF] transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5">
                                     Lancer mon diagnostic gratuit
                                 </button>
-                                <button type="button" onClick={() => navigate('methode')} className="bg-white border border-[#E2E8F0] text-[#0F172A] px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-[#F8FAFC] transition-colors">
-                                    Voir l'approche
-                                </button>
+
                             </div>
                         </div>
                     </section>
@@ -3360,11 +3358,11 @@
         };
 
         const INFLATION_ENERGIE = {
-            electricite:    0.030, // SOURCE_PARTIAL — à revalider annuellement
-            gaz:            0.055, // SOURCE_PARTIAL — volatilité post-2021, trajectoire sortie fossile. 5.5% = moyenne prudente 10 ans
+            electricite: 0.030, // SOURCE_PARTIAL — à revalider annuellement
+            gaz: 0.055, // SOURCE_PARTIAL — volatilité post-2021, trajectoire sortie fossile. 5.5% = moyenne prudente 10 ans
             reseau_chaleur: 0.035, // SOURCE_PARTIAL
-            fioul:          0.060, // SOURCE_PARTIAL — sortie progressive, raréfaction
-            bois_granules:  0.025, // SOURCE_PARTIAL — marché plus stable
+            fioul: 0.060, // SOURCE_PARTIAL — sortie progressive, raréfaction
+            bois_granules: 0.025, // SOURCE_PARTIAL — marché plus stable
         };
 
         /* ─────────────────────────────────────────────────────────────────────────
@@ -4447,13 +4445,13 @@
 
             // ── Taux d'inflation pondéré par source d'énergie ──────────────────────
             const elecEur = elecKwh * NEW_DIAGNOSTIC_ENERGY_PRICES.electricity.price_default_eur_kwh;
-            const gazEur  = gasKwh  * NEW_DIAGNOSTIC_ENERGY_PRICES.gas.price_default_eur_kwh;
+            const gazEur = gasKwh * NEW_DIAGNOSTIC_ENERGY_PRICES.gas.price_default_eur_kwh;
             const totalBase = Math.max(elecEur + gazEur, 1);
             const partElec = elecEur / totalBase;
-            const partGaz  = gazEur  / totalBase;
+            const partGaz = gazEur / totalBase;
             const taux = partElec * INFLATION_ENERGIE.electricite
-                       + partGaz  * INFLATION_ENERGIE.gaz
-                       + Math.max(0, 1 - partElec - partGaz) * INFLATION_ENERGIE.electricite;
+                + partGaz * INFLATION_ENERGIE.gaz
+                + Math.max(0, 1 - partElec - partGaz) * INFLATION_ENERGIE.electricite;
             const tauxPct = (taux * 100).toFixed(1);
             const hasGaz = gazEur > 0;
 

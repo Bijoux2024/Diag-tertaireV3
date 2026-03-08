@@ -15,7 +15,7 @@
     <script src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
     <script>
         // Shim PropTypes pour Recharts UMD — doit être chargé avant Recharts
-        if (typeof PropTypes === 'undefined') window.PropTypes = { func: ()=>{}, bool: ()=>{}, node: ()=>{}, string: ()=>{}, number: ()=>{}, object: ()=>{}, array: ()=>{}, any: ()=>{}, arrayOf: ()=>()=>{}, objectOf: ()=>()=>{}, oneOf: ()=>()=>{}, oneOfType: ()=>()=>{}, shape: ()=>()=>{}, exact: ()=>()=>{}, instanceOf: ()=>()=>{}, element: ()=>{}, elementType: ()=>{}, checkPropTypes: ()=>{} };
+        if (typeof PropTypes === 'undefined') window.PropTypes = { func: () => { }, bool: () => { }, node: () => { }, string: () => { }, number: () => { }, object: () => { }, array: () => { }, any: () => { }, arrayOf: () => () => { }, objectOf: () => () => { }, oneOf: () => () => { }, oneOfType: () => () => { }, shape: () => () => { }, exact: () => () => { }, instanceOf: () => () => { }, element: () => { }, elementType: () => { }, checkPropTypes: () => { } };
         if (typeof React !== 'undefined' && !React.PropTypes) React.PropTypes = window.PropTypes;
     </script>
     <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
@@ -601,11 +601,11 @@
         };
 
         const INFLATION_ENERGIE = {
-            electricite:    0.030, // SOURCE_PARTIAL — à revalider annuellement
-            gaz:            0.055, // SOURCE_PARTIAL — volatilité post-2021, trajectoire sortie fossile. 5.5% = moyenne prudente 10 ans
+            electricite: 0.030, // SOURCE_PARTIAL — à revalider annuellement
+            gaz: 0.055, // SOURCE_PARTIAL — volatilité post-2021, trajectoire sortie fossile. 5.5% = moyenne prudente 10 ans
             reseau_chaleur: 0.035, // SOURCE_PARTIAL
-            fioul:          0.060, // SOURCE_PARTIAL — sortie progressive, raréfaction
-            bois_granules:  0.025, // SOURCE_PARTIAL — marché plus stable
+            fioul: 0.060, // SOURCE_PARTIAL — sortie progressive, raréfaction
+            bois_granules: 0.025, // SOURCE_PARTIAL — marché plus stable
         };
 
         const CO2_FACTEURS = {
@@ -891,16 +891,16 @@
         const ENGINE_PRO = {
             benchmarks: {
                 ...BENCHMARKS,
-                'Bureau':              { q1: 120, med: 180, q3: 280, unit: 'kWh/m²/an', scope: 'Bureaux & Services' },
-                'Hôtel':               { q1: 200, med: 280, q3: 420, unit: 'kWh/m²/an', scope: 'Hôtellerie' },
-                'Restauration':        { q1: 350, med: 500, q3: 800, unit: 'kWh/m²/an', scope: 'Restauration' },
-                'Santé':               { q1: 160, med: 220, q3: 350, unit: 'kWh/m²/an', scope: 'Santé / Soins' },
-                'Enseignement':        { q1: 100, med: 150, q3: 220, unit: 'kWh/m²/an', scope: 'Enseignement' },
-                'Entrepôt-Chauffé':    { q1: 50,  med: 80,  q3: 130, unit: 'kWh/m²/an', scope: 'Entrepôt chauffé' },
-                'Entrepôt-NonChauffé': { q1: 25,  med: 45,  q3: 70,  unit: 'kWh/m²/an', scope: 'Entrepôt non chauffé' },
-                'Commerce_SansFroid':  { q1: 200, med: 320, q3: 500, unit: 'kWh/m²/an', scope: 'Commerce (sans froid)' },
-                'Commerce_Froid':      { q1: 450, med: 650, q3: 900, unit: 'kWh/m²/an', scope: 'Commerce alimentaire (avec froid)' },
-                'Autre':               { q1: 120, med: 180, q3: 280, unit: 'kWh/m²/an', scope: 'Autre activité' },
+                'Bureau': { q1: 120, med: 180, q3: 280, unit: 'kWh/m²/an', scope: 'Bureaux & Services' },
+                'Hôtel': { q1: 200, med: 280, q3: 420, unit: 'kWh/m²/an', scope: 'Hôtellerie' },
+                'Restauration': { q1: 350, med: 500, q3: 800, unit: 'kWh/m²/an', scope: 'Restauration' },
+                'Santé': { q1: 160, med: 220, q3: 350, unit: 'kWh/m²/an', scope: 'Santé / Soins' },
+                'Enseignement': { q1: 100, med: 150, q3: 220, unit: 'kWh/m²/an', scope: 'Enseignement' },
+                'Entrepôt-Chauffé': { q1: 50, med: 80, q3: 130, unit: 'kWh/m²/an', scope: 'Entrepôt chauffé' },
+                'Entrepôt-NonChauffé': { q1: 25, med: 45, q3: 70, unit: 'kWh/m²/an', scope: 'Entrepôt non chauffé' },
+                'Commerce_SansFroid': { q1: 200, med: 320, q3: 500, unit: 'kWh/m²/an', scope: 'Commerce (sans froid)' },
+                'Commerce_Froid': { q1: 450, med: 650, q3: 900, unit: 'kWh/m²/an', scope: 'Commerce alimentaire (avec froid)' },
+                'Autre': { q1: 120, med: 180, q3: 280, unit: 'kWh/m²/an', scope: 'Autre activité' },
             },
             prices: {
                 elec: 0.196,
@@ -923,25 +923,25 @@
             },
             anneeCorrectifs: {
                 general: {
-                    'avant1948':  1.50, '1948-1974':  1.35, '1975-1988':  1.15,
-                    '1989-2000':  1.05, '2001-2012':  1.00, 'apres2012':  0.65,
+                    'avant1948': 1.50, '1948-1974': 1.35, '1975-1988': 1.15,
+                    '1989-2000': 1.05, '2001-2012': 1.00, 'apres2012': 0.65,
                 },
                 entrepot: {
-                    'avant1948':  1.20, '1948-1974':  1.15, '1975-1988':  1.05,
-                    '1989-2000':  1.00, '2001-2012':  1.00, 'apres2012':  0.80,
+                    'avant1948': 1.20, '1948-1974': 1.15, '1975-1988': 1.05,
+                    '1989-2000': 1.00, '2001-2012': 1.00, 'apres2012': 0.80,
                 },
             },
             postesRepartition: {
-                'Bureau':              { chauffage:45, clim:8,  ventil:9,  eclairage:18, ecs:5,  autres:15 },
-                'Commerce_SansFroid':  { chauffage:40, clim:10, ventil:8,  eclairage:25, ecs:3,  autres:14 },
-                'Commerce_Froid':      { chauffage:20, clim:35, ventil:5,  eclairage:22, ecs:3,  autres:15 },
-                'Hôtel':               { chauffage:38, clim:10, ventil:10, eclairage:12, ecs:20, autres:10 },
-                'Restauration':        { chauffage:20, clim:8,  ventil:12, eclairage:10, ecs:15, autres:35 },
-                'Santé':               { chauffage:36, clim:10, ventil:20, eclairage:12, ecs:8,  autres:14 },
-                'Enseignement':        { chauffage:50, clim:5,  ventil:10, eclairage:20, ecs:8,  autres:7  },
-                'Entrepôt-Chauffé':    { chauffage:60, clim:2,  ventil:8,  eclairage:25, ecs:2,  autres:3  },
-                'Entrepôt-NonChauffé': { chauffage:0,  clim:0,  ventil:5,  eclairage:80, ecs:0,  autres:15 },
-                'Autre':               { chauffage:40, clim:10, ventil:10, eclairage:20, ecs:5,  autres:15 },
+                'Bureau': { chauffage: 45, clim: 8, ventil: 9, eclairage: 18, ecs: 5, autres: 15 },
+                'Commerce_SansFroid': { chauffage: 40, clim: 10, ventil: 8, eclairage: 25, ecs: 3, autres: 14 },
+                'Commerce_Froid': { chauffage: 20, clim: 35, ventil: 5, eclairage: 22, ecs: 3, autres: 15 },
+                'Hôtel': { chauffage: 38, clim: 10, ventil: 10, eclairage: 12, ecs: 20, autres: 10 },
+                'Restauration': { chauffage: 20, clim: 8, ventil: 12, eclairage: 10, ecs: 15, autres: 35 },
+                'Santé': { chauffage: 36, clim: 10, ventil: 20, eclairage: 12, ecs: 8, autres: 14 },
+                'Enseignement': { chauffage: 50, clim: 5, ventil: 10, eclairage: 20, ecs: 8, autres: 7 },
+                'Entrepôt-Chauffé': { chauffage: 60, clim: 2, ventil: 8, eclairage: 25, ecs: 2, autres: 3 },
+                'Entrepôt-NonChauffé': { chauffage: 0, clim: 0, ventil: 5, eclairage: 80, ecs: 0, autres: 15 },
+                'Autre': { chauffage: 40, clim: 10, ventil: 10, eclairage: 20, ecs: 5, autres: 15 },
             },
             plafondGains: {
                 'Bureau': 0.60, 'Commerce_SansFroid': 0.65, 'Commerce_Froid': 0.75,
@@ -953,48 +953,48 @@
                 elec: 0.030, gaz: 0.055, reseau: 0.035, fioul: 0.060, bois: 0.025,
             },
             actions: [
-                { id:'ACT01', title:'Réglage horaires chauffage',       scope:'chauffage',  gainRange:[8,12,18],    capRange:[0,750,1500],     capexType:'forfait',          cee:false, fiches:[],             prerequis:[] },
-                { id:'ACT02', title:'Régulation centrale chauffage',    scope:'chauffage',  gainRange:[10,15,22],   capRange:[2000,5000,8000],  capexType:'forfait',          cee:true,  fiches:['BAT-TH-116'], prerequis:['reseau_eau'] },
-                { id:'ACT03', title:'Robinets thermostatiques',         scope:'chauffage',  gainRange:[7,10,15],    capRange:[500,2750,5000],   capexType:'forfait',          cee:true,  fiches:['BAT-TH-024'], prerequis:['reseau_eau'] },
-                { id:'ACT04', title:'Désembouage réseau',               scope:'chauffage',  gainRange:[4,7,12],     capRange:[1500,3000,4500],  capexType:'forfait',          cee:false, fiches:[],             prerequis:['reseau_eau','chaudiere_age_10plus'], sourceWarning:'Gain sous réserve d\'encrassement avéré' },
-                { id:'ACT05', title:'Horloge VMC simple flux',          scope:'ventil',     gainRange:[18,25,35],   capRange:[800,1900,3000],   capexType:'forfait',          cee:true,  fiches:['BAT-TH-125'], prerequis:['vmc_simple'] },
-                { id:'ACT06', title:'VMC régulée présence/CO2',         scope:'ventil',     gainRange:[22,30,40],   capRange:[3000,6000,9000],  capexType:'forfait',          cee:true,  fiches:['BAT-TH-116'], prerequis:[] },
-                { id:'ACT07', title:'Calorifugeage ECS / réseaux',      scope:'ecs',        gainRange:[10,15,22],   capRange:[800,1900,3000],   capexType:'forfait',          cee:true,  fiches:['BAT-TH-160'], prerequis:['ecs_presente'] },
-                { id:'ACT08', title:'Relamping LED complet',            scope:'eclairage',  gainRange:[40,55,70],   capRange:[20,25,35],        capexType:'point_lumineux',   cee:true,  fiches:['BAT-EQ-127'], prerequis:['eclairage_non_led'] },
-                { id:'ACT09', title:'Détecteurs présence éclairage',    scope:'eclairage',  gainRange:[12,20,30],   capRange:[1500,3750,6000],  capexType:'forfait',          cee:true,  fiches:['BAT-EQ-212'], prerequis:[] },
-                { id:'ACT10', title:'Isolation toiture opportuniste',   scope:'chauffage',  gainRange:[14,20,28],   capRange:[50,70,100],       capexType:'m2',               cee:true,  fiches:['BAT-EN-102'], prerequis:['isolation_toiture_partielle_ou_nulle'] },
-                { id:'ACT11', title:'Remplacement chaudière / PAC',     scope:'chauffage',  gainRange:[25,35,50],   capRange:[8000,24000,40000],capexType:'forfait',          cee:true,  fiches:['BAT-TH-113'], prerequis:['chaudiere_presente'] },
-                { id:'ACT12', title:'VMC double flux haute performance', scope:'ventil',     gainRange:[35,50,65],   capRange:[8000,19000,30000],capexType:'forfait',          cee:true,  fiches:['BAT-TH-125'], prerequis:['vmc_presente'] },
+                { id: 'ACT01', title: 'Réglage horaires chauffage', scope: 'chauffage', gainRange: [8, 12, 18], capRange: [0, 750, 1500], capexType: 'forfait', cee: false, fiches: [], prerequis: [] },
+                { id: 'ACT02', title: 'Régulation centrale chauffage', scope: 'chauffage', gainRange: [10, 15, 22], capRange: [2000, 5000, 8000], capexType: 'forfait', cee: true, fiches: ['BAT-TH-116'], prerequis: ['reseau_eau'] },
+                { id: 'ACT03', title: 'Robinets thermostatiques', scope: 'chauffage', gainRange: [7, 10, 15], capRange: [500, 2750, 5000], capexType: 'forfait', cee: true, fiches: ['BAT-TH-024'], prerequis: ['reseau_eau'] },
+                { id: 'ACT04', title: 'Désembouage réseau', scope: 'chauffage', gainRange: [4, 7, 12], capRange: [1500, 3000, 4500], capexType: 'forfait', cee: false, fiches: [], prerequis: ['reseau_eau', 'chaudiere_age_10plus'], sourceWarning: 'Gain sous réserve d\'encrassement avéré' },
+                { id: 'ACT05', title: 'Horloge VMC simple flux', scope: 'ventil', gainRange: [18, 25, 35], capRange: [800, 1900, 3000], capexType: 'forfait', cee: true, fiches: ['BAT-TH-125'], prerequis: ['vmc_simple'] },
+                { id: 'ACT06', title: 'VMC régulée présence/CO2', scope: 'ventil', gainRange: [22, 30, 40], capRange: [3000, 6000, 9000], capexType: 'forfait', cee: true, fiches: ['BAT-TH-116'], prerequis: [] },
+                { id: 'ACT07', title: 'Calorifugeage ECS / réseaux', scope: 'ecs', gainRange: [10, 15, 22], capRange: [800, 1900, 3000], capexType: 'forfait', cee: true, fiches: ['BAT-TH-160'], prerequis: ['ecs_presente'] },
+                { id: 'ACT08', title: 'Relamping LED complet', scope: 'eclairage', gainRange: [40, 55, 70], capRange: [20, 25, 35], capexType: 'point_lumineux', cee: true, fiches: ['BAT-EQ-127'], prerequis: ['eclairage_non_led'] },
+                { id: 'ACT09', title: 'Détecteurs présence éclairage', scope: 'eclairage', gainRange: [12, 20, 30], capRange: [1500, 3750, 6000], capexType: 'forfait', cee: true, fiches: ['BAT-EQ-212'], prerequis: [] },
+                { id: 'ACT10', title: 'Isolation toiture opportuniste', scope: 'chauffage', gainRange: [14, 20, 28], capRange: [50, 70, 100], capexType: 'm2', cee: true, fiches: ['BAT-EN-102'], prerequis: ['isolation_toiture_partielle_ou_nulle'] },
+                { id: 'ACT11', title: 'Remplacement chaudière / PAC', scope: 'chauffage', gainRange: [25, 35, 50], capRange: [8000, 24000, 40000], capexType: 'forfait', cee: true, fiches: ['BAT-TH-113'], prerequis: ['chaudiere_presente'] },
+                { id: 'ACT12', title: 'VMC double flux haute performance', scope: 'ventil', gainRange: [35, 50, 65], capRange: [8000, 19000, 30000], capexType: 'forfait', cee: true, fiches: ['BAT-TH-125'], prerequis: ['vmc_presente'] },
             ],
-            getZoneFromCP: function(cp) {
+            getZoneFromCP: function (cp) {
                 if (!cp) return 'H2';
                 const dept = parseInt(String(cp).substring(0, 2));
-                const H1 = [2,8,10,51,52,54,55,57,67,68,88,3,15,19,23,43,63,87,4,5,38,73,74];
-                const H3 = [6,13,30,34,66,83,84,11,20];
+                const H1 = [2, 8, 10, 51, 52, 54, 55, 57, 67, 68, 88, 3, 15, 19, 23, 43, 63, 87, 4, 5, 38, 73, 74];
+                const H3 = [6, 13, 30, 34, 66, 83, 84, 11, 20];
                 if (H1.includes(dept)) return 'H1';
                 if (H3.includes(dept)) return 'H3';
                 return 'H2';
             },
             compute: function (data) {
                 const actMapping = {
-                    'bureau':'Bureau','hotel':'Hôtel','restauration':'Restauration',
-                    'sante':'Santé','enseignement':'Enseignement',
-                    'entrepot_chauffe':'Entrepôt-Chauffé','entrepot_non_chauffe':'Entrepôt-NonChauffé',
-                    'commerce_non_alim':'Commerce_SansFroid','commerce_alim':'Commerce_Froid',
-                    'commerce_nonalim':'Commerce_SansFroid',
+                    'bureau': 'Bureau', 'hotel': 'Hôtel', 'restauration': 'Restauration',
+                    'sante': 'Santé', 'enseignement': 'Enseignement',
+                    'entrepot_chauffe': 'Entrepôt-Chauffé', 'entrepot_non_chauffe': 'Entrepôt-NonChauffé',
+                    'commerce_non_alim': 'Commerce_SansFroid', 'commerce_alim': 'Commerce_Froid',
+                    'commerce_nonalim': 'Commerce_SansFroid',
                     // Compatibilité anciens IDs
-                    'Bureau':'Bureau','Hôtel':'Hôtel','Restauration':'Restauration',
-                    'Santé':'Santé','Enseignement':'Enseignement','Autre':'Autre',
-                    'offices':'Bureau','retail':'Commerce_SansFroid','restaurant':'Restauration',
+                    'Bureau': 'Bureau', 'Hôtel': 'Hôtel', 'Restauration': 'Restauration',
+                    'Santé': 'Santé', 'Enseignement': 'Enseignement', 'Autre': 'Autre',
+                    'offices': 'Bureau', 'retail': 'Commerce_SansFroid', 'restaurant': 'Restauration',
                     // Anciens alias ProReport
-                    'bureaux':'Bureau','hotellerie':'Hôtel','sante_cabinet':'Santé',
-                    'commerce_nonalim_old':'Commerce_SansFroid','entrepot_froid':'Entrepôt-NonChauffé',
-                    'health_local':'Santé','light_warehouse':'Entrepôt-NonChauffé','mixed':'Bureau',
+                    'bureaux': 'Bureau', 'hotellerie': 'Hôtel', 'sante_cabinet': 'Santé',
+                    'commerce_nonalim_old': 'Commerce_SansFroid', 'entrepot_froid': 'Entrepôt-NonChauffé',
+                    'health_local': 'Santé', 'light_warehouse': 'Entrepôt-NonChauffé', 'mixed': 'Bureau',
                 };
                 // compat alias for old mock activity keys
                 const _aliases = {
-                    'bureaux':'bureau','hotellerie':'hotel','sante_cabinet':'sante',
-                    'commerce_nonalim':'commerce_non_alim','entrepot_froid':'entrepot_non_chauffe',
+                    'bureaux': 'bureau', 'hotellerie': 'hotel', 'sante_cabinet': 'sante',
+                    'commerce_nonalim': 'commerce_non_alim', 'entrepot_froid': 'entrepot_non_chauffe',
                 };
                 const _act = _aliases[data.activity] || data.activity || data.activite;
                 let activityKey = actMapping[_act] || actMapping[data.activity] || 'Autre';
@@ -1022,7 +1022,7 @@
                     return 0;
                 };
                 let kwhElec = getKwh(data.elecKwh || data.elec_kwh || data.conso_elec_kwh, data.elecEuro || data.elec_euro || data.elec_eur || data.cout_elec_eur, this.prices.elec);
-                let kwhGaz  = getKwh(data.gasKwh  || data.gaz_kwh  || data.gas_kwh || data.conso_gaz_kwh, data.gasEuro  || data.gaz_euro  || data.gaz_eur  || data.cout_gaz_eur,  this.prices.gaz);
+                let kwhGaz = getKwh(data.gasKwh || data.gaz_kwh || data.gas_kwh || data.conso_gaz_kwh, data.gasEuro || data.gaz_euro || data.gaz_eur || data.cout_gaz_eur, this.prices.gaz);
                 let kwhTotal = kwhElec + kwhGaz;
                 const isFallback = kwhTotal === 0;
                 if (isFallback) kwhTotal = ref.med * area;
@@ -1032,19 +1032,19 @@
 
                 // === SCORE A–E ===
                 let score = 'C', positioning = 'Dans la médiane';
-                if (ratio < 0.6)       { score = 'A'; positioning = 'Très performant'; }
-                else if (ratio < 0.9)  { score = 'B'; positioning = 'Performant'; }
-                else if (ratio < 1.2)  { score = 'C'; positioning = 'Dans la médiane'; }
-                else if (ratio < 1.7)  { score = 'D'; positioning = 'Surconsommation notable'; }
-                else                   { score = 'E'; positioning = 'Très énergivore'; }
+                if (ratio < 0.6) { score = 'A'; positioning = 'Très performant'; }
+                else if (ratio < 0.9) { score = 'B'; positioning = 'Performant'; }
+                else if (ratio < 1.2) { score = 'C'; positioning = 'Dans la médiane'; }
+                else if (ratio < 1.7) { score = 'D'; positioning = 'Surconsommation notable'; }
+                else { score = 'E'; positioning = 'Très énergivore'; }
 
                 // === PRIX MOYEN PONDÉRÉ ===
                 const billElec = parseFloat(data.elecEuro || data.elec_euro || data.elec_eur || data.cout_elec_eur) || 0;
-                const billGaz  = parseFloat(data.gasEuro  || data.gaz_euro  || data.gaz_eur  || data.cout_gaz_eur)  || 0;
-                const aboElec  = parseFloat(data.elecSubscriptionYearly || data.elec_abo_euro) || 0;
+                const billGaz = parseFloat(data.gasEuro || data.gaz_euro || data.gaz_eur || data.cout_gaz_eur) || 0;
+                const aboElec = parseFloat(data.elecSubscriptionYearly || data.elec_abo_euro) || 0;
                 const billElecNet = Math.max(0, billElec - aboElec);
                 const implicitElec = (kwhElec > 0 && billElecNet > 0) ? billElecNet / kwhElec : this.prices.elec;
-                const implicitGaz  = (kwhGaz  > 0 && billGaz > 0)    ? billGaz  / kwhGaz   : this.prices.gaz;
+                const implicitGaz = (kwhGaz > 0 && billGaz > 0) ? billGaz / kwhGaz : this.prices.gaz;
                 const avgPrice = kwhTotal > 0
                     ? (kwhElec * implicitElec + kwhGaz * implicitGaz) / kwhTotal
                     : this.prices.elec;
@@ -1062,7 +1062,7 @@
                 for (const [p, pct] of Object.entries(postesBase)) {
                     let corrMulti = 1.0;
                     if (p === 'chauffage') corrMulti = zoneCorr.chauffage * anneeCorr;
-                    if (p === 'clim')      corrMulti = zoneCorr.clim;
+                    if (p === 'clim') corrMulti = zoneCorr.clim;
                     postes[p] = { pct, kwh: Math.round(kwhTotal * (pct / 100) * corrMulti), eur: 0 };
                 }
                 const sumKwh = Object.values(postes).reduce((s, p) => s + p.kwh, 0);
@@ -1079,32 +1079,32 @@
                 // === SÉLECTION DES ACTIONS (nouvelle bibliothèque) ===
                 const travaux = data.travaux_realises || data.travauxRealises || [];
                 const exclusionMap = {
-                    'led_recent':['ACT08'], 'vmc_df_recente':['ACT12','ACT05'],
-                    'chaudiere_pac_recente':['ACT11'], 'regulation_recente':['ACT02','ACT01'],
-                    'calorifugeage_recent':['ACT07'], 'isolation_toiture_recente':['ACT10'],
+                    'led_recent': ['ACT08'], 'vmc_df_recente': ['ACT12', 'ACT05'],
+                    'chaudiere_pac_recente': ['ACT11'], 'regulation_recente': ['ACT02', 'ACT01'],
+                    'calorifugeage_recent': ['ACT07'], 'isolation_toiture_recente': ['ACT10'],
                 };
                 const actionsExclues = travaux.flatMap(t => exclusionMap[t] || []);
-                const heatingType   = data.heating || data.chauffage_type || data.mainHeating || '';
-                const vmcType       = data.vmc_type || '';
-                const hasECS        = data.ecs_presente !== false;
+                const heatingType = data.heating || data.chauffage_type || data.mainHeating || '';
+                const vmcType = data.vmc_type || '';
+                const hasECS = data.ecs_presente !== false;
                 const eclairageType = data.eclairage_type || '';
-                const isolToiture   = data.isolation_toiture || '';
-                const chaudiereAge  = data.chauffage_age || '';
-                const hasReseauEau  = heatingType.includes('gaz') || heatingType.includes('chaudiere') || heatingType === 'reseau' || heatingType === 'eau_chaude';
+                const isolToiture = data.isolation_toiture || '';
+                const chaudiereAge = data.chauffage_age || '';
+                const hasReseauEau = heatingType.includes('gaz') || heatingType.includes('chaudiere') || heatingType === 'reseau' || heatingType === 'eau_chaude';
                 const chaudiereVieille = chaudiereAge.includes('10_20') || chaudiereAge.includes('20') || chaudiereAge === 'entre_10_20_ans' || chaudiereAge === 'plus_20_ans';
-                const hasChaudiere  = heatingType.includes('chaudiere') || heatingType.includes('gaz') || heatingType === 'gas';
-                const isLED         = eclairageType.includes('led_complet');
+                const hasChaudiere = heatingType.includes('chaudiere') || heatingType.includes('gaz') || heatingType === 'gas';
+                const isLED = eclairageType.includes('led_complet');
 
                 let pool = this.actions.filter(a => {
                     if (actionsExclues.includes(a.id)) return false;
                     const p = a.prerequis;
-                    if (p.includes('reseau_eau')                          && !hasReseauEau)     return false;
-                    if (p.includes('chaudiere_age_10plus')                && !chaudiereVieille) return false;
-                    if (p.includes('vmc_simple')                          && vmcType !== 'simple_auto') return false;
-                    if (p.includes('vmc_presente')                        && !vmcType)          return false;
-                    if (p.includes('ecs_presente')                        && !hasECS)           return false;
-                    if (p.includes('chaudiere_presente')                  && !hasChaudiere)     return false;
-                    if (p.includes('eclairage_non_led')                   && isLED)             return false;
+                    if (p.includes('reseau_eau') && !hasReseauEau) return false;
+                    if (p.includes('chaudiere_age_10plus') && !chaudiereVieille) return false;
+                    if (p.includes('vmc_simple') && vmcType !== 'simple_auto') return false;
+                    if (p.includes('vmc_presente') && !vmcType) return false;
+                    if (p.includes('ecs_presente') && !hasECS) return false;
+                    if (p.includes('chaudiere_presente') && !hasChaudiere) return false;
+                    if (p.includes('eclairage_non_led') && isLED) return false;
                     if (p.includes('isolation_toiture_partielle_ou_nulle') && isolToiture === 'oui') return false;
                     return true;
                 });
@@ -1114,12 +1114,12 @@
                 let selectedActions = [];
                 pool = pool.map(a => {
                     const scopePct = postesBase[a.scope] || 30;
-                    const gainKwh  = kwhTotal * (scopePct / 100) * (a.gainRange[1] / 100);
-                    const gainEur  = gainKwh * avgPrice;
+                    const gainKwh = kwhTotal * (scopePct / 100) * (a.gainRange[1] / 100);
+                    const gainEur = gainKwh * avgPrice;
                     let capex;
-                    if (a.capexType === 'm2')             capex = a.capRange[1] * area;
+                    if (a.capexType === 'm2') capex = a.capRange[1] * area;
                     else if (a.capexType === 'point_lumineux') capex = a.capRange[1] * (area / 15);
-                    else                                   capex = a.capRange[1];
+                    else capex = a.capRange[1];
                     const roi = gainEur > 0 ? capex / gainEur : 999;
                     return { ...a, gainKwh: Math.round(gainKwh), gainEur: Math.round(gainEur), capex: Math.round(capex), roi: parseFloat(roi.toFixed(1)), gain_kwh: Math.round(gainKwh), gain_eur: Math.round(gainEur) };
                 }).sort((a, b) => a.roi - b.roi);
@@ -1133,7 +1133,7 @@
 
                 const totalSavingsKwh = selectedActions.reduce((s, a) => s + a.gainKwh, 0);
                 const totalSavingsEur = selectedActions.reduce((s, a) => s + a.gainEur, 0);
-                const totalCapexBrut  = selectedActions.reduce((s, a) => s + a.capex, 0);
+                const totalCapexBrut = selectedActions.reduce((s, a) => s + a.capex, 0);
 
                 // === AIDES ===
                 let aidesTotal = 0;
@@ -1150,7 +1150,7 @@
 
                 // === INFLATION PONDÉRÉE ===
                 const partElec = kwhTotal > 0 ? kwhElec / kwhTotal : 0.5;
-                const partGaz  = kwhTotal > 0 ? kwhGaz  / kwhTotal : 0.5;
+                const partGaz = kwhTotal > 0 ? kwhGaz / kwhTotal : 0.5;
                 const tauxInflation = partElec * this.inflationTaux.elec + partGaz * this.inflationTaux.gaz;
 
                 // === PROJECTION ===
@@ -1171,8 +1171,8 @@
 
                 // === SCORE MATURITÉ ===
                 const mainGoal = data.mainGoal || data.objectif || data.objectif_principal || '';
-                const horizon  = data.timeHorizon || data.horizon || data.horizon_decision || '';
-                const budget   = data.budget || data.budget_travaux || '';
+                const horizon = data.timeHorizon || data.horizon || data.horizon_decision || '';
+                const budget = data.budget || data.budget_travaux || '';
                 let scoreMat = 0;
                 if (horizon === 'immediat') scoreMat += 2;
                 else if (horizon === 'moyen' || horizon === 'court' || horizon === 'court_terme') scoreMat += 1;
@@ -1309,92 +1309,293 @@
         // Application du template
         const allCases = proCasesRaw.map(c => ({ ...c, ...getTemplateForCase(c) }));
 
-        /* ===== CAS FICTIFS V2 (3 dossiers riches — clé localStorage : proCasesRaw) ===== */
+        /* ===== CAS FICTIFS V2 (4 dossiers riches démonstrables — clé localStorage : proCasesRaw) ===== */
         const MOCK_PRO_CASES_V2 = [
+
             {
                 id: 'case_001',
-                projectName: 'Boutique Rivoli Sélection',
-                createdAt: '2026-03-01',
-                lastUpdated: '2026-03-05',
-                formData: {
-                    clientName: 'Boutique Rivoli Sélection',
-                    activity: 'commerce_nonalim',
-                    surface: 1200,
-                    elec_kwh: 150000,
-                    gas_kwh: 0,
-                    mainHeating: 'electric',
-                    budget_travaux: 'moyen',
-                    horizon_decision: 'court',
-                    objectif_principal: 'economie'
-                }
+                projectName: 'Brasserie du Marché',
+                clientName: 'SAS Brasserie du Marché',
+                activity: 'Restauration',
+                address: '14 Place du Parlement, 33000 Bordeaux',
+                status: 'completed',
+                completionPercent: 100,
+                createdAt: '18/02/2026',
+                lastUpdated: '05/03/2026',
+                reportGeneratedAt: '05/03/2026',
+                contact: { name: 'Thierry Blanc', phone: '06 78 23 45 67', role: 'Gérant' },
+                buildingArea: 210,
+                annualConsumption: 126000,
+                annualCost: 18400,
+                intensityPerSqm: 600,
+                score: 'E',
+                scoreApresTravauxLabel: 'C',
+                scoreConfidence: 'Élevé',
+                benchmark: { q1: 350, median: 500, q3: 800 },
+                estimatedSavingsPerYear: 7200,
+                estimatedSavingsPercent: 39,
+                totalCapex: 14500,
+                totalCapexNet: 11800,
+                aidesEstimees: 2700,
+                roiGlobal: 1.6,
+                actions: [
+                    { name: 'Optimisation horaires chauffage + cuisson', savingsEuro: 2800, capex: 800, roi: 0.3, eligCEE: false, fichesCEE: [], description: 'Réglage des plages de chauffe et décalage des préchauffages four selon les services. Action sans travaux, retour quasi-immédiat.' },
+                    { name: 'Relamping LED complet (salle + cuisine)', savingsEuro: 1950, capex: 5500, roi: 2.8, eligCEE: true, fichesCEE: ['BAT-EQ-127'], description: '210 m² en fluorescent T8 remplacés par LED. Gain éclairage estimé à 55%. Interventions sur 1 journée de fermeture.' },
+                    { name: 'Horloge VMC + modulation hors service', savingsEuro: 1400, capex: 2200, roi: 1.6, eligCEE: true, fichesCEE: ['BAT-TH-125'], description: 'La VMC cuisine tourne 24h/24. Programmation hors occupation (coupure 22h–6h) et réduction en inter-service.' },
+                    { name: 'Calorifugeage réseaux ECS et boucle cuisine', savingsEuro: 1050, capex: 6000, roi: 5.7, eligCEE: true, fichesCEE: ['BAT-TH-160'], description: 'Réseau ECS non isolé sur 35 ml. Pertes thermiques estimées à ~12% de la consommation ECS. Isolation laine de verre + protection alu.' }
+                ],
+                postes: {
+                    chauffage: { pct: 20, kwh: 25200, eur: 2646 },
+                    clim: { pct: 8, kwh: 10080, eur: 1058 },
+                    ventil: { pct: 12, kwh: 15120, eur: 1588 },
+                    eclairage: { pct: 10, kwh: 12600, eur: 1323 },
+                    ecs: { pct: 15, kwh: 18900, eur: 1985 },
+                    autres: { pct: 35, kwh: 44100, eur: 4631 }
+                },
+                benchmark_data: [
+                    { name: 'Votre brasserie', value: 600, fill: '#EF4444' },
+                    { name: 'Q1 (bon)', value: 350, fill: '#10B981' },
+                    { name: 'Médiane', value: 500, fill: '#F59E0B' },
+                    { name: 'Q3 (élevé)', value: 800, fill: '#EF4444' }
+                ],
+                projectionData: (() => {
+                    const data = [{ annee: 'Auj.', sans_travaux: 0, avec_travaux: 11800 }];
+                    let cs = 0, ca = 11800;
+                    for (let i = 1; i <= 10; i++) {
+                        cs += 18400 * Math.pow(1.048, i);
+                        ca += (18400 - 7200) * Math.pow(1.048, i);
+                        data.push({ annee: 'A+' + i, sans_travaux: Math.round(cs), avec_travaux: Math.round(ca), economies_nettes: Math.round(cs - ca) });
+                    }
+                    return data;
+                })(),
+                tauxInflation: 4.8,
+                roiAnnee: 2,
+                graphiquePubliable: true,
+                horizonAns: 10,
+                summary: 'Consommation nettement au-dessus de la médiane restauration (600 vs 500 kWh/m²/an). La facture gaz représente 70% du total et bénéficie d\'un fort levier rapide. 4 actions permettent de ramener l\'indice en zone C avec un retour global sous 2 ans.',
+                resultBasis: ['Factures réelles sur 12 mois (gaz + électricité)', 'Chaudière gaz standard > 15 ans identifiée', 'VMC cuisine fonctionnant 24h/24 — fort potentiel horaires'],
+                reliability: 'élevé',
+                attention: 'à surveiller',
+                providerQuestions: ['Le four et les équipements de cuisson sont-ils inclus dans les relevés de consommation gaz ?', 'Quel est l\'âge exact de la chaudière et date de la dernière maintenance ?', 'La VMC cuisine est-elle en simple ou double flux ?', 'Y a-t-il un contrat de maintenance en cours sur les équipements ?']
             },
+
+            {
+                id: 'case_002',
+                projectName: 'Le Clos Saint-Félix — Bureaux',
+                clientName: 'SCI Patrimoine Saint-Félix',
+                activity: 'Bureau',
+                address: '8 rue des Hauts-Pavés, 44000 Nantes',
+                status: 'completed',
+                completionPercent: 100,
+                createdAt: '24/02/2026',
+                lastUpdated: '06/03/2026',
+                reportGeneratedAt: '06/03/2026',
+                contact: { name: 'Isabelle Morin', phone: '06 31 44 89 12', role: 'Responsable patrimoine' },
+                buildingArea: 1100,
+                annualConsumption: 231000,
+                annualCost: 31800,
+                intensityPerSqm: 210,
+                score: 'D',
+                scoreApresTravauxLabel: 'B',
+                scoreConfidence: 'Élevé',
+                benchmark: { q1: 120, median: 180, q3: 280 },
+                estimatedSavingsPerYear: 11200,
+                estimatedSavingsPercent: 35,
+                totalCapex: 38500,
+                totalCapexNet: 30200,
+                aidesEstimees: 8300,
+                roiGlobal: 2.7,
+                actions: [
+                    { name: 'Régulation centrale chauffage (GTB légère)', savingsEuro: 4800, capex: 7500, roi: 1.6, eligCEE: true, fichesCEE: ['BAT-TH-116'], description: 'Installation d\'un régulateur central avec programmation hebdomadaire et zonage 3 niveaux. Chaudière 18 ans en réseau eau chaude — fort gain sur les dérives de consigne.' },
+                    { name: 'Relamping LED open space + circulations', savingsEuro: 2900, capex: 13500, roi: 4.7, eligCEE: true, fichesCEE: ['BAT-EQ-127'], description: '1 100 m² en T8 fluorescent. Remplacement par dalles LED 40W avec gradation. Réduction estimée de 58% sur le poste éclairage.' },
+                    { name: 'Robinets thermostatiques sur radiateurs', savingsEuro: 2100, capex: 5500, roi: 2.6, eligCEE: true, fichesCEE: ['BAT-TH-024'], description: 'Réseau eau chaude sans robinets thermostatiques dans les bureaux. Pose sur 55 émetteurs. Permet une régulation locale et réduit les surchauffes de 10% estimées.' },
+                    { name: 'Horloge VMC simple flux (3 caissons)', savingsEuro: 1400, capex: 4500, roi: 3.2, eligCEE: true, fichesCEE: ['BAT-TH-125'], description: 'VMC fonctionnant 24h/24. Programmation horaire (7h–20h semaine) sur 3 caissons. Économie ventilation estimée à 28%.' }
+                ],
+                postes: {
+                    chauffage: { pct: 45, kwh: 103950, eur: 14758 },
+                    clim: { pct: 8, kwh: 18480, eur: 2626 },
+                    ventil: { pct: 9, kwh: 20790, eur: 2954 },
+                    eclairage: { pct: 18, kwh: 41580, eur: 5908 },
+                    ecs: { pct: 5, kwh: 11550, eur: 1641 },
+                    autres: { pct: 15, kwh: 34650, eur: 4923 }
+                },
+                benchmark_data: [
+                    { name: 'Vos bureaux', value: 210, fill: '#F97316' },
+                    { name: 'Q1 (bon)', value: 120, fill: '#10B981' },
+                    { name: 'Médiane', value: 180, fill: '#F59E0B' },
+                    { name: 'Q3 (élevé)', value: 280, fill: '#EF4444' }
+                ],
+                projectionData: (() => {
+                    const data = [{ annee: 'Auj.', sans_travaux: 0, avec_travaux: 30200 }];
+                    let cs = 0, ca = 30200;
+                    for (let i = 1; i <= 10; i++) {
+                        cs += 31800 * Math.pow(1.040, i);
+                        ca += (31800 - 11200) * Math.pow(1.040, i);
+                        data.push({ annee: 'A+' + i, sans_travaux: Math.round(cs), avec_travaux: Math.round(ca), economies_nettes: Math.round(cs - ca) });
+                    }
+                    return data;
+                })(),
+                tauxInflation: 4.0,
+                roiAnnee: 3,
+                graphiquePubliable: true,
+                horizonAns: 10,
+                summary: 'Immeuble de bureaux 1960 avec chaudière gaz de 18 ans et éclairage fluorescent intégral. L\'intensité de 210 kWh/m²/an dépasse de 17% la médiane du secteur. 4 actions complémentaires permettent de ramener l\'indice en zone B avec un ROI global inférieur à 3 ans.',
+                resultBasis: ['Factures annuelles gaz + électricité vérifiées sur 12 mois', 'Visite terrain : chaudière Viessmann 2008, 3 caissons VMC sans horloge', 'Éclairage T8 intégral identifié lors du relevé'],
+                reliability: 'élevé',
+                attention: 'modéré',
+                providerQuestions: ['La chaudière a-t-elle bénéficié d\'un contrat de maintenance annuel ?', 'Les locataires disposent-ils de thermostats individuels ?', 'Existe-t-il un comptage séparé éclairage / prises / CVC ?', 'Le bail prévoit-il une clause verte ou des charges refacturées ?']
+            },
+
             {
                 id: 'case_003',
-                projectName: 'Hôtel Convention Paris',
-                createdAt: '2026-02-28',
-                lastUpdated: '2026-03-01',
-                formData: {
-                    clientName: 'Hôtel Convention Paris',
-                    activity: 'hotellerie',
-                    surface: 4500,
-                    elec_kwh: 450000,
-                    gas_kwh: 200000,
-                    mainHeating: 'gas',
-                    budget_travaux: 'eleve',
-                    horizon_decision: 'immediat',
-                    objectif_principal: 'conformite'
-                }
+                projectName: 'Clinique Vétérinaire du Soleil',
+                clientName: 'SELARL Vétérinaire du Soleil',
+                activity: 'Santé',
+                address: '23 avenue de la Pompignane, 34000 Montpellier',
+                status: 'completed',
+                completionPercent: 100,
+                createdAt: '01/03/2026',
+                lastUpdated: '07/03/2026',
+                reportGeneratedAt: '07/03/2026',
+                contact: { name: 'Dr. Laurence Favre', phone: '06 52 89 34 11', role: 'Associée gérante' },
+                buildingArea: 320,
+                annualConsumption: 86400,
+                annualCost: 16900,
+                intensityPerSqm: 270,
+                score: 'D',
+                scoreApresTravauxLabel: 'C',
+                scoreConfidence: 'Élevé',
+                benchmark: { q1: 160, median: 220, q3: 350 },
+                estimatedSavingsPerYear: 4800,
+                estimatedSavingsPercent: 28,
+                totalCapex: 22000,
+                totalCapexNet: 17500,
+                aidesEstimees: 4500,
+                roiGlobal: 3.6,
+                actions: [
+                    { name: 'VMC régulée CO2 (salles de soins)', savingsEuro: 2100, capex: 8500, roi: 4.0, eligCEE: true, fichesCEE: ['BAT-TH-116'], description: 'Renouvellement d\'air fixe 24h/24 en zone de soins. Remplacement par VMC modulée sur sonde CO2 et présence. Économie ventilation estimée à 30%. Conforme arrêté du 25/04/2017.' },
+                    { name: 'Détecteurs de présence éclairage', savingsEuro: 1350, capex: 4500, roi: 3.3, eligCEE: true, fichesCEE: ['BAT-EQ-212'], description: '6 zones identifiées avec éclairage permanent non justifié. Pose de détecteurs HF dans les couloirs, la salle d\'attente et les sanitaires. Gain estimé 20% sur le poste éclairage.' },
+                    { name: 'Calorifugeage réseau ECS (stérilisation)', savingsEuro: 850, capex: 3500, roi: 4.1, eligCEE: true, fichesCEE: ['BAT-TH-160'], description: 'Réseau ECS dédié à la stérilisation non isolé sur 22 ml. Pertes thermiques estimées à 15% de la consommation ECS. Isolation élastomère DN25–DN40.' },
+                    { name: 'Optimisation plages climatisation (zone H3)', savingsEuro: 500, capex: 5500, roi: 11.0, eligCEE: false, fichesCEE: [], description: 'Climatiseurs split tournant de 7h à 22h même hors présence. Programmation horaire sur 8 unités. Gain estimé 12% sur la clim. Zone H3 : fort enjeu rafraîchissement en été.' }
+                ],
+                postes: {
+                    chauffage: { pct: 36, kwh: 31104, eur: 6096 },
+                    clim: { pct: 10, kwh: 8640, eur: 1693 },
+                    ventil: { pct: 20, kwh: 17280, eur: 3387 },
+                    eclairage: { pct: 12, kwh: 10368, eur: 2032 },
+                    ecs: { pct: 8, kwh: 6912, eur: 1354 },
+                    autres: { pct: 14, kwh: 12096, eur: 2371 }
+                },
+                benchmark_data: [
+                    { name: 'Votre clinique', value: 270, fill: '#F97316' },
+                    { name: 'Q1 (bon)', value: 160, fill: '#10B981' },
+                    { name: 'Médiane', value: 220, fill: '#F59E0B' },
+                    { name: 'Q3 (élevé)', value: 350, fill: '#EF4444' }
+                ],
+                projectionData: (() => {
+                    const data = [{ annee: 'Auj.', sans_travaux: 0, avec_travaux: 17500 }];
+                    let cs = 0, ca = 17500;
+                    for (let i = 1; i <= 10; i++) {
+                        cs += 16900 * Math.pow(1.030, i);
+                        ca += (16900 - 4800) * Math.pow(1.030, i);
+                        data.push({ annee: 'A+' + i, sans_travaux: Math.round(cs), avec_travaux: Math.round(ca), economies_nettes: Math.round(cs - ca) });
+                    }
+                    return data;
+                })(),
+                tauxInflation: 3.0,
+                roiAnnee: 4,
+                graphiquePubliable: true,
+                horizonAns: 10,
+                summary: 'Cabinet vétérinaire zone H3 avec consommation électrique de 270 kWh/m²/an (médiane santé : 220). Le poste ventilation représente 20% des dépenses et constitue le levier prioritaire, avec une exigence réglementaire spécifique en établissement de santé. ROI global estimé sous 4 ans.',
+                resultBasis: ['Factures électricité 12 mois vérifiées (compteur unique)', 'Zone climatique H3 (Montpellier) — correctif clim +40% appliqué', 'Ventilation réglementaire identifiée comme fonctionnant hors plages d\'occupation'],
+                reliability: 'élevé',
+                attention: 'modéré',
+                providerQuestions: ['La ventilation est-elle conforme à l\'arrêté du 25 avril 2017 sur les établissements de santé ?', 'Les climatiseurs ont-ils fait l\'objet d\'une vérification d\'étanchéité récente (F-gaz) ?', 'Existe-t-il un réseau eau chaude ou tout est-il électrique ?', 'Le bail permet-il des travaux sur les équipements techniques ?']
             },
+
             {
                 id: 'case_004',
-                projectName: 'Entrepôt Logistique Nord',
-                createdAt: '2026-03-05',
-                lastUpdated: '2026-03-07',
-                formData: {
-                    clientName: 'Entrepôt Logistique Nord',
-                    activity: 'entrepot_chauffe',
-                    surface: 3200,
-                    postalCode: '59000',
-                    constructionYear: '1975-1988',
-                    heating: 'fioul',
-                    chauffage_age: 'plus_20_ans',
-                    elecKwh: 250000,
-                    gasKwh: 966400,
-                    elecEuro: 49000,
-                    gasEuro: 101000,
-                    budget: '20k_50k',
-                    horizon: 'moyen',
-                    objectif: 'facture',
-                }
-            },
-            {
-                id: 'case_005',
-                projectName: 'Résidence Hôtelière Gambetta',
-                createdAt: '2026-03-06',
-                lastUpdated: '2026-03-08',
-                formData: {
-                    clientName: 'Résidence Hôtelière Gambetta',
-                    activity: 'hotel',
-                    surface: 890,
-                    postalCode: '69003',
-                    constructionYear: '1948-1974',
-                    heating: 'chaudiere_gaz_standard',
-                    chauffage_age: 'entre_10_20_ans',
-                    vmc_type: 'simple_auto',
-                    eclairage_type: 'fluorescent_neon',
-                    elecKwh: 100000,
-                    gasKwh: 362800,
-                    elecEuro: 19600,
-                    gasEuro: 38000,
-                    budget: '20k_50k',
-                    horizon: 'immediat',
-                    objectif: 'conformite',
-                }
+                projectName: 'Entrepôt Logipole Roissy A',
+                clientName: 'Logipole Distribution SAS',
+                activity: 'Entrepôt',
+                address: 'Zone Logistique Roissy-en-France, 95700 Roissy-CDG',
+                status: 'completed',
+                completionPercent: 100,
+                createdAt: '03/03/2026',
+                lastUpdated: '07/03/2026',
+                reportGeneratedAt: '07/03/2026',
+                contact: { name: 'Frédéric Aumont', phone: '06 14 67 23 09', role: 'Responsable technique' },
+                buildingArea: 2800,
+                annualConsumption: 252000,
+                annualCost: 38200,
+                intensityPerSqm: 90,
+                score: 'C',
+                scoreApresTravauxLabel: 'A',
+                scoreConfidence: 'Élevé',
+                benchmark: { q1: 50, median: 80, q3: 130 },
+                estimatedSavingsPerYear: 18500,
+                estimatedSavingsPercent: 48,
+                totalCapex: 56000,
+                totalCapexNet: 43000,
+                aidesEstimees: 13000,
+                roiGlobal: 2.3,
+                actions: [
+                    { name: 'Relamping LED haute baie (sodium 400W → LED 150W)', savingsEuro: 11200, capex: 42000, roi: 3.75, eligCEE: true, fichesCEE: ['BAT-EQ-127'], description: '280 projecteurs sodium 400W remplacés par LED haute baie 150W avec driver dimmable. Économie 62% sur l\'éclairage. Entrepôt 7h–22h, 6j/7. Durée de vie LED : 50 000h.' },
+                    { name: 'Optimisation aérothermes gaz (réglage + zonage)', savingsEuro: 4800, capex: 6500, roi: 1.35, eligCEE: false, fichesCEE: [], description: 'Aérothermes gaz fonctionnant à consigne uniforme 18°C sur tout le volume. Mise en place d\'un zonage (quais 12°C, zone picking 16°C, bureaux 19°C). Détecteurs de porte ouverte sur quais.' },
+                    { name: 'Détecteurs de présence éclairage (allées secondaires)', savingsEuro: 1800, capex: 4500, roi: 2.5, eligCEE: true, fichesCEE: ['BAT-EQ-212'], description: 'Allées secondaires et zones de stockage peu fréquentées éclairées en permanence. Pose de 18 détecteurs HF sur les allées B, C, D. Gain estimé 20% sur ces zones (30% du bâtiment).' },
+                    { name: 'Isolation toiture (panneaux sandwich 120 mm)', savingsEuro: 700, capex: 3000, roi: 4.3, eligCEE: true, fichesCEE: ['BAT-EN-102'], description: 'Toiture bac acier non isolée sur 400 m² (zone bureaux intégrés). Pose de panneaux sandwich R=6. Gain chauffage estimé 14% sur la zone concernée.' }
+                ],
+                postes: {
+                    chauffage: { pct: 60, kwh: 151200, eur: 22932 },
+                    clim: { pct: 2, kwh: 5040, eur: 764 },
+                    ventil: { pct: 8, kwh: 20160, eur: 3056 },
+                    eclairage: { pct: 25, kwh: 63000, eur: 9554 },
+                    ecs: { pct: 2, kwh: 5040, eur: 764 },
+                    autres: { pct: 3, kwh: 7560, eur: 1146 }
+                },
+                benchmark_data: [
+                    { name: 'Votre entrepôt', value: 90, fill: '#F59E0B' },
+                    { name: 'Q1 (bon)', value: 50, fill: '#10B981' },
+                    { name: 'Médiane', value: 80, fill: '#F59E0B' },
+                    { name: 'Q3 (élevé)', value: 130, fill: '#EF4444' }
+                ],
+                projectionData: (() => {
+                    const data = [{ annee: 'Auj.', sans_travaux: 0, avec_travaux: 43000 }];
+                    let cs = 0, ca = 43000;
+                    for (let i = 1; i <= 10; i++) {
+                        cs += 38200 * Math.pow(1.042, i);
+                        ca += (38200 - 18500) * Math.pow(1.042, i);
+                        data.push({ annee: 'A+' + i, sans_travaux: Math.round(cs), avec_travaux: Math.round(ca), economies_nettes: Math.round(cs - ca) });
+                    }
+                    return data;
+                })(),
+                tauxInflation: 4.2,
+                roiAnnee: 2,
+                graphiquePubliable: true,
+                horizonAns: 10,
+                summary: 'Entrepôt logistique chauffé de 2 800 m² avec éclairage sodium haute pression et aérothermes gaz sans zonage. Intensité de 90 kWh/m²/an légèrement au-dessus de la médiane. Le relamping LED seul représente 60% des économies avec une aide CEE significative. ROI global estimé sous 2,5 ans.',
+                resultBasis: ['Relevés de consommation gaz + électricité sur 12 mois (compteurs séparés)', 'Éclairage sodium haute pression 400W confirmé — 280 projecteurs comptabilisés', 'Aérothermes gaz sans zonage ni détecteur de portes ouvertes'],
+                reliability: 'élevé',
+                attention: 'faible',
+                providerQuestions: ['Quel est le nombre exact de projecteurs et leur puissance unitaire ?', 'Les aérothermes ont-ils une régulation centrale ou chaque zone est-elle indépendante ?', 'Le bail commercial autorise-t-il les travaux sur l\'éclairage ?', 'Existe-t-il un contrat de maintenance sur les équipements de chauffage ?']
             }
+
         ];
 
         function initializeMockProCases() {
-            if (!localStorage.getItem('proCasesRaw')) {
+            // Toujours s'assurer que les 4 cas de démo sont présents
+            // (même si l'utilisateur a un ancien cache avec les anciens dossiers)
+            try {
+                const existing = JSON.parse(localStorage.getItem('proCasesRaw') || '[]');
+                const existingIds = existing.map(function (c) { return c.id; });
+                const mockIds = MOCK_PRO_CASES_V2.map(function (m) { return m.id; });
+                const allMocksPresent = mockIds.every(function (id) { return existingIds.includes(id); });
+                if (!allMocksPresent) {
+                    // Conserver les dossiers générés par l'utilisateur (ceux avec des IDs PRO-xxxxx)
+                    const userGenerated = existing.filter(function (c) { return c.id.startsWith('PRO-'); });
+                    localStorage.setItem('proCasesRaw', JSON.stringify([...MOCK_PRO_CASES_V2, ...userGenerated]));
+                }
+            } catch (e) {
                 localStorage.setItem('proCasesRaw', JSON.stringify(MOCK_PRO_CASES_V2));
             }
         }
@@ -1515,7 +1716,7 @@
                                     </div>
                                 </F>
                                 <F label="Statut occupant">
-                                    {sel('statut_occupant', [['proprietaire','Propriétaire'],['locataire','Locataire'],['mixte','Mixte']])}
+                                    {sel('statut_occupant', [['proprietaire', 'Propriétaire'], ['locataire', 'Locataire'], ['mixte', 'Mixte']])}
                                 </F>
                             </div>
                         </div>
@@ -1526,33 +1727,33 @@
                             <div className="grid grid-cols-2 gap-4">
                                 <F label="Activité principale" req>
                                     {sel('activite', [
-                                        ['bureaux','Bureaux / Services'],
-                                        ['commerce','Commerce / Détail'],
-                                        ['entrepot','Entrepôt / Logistique'],
-                                        ['hotellerie','Hôtellerie'],
-                                        ['restauration','Restauration'],
-                                        ['sante_cabinet','Santé (cabinet)'],
-                                        ['enseignement','Enseignement'],
+                                        ['bureaux', 'Bureaux / Services'],
+                                        ['commerce', 'Commerce / Détail'],
+                                        ['entrepot', 'Entrepôt / Logistique'],
+                                        ['hotellerie', 'Hôtellerie'],
+                                        ['restauration', 'Restauration'],
+                                        ['sante_cabinet', 'Santé (cabinet)'],
+                                        ['enseignement', 'Enseignement'],
                                     ])}
                                 </F>
                                 <F label="Surface utile (m²)" req>{inp('surface', '380', 'number')}</F>
                                 <F label="Année de construction">
                                     {sel('annee_construction', [
-                                        ['avant_1948','Avant 1948'],['1948_1974','1948 – 1974'],
-                                        ['1975_1988','1975 – 1988'],['1989_2000','1989 – 2000'],
-                                        ['2001_2012','2001 – 2012'],['apres_2012','Après 2012'],
-                                        ['inconnu','Non renseigné'],
+                                        ['avant_1948', 'Avant 1948'], ['1948_1974', '1948 – 1974'],
+                                        ['1975_1988', '1975 – 1988'], ['1989_2000', '1989 – 2000'],
+                                        ['2001_2012', '2001 – 2012'], ['apres_2012', 'Après 2012'],
+                                        ['inconnu', 'Non renseigné'],
                                     ])}
                                 </F>
                                 <F label="Énergie principale">
                                     {sel('energie_principale', [
-                                        ['electricite','Électricité'],['gaz_naturel','Gaz naturel'],
-                                        ['fioul','Fioul'],['bois','Bois / Biomasse'],
-                                        ['pac','Pompe à chaleur'],['reseau_chaleur','Réseau de chaleur'],
+                                        ['electricite', 'Électricité'], ['gaz_naturel', 'Gaz naturel'],
+                                        ['fioul', 'Fioul'], ['bois', 'Bois / Biomasse'],
+                                        ['pac', 'Pompe à chaleur'], ['reseau_chaleur', 'Réseau de chaleur'],
                                     ])}
                                 </F>
                                 <F label="Nombre de niveaux">
-                                    {sel('nb_niveaux', [['1','1'],['2','2'],['3','3'],['4','4'],['5+','5 et plus']])}
+                                    {sel('nb_niveaux', [['1', '1'], ['2', '2'], ['3', '3'], ['4', '4'], ['5+', '5 et plus']])}
                                 </F>
                             </div>
                         </div>
@@ -1562,13 +1763,13 @@
                             <p className="text-sm text-slate-500">État de l'enveloppe thermique du bâtiment</p>
                             <div className="grid grid-cols-2 gap-4">
                                 <F label="Isolation toiture">
-                                    {sel('isolation_toiture', [['bonne','Bonne (< 10 ans)'],['moyenne','Moyenne (10–25 ans)'],['mauvaise','Mauvaise / Absente'],['inconnue','Non renseignée']])}
+                                    {sel('isolation_toiture', [['bonne', 'Bonne (< 10 ans)'], ['moyenne', 'Moyenne (10–25 ans)'], ['mauvaise', 'Mauvaise / Absente'], ['inconnue', 'Non renseignée']])}
                                 </F>
                                 <F label="Isolation murs">
-                                    {sel('isolation_murs', [['bonne','Bonne'],['moyenne','Moyenne'],['mauvaise','Mauvaise / Absente'],['inconnue','Non renseignée']])}
+                                    {sel('isolation_murs', [['bonne', 'Bonne'], ['moyenne', 'Moyenne'], ['mauvaise', 'Mauvaise / Absente'], ['inconnue', 'Non renseignée']])}
                                 </F>
                                 <F label="Type de vitrage">
-                                    {sel('vitrage_type', [['simple','Simple vitrage'],['double_ancien','Double vitrage ancien (> 15 ans)'],['double_recen','Double vitrage récent'],['triple','Triple vitrage']])}
+                                    {sel('vitrage_type', [['simple', 'Simple vitrage'], ['double_ancien', 'Double vitrage ancien (> 15 ans)'], ['double_recen', 'Double vitrage récent'], ['triple', 'Triple vitrage']])}
                                 </F>
                             </div>
                             <div className="p-3 bg-slate-50 rounded-lg">
@@ -1586,16 +1787,16 @@
                             <div className="grid grid-cols-2 gap-4">
                                 <F label="Type de chauffage">
                                     {sel('chauffage_type', [
-                                        ['radiateurs_elec','Radiateurs électriques'],
-                                        ['pac','Pompe à chaleur (PAC)'],
-                                        ['chaudiere_gaz','Chaudière gaz'],
-                                        ['chaudiere_fioul','Chaudière fioul'],
-                                        ['plancher_chauffant','Plancher chauffant'],
-                                        ['autre','Autre'],
+                                        ['radiateurs_elec', 'Radiateurs électriques'],
+                                        ['pac', 'Pompe à chaleur (PAC)'],
+                                        ['chaudiere_gaz', 'Chaudière gaz'],
+                                        ['chaudiere_fioul', 'Chaudière fioul'],
+                                        ['plancher_chauffant', 'Plancher chauffant'],
+                                        ['autre', 'Autre'],
                                     ])}
                                 </F>
                                 <F label="Âge de l'installation">
-                                    {sel('chauffage_age', [['moins_5ans','Moins de 5 ans'],['5_15ans','5 – 15 ans'],['plus_15ans','Plus de 15 ans'],['inconnu','Non renseigné']])}
+                                    {sel('chauffage_age', [['moins_5ans', 'Moins de 5 ans'], ['5_15ans', '5 – 15 ans'], ['plus_15ans', 'Plus de 15 ans'], ['inconnu', 'Non renseigné']])}
                                 </F>
                             </div>
                             <div className="p-3 bg-slate-50 rounded-lg">
@@ -1608,7 +1809,7 @@
                             </div>
                             <div className="p-3 bg-slate-50 rounded-lg">
                                 <p className="text-xs font-semibold text-slate-600 mb-2">Ventilation (VMC)</p>
-                                {sel('vmc_type', [['simple_flux','Simple flux'],['double_flux','Double flux avec récupération'],['naturelle','Ventilation naturelle'],['aucune','Aucune VMC']])}
+                                {sel('vmc_type', [['simple_flux', 'Simple flux'], ['double_flux', 'Double flux avec récupération'], ['naturelle', 'Ventilation naturelle'], ['aucune', 'Aucune VMC']])}
                                 <div className="mt-2">{chk('vmc_horloge', undefined, 'VMC avec horloge / programmation')}</div>
                             </div>
                             <div className="p-3 bg-slate-50 rounded-lg">
@@ -1627,7 +1828,7 @@
                             <div className="p-3 bg-slate-50 rounded-lg">
                                 <p className="text-xs font-semibold text-slate-600 mb-2">Éclairage</p>
                                 <F label="Type d'éclairage majoritaire">
-                                    {sel('eclairage_type', [['led','LED'],['fluorescent','Fluorescent / néon'],['halogene','Halogène'],['mixte','Mixte']])}
+                                    {sel('eclairage_type', [['led', 'LED'], ['fluorescent', 'Fluorescent / néon'], ['halogene', 'Halogène'], ['mixte', 'Mixte']])}
                                 </F>
                                 <div className="mt-2">{chk('eclairage_detecteurs', undefined, 'Détecteurs de présence / zones sans occupation')}</div>
                             </div>
@@ -1637,7 +1838,7 @@
                                 {data.clim_presente && (
                                     <div className="mt-2">
                                         <F label="Âge de la climatisation">
-                                            {sel('clim_age', [['moins_5ans','Moins de 5 ans'],['5_15ans','5 – 15 ans'],['plus_15ans','Plus de 15 ans'],['inconnu','Non renseigné']])}
+                                            {sel('clim_age', [['moins_5ans', 'Moins de 5 ans'], ['5_15ans', '5 – 15 ans'], ['plus_15ans', 'Plus de 15 ans'], ['inconnu', 'Non renseigné']])}
                                         </F>
                                     </div>
                                 )}
@@ -1669,7 +1870,7 @@
                                 </div>
                             </div>
                             <F label="Période couverte">
-                                {sel('periode_couverte', [['12','12 mois (annuel)'],['11','11 mois'],['10','10 mois'],['9','9 mois ou moins']])}
+                                {sel('periode_couverte', [['12', '12 mois (annuel)'], ['11', '11 mois'], ['10', '10 mois'], ['9', '9 mois ou moins']])}
                             </F>
                         </div>
                     );
@@ -1679,18 +1880,18 @@
                             <div className="grid grid-cols-2 gap-4">
                                 <F label="Objectif principal">
                                     {sel('objectif_principal', [
-                                        ['reduction_charges','Réduction des charges'],
-                                        ['conformite_reglementaire','Conformité réglementaire (décret tertiaire)'],
-                                        ['valorisation_patrimoine','Valorisation du patrimoine'],
-                                        ['confort_occupants','Amélioration du confort'],
-                                        ['demarche_rse','Démarche RSE / ISR'],
+                                        ['reduction_charges', 'Réduction des charges'],
+                                        ['conformite_reglementaire', 'Conformité réglementaire (décret tertiaire)'],
+                                        ['valorisation_patrimoine', 'Valorisation du patrimoine'],
+                                        ['confort_occupants', 'Amélioration du confort'],
+                                        ['demarche_rse', 'Démarche RSE / ISR'],
                                     ])}
                                 </F>
                                 <F label="Horizon de décision">
-                                    {sel('horizon_decision', [['immediat','Immédiat (< 3 mois)'],['1an','Court terme (3–12 mois)'],['3ans','Moyen terme (1–3 ans)'],['5ans','Long terme (3–5 ans)']])}
+                                    {sel('horizon_decision', [['immediat', 'Immédiat (< 3 mois)'], ['1an', 'Court terme (3–12 mois)'], ['3ans', 'Moyen terme (1–3 ans)'], ['5ans', 'Long terme (3–5 ans)']])}
                                 </F>
                                 <F label="Budget travaux envisagé">
-                                    {sel('budget_travaux', [['moins_5k','< 5 000 €'],['5k_20k','5 000 – 20 000 €'],['20k_50k','20 000 – 50 000 €'],['50k_200k','50 000 – 200 000 €'],['plus_200k','> 200 000 €'],['inconnu','Non défini']])}
+                                    {sel('budget_travaux', [['moins_5k', '< 5 000 €'], ['5k_20k', '5 000 – 20 000 €'], ['20k_50k', '20 000 – 50 000 €'], ['50k_200k', '50 000 – 200 000 €'], ['plus_200k', '> 200 000 €'], ['inconnu', 'Non défini']])}
                                 </F>
                             </div>
                             <div className="p-3 bg-slate-50 rounded-lg">
@@ -1712,7 +1913,7 @@
                 }
             };
 
-            const STEP_LABELS = ['Identification','Bâtiment','Enveloppe','Équipements','ECS & Éclairage','Consommations','Contexte'];
+            const STEP_LABELS = ['Identification', 'Bâtiment', 'Enveloppe', 'Équipements', 'ECS & Éclairage', 'Consommations', 'Contexte'];
             const canNext = () => {
                 if (step === 1) return data.contact.trim() && data.societe.trim();
                 if (step === 2) return !!data.surface;
@@ -2268,6 +2469,7 @@
                                         <th>Activité</th>
                                         <th>Surface</th>
                                         <th>Score</th>
+                                        <th>Après travaux</th>
                                         <th>Consommation est.</th>
                                         <th>Économies est.</th>
                                         <th>Date</th>
@@ -2287,7 +2489,17 @@
                                                 <td>
                                                     {c._area > 0 ? <><span className="font-semibold text-slate-700">{c._area.toLocaleString('fr-FR')}</span><span className="text-xs text-slate-400 ml-1">m²</span></> : <span className="text-slate-400 text-xs">—</span>}
                                                 </td>
-                                                <td>{comp ? <ScoreBadge score={comp.score} /> : <span className="text-slate-400 text-xs">—</span>}</td>
+                                                <td>{comp ? <ScoreBadge score={comp.score} /> : (c.score ? <ScoreBadge score={c.score} /> : <span className="text-slate-400 text-xs">—</span>)}</td>
+                                                <td>
+                                                    {c.scoreApresTravauxLabel ? (
+                                                        <div className="flex items-center gap-1.5">
+                                                            <Icon icon="solar:arrow-right-line-duotone" className="text-green-500 text-xs" />
+                                                            <ScoreBadge score={c.scoreApresTravauxLabel} />
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-xs text-slate-300">—</span>
+                                                    )}
+                                                </td>
                                                 <td>
                                                     {comp ? (
                                                         <div>
@@ -2315,7 +2527,7 @@
                                         );
                                     })}
                                     {filtered.length === 0 && (
-                                        <tr><td colSpan="8" className="text-center py-12 text-slate-400">Aucun dossier trouvé. Créez votre premier diagnostic.</td></tr>
+                                        <tr><td colSpan="9" className="text-center py-12 text-slate-400">Aucun dossier trouvé. Créez votre premier diagnostic.</td></tr>
                                     )}
                                 </tbody>
                             </table>
@@ -2329,8 +2541,14 @@
         /* ===== ProCaseReport — Rapport pour dossiers générés via le wizard 7 modules ===== */
         const ProCaseReport = ({ caseId, setPage }) => {
             const [cases] = useState(() => {
-                const localCases = JSON.parse(localStorage.getItem('proCases') || '[]');
-                return [...localCases, ...allCases];
+                try {
+                    const wizardCases = JSON.parse(localStorage.getItem('proCases') || '[]');
+                    const rawCases = JSON.parse(localStorage.getItem('proCasesRaw') || '[]');
+                    // Fusionner : cas wizard + cas localStorage + mocks statiques en fallback
+                    const allStoredIds = [...wizardCases, ...rawCases].map(function (c) { return c.id; });
+                    const mocksNotStored = MOCK_PRO_CASES_V2.filter(function (m) { return !allStoredIds.includes(m.id); });
+                    return [...wizardCases, ...rawCases, ...mocksNotStored];
+                } catch (e) { return MOCK_PRO_CASES_V2; }
             });
             const c = cases.find(x => x.id === caseId);
             const isProAuth = localStorage.getItem('proAuth') === 'true';
@@ -2355,14 +2573,14 @@
                 const { phone, email, ...publicData } = c.formData || {};
                 const shareData = { id: c.id, clientName: c.clientName, engineResult: c.engineResult, formData: publicData };
                 let encoded;
-                try { encoded = btoa(unescape(encodeURIComponent(JSON.stringify(shareData)))); } catch(e) { encoded = btoa(JSON.stringify(shareData)); }
+                try { encoded = btoa(unescape(encodeURIComponent(JSON.stringify(shareData)))); } catch (e) { encoded = btoa(JSON.stringify(shareData)); }
                 const url = window.location.href.split('#')[0] + '#case=' + encoded;
                 if (navigator.clipboard) navigator.clipboard.writeText(url).then(() => alert('Lien copié !')).catch(() => prompt('Lien :', url));
                 else prompt('Lien :', url);
             };
 
-            const COLORS = { chauffage:'#F97316', clim:'#06B6D4', ventil:'#3B82F6', eclairage:'#F59E0B', ecs:'#8B5CF6', autres:'#94A3B8' };
-            const LABELS = { chauffage:'Chauffage', clim:'Climatisation', ventil:'Ventilation', eclairage:'Éclairage', ecs:'ECS', autres:'Autres' };
+            const COLORS = { chauffage: '#F97316', clim: '#06B6D4', ventil: '#3B82F6', eclairage: '#F59E0B', ecs: '#8B5CF6', autres: '#94A3B8' };
+            const LABELS = { chauffage: 'Chauffage', clim: 'Climatisation', ventil: 'Ventilation', eclairage: 'Éclairage', ecs: 'ECS', autres: 'Autres' };
 
             return (
                 <div className="p-4 md:p-8 max-w-5xl mx-auto">
@@ -2389,7 +2607,7 @@
                             <div>
                                 <div className="text-blue-300 text-xs font-bold uppercase tracking-widest mb-2">Pré-diagnostic énergétique</div>
                                 <h1 className="text-3xl font-extrabold mb-1">{c.clientName || c.company || '—'}</h1>
-                                <div className="text-slate-300 text-sm">{c.activity} · {c.surfaceLabel} · {c.postalCode}</div>
+                                <div className="text-slate-300 text-sm">{c.activity} · {c.surfaceLabel || (c.buildingArea ? c.buildingArea.toLocaleString('fr-FR') + ' m²' : '')} · {c.postalCode || c.address || ''}</div>
                                 <div className="text-slate-400 text-xs mt-1">Généré le {c.createdAt} · Dossier {c.id}</div>
                             </div>
                             <div className="flex flex-col items-center justify-center bg-white/10 rounded-xl px-8 py-5 shrink-0">
@@ -2443,7 +2661,7 @@
                         const cfgApres = SCORE_CONFIG[scoreApres] || SCORE_CONFIG['C'];
 
                         const EtiquetteBande = ({ score, intensite, label }) => {
-                            const ORDER = ['A','B','C','D','E'];
+                            const ORDER = ['A', 'B', 'C', 'D', 'E'];
                             return (
                                 <div className="rounded-xl overflow-hidden border border-slate-200 shadow-sm w-full max-w-xs">
                                     <div className="bg-slate-800 text-white text-xs font-bold px-3 py-1.5 tracking-wider uppercase">{label}</div>
@@ -2557,7 +2775,7 @@
                                                 <Recharts.BarChart data={decompoData} margin={{ top: 5, right: 10, bottom: 5, left: 10 }}>
                                                     <Recharts.CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
                                                     <Recharts.XAxis dataKey="scenario" tick={{ fontSize: 13, fontWeight: 600 }} />
-                                                    <Recharts.YAxis tickFormatter={v => v >= 1000 ? `${(v/1000).toFixed(0)}k€` : `${v}€`} tick={{ fontSize: 11 }} />
+                                                    <Recharts.YAxis tickFormatter={v => v >= 1000 ? `${(v / 1000).toFixed(0)}k€` : `${v}€`} tick={{ fontSize: 11 }} />
                                                     <Recharts.Tooltip formatter={(v, n) => [`${v?.toLocaleString('fr-FR')} €`, LABELS[n] || n]} />
                                                     {Object.keys(COLORS).map(k => (
                                                         <Recharts.Bar key={k} dataKey={k} stackId="a" fill={COLORS[k]} name={k} />
@@ -2644,7 +2862,7 @@
                                                 </defs>
                                                 <Recharts.CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
                                                 <Recharts.XAxis dataKey="annee" tick={{ fontSize: 11 }} />
-                                                <Recharts.YAxis tickFormatter={v => v >= 1000 ? `${(v/1000).toFixed(0)}k€` : `${v}€`} tick={{ fontSize: 11 }} domain={['auto','auto']} />
+                                                <Recharts.YAxis tickFormatter={v => v >= 1000 ? `${(v / 1000).toFixed(0)}k€` : `${v}€`} tick={{ fontSize: 11 }} domain={['auto', 'auto']} />
                                                 <Recharts.Tooltip formatter={(v, name) => [`${v?.toLocaleString('fr-FR')} €`, name === 'sans_travaux' ? 'Sans travaux (cumulé)' : 'Avec travaux (cumulé)']} />
                                                 <Recharts.Area type="monotone" dataKey="sans_travaux" stroke="none" fill="url(#zoneEco)" />
                                                 <Recharts.Line type="monotone" dataKey="sans_travaux" stroke="#EF4444" strokeWidth={2.5} strokeDasharray="7 3" dot={false} name="sans_travaux" />
@@ -2740,6 +2958,210 @@
                             </div>
                         </div>
                     )}
+
+                    {/* Graphiques + actions — dossiers new-style (postes / benchmark_data directs) */}
+                    {c.postes && c.benchmark_data && (() => {
+                        const COLORS_MAP = { chauffage: '#F97316', clim: '#06B6D4', ventil: '#3B82F6', eclairage: '#F59E0B', ecs: '#8B5CF6', autres: '#94A3B8' };
+                        const LABELS_MAP = { chauffage: 'Chauffage', clim: 'Climatisation', ventil: 'Ventilation', eclairage: 'Éclairage', ecs: 'ECS', autres: 'Autres' };
+
+                        const postesData = Object.entries(c.postes)
+                            .filter(function (_ref) { return _ref[1].pct > 0; })
+                            .map(function (_ref2) { var k = _ref2[0], v = _ref2[1]; return { name: LABELS_MAP[k] || k, value: v.kwh, eur: v.eur, pct: v.pct, fill: COLORS_MAP[k] || '#94A3B8' }; });
+
+                        const roiData = [...(c.actions || [])]
+                            .filter(function (a) { return a.roi > 0 && a.roi <= 15; })
+                            .sort(function (a, b) { return a.roi - b.roi; })
+                            .map(function (a) {
+                                return {
+                                    name: a.name.length > 32 ? a.name.substring(0, 29) + '…' : a.name,
+                                    roi: parseFloat(a.roi),
+                                    investissement: a.capex,
+                                    economie: a.savingsEuro,
+                                    fill: a.roi <= 3 ? '#059669' : a.roi <= 7 ? '#F59E0B' : '#EF4444',
+                                };
+                            });
+
+                        return (
+                            <div className="space-y-6 mb-8">
+
+                                {/* Actions recommandées (new-style) */}
+                                {c.actions && c.actions.length > 0 && (
+                                    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                                        <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                                            <Icon icon="solar:magic-stick-3-bold" className="text-blue-600" /> Actions recommandées ({c.actions.length})
+                                        </h3>
+                                        <div className="space-y-3">
+                                            {c.actions.map(function (a, i) {
+                                                return (
+                                                    <div key={i} className="flex flex-col md:flex-row md:items-start gap-3 p-4 rounded-xl bg-slate-50 border border-slate-100">
+                                                        <div className="flex-1">
+                                                            <div className="font-bold text-slate-800 text-sm">{a.name}</div>
+                                                            {a.description && <div className="text-xs text-slate-500 mt-1">{a.description}</div>}
+                                                            {a.eligCEE && a.fichesCEE?.length > 0 && (
+                                                                <div className="text-xs text-blue-600 mt-1 font-medium">Fiche CEE : {a.fichesCEE.join(', ')}</div>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex gap-4 text-sm shrink-0">
+                                                            <div className="text-center">
+                                                                <div className="text-xs text-slate-500">Investissement</div>
+                                                                <div className="font-bold text-slate-800">{a.capex?.toLocaleString('fr-FR')} €</div>
+                                                            </div>
+                                                            <div className="text-center">
+                                                                <div className="text-xs text-slate-500">Économies/an</div>
+                                                                <div className="font-bold text-green-600">{a.savingsEuro?.toLocaleString('fr-FR')} €</div>
+                                                            </div>
+                                                            <div className="text-center">
+                                                                <div className="text-xs text-slate-500">ROI</div>
+                                                                <div className={'font-bold ' + (a.roi <= 3 ? 'text-emerald-600' : a.roi <= 7 ? 'text-amber-600' : 'text-red-600')}>{a.roi} ans</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                        <div className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-100 text-xs text-blue-700">
+                                            <strong>Invest. brut total :</strong> {c.totalCapex?.toLocaleString('fr-FR')} € ·
+                                            <strong> Aides estimées :</strong> {c.aidesEstimees?.toLocaleString('fr-FR')} € ·
+                                            <strong> Invest. net :</strong> {c.totalCapexNet?.toLocaleString('fr-FR')} €
+                                            <div className="mt-1 text-blue-500">Aides : TVA 5,5% + CEE plancher. Montants réels pouvant être supérieurs — faire chiffrer par un installateur RGE.</div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* G1 — Décomposition par poste */}
+                                <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+                                    <h3 className="text-lg font-bold text-slate-800 mb-1 flex items-center gap-2">
+                                        <Icon icon="solar:pie-chart-2-bold" className="text-blue-600" /> Répartition des consommations par poste
+                                    </h3>
+                                    <p className="text-xs text-slate-400 mb-5">Estimation statistique — énergie finale tous usages</p>
+                                    <div className="grid md:grid-cols-2 gap-6 items-center">
+                                        <Recharts.ResponsiveContainer width="100%" height={220}>
+                                            <Recharts.PieChart>
+                                                <Recharts.Pie data={postesData} cx="50%" cy="50%" innerRadius={50} outerRadius={85} dataKey="value" nameKey="name" paddingAngle={2}>
+                                                    {postesData.map(function (d, i) { return <Recharts.Cell key={i} fill={d.fill} />; })}
+                                                </Recharts.Pie>
+                                                <Recharts.Tooltip formatter={function (v, n, p) { return [((p.payload.eur || 0).toLocaleString('fr-FR')) + ' €/an (' + p.payload.pct + '%)', n]; }} />
+                                            </Recharts.PieChart>
+                                        </Recharts.ResponsiveContainer>
+                                        <div className="space-y-2">
+                                            {postesData.slice().sort(function (a, b) { return b.value - a.value; }).map(function (d, i) {
+                                                return (
+                                                    <div key={i} className="flex items-center gap-3 text-sm">
+                                                        <div className="w-3 h-3 rounded-full shrink-0" style={{ background: d.fill }} />
+                                                        <span className="flex-1 font-medium text-slate-700">{d.name}</span>
+                                                        <span className="text-slate-400">{d.pct}%</span>
+                                                        <span className="font-bold text-slate-800 w-20 text-right">{(d.eur || 0).toLocaleString('fr-FR')} €</span>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* G2 — Benchmark sectoriel */}
+                                <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+                                    <h3 className="text-lg font-bold text-slate-800 mb-1 flex items-center gap-2">
+                                        <Icon icon="solar:chart-square-bold" className="text-blue-600" /> Benchmark sectoriel
+                                    </h3>
+                                    <p className="text-xs text-slate-400 mb-5">kWh EF/m²/an — Source : ADEME / ECNA 2022</p>
+                                    <Recharts.ResponsiveContainer width="100%" height={200}>
+                                        <Recharts.BarChart data={c.benchmark_data} layout="vertical" margin={{ top: 5, right: 80, bottom: 5, left: 10 }}>
+                                            <Recharts.CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" horizontal={false} />
+                                            <Recharts.XAxis type="number" tickFormatter={function (v) { return '' + v; }} tick={{ fontSize: 11 }} />
+                                            <Recharts.YAxis type="category" dataKey="name" tick={{ fontSize: 12, fontWeight: 600 }} width={120} />
+                                            <Recharts.Tooltip formatter={function (v) { return [v + ' kWh/m²/an']; }} />
+                                            <Recharts.Bar dataKey="value" radius={[0, 6, 6, 0]}>
+                                                {c.benchmark_data.map(function (d, i) { return <Recharts.Cell key={i} fill={d.fill} />; })}
+                                                <Recharts.LabelList dataKey="value" position="right" formatter={function (v) { return v + ' kWh/m²/an'; }} style={{ fontSize: 11, fill: '#64748B', fontWeight: 600 }} />
+                                            </Recharts.Bar>
+                                        </Recharts.BarChart>
+                                    </Recharts.ResponsiveContainer>
+                                    <p className="text-xs text-slate-400 mt-2">⚠️ Indice DiagTertiaire — estimation indicative. Ne constitue pas une classe OPERAT réglementaire.</p>
+                                </div>
+
+                                {/* G3 — ROI par action */}
+                                {roiData.length > 0 && (
+                                    <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+                                        <h3 className="text-lg font-bold text-slate-800 mb-1 flex items-center gap-2">
+                                            <Icon icon="solar:chart-bold" className="text-blue-600" /> Retour sur investissement par action
+                                        </h3>
+                                        <p className="text-xs text-slate-400 mb-5">Trié du meilleur ROI au plus long</p>
+                                        <Recharts.ResponsiveContainer width="100%" height={roiData.length * 52 + 40}>
+                                            <Recharts.BarChart data={roiData} layout="vertical" margin={{ top: 5, right: 120, bottom: 5, left: 20 }}>
+                                                <Recharts.CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" horizontal={false} />
+                                                <Recharts.XAxis type="number" tickFormatter={function (v) { return v + ' ans'; }} tick={{ fontSize: 11 }} />
+                                                <Recharts.YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={210} />
+                                                <Recharts.Tooltip formatter={function (v, n, p) {
+                                                    var d = p.payload;
+                                                    return ['ROI: ' + d.roi + ' ans | Invt: ' + (d.investissement || 0).toLocaleString('fr-FR') + ' € | Éco: ' + (d.economie || 0).toLocaleString('fr-FR') + ' €/an', ''];
+                                                }} />
+                                                <Recharts.Bar dataKey="roi" radius={[0, 4, 4, 0]}>
+                                                    {roiData.map(function (d, i) { return <Recharts.Cell key={i} fill={d.fill} />; })}
+                                                    <Recharts.LabelList dataKey="investissement" position="right" formatter={function (v) { return (v || 0).toLocaleString('fr-FR') + ' €'; }} style={{ fontSize: 11, fill: '#64748B' }} />
+                                                </Recharts.Bar>
+                                            </Recharts.BarChart>
+                                        </Recharts.ResponsiveContainer>
+                                        <div className="flex flex-wrap gap-4 mt-3 text-xs font-semibold">
+                                            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-emerald-600 inline-block" /> ROI &lt; 3 ans</span>
+                                            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-amber-500 inline-block" /> 3–7 ans</span>
+                                            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-red-500 inline-block" /> &gt; 7 ans</span>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* G4 — Projection financière */}
+                                {c.graphiquePubliable && c.projectionData && c.projectionData.length > 2 && (
+                                    <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+                                        <h3 className="text-lg font-bold text-slate-800 mb-1 flex items-center gap-2">
+                                            <Icon icon="solar:graph-new-up-bold" className="text-blue-600" />
+                                            Projection financière sur {c.horizonAns || 10} ans
+                                        </h3>
+                                        <p className="text-xs text-slate-400 mb-5">
+                                            Inflation pondérée : {c.tauxInflation}%/an —
+                                            Invest. net après aides estimées : {(c.totalCapexNet || 0).toLocaleString('fr-FR')} €
+                                            (aides : {(c.aidesEstimees || 0).toLocaleString('fr-FR')} € — TVA 5,5% + CEE plancher)
+                                        </p>
+                                        <Recharts.ResponsiveContainer width="100%" height={280}>
+                                            <Recharts.ComposedChart data={c.projectionData} margin={{ top: 20, right: 30, bottom: 10, left: 10 }}>
+                                                <defs>
+                                                    <linearGradient id={'zoneEco_' + c.id} x1="0" y1="0" x2="0" y2="1">
+                                                        <stop offset="5%" stopColor="#10B981" stopOpacity={0.2} />
+                                                        <stop offset="95%" stopColor="#10B981" stopOpacity={0.02} />
+                                                    </linearGradient>
+                                                </defs>
+                                                <Recharts.CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
+                                                <Recharts.XAxis dataKey="annee" tick={{ fontSize: 11 }} />
+                                                <Recharts.YAxis tickFormatter={function (v) { return v >= 1000 ? Math.round(v / 1000) + 'k€' : v + '€'; }} tick={{ fontSize: 11 }} domain={['auto', 'auto']} />
+                                                <Recharts.Tooltip formatter={function (v, name) { return [(v || 0).toLocaleString('fr-FR') + ' €', name === 'sans_travaux' ? 'Sans travaux (cumulé)' : 'Avec travaux (cumulé)']; }} />
+                                                <Recharts.Area type="monotone" dataKey="sans_travaux" stroke="none" fill={'url(#zoneEco_' + c.id + ')'} />
+                                                <Recharts.Line type="monotone" dataKey="sans_travaux" stroke="#EF4444" strokeWidth={2.5} strokeDasharray="7 3" dot={false} name="sans_travaux" />
+                                                <Recharts.Line type="monotone" dataKey="avec_travaux" stroke="#10B981" strokeWidth={3} dot={false} name="avec_travaux" />
+                                                {c.roiAnnee && (
+                                                    <Recharts.ReferenceLine x={'A+' + c.roiAnnee} stroke="#1B4FD8" strokeDasharray="4 2"
+                                                        label={{ value: '✓ Rentable A+' + c.roiAnnee, position: 'insideTopLeft', fill: '#1B4FD8', fontSize: 11, fontWeight: 700 }} />
+                                                )}
+                                            </Recharts.ComposedChart>
+                                        </Recharts.ResponsiveContainer>
+                                        <div className="grid grid-cols-3 gap-4 mt-4">
+                                            <div className="bg-slate-50 rounded-xl p-4 text-center border border-slate-100">
+                                                <div className="text-xs text-slate-500 font-bold uppercase mb-1">Économies / an</div>
+                                                <div className="text-xl font-extrabold text-green-600">{(c.estimatedSavingsPerYear || 0).toLocaleString('fr-FR')} €</div>
+                                            </div>
+                                            <div className="bg-slate-50 rounded-xl p-4 text-center border border-slate-100">
+                                                <div className="text-xs text-slate-500 font-bold uppercase mb-1">Invest. net estimé</div>
+                                                <div className="text-xl font-extrabold text-blue-700">{(c.totalCapexNet || 0).toLocaleString('fr-FR')} €</div>
+                                            </div>
+                                            <div className="bg-slate-50 rounded-xl p-4 text-center border border-slate-100">
+                                                <div className="text-xs text-slate-500 font-bold uppercase mb-1">ROI global</div>
+                                                <div className="text-xl font-extrabold text-slate-800">{c.roiGlobal} ans</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                            </div>
+                        );
+                    })()}
 
                     {/* Résumé */}
                     {c.summary && (
@@ -2876,8 +3298,8 @@
                         summary: result.score === 'A' || result.score === 'B'
                             ? 'Bâtiment bien géré. Les marges de progression se situent sur des leviers ciblés.'
                             : result.score === 'C'
-                            ? 'Niveau de performance dans la médiane du secteur. Des gains accessibles sur l\'exploitation.'
-                            : 'Surconsommation notable. Des actions prioritaires permettent des gains significatifs.',
+                                ? 'Niveau de performance dans la médiane du secteur. Des gains accessibles sur l\'exploitation.'
+                                : 'Surconsommation notable. Des actions prioritaires permettent des gains significatifs.',
                         priorities: result.topActions.slice(0, 3).map(a => ({
                             title: a.title,
                             description: a.sourceWarning || 'Action prioritaire identifiée sur ce périmètre.',
@@ -2924,7 +3346,7 @@
                 );
             };
 
-            const STEPS = ['Identification','Bâtiment','Enveloppe','Systèmes','Consommations','Usage','Travaux & Budget'];
+            const STEPS = ['Identification', 'Bâtiment', 'Enveloppe', 'Systèmes', 'Consommations', 'Usage', 'Travaux & Budget'];
 
             return (
                 <div className="p-4 md:p-10 max-w-3xl mx-auto fade-in">
@@ -3100,7 +3522,7 @@
                                 <div>
                                     <label className="pro-label mb-3 block">Ponts thermiques constatés</label>
                                     <div className="flex flex-wrap gap-2">
-                                        {['Menuiseries non isolées','Liaisons mur/dalle','Toiture/mur','Plancher bas','Aucun constaté'].map(v => (
+                                        {['Menuiseries non isolées', 'Liaisons mur/dalle', 'Toiture/mur', 'Plancher bas', 'Aucun constaté'].map(v => (
                                             <Tag key={v} label={v} field="ponts_thermiques" value={v} />
                                         ))}
                                     </div>
@@ -3145,7 +3567,7 @@
                                     <div>
                                         <label className="pro-label mb-2 block">Régulation existante</label>
                                         <div className="flex flex-wrap gap-2">
-                                            {['Thermostat simple','Thermostat programmable','Robinets thermostatiques','GTB'].map(v => (
+                                            {['Thermostat simple', 'Thermostat programmable', 'Robinets thermostatiques', 'GTB'].map(v => (
                                                 <Tag key={v} label={v} field="chauffage_regulation" value={v} />
                                             ))}
                                         </div>
@@ -3299,10 +3721,10 @@
                                     <label className="pro-label mb-3 block">Travaux réalisés récemment (— 5 ans) — actions correspondantes exclues des recommandations</label>
                                     <div className="flex flex-wrap gap-2">
                                         {[
-                                            ['led_recent','Relamping LED'],['vmc_df_recente','VMC double flux'],
-                                            ['chaudiere_pac_recente','Remplacement chaudière / PAC'],['regulation_recente','Régulation / GTB'],
-                                            ['calorifugeage_recent','Calorifugeage ECS'],['isolation_toiture_recente','Isolation toiture'],
-                                            ['isolation_murs_recente','Isolation murs'],['vitrage_recent','Remplacement vitrages'],
+                                            ['led_recent', 'Relamping LED'], ['vmc_df_recente', 'VMC double flux'],
+                                            ['chaudiere_pac_recente', 'Remplacement chaudière / PAC'], ['regulation_recente', 'Régulation / GTB'],
+                                            ['calorifugeage_recent', 'Calorifugeage ECS'], ['isolation_toiture_recente', 'Isolation toiture'],
+                                            ['isolation_murs_recente', 'Isolation murs'], ['vitrage_recent', 'Remplacement vitrages'],
                                         ].map(([v, l]) => <Tag key={v} label={l} field="travaux_realises" value={v} />)}
                                         <Tag label="Aucun" field="travaux_realises" value="aucun" />
                                     </div>
@@ -3320,7 +3742,7 @@
                                 <div>
                                     <label className="pro-label mb-3 block">Contraintes éventuelles</label>
                                     <div className="flex flex-wrap gap-2">
-                                        {['Bâtiment classé / patrimonial','Copropriété (accord requis)','Bail en cours (contrainte locataire)','Travaux en site occupé uniquement'].map(v => (
+                                        {['Bâtiment classé / patrimonial', 'Copropriété (accord requis)', 'Bail en cours (contrainte locataire)', 'Travaux en site occupé uniquement'].map(v => (
                                             <Tag key={v} label={v} field="contraintes" value={v} />
                                         ))}
                                     </div>
@@ -3405,7 +3827,7 @@
                         <div>
                             {/* FIX audit-2026-03-07 — champs alignés sur sortie alpha form */}
                             {/* FIX #E audit-2026-03-07 — aliases 7-mod form : contact_nom, contact_societe, contact_telephone, contact_email */}
-                        <div className="font-bold text-lg mb-1">👤 {formData.contact_nom || formData.contact || formData.contact_name || c.projectName} {(formData.contact_societe || formData.societe || formData.contact_company) ? `(${formData.contact_societe || formData.societe || formData.contact_company})` : ''}</div>
+                            <div className="font-bold text-lg mb-1">👤 {formData.contact_nom || formData.contact || formData.contact_name || c.projectName} {(formData.contact_societe || formData.societe || formData.contact_company) ? `(${formData.contact_societe || formData.societe || formData.contact_company})` : ''}</div>
                             <div className="text-slate-400 text-sm mb-4">📞 {formData.contact_telephone || formData.telephone || formData.contact_phone || 'N/A'}  ✉️ {formData.contact_email || formData.email || 'N/A'}</div>
 
                             <div className="grid grid-cols-2 gap-y-3 gap-x-4 text-sm mb-4 bg-slate-800/50 p-4 rounded-lg">
@@ -3804,14 +4226,14 @@
 
             // ── Taux d'inflation pondéré par source d'énergie ──────────────────────
             const elecEur = c.elecCost || (c.kwhElec || 0) * PRIX_ENERGIE.electricite;
-            const gazEur  = c.gasCost  || (c.kwhGaz  || 0) * PRIX_ENERGIE.gaz;
+            const gazEur = c.gasCost || (c.kwhGaz || 0) * PRIX_ENERGIE.gaz;
             const totalEurBase = Math.max(elecEur + gazEur, 1);
             const partElec = elecEur / totalEurBase;
-            const partGaz  = gazEur  / totalEurBase;
+            const partGaz = gazEur / totalEurBase;
             const autreEnergie = c.formData.autre_energie || 'reseau_chaleur';
             const taux = partElec * INFLATION_ENERGIE.electricite
-                       + partGaz  * INFLATION_ENERGIE.gaz
-                       + Math.max(0, 1 - partElec - partGaz) * (INFLATION_ENERGIE[autreEnergie] || INFLATION_ENERGIE.reseau_chaleur);
+                + partGaz * INFLATION_ENERGIE.gaz
+                + Math.max(0, 1 - partElec - partGaz) * (INFLATION_ENERGIE[autreEnergie] || INFLATION_ENERGIE.reseau_chaleur);
             const tauxPct = (taux * 100).toFixed(1);
             const hasGaz = gazEur > 0;
 
@@ -3829,7 +4251,7 @@
                 aides_total += tva_eco;
             }
             const capex_brut = c.totalCapex || 0;
-            const capex_net  = Math.max(0, capex_brut - aides_total);
+            const capex_net = Math.max(0, capex_brut - aides_total);
 
             // ── Évaluation règles de publication ──────────────────────────────────
             const economies_annuelles = c.totalSavingsEur || 0;
@@ -3910,10 +4332,10 @@
             for (let an = 1; an <= horizon; an++) {
                 const f = Math.pow(1 + taux, an);
                 const cout_an = cout_annuel * f;
-                const eco_an  = economies_annuelles * f;
+                const eco_an = economies_annuelles * f;
                 cumSans += cout_an;
                 cumAvec += cout_an - eco_an;
-                cumLow  += cout_an - eco_an * 1.15;
+                cumLow += cout_an - eco_an * 1.15;
                 cumHigh += cout_an - eco_an * 0.85;
                 const eco_nettes = Math.round(cumSans - cumAvec);
                 if (!roiLabel && eco_nettes > 0) roiLabel = `A+${an}`;
@@ -3940,13 +4362,13 @@
                 gainsParPoste[poste] = actions.filter(a => a.poste === poste).reduce((s, a) => s + a.gain.med, 0);
             }
             const decompoActuel = { scenario: 'Situation actuelle' };
-            const decompoApres  = { scenario: 'Après travaux' };
-            const activePostes  = [];
+            const decompoApres = { scenario: 'Après travaux' };
+            const activePostes = [];
             for (const poste of postesKeys) {
                 const eur = cout_annuel * ((postesActiv[poste] || 0) / 100);
                 if (eur < 50) continue;
                 decompoActuel[poste] = Math.round(eur);
-                decompoApres[poste]  = Math.round(eur * (1 - (gainsParPoste[poste] || 0)));
+                decompoApres[poste] = Math.round(eur * (1 - (gainsParPoste[poste] || 0)));
                 activePostes.push(poste);
             }
             const decompoData = [decompoActuel, decompoApres];
@@ -3955,13 +4377,13 @@
             const roiData = actions
                 .filter(a => a.roi > 0 && a.roi <= 20)
                 .map(a => ({
-                    nom_court:          a.nom.length > 28 ? a.nom.substring(0, 25) + '...' : a.nom,
-                    nom_complet:        a.nom,
-                    roi_ans:            parseFloat(a.roi.toFixed(1)),
-                    investissement:     Math.round(a.capex),
-                    economie_annuelle:  Math.round(a.gain_eur),
-                    cee:                a.cee,
-                    couleur_roi:        a.roi <= 3 ? '#059669' : a.roi <= 7 ? '#F59E0B' : '#EF4444',
+                    nom_court: a.nom.length > 28 ? a.nom.substring(0, 25) + '...' : a.nom,
+                    nom_complet: a.nom,
+                    roi_ans: parseFloat(a.roi.toFixed(1)),
+                    investissement: Math.round(a.capex),
+                    economie_annuelle: Math.round(a.gain_eur),
+                    cee: a.cee,
+                    couleur_roi: a.roi <= 3 ? '#059669' : a.roi <= 7 ? '#F59E0B' : '#EF4444',
                 }))
                 .sort((a, b) => a.roi_ans - b.roi_ans);
 
@@ -4012,19 +4434,19 @@
                                     formatter={(v, name) => [
                                         `${Math.round(v).toLocaleString('fr-FR')} €`,
                                         name === 'sans_travaux' ? 'Sans travaux (cumulé)' :
-                                        name === 'avec_travaux' ? 'Avec travaux net aides (cumulé)' : name
+                                            name === 'avec_travaux' ? 'Avec travaux net aides (cumulé)' : name
                                     ]}
                                     contentStyle={{ borderRadius: '8px', border: '1px solid #E2E8F0' }}
                                 />
                                 <CLineLegend verticalAlign="top" height={36} />
                                 {/* Zone d'incertitude (fourchette ±15% économies) */}
                                 <Area type="monotone" dataKey="avec_travaux_high" stroke="none" fill="url(#zoneIncertPro)" legendType="none" />
-                                <Area type="monotone" dataKey="avec_travaux_low"  stroke="none" fill="#F8FAFC" legendType="none" />
+                                <Area type="monotone" dataKey="avec_travaux_low" stroke="none" fill="#F8FAFC" legendType="none" />
                                 {/* Zone économies entre les deux courbes */}
                                 <Area type="monotone" dataKey="sans_travaux" stroke="none" fill="url(#zoneEcoPro)" legendType="none" />
                                 {/* Courbes principales */}
                                 <Line type="monotone" dataKey="sans_travaux" stroke="#EF4444" strokeWidth={2.5} strokeDasharray="8 4" dot={false} name="Sans travaux" />
-                                <Line type="monotone" dataKey="avec_travaux" stroke="#10B981" strokeWidth={3}   dot={false} name="Avec travaux (net aides)" />
+                                <Line type="monotone" dataKey="avec_travaux" stroke="#10B981" strokeWidth={3} dot={false} name="Avec travaux (net aides)" />
                                 {roiLabel && (
                                     <ReferenceLine x={roiLabel} stroke="#1B4FD8" strokeDasharray="4 2" strokeWidth={1.5}
                                         label={{ value: `✓ Rentable — ${roiLabel}`, position: 'insideTopLeft', fill: '#1B4FD8', fontSize: 11, fontWeight: '600' }}
@@ -4476,8 +4898,8 @@
                         </div>
                     </div>
                 </div>
-    );
-};
+            );
+        };
 
         const PartiePiedDePage = ({ c }) => {
             const proLogoName = localStorage.getItem('proLogoName') || 'DiagTertiaire Pro';

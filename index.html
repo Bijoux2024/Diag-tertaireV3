@@ -3359,6 +3359,14 @@
             wood_pellets: { price_default_eur_kwh: 0.065 }
         };
 
+        const INFLATION_ENERGIE = {
+            electricite:    0.030, // SOURCE_PARTIAL — à revalider annuellement
+            gaz:            0.055, // SOURCE_PARTIAL — volatilité post-2021, trajectoire sortie fossile. 5.5% = moyenne prudente 10 ans
+            reseau_chaleur: 0.035, // SOURCE_PARTIAL
+            fioul:          0.060, // SOURCE_PARTIAL — sortie progressive, raréfaction
+            bois_granules:  0.025, // SOURCE_PARTIAL — marché plus stable
+        };
+
         /* ─────────────────────────────────────────────────────────────────────────
            TABLE 2 : NEW_DIAGNOSTIC_BENCHMARKS_INTENSITY
            v1.1 — Valeurs expertes validées (kWh EF/m²/an)
@@ -4434,79 +4442,127 @@
             LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area
         } = window.Recharts;
 
-        const NewDiagnosticInactionGraph = ({ annualSavingsEuro, totalCostEuroAn }) => {
-            const data = [];
-            let cumulativeInaction = 0;
-            const ACTION_COST = annualSavingsEuro * 3; // Hypothèse CAPEX = 3 ans d'économies
-            let cumulativeAction = ACTION_COST;
+        const NewDiagnosticInactionGraph = ({ annualSavingsEuro, totalCostEuroAn, elecKwh = 0, gasKwh = 0, actions = [] }) => {
+            const { ComposedChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip: GrTooltip, ReferenceLine, ResponsiveContainer: GrResponsive } = window.Recharts;
 
-            for (let year = 0; year < 10; year++) {
-                const inaction = cumulativeInaction;
-                const action = cumulativeAction;
-                const savings = cumulativeInaction - cumulativeAction;
+            // ── Taux d'inflation pondéré par source d'énergie ──────────────────────
+            const elecEur = elecKwh * NEW_DIAGNOSTIC_ENERGY_PRICES.electricity.price_default_eur_kwh;
+            const gazEur  = gasKwh  * NEW_DIAGNOSTIC_ENERGY_PRICES.gas.price_default_eur_kwh;
+            const totalBase = Math.max(elecEur + gazEur, 1);
+            const partElec = elecEur / totalBase;
+            const partGaz  = gazEur  / totalBase;
+            const taux = partElec * INFLATION_ENERGIE.electricite
+                       + partGaz  * INFLATION_ENERGIE.gaz
+                       + Math.max(0, 1 - partElec - partGaz) * INFLATION_ENERGIE.electricite;
+            const tauxPct = (taux * 100).toFixed(1);
+            const hasGaz = gazEur > 0;
 
-                data.push({
-                    year: `An ${year}`,
-                    inaction: Math.round(inaction),
-                    action: Math.round(action),
-                    savings: Math.round(savings)
-                });
+            // ── CAPEX et aides estimées ────────────────────────────────────────────
+            const capex_brut = actions.reduce((s, a) => s + (a.capex?.value || 0), 0);
+            let aides_total = 0;
+            for (const a of actions) {
+                const capVal = a.capex?.value || 0;
+                aides_total += capVal * (0.20 - 0.055) / 1.20; // TVA 5,5%
+                if (a.aid_tags?.includes('CEE')) aides_total += capVal * 0.015; // CEE plancher
+            }
+            const capex_net = Math.max(0, capex_brut - aides_total);
 
-                cumulativeInaction += totalCostEuroAn * Math.pow(1.03, year);
-                cumulativeAction += (totalCostEuroAn - annualSavingsEuro) * Math.pow(1.03, year);
+            // ── Évaluation règles de publication ──────────────────────────────────
+            const roi_global = annualSavingsEuro > 0 ? capex_net / annualSavingsEuro : 999;
+            const economies_pct = totalCostEuroAn > 0 ? annualSavingsEuro / totalCostEuroAn : 0;
+
+            if (roi_global < 0.5 || roi_global > 20 || economies_pct < 0.01) {
+                return (
+                    <div className="mt-4 p-6 bg-orange-50 border border-orange-200 rounded-xl">
+                        <p className="text-sm text-orange-700 italic">
+                            Les données disponibles ne permettent pas d'établir une projection financière fiable. Un audit approfondi est recommandé.
+                        </p>
+                    </div>
+                );
+            }
+
+            const horizon = roi_global > 10 ? 15 : 10;
+
+            // ── Construction données ───────────────────────────────────────────────
+            const data = [{ annee: 'Auj.', sans_travaux: 0, avec_travaux: Math.round(capex_net), economies_nettes: -Math.round(capex_net) }];
+            let cumSans = 0, cumAvec = capex_net;
+            let roiAnnee = null;
+            for (let an = 1; an <= horizon; an++) {
+                const f = Math.pow(1 + taux, an);
+                cumSans += totalCostEuroAn * f;
+                cumAvec += (totalCostEuroAn - annualSavingsEuro) * f;
+                const eco_nettes = Math.round(cumSans - cumAvec);
+                if (!roiAnnee && eco_nettes > 0) roiAnnee = `A+${an}`;
+                data.push({ annee: `A+${an}`, sans_travaux: Math.round(cumSans), avec_travaux: Math.round(cumAvec), economies_nettes: eco_nettes });
             }
 
             return (
-                <div className="h-[350px] w-full mt-6">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={data} margin={{ top: 10, right: 30, left: 10, bottom: 0 }}>
-                            <defs>
-                                <linearGradient id="colorInaction" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#EF4444" stopOpacity={0.1} />
-                                    <stop offset="95%" stopColor="#EF4444" stopOpacity={0} />
-                                </linearGradient>
-                                <linearGradient id="colorAction" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#10B981" stopOpacity={0.1} />
-                                    <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
-                                </linearGradient>
-                            </defs>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                            <XAxis dataKey="year" fontSize={12} tickLine={false} axisLine={false} />
-                            <YAxis fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k€`} />
-                            <Tooltip
-                                formatter={(v) => [`${v.toLocaleString()} €`, '']}
-                                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
-                            />
-                            <Legend verticalAlign="top" height={36} />
-                            <Area
-                                type="monotone"
-                                dataKey="inaction"
-                                name="Coût cumulé (Statu Quo)"
-                                stroke="#EF4444"
-                                strokeWidth={3}
-                                fillOpacity={0.1}
-                                fill="#EF4444"
-                            />
-                            <Area
-                                type="monotone"
-                                dataKey="action"
-                                name="Coût avec travaux"
-                                stroke="#10B981"
-                                strokeWidth={3}
-                                fillOpacity={0.1}
-                                fill="#10B981"
-                            />
-                            <Area
-                                type="monotone"
-                                dataKey="savings"
-                                name="Économies nettes"
-                                stroke="#3B82F6"
-                                strokeWidth={3}
-                                fillOpacity={0.1}
-                                fill="#3B82F6"
-                            />
-                        </AreaChart>
-                    </ResponsiveContainer>
+                <div>
+                    {/* Titre + badge inflation */}
+                    <div className="flex items-center justify-between mb-1">
+                        <p className="text-sm font-semibold text-neutral-700">Ce que vous économisez en agissant maintenant — coûts cumulés {horizon} ans</p>
+                        <span className="text-xs bg-slate-100 text-slate-500 px-2 py-1 rounded">
+                            Inflation : {tauxPct}%/an{hasGaz ? ' (pondéré)' : ''}
+                        </span>
+                    </div>
+                    <div className="h-[320px] w-full mt-3">
+                        <GrResponsive width="100%" height="100%">
+                            <ComposedChart data={data} margin={{ top: 20, right: 30, bottom: 10, left: 10 }}>
+                                <defs>
+                                    <linearGradient id="zoneEcoGrat" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#10B981" stopOpacity={0.25} />
+                                        <stop offset="95%" stopColor="#10B981" stopOpacity={0.05} />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                                <XAxis dataKey="annee" fontSize={12} tickLine={false} axisLine={false} />
+                                <YAxis fontSize={12} tickLine={false} axisLine={false}
+                                    tickFormatter={v => `${(v / 1000).toFixed(0)}k€`}
+                                    domain={['auto', 'auto']}
+                                />
+                                <GrTooltip
+                                    formatter={(v, name) => [
+                                        `${Math.round(v).toLocaleString('fr-FR')} €`,
+                                        name === 'sans_travaux' ? 'Sans travaux (cumulé)' : 'Avec travaux (cumulé)'
+                                    ]}
+                                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                                />
+                                {/* Zone verte entre les courbes */}
+                                <Area type="monotone" dataKey="sans_travaux" stroke="none" fill="url(#zoneEcoGrat)" legendType="none" />
+                                {/* Courbe sans travaux — rouge tiretée */}
+                                <Line type="monotone" dataKey="sans_travaux" stroke="#EF4444" strokeWidth={2.5} strokeDasharray="6 3" dot={false} name="sans_travaux" />
+                                {/* Courbe avec travaux — verte */}
+                                <Line type="monotone" dataKey="avec_travaux" stroke="#10B981" strokeWidth={3} dot={false} name="avec_travaux" />
+                                {roiAnnee && (
+                                    <ReferenceLine x={roiAnnee} stroke="#1B4FD8" strokeDasharray="4 2"
+                                        label={{ value: '✓ Rentable ici', position: 'top', fill: '#1B4FD8', fontSize: 12, fontWeight: 'bold' }}
+                                    />
+                                )}
+                            </ComposedChart>
+                        </GrResponsive>
+                    </div>
+                    {/* KPI row */}
+                    <div className="mt-6 grid grid-cols-3 gap-4">
+                        <div className="bg-green-50 rounded-xl p-4 text-center border border-green-100">
+                            <p className="text-xs text-green-700 font-bold uppercase mb-1">Économies/an</p>
+                            <p className="text-xl font-black text-green-800">{Math.round(annualSavingsEuro).toLocaleString('fr-FR')} €</p>
+                        </div>
+                        <div className="bg-blue-50 rounded-xl p-4 text-center border border-blue-100">
+                            <p className="text-xs text-blue-700 font-bold uppercase mb-1">Investissement net est.</p>
+                            <p className="text-xl font-black text-blue-800">{Math.round(capex_net).toLocaleString('fr-FR')} €</p>
+                            <p className="text-xs text-blue-500">après TVA 5,5% + CEE min.</p>
+                        </div>
+                        <div className="bg-emerald-50 rounded-xl p-4 text-center border border-emerald-100">
+                            <p className="text-xs text-emerald-700 font-bold uppercase mb-1">Rentable en</p>
+                            <p className="text-xl font-black text-emerald-800">{roi_global.toFixed(1)} ans</p>
+                        </div>
+                    </div>
+                    {/* Hypothèses mini + disclaimer aides obligatoire */}
+                    <p className="mt-3 text-xs text-neutral-400 italic">
+                        Inflation énergie : {tauxPct}%/an
+                        {hasGaz ? ` (élec ${(INFLATION_ENERGIE.electricite * 100).toFixed(1)}% + gaz ${(INFLATION_ENERGIE.gaz * 100).toFixed(1)}% pondéré)` : ''} •
+                        Aides estimées au minimum défendable (TVA 5,5% + CEE plancher). Les montants réels peuvent être significativement supérieurs.
+                    </p>
                 </div>
             );
         };
@@ -4800,11 +4856,14 @@
                                     <span className="text-[10px] font-bold text-neutral-500 uppercase">Avec Travaux</span>
                                 </div>
                             </div>
-                            <p className="text-sm text-neutral-600 mb-6">Projection cumulative du coût de l'énergie (basée sur une inflation annuelle de 3%) vs trajectoire de performance.</p>
+                            <p className="text-sm text-neutral-600 mb-6">Projection cumulative du coût de l'énergie (inflation pondérée par source) vs trajectoire de performance.</p>
 
                             <NewDiagnosticInactionGraph
                                 annualSavingsEuro={reportPayload.composite_savings.annual_euro.value}
                                 totalCostEuroAn={reportPayload.calculation_results.total_cost_euro_an.value}
+                                elecKwh={reportPayload.calculation_results.elec_kwh_an.value}
+                                gasKwh={reportPayload.calculation_results.gas_kwh_an.value}
+                                actions={reportPayload.top_actions}
                             />
 
                             <div className="mt-8 p-5 bg-green-50 rounded-2xl border border-green-100 flex items-center justify-between gap-4">

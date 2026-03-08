@@ -9,6 +9,7 @@ Méthode :
 4. Vérifie que les namespaces NEW_DIAGNOSTIC_* sont intacts
 5. Vérifie que les clés localStorage n'ont pas été renommées
 6. Ne modifie rien sans expliquer pourquoi
+7. Ne jamais faire apparaitre aucun carractere "—" dans le front
 
 Retourne :
 - zones vérifiées

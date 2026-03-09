@@ -16,20 +16,8 @@
     <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
-        :root {
-            --pro-gutter: clamp(0.9rem, 2.8vw, 1.5rem);
-            --pro-topbar-height: 73px;
-        }
-
         * {
             box-sizing: border-box;
-        }
-
-        html,
-        body {
-            max-width: 100%;
-            overflow-x: clip;
-            -webkit-text-size-adjust: 100%;
         }
 
         body {
@@ -136,7 +124,6 @@
             cursor: pointer;
             transition: all 0.2s ease;
             border: none;
-            min-height: 44px;
         }
 
         .pro-btn:disabled {
@@ -539,130 +526,6 @@
             border: 2px solid #1D4ED8;
             box-shadow: 0 12px 32px rgba(29, 78, 216, 0.1);
             position: relative;
-        }
-
-        img,
-        svg,
-        canvas,
-        video {
-            max-width: 100%;
-            height: auto;
-        }
-
-        .pro-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        @media (max-width: 1279px) {
-            .kpi-card,
-            .plan-card {
-                padding: 1.25rem;
-            }
-        }
-
-        @media (max-width: 1024px) {
-            .pro-content {
-                width: 100%;
-            }
-
-            .chatbot-widget {
-                bottom: 16px;
-                right: 16px;
-            }
-        }
-
-        @media (max-width: 767px) {
-            body {
-                font-size: 15px;
-                line-height: 1.55;
-            }
-
-            .nav-item {
-                margin-inline: 10px;
-                padding: 12px 14px;
-                font-size: 13px;
-            }
-
-            .pro-input {
-                font-size: 16px;
-                padding: 11px 12px;
-            }
-
-            .pro-btn {
-                width: 100%;
-                font-size: 14px;
-                padding: 11px 14px;
-            }
-
-            .modal-overlay {
-                align-items: flex-end;
-                padding: 10px;
-            }
-
-            .modal-box {
-                max-height: 88vh;
-                border-radius: 16px 16px 0 0;
-            }
-
-            .pro-table th,
-            .pro-table td {
-                padding: 10px 12px;
-                font-size: 12px;
-                white-space: nowrap;
-            }
-
-            .chatbot-panel {
-                position: fixed;
-                right: 10px;
-                left: 10px;
-                bottom: 84px;
-                width: auto;
-                max-width: calc(100vw - 20px);
-            }
-
-            .h-\[480px\] {
-                height: min(68vh, 480px) !important;
-            }
-
-            .sticky.top-6 {
-                position: static !important;
-            }
-
-            .tooltip-wrap {
-                flex-direction: column;
-                align-items: flex-start !important;
-            }
-
-            .timeline-line {
-                padding-left: 38px;
-            }
-
-            .timeline-line::before {
-                left: 14px;
-                top: 24px;
-            }
-
-            .timeline-dot {
-                left: 4px;
-                width: 20px;
-                height: 20px;
-                font-size: 10px;
-            }
-
-            .step-option {
-                padding: 12px;
-                gap: 10px;
-                font-size: 13px;
-            }
-
-            .min-h-\[480px\] {
-                min-height: auto !important;
-            }
-
-            .pro-content main {
-                overflow-x: hidden;
-            }
         }
     </style>
 </head>
@@ -1281,136 +1144,56 @@
 
 
         /* ===== DASHBOARD PRO V1 ===== */
-        const normalizeDashboardCase = (rawCase, index) => {
-            const score = rawCase?.report?.score || rawCase?.score || "C";
-            const surfaceLabel = rawCase?.surfaceLabel
-                || (rawCase?.surface ? `${rawCase.surface} m²` : null)
-                || (rawCase?.area ? `${rawCase.area} m²` : "Non renseignée");
-
-            const mergedReport = rawCase?.report
-                ? { ...rawCase.report, score: rawCase.report.score || score }
-                : { score };
-
-            return {
-                ...rawCase,
-                id: rawCase?.id || `LOCAL-${index + 1}`,
-                date: rawCase?.date || "Date non renseignée",
-                clientName: rawCase?.clientName || rawCase?.company || "Client non renseigné",
-                city: rawCase?.city || "",
-                postalCode: rawCase?.postalCode || "",
-                activity: rawCase?.activity || "Activité non renseignée",
-                surfaceLabel,
-                status: rawCase?.status || "",
-                annualEnergyCostLabel: rawCase?.annualEnergyCostLabel || "",
-                annualSavingsLabel: rawCase?.annualSavingsLabel || "",
-                summary: rawCase?.summary || "",
-                report: mergedReport,
-                score
-            };
-        };
-
         const ProDashboard = ({ setPage, openDemo }) => {
-            const [cases] = useState(() => {
-                let savedCases = [];
-                try {
-                    const savedRaw = localStorage.getItem('proCases');
-                    const parsed = savedRaw ? JSON.parse(savedRaw) : [];
-                    if (Array.isArray(parsed)) {
-                        savedCases = parsed;
-                    }
-                } catch (error) {
-                    savedCases = [];
-                }
-
-                const mergedById = new Map();
-                [...allCases, ...savedCases].forEach((item, index) => {
-                    if (!item || typeof item !== 'object') return;
-                    const normalized = normalizeDashboardCase(item, index);
-                    const key = normalized.id;
-
-                    if (mergedById.has(key)) {
-                        const previous = mergedById.get(key);
-                        mergedById.set(key, {
-                            ...previous,
-                            ...normalized,
-                            report: { ...(previous.report || {}), ...(normalized.report || {}) }
-                        });
-                    } else {
-                        mergedById.set(key, normalized);
-                    }
-                });
-
-                return Array.from(mergedById.values());
+            const [cases, setCases] = useState(() => {
+                const saved = localStorage.getItem('proCases');
+                return saved ? JSON.parse(saved) : [];
             });
-
             const [searchQuery, setSearchQuery] = useState("");
-            const getCaseScore = (c) => c?.report?.score || c?.score || "C";
-            const getCaseSurface = (c) => c?.surfaceLabel || (c?.surface ? `${c.surface} m²` : "Non renseignée");
-            const getCaseLocation = (c) => {
-                const parts = [c?.city, c?.postalCode].filter(Boolean);
-                return parts.length ? parts.join(" • ") : "Site non renseigné";
-            };
 
             const stats = {
                 total: cases.length,
                 scores: { A: 0, B: 0, C: 0, D: 0, E: 0 }
             };
-            cases.forEach(c => {
-                const score = getCaseScore(c);
-                if (stats.scores[score] !== undefined) stats.scores[score]++;
-            });
+            cases.forEach(c => { if (c.report && c.report.score && stats.scores[c.report.score] !== undefined) stats.scores[c.report.score]++; });
 
-            const query = searchQuery.trim().toLowerCase();
             const filteredCases = cases.filter(c => {
-                if (!query) return true;
-                const searchableText = [
-                    c.id,
-                    c.date,
-                    c.clientName,
-                    c.city,
-                    c.postalCode,
-                    c.activity,
-                    getCaseSurface(c),
-                    c.status,
-                    c.annualEnergyCostLabel,
-                    c.annualSavingsLabel,
-                    c.summary
-                ]
-                    .filter(Boolean)
-                    .join(" ")
-                    .toLowerCase();
-                return searchableText.includes(query);
+                if (searchQuery) {
+                    const q = searchQuery.toLowerCase();
+                    return c.clientName.toLowerCase().includes(q) || c.activity.toLowerCase().includes(q);
+                }
+                return true;
             });
 
             return (
-                <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto fade-in">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6 mb-8 sm:mb-10">
+                <div className="p-8 max-w-7xl mx-auto fade-in">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
                         <div>
-                            <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight">Vue d'ensemble</h2>
-                            <p className="text-slate-500 mt-1 text-sm sm:text-base">Supervisez l'état de votre parc et vos mandats en cours.</p>
+                            <h2 className="text-3xl font-bold text-slate-800 tracking-tight">Vue d'ensemble</h2>
+                            <p className="text-slate-500 mt-1">Supervisez l'état de votre parc et vos mandats en cours.</p>
                         </div>
-                        <button type="button" onClick={() => setPage('new')} className="pro-btn pro-btn-primary shadow-lg shadow-blue-500/20 w-full md:w-auto">
+                        <button type="button" onClick={() => setPage('new')} className="pro-btn pro-btn-primary shadow-lg shadow-blue-500/20">
                             <Icon icon="solar:add-square-bold" style={{ fontSize: '18px' }} />
                             Nouveau diagnostic
                         </button>
                     </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-10">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
                         <div className="kpi-card flex flex-col justify-between relative overflow-hidden bg-white">
                             <div className="flex items-center gap-3 text-slate-600 font-semibold text-sm mb-4">
                                 <Icon icon="solar:folder-with-files-bold" className="text-blue-600 text-xl" />
                                 Total dossiers générés
                             </div>
-                            <div className="text-3xl sm:text-4xl font-extrabold text-slate-900">{stats.total}</div>
+                            <div className="text-4xl font-extrabold text-slate-900">{stats.total}</div>
                         </div>
-                        <div className="kpi-card flex flex-col justify-between lg:col-span-2 relative overflow-hidden bg-white">
+                        <div className="kpi-card flex flex-col justify-between col-span-2 relative overflow-hidden bg-white">
                             <div className="flex items-center gap-3 text-slate-600 font-semibold text-sm mb-4">
                                 <Icon icon="solar:chart-square-bold" className="text-indigo-500 text-xl" />
                                 Répartition des scores
                             </div>
-                            <div className="flex flex-wrap gap-3 sm:gap-4">
+                            <div className="flex gap-4">
                                 {Object.keys(stats.scores).map(s => (
-                                    <div key={s} className="flex flex-col items-center min-w-[42px]">
+                                    <div key={s} className="flex flex-col items-center">
                                         <ScoreBadge score={s} />
                                         <span className="text-sm font-bold text-slate-600 mt-1">{stats.scores[s]}</span>
                                     </div>
@@ -1420,33 +1203,22 @@
                     </div>
 
                     <div className="bg-white rounded-2xl shadow-sm shadow-slate-200/40 border border-slate-200 overflow-hidden mb-12">
-                        <div className="p-4 sm:p-6 border-b border-slate-100 flex flex-col lg:flex-row gap-3 sm:gap-4 justify-between bg-slate-50/50">
-                            <div className="relative w-full lg:w-[380px]">
+                        <div className="p-6 border-b border-slate-100 flex flex-col md:flex-row gap-4 justify-between bg-slate-50/50">
+                            <div className="relative w-full md:w-80">
                                 <Icon icon="solar:magnifer-linear" className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                                <input
-                                    type="text"
-                                    placeholder="Rechercher (ID, client, activité, ville, statut...)"
-                                    className="pro-input pl-10 bg-white"
-                                    value={searchQuery}
-                                    onChange={e => setSearchQuery(e.target.value)}
-                                />
-                            </div>
-                            <div className="text-xs sm:text-sm text-slate-500 font-semibold self-start lg:self-center">
-                                {filteredCases.length} dossier{filteredCases.length > 1 ? 's' : ''} affiché{filteredCases.length > 1 ? 's' : ''}
+                                <input type="text" placeholder="Rechercher un dossier..." className="pro-input pl-10 bg-white" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
                             </div>
                         </div>
 
-                        <div className="hidden lg:block overflow-x-auto">
-                            <table className="w-full pro-table min-w-[1120px]">
+                        <div className="overflow-x-auto">
+                            <table className="w-full pro-table min-w-[900px]">
                                 <thead>
                                     <tr>
-                                        <th style={{ width: '13%' }}>Date & ID</th>
-                                        <th style={{ width: '20%' }}>Client / Site</th>
-                                        <th style={{ width: '15%' }}>Activité & Surface</th>
-                                        <th style={{ width: '9%' }}>Score</th>
-                                        <th style={{ width: '10%' }}>Statut</th>
-                                        <th style={{ width: '23%' }}>Économie / Synthèse</th>
-                                        <th style={{ width: '10%', textAlign: 'right' }}>Actions</th>
+                                        <th style={{ width: '20%' }}>Date & ID</th>
+                                        <th style={{ width: '30%' }}>Client / Site</th>
+                                        <th style={{ width: '20%' }}>Activité & Surface</th>
+                                        <th style={{ width: '15%' }}>Score</th>
+                                        <th style={{ width: '15%', textAlign: 'right' }}>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -1456,21 +1228,12 @@
                                                 <div className="font-mono text-xs text-slate-500 font-medium">{c.id}</div>
                                                 <div className="text-xs text-slate-400 mt-0.5">{c.date}</div>
                                             </td>
-                                            <td>
-                                                <div className="font-bold text-slate-800">{c.clientName}</div>
-                                                <div className="text-xs text-slate-400 mt-0.5">{getCaseLocation(c)}</div>
-                                            </td>
+                                            <td><div className="font-bold text-slate-800">{c.clientName}</div></td>
                                             <td>
                                                 <div className="font-medium text-slate-700">{c.activity}</div>
-                                                <div className="text-xs text-slate-400">{getCaseSurface(c)}</div>
+                                                <div className="text-xs text-slate-400">{c.surface} m²</div>
                                             </td>
-                                            <td><ScoreBadge score={getCaseScore(c)} /></td>
-                                            <td>{c.status ? <StatusBadge status={c.status} /> : <span className="text-xs text-slate-400">—</span>}</td>
-                                            <td>
-                                                <div className="text-xs text-slate-600 font-medium">{c.annualEnergyCostLabel || "Coût annuel non renseigné"}</div>
-                                                <div className="text-xs text-slate-500 mt-0.5">{c.annualSavingsLabel || "Économies non renseignées"}</div>
-                                                {c.summary && <div className="text-xs text-slate-400 mt-1 leading-relaxed">{c.summary}</div>}
-                                            </td>
+                                            <td><ScoreBadge score={c.report?.score || "C"} /></td>
                                             <td className="text-right">
                                                 <button type="button" onClick={() => setPage('report-' + c.id)} className="pro-btn pro-btn-secondary px-3 py-1.5 text-xs bg-white rounded-lg hover:border-blue-300 hover:text-blue-700">
                                                     Ouvrir
@@ -1479,65 +1242,10 @@
                                         </tr>
                                     ))}
                                     {filteredCases.length === 0 && (
-                                        <tr><td colSpan="7" className="text-center py-12 text-slate-500">Aucun dossier trouvé. Créez un nouveau diagnostic pour commencer.</td></tr>
+                                        <tr><td colSpan="5" className="text-center py-12 text-slate-500">Aucun dossier trouvé. Créez un nouveau diagnostic pour commencer.</td></tr>
                                     )}
                                 </tbody>
                             </table>
-                        </div>
-
-                        <div className="lg:hidden p-3 sm:p-4 space-y-3 sm:space-y-4">
-                            {filteredCases.map(c => (
-                                <article key={`mobile-${c.id}`} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                                    <div className="flex items-start justify-between gap-3 mb-3">
-                                        <div className="min-w-0">
-                                            <div className="font-mono text-[11px] text-slate-500 font-semibold">{c.id}</div>
-                                            <div className="text-xs text-slate-400">{c.date}</div>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <ScoreBadge score={getCaseScore(c)} />
-                                            {c.status ? <StatusBadge status={c.status} /> : null}
-                                        </div>
-                                    </div>
-
-                                    <div className="mb-3">
-                                        <h3 className="text-sm font-bold text-slate-800 leading-tight">{c.clientName}</h3>
-                                        <p className="text-xs text-slate-500 mt-1">{getCaseLocation(c)}</p>
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-2 text-xs mb-3">
-                                        <div className="rounded-lg border border-slate-100 bg-slate-50 p-2">
-                                            <div className="text-slate-400 uppercase tracking-wide text-[10px] font-bold">Activité</div>
-                                            <div className="text-slate-700 font-semibold mt-0.5">{c.activity}</div>
-                                        </div>
-                                        <div className="rounded-lg border border-slate-100 bg-slate-50 p-2">
-                                            <div className="text-slate-400 uppercase tracking-wide text-[10px] font-bold">Surface</div>
-                                            <div className="text-slate-700 font-semibold mt-0.5">{getCaseSurface(c)}</div>
-                                        </div>
-                                    </div>
-
-                                    {(c.annualEnergyCostLabel || c.annualSavingsLabel) && (
-                                        <div className="rounded-lg border border-blue-100 bg-blue-50/40 p-2.5 mb-3">
-                                            <div className="text-[10px] uppercase tracking-wide text-blue-500 font-bold mb-1">Synthèse économique</div>
-                                            <div className="text-xs text-slate-700 font-semibold">{c.annualEnergyCostLabel || "Coût annuel non renseigné"}</div>
-                                            <div className="text-xs text-slate-600 mt-0.5">{c.annualSavingsLabel || "Économies non renseignées"}</div>
-                                        </div>
-                                    )}
-
-                                    {c.summary && <p className="text-xs text-slate-600 leading-relaxed mb-3">{c.summary}</p>}
-
-                                    <button
-                                        type="button"
-                                        onClick={() => setPage('report-' + c.id)}
-                                        className="pro-btn pro-btn-secondary w-full justify-center text-sm bg-white rounded-lg hover:border-blue-300 hover:text-blue-700"
-                                    >
-                                        Ouvrir le dossier
-                                    </button>
-                                </article>
-                            ))}
-
-                            {filteredCases.length === 0 && (
-                                <div className="text-center py-10 text-slate-500 text-sm">Aucun dossier trouvé. Créez un nouveau diagnostic pour commencer.</div>
-                            )}
                         </div>
                     </div>
                 </div>
@@ -1960,160 +1668,99 @@
             };
 
             return (
-                <div className="p-4 md:p-8 xl:p-10 max-w-6xl mx-auto fade-in">
-                    <div className="mb-8 md:mb-10 text-center md:text-left">
+                <div className="p-4 md:p-10 max-w-5xl mx-auto fade-in">
+                    <div className="mb-10 text-center md:text-left">
                         <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">Paramètres de l'espace</h2>
                         <p className="text-slate-500 mt-2">Personnalisez votre compte, gérez votre équipe et vos préférences d'export.</p>
                     </div>
 
-                    <div className="space-y-8">
-                        <div className="bg-white rounded-2xl p-5 sm:p-6 md:p-8 shadow-sm shadow-slate-200/40 border border-slate-200">
-                            <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
-                                <Icon icon="solar:paint-roller-bold" className="text-blue-600" /> Branding & Marque blanche
-                            </h3>
+                    <div className="grid lg:grid-cols-2 gap-8">
+                        <div className="space-y-8">
+                            {/* SECTION BRANDING */}
+                            <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm shadow-slate-200/40 border border-slate-200">
+                                <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+                                    <Icon icon="solar:paint-roller-bold" className="text-blue-600" /> Branding & Marque blanche
+                                </h3>
 
-                            <div className="space-y-6">
-                                <div>
-                                    <label className="pro-label block mb-2 text-sm font-semibold text-slate-700">Logo de votre cabinet</label>
-                                    <div className="flex items-center gap-4">
-                                        {proLogoImg ? (
-                                            <div className="relative w-16 h-16 rounded-lg border border-slate-200 bg-slate-50 flex items-center justify-center p-1">
-                                                <img src={proLogoImg} alt="Logo" className="max-w-full max-h-full object-contain" />
-                                                <button type="button" onClick={removeLogo} className="absolute -top-2 -right-2 bg-red-500 text-white w-5 h-5 rounded-full flex items-center justify-center hover:bg-red-600 shadow border border-white">
-                                                    <Icon icon="solar:close-circle-bold" className="text-xs" />
-                                                </button>
-                                            </div>
-                                        ) : (
-                                            <div className="w-16 h-16 rounded-lg border border-dashed border-slate-300 bg-slate-50 flex items-center justify-center text-slate-400">
-                                                <Icon icon="solar:gallery-add-bold" className="text-xl" />
-                                            </div>
-                                        )}
-                                        <div className="flex-1">
-                                            <label className="cursor-pointer inline-flex items-center justify-center px-4 py-2 border border-slate-300 shadow-sm shadow-slate-200/40 text-xs font-semibold rounded-lg text-slate-700 bg-white hover:bg-slate-50 transition-colors">
-                                                Parcourir
-                                                <input type="file" className="hidden" accept="image/*" onChange={handleLogoUpload} />
-                                            </label>
-                                            <p className="text-[10px] text-slate-400 mt-1">PNG ou JPG (max 1Mo)</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="pro-label block mb-2 text-sm font-semibold text-slate-700">Nom du cabinet (affiché si pas de logo)</label>
-                                    <input
-                                        type="text"
-                                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-shadow"
-                                        value={proLogoName}
-                                        onChange={e => setProLogoName(e.target.value)}
-                                        placeholder="Gex Immo Conseil"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="pro-label block mb-2 text-sm font-semibold text-slate-700">Couleur principale (boutons et titres)</label>
-                                    <div className="flex gap-4">
-                                        <input
-                                            type="color"
-                                            className="h-10 w-16 p-1 border border-slate-200 rounded-lg cursor-pointer bg-white shrink-0"
-                                            value={proAccent}
-                                            onChange={e => setProAccent(e.target.value)}
-                                        />
-                                        <input
-                                            type="text"
-                                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-mono uppercase focus:ring-2 focus:ring-blue-500/20 outline-none transition-shadow"
-                                            value={proAccent}
-                                            onChange={e => setProAccent(e.target.value)}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="mt-8 pt-8 border-t border-slate-200">
-                                <h4 className="text-[13px] font-bold text-slate-500 uppercase tracking-[0.1em] mb-4 flex items-center gap-2">
-                                    <Icon icon="solar:laptop-minimalistic-bold" className="text-blue-500" /> Aperçu live du livrable client
-                                </h4>
-                                <div className="bg-white border border-slate-200/80 rounded-[20px] overflow-hidden shadow-xl shadow-blue-900/5 ring-1 ring-slate-900/5">
-                                    <div className="px-4 py-3 flex items-center gap-2 border-b border-slate-100 bg-slate-50/80 backdrop-blur-sm">
-                                        <div className="flex gap-1.5">
-                                            <div className="w-2.5 h-2.5 rounded-full bg-slate-200"></div>
-                                            <div className="w-2.5 h-2.5 rounded-full bg-slate-200"></div>
-                                            <div className="w-2.5 h-2.5 rounded-full bg-slate-200"></div>
-                                        </div>
-                                        <div className="mx-auto w-1/2 h-5 rounded-md bg-white border border-slate-200/60 shadow-sm flex items-center justify-center">
-                                            <div className="w-16 h-1.5 rounded-full bg-slate-200"></div>
-                                        </div>
-                                    </div>
-
-                                    <div className="px-4 sm:px-6 py-4 sm:py-5 flex items-center justify-between border-b border-slate-100 bg-white gap-3">
-                                        <div className="flex items-center gap-3 min-w-0">
-                                            {proLogoImg && <img src={proLogoImg} alt="Logo Cabinet" className="h-8 object-contain" />}
-                                            {(!proLogoImg || proLogoName) && (
-                                                <div className="font-extrabold text-base sm:text-[1.125rem] tracking-tight truncate" style={{ color: proAccent }}>
-                                                    {proLogoName || "Nom de votre cabinet"}
+                                <div className="space-y-6">
+                                    <div>
+                                        <label className="pro-label block mb-2 text-sm font-semibold text-slate-700">Logo de votre cabinet</label>
+                                        <div className="flex items-center gap-4">
+                                            {proLogoImg ? (
+                                                <div className="relative w-16 h-16 rounded-lg border border-slate-200 bg-slate-50 flex items-center justify-center p-1">
+                                                    <img src={proLogoImg} alt="Logo" className="max-w-full max-h-full object-contain" />
+                                                    <button onClick={removeLogo} className="absolute -top-2 -right-2 bg-red-500 text-white w-5 h-5 rounded-full flex items-center justify-center hover:bg-red-600 shadow border border-white">
+                                                        <Icon icon="solar:close-circle-bold" className="text-xs" />
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <div className="w-16 h-16 rounded-lg border border-dashed border-slate-300 bg-slate-50 flex items-center justify-center text-slate-400">
+                                                    <Icon icon="solar:gallery-add-bold" className="text-xl" />
                                                 </div>
                                             )}
+                                            <div className="flex-1">
+                                                <label className="cursor-pointer inline-flex items-center justify-center px-4 py-2 border border-slate-300 shadow-sm shadow-slate-200/40 text-xs font-semibold rounded-lg text-slate-700 bg-white hover:bg-slate-50 transition-colors">
+                                                    Parcourir
+                                                    <input type="file" className="hidden" accept="image/*" onChange={handleLogoUpload} />
+                                                </label>
+                                                <p className="text-[10px] text-slate-400 mt-1">PNG ou JPG (max 1Mo)</p>
+                                            </div>
                                         </div>
-                                        <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50 px-2 py-1 rounded shrink-0">Rapport de synthèse</div>
                                     </div>
-
-                                    <div className="p-4 sm:p-6 bg-slate-50/30">
-                                        <div className="w-1/3 h-2.5 rounded-full bg-slate-200 mb-2"></div>
-                                        <div className="w-2/3 h-4 rounded-full bg-slate-300 mb-6 sm:mb-8"></div>
-
-                                        <div className="flex gap-3 sm:gap-4 mb-6 sm:mb-8">
-                                            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center shadow-sm shrink-0" style={{ backgroundColor: `${proAccent}15`, color: proAccent, border: `1px solid ${proAccent}30` }}>
-                                                <span className="font-black text-xl sm:text-2xl">B</span>
-                                            </div>
-                                            <div className="flex-1 flex flex-col justify-center space-y-2.5">
-                                                <div className="w-full h-2 rounded-full bg-slate-200"></div>
-                                                <div className="w-4/5 h-2 rounded-full bg-slate-200"></div>
-                                            </div>
-                                        </div>
-
-                                        <div className="rounded-xl p-4 sm:p-5 shadow-sm border border-slate-100 bg-white relative overflow-hidden" style={{ borderLeft: `4px solid ${proAccent}` }}>
-                                            <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-transparent to-slate-50 opacity-50 pointer-events-none"></div>
-                                            <div className="text-[11px] font-bold mb-3 uppercase tracking-widest" style={{ color: proAccent }}>Priorité identifiée</div>
-                                            <div className="w-full h-2 rounded-full bg-slate-100 mb-2.5"></div>
-                                            <div className="w-5/6 h-2 rounded-full bg-slate-100"></div>
-                                        </div>
-
-                                        <div className="flex justify-center mt-6 sm:mt-8">
-                                            <div className="px-6 py-2.5 rounded-xl text-[13px] font-bold text-white shadow-lg transition-transform hover:-translate-y-0.5" style={{ backgroundColor: proAccent, boxShadow: `0 8px 16px ${proAccent}30` }}>
-                                                Contacter l'expert
-                                            </div>
+                                    <div>
+                                        <label className="pro-label block mb-2 text-sm font-semibold text-slate-700">Nom du Cabinet (affiché si pas de logo)</label>
+                                        <input
+                                            type="text"
+                                            className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-shadow"
+                                            value={proLogoName}
+                                            onChange={e => setProLogoName(e.target.value)}
+                                            placeholder="Gex Immo Conseil"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="pro-label block mb-2 text-sm font-semibold text-slate-700">Couleur principale (boutons et titres)</label>
+                                        <div className="flex gap-4">
+                                            <input
+                                                type="color"
+                                                className="h-10 w-16 p-1 border border-slate-200 rounded-lg cursor-pointer bg-white shrink-0"
+                                                value={proAccent}
+                                                onChange={e => setProAccent(e.target.value)}
+                                            />
+                                            <input
+                                                type="text"
+                                                className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-mono uppercase focus:ring-2 focus:ring-blue-500/20 outline-none transition-shadow"
+                                                value={proAccent}
+                                                onChange={e => setProAccent(e.target.value)}
+                                            />
                                         </div>
                                     </div>
                                 </div>
-                                <p className="text-center text-[12px] text-slate-500 mt-5 px-1 sm:px-4 font-medium leading-relaxed">
-                                    Vos clients reçoivent des rapports interactifs à vos couleurs. Valorisez votre expertise et accélérez la prise de décision.
-                                </p>
                             </div>
-                        </div>
 
-                        <div className="grid xl:grid-cols-2 gap-8">
-                            <div className="bg-white rounded-2xl p-5 sm:p-6 md:p-8 shadow-sm shadow-slate-200/40 border border-slate-200">
-                                <div className="flex flex-wrap justify-between items-center gap-3 mb-6">
+                            {/* SECTION EQUIPE */}
+                            <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm shadow-slate-200/40 border border-slate-200">
+                                <div className="flex justify-between items-center mb-6">
                                     <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                                         <Icon icon="solar:users-group-rounded-bold" className="text-blue-600" /> Équipe partagée
                                     </h3>
-                                    <button type="button" className="pro-btn pro-btn-secondary text-xs px-3 py-1.5 rounded-lg shadow-sm shadow-slate-200/40 w-auto">
+                                    <button type="button" className="pro-btn pro-btn-secondary text-xs px-3 py-1.5 rounded-lg shadow-sm shadow-slate-200/40">
                                         <Icon icon="solar:user-plus-bold" /> Inviter
                                     </button>
                                 </div>
 
                                 <div className="space-y-3">
                                     {mockTeam.map((member, i) => (
-                                        <div key={i} className="flex items-center justify-between p-3 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-slate-50 transition-colors gap-3">
-                                            <div className="flex items-center gap-3 min-w-0">
+                                        <div key={i} className="flex items-center justify-between p-3 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-slate-50 transition-colors">
+                                            <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-700 font-bold flex items-center justify-center text-sm shadow-inner shrink-0">
                                                     {member.initials}
                                                 </div>
-                                                <div className="min-w-0">
-                                                    <div className="font-bold text-slate-800 text-sm leading-tight truncate">{member.name}</div>
-                                                    <div className="text-xs text-slate-500 font-medium truncate">{member.email}</div>
+                                                <div>
+                                                    <div className="font-bold text-slate-800 text-sm leading-tight">{member.name}</div>
+                                                    <div className="text-xs text-slate-500 font-medium">{member.email}</div>
                                                 </div>
                                             </div>
-                                            <div className="text-xs font-bold text-slate-400 bg-white px-2.5 py-1 rounded-md border border-slate-200 shadow-sm shadow-slate-200/40 leading-none flex items-center shrink-0">
+                                            <div className="text-xs font-bold text-slate-400 bg-white px-2.5 py-1 rounded-md border border-slate-200 shadow-sm shadow-slate-200/40 leading-none flex items-center">
                                                 {member.role}
                                             </div>
                                         </div>
@@ -2121,7 +1768,8 @@
                                 </div>
                             </div>
 
-                            <div className="bg-white rounded-2xl p-5 sm:p-6 md:p-8 shadow-sm shadow-slate-200/40 border border-slate-200">
+                            {/* SECTION EXPORT */}
+                            <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm shadow-slate-200/40 border border-slate-200">
                                 <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
                                     <Icon icon="solar:database-bold" className="text-blue-600" /> Export & RGPD
                                 </h3>
@@ -2133,17 +1781,80 @@
                                     </p>
                                 </div>
 
-                                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 tooltip-wrap w-full">
+                                <div className="flex justify-between items-center tooltip-wrap w-full">
                                     <div>
                                         <div className="font-bold text-slate-700 text-sm">Export de vos dossiers</div>
                                         <div className="text-xs text-slate-500 font-medium">Récupérer la liste complète au format CSV.</div>
                                     </div>
-                                    <button type="button" disabled className="pro-btn pro-btn-secondary px-3 py-2 bg-slate-50 text-slate-400 border-slate-200 w-full sm:w-auto">
+                                    <button type="button" disabled className="pro-btn pro-btn-secondary px-3 py-2 bg-slate-50 text-slate-400 border-slate-200">
                                         Générer l'export
                                     </button>
                                     <span className="tooltip w-40 whitespace-normal text-center" style={{ right: 0, left: 'auto', transform: 'none' }}>Export disponible dans la formule Équipe</span>
                                 </div>
                             </div>
+                        </div>
+
+                        {/* SECTION APERÇU LIVE (Gros plus SaaS) */}
+                        <div className="sticky top-6">
+                            <h3 className="text-[13px] font-bold text-slate-500 uppercase tracking-[0.1em] mb-4 flex items-center gap-2">
+                                <Icon icon="solar:laptop-minimalistic-bold" className="text-blue-500" /> Aperçu du livrable client
+                            </h3>
+                            <div className="bg-white border border-slate-200/80 rounded-[20px] overflow-hidden shadow-2xl shadow-blue-900/5 ring-1 ring-slate-900/5">
+                                {/* Browser Header Mock */}
+                                <div className="px-4 py-3 flex items-center gap-2 border-b border-slate-100 bg-slate-50/80 backdrop-blur-sm">
+                                    <div className="flex gap-1.5">
+                                        <div className="w-2.5 h-2.5 rounded-full bg-slate-200"></div>
+                                        <div className="w-2.5 h-2.5 rounded-full bg-slate-200"></div>
+                                        <div className="w-2.5 h-2.5 rounded-full bg-slate-200"></div>
+                                    </div>
+                                    <div className="mx-auto w-1/2 h-5 rounded-md bg-white border border-slate-200/60 shadow-sm flex items-center justify-center">
+                                        <div className="w-16 h-1.5 rounded-full bg-slate-200"></div>
+                                    </div>
+                                </div>
+                                {/* Header Mock (Brand) */}
+                                <div className="px-6 py-5 flex items-center justify-between border-b border-slate-100 bg-white">
+                                    <div className="flex items-center gap-3">
+                                        {proLogoImg && <img src={proLogoImg} alt="Logo Cabinet" className="h-8 object-contain" />}
+                                        {(!proLogoImg || proLogoName) && (
+                                            <div className="font-extrabold text-[1.125rem] tracking-tight" style={{ color: proAccent }}>
+                                                {proLogoName || "Nom de votre cabinet"}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50 px-2 py-1 rounded">Rapport de synthèse</div>
+                                </div>
+                                {/* Body Mock */}
+                                <div className="p-6 bg-slate-50/30">
+                                    <div className="w-1/3 h-2.5 rounded-full bg-slate-200 mb-2"></div>
+                                    <div className="w-2/3 h-4 rounded-full bg-slate-300 mb-8"></div>
+
+                                    <div className="flex gap-4 mb-8">
+                                        <div className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-sm" style={{ backgroundColor: `${proAccent}15`, color: proAccent, border: `1px solid ${proAccent}30` }}>
+                                            <span className="font-black text-2xl">B</span>
+                                        </div>
+                                        <div className="flex-1 flex flex-col justify-center space-y-2.5">
+                                            <div className="w-full h-2 rounded-full bg-slate-200"></div>
+                                            <div className="w-4/5 h-2 rounded-full bg-slate-200"></div>
+                                        </div>
+                                    </div>
+
+                                    <div className="rounded-xl p-5 shadow-sm border border-slate-100 bg-white relative overflow-hidden" style={{ borderLeft: `4px solid ${proAccent}` }}>
+                                        <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-transparent to-slate-50 opacity-50 pointer-events-none"></div>
+                                        <div className="text-[11px] font-bold mb-3 uppercase tracking-widest" style={{ color: proAccent }}>Priorité identifiée</div>
+                                        <div className="w-full h-2 rounded-full bg-slate-100 mb-2.5"></div>
+                                        <div className="w-5/6 h-2 rounded-full bg-slate-100"></div>
+                                    </div>
+
+                                    <div className="flex justify-center mt-8">
+                                        <div className="px-6 py-2.5 rounded-xl text-[13px] font-bold text-white shadow-lg transition-transform hover:-translate-y-0.5" style={{ backgroundColor: proAccent, boxShadow: `0 8px 16px ${proAccent}30` }}>
+                                            Contacter l'expert
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <p className="text-center text-[12px] text-slate-500 mt-6 px-4 font-medium leading-relaxed">
+                                Vos clients reçoivent des rapports interactifs à vos couleurs. Valorisez votre expertise et accélérez la prise de décision.
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -2172,7 +1883,7 @@
                                 <Icon icon="solar:buildings-2-bold" className="text-blue-500" /> DT Pro
                             </h2>
                             {/* Bouton fermeture interne pour mobile */}
-                            <button type="button" onClick={closeMobile} className="lg:hidden text-slate-400 hover:text-slate-700 transition-colors">
+                            <button type="button" onClick={closeMobile} className="lg:hidden text-slate-400 hover:text-white transition-colors">
                                 <Icon icon="solar:close-circle-bold" style={{ fontSize: '24px' }} />
                             </button>
                         </div>
@@ -2214,12 +1925,12 @@
         };
 
         const ProTopbar = ({ title, toggleMobile }) => (
-            <div className="bg-white border-b border-slate-200 px-3 sm:px-4 md:px-8 py-3 sm:py-4 flex items-center justify-between sticky top-0 z-30 shadow-sm shadow-slate-200/40">
+            <div className="bg-white border-b border-slate-200 px-4 md:px-8 py-4 flex items-center justify-between sticky top-0 z-30 shadow-sm shadow-slate-200/40">
                 <div className="flex items-center gap-3">
                     <button type="button" onClick={toggleMobile} className="lg:hidden w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200 transition-colors">
                         <Icon icon="solar:hamburger-menu-linear" style={{ fontSize: '22px' }} />
                     </button>
-                    <h1 className="text-base sm:text-xl font-bold text-slate-800 tracking-tight max-w-[62vw] sm:max-w-none truncate">{title}</h1>
+                    <h1 className="text-xl font-bold text-slate-800 tracking-tight hidden sm:block">{title}</h1>
                 </div>
 
                 <div className="flex items-center gap-4">

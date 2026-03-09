@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 
 <head>
@@ -1600,32 +1600,6 @@
             }
         }
 
-        function loadAllProCases() {
-            try {
-                const wizardCases = JSON.parse(localStorage.getItem('proCases') || '[]');
-                const rawCases = JSON.parse(localStorage.getItem('proCasesRaw') || '[]');
-                const allStoredIds = [...wizardCases, ...rawCases].map(c => c.id);
-                const mocksNotStored = (typeof MOCK_PRO_CASES_V2 !== 'undefined' ? MOCK_PRO_CASES_V2 : [])
-                    .filter(m => !allStoredIds.includes(m.id));
-                return [...wizardCases, ...rawCases, ...mocksNotStored];
-            } catch (e) {
-                return typeof MOCK_PRO_CASES_V2 !== 'undefined' ? MOCK_PRO_CASES_V2 : [];
-            }
-        }
-
-        function findRawCaseById(caseId) {
-            const cases = loadAllProCases();
-            const found = cases.find(c => c.id === caseId);
-            if (found) return found;
-
-            try {
-                const latest = JSON.parse(localStorage.getItem('newDiagnosticLatestReport') || 'null');
-                if (latest && latest.id === caseId) return latest;
-            } catch (e) { }
-
-            return null;
-        }
-
         const planCards = [
             { key: "essentiel", title: "Essentiel", subtitle: "Pour démarrer rapidement sur un périmètre simple.", features: ["Génération illimitée de rapports", "Mise en page standardisée", "Téléchargement PDF intégré", "Idéal usage mono-site"], cta: "Être recontacté pour une démo" },
             { key: "equipe", title: "Équipe", subtitle: "L'offre métier idéale pour partager les dossiers et structurer le suivi.", features: ["Accès multi-utilisateurs", "Partage et suivi des dossiers", "Personnalisation (Logo & Couleurs)", "Export CSV complet"], cta: "Être recontacté pour une démo", featured: true },
@@ -2323,23 +2297,26 @@
 
         /* ===== DASHBOARD PRO V2 (KPI + Timeline) ===== */
         const ProDashboard = ({ setPage, openDemo }) => {
-            const [cases] = useState(() => loadAllProCases());
+            const [cases] = useState(() => {
+                try {
+                    const newCases = JSON.parse(localStorage.getItem('proCases') || '[]');
+                    const oldCases = JSON.parse(localStorage.getItem('proCasesRaw') || '[]');
+                    return [...newCases, ...oldCases];
+                } catch { return MOCK_PRO_CASES_V2; }
+            });
 
             // Compute each case's data on-the-fly
             const casesComputed = useMemo(() => cases.map(c => {
-                let computed = c.engineResult || null;
-                try { if (!computed && c.formData) computed = ENGINE_PRO.compute(c.formData); } catch (e) { }
+                let computed = null;
+                try { if (c.formData) computed = ENGINE_PRO.compute(c.formData); } catch (e) { }
                 return { ...c, _computed: computed };
             }), [cases]);
 
-            const totalSavings = casesComputed.reduce((acc, c) => acc + (c._computed?.totalSavingsEur || c.estimatedSavingsPerYear || 0), 0);
+            const totalSavings = casesComputed.reduce((acc, c) => acc + (c._computed?.totalSavingsEur || 0), 0);
             const completedCount = casesComputed.length; // all cases have a report
             const completionRate = 100;
             const scoreDistrib = { A: 0, B: 0, C: 0, D: 0, E: 0 };
-            casesComputed.forEach(c => {
-                const s = c._computed?.score || c.score;
-                if (s && scoreDistrib[s] !== undefined) scoreDistrib[s]++;
-            });
+            casesComputed.forEach(c => { const s = c._computed?.score; if (s && scoreDistrib[s] !== undefined) scoreDistrib[s]++; });
 
             const timeline = casesComputed
                 .filter(c => c.createdAt || c.lastUpdated)
@@ -2402,7 +2379,7 @@
                         </h3>
                         <div className="space-y-1">
                             {timeline.map((item, i) => (
-                                <div key={i} className="timeline-line" style={item.id ? { cursor: 'pointer' } : {}} onClick={item.id ? () => setPage('report-' + item.id) : undefined}>
+                                <div key={i} className="timeline-line" style={item.id ? { cursor: 'pointer' } : {}} onClick={item.id ? () => setPage('case-report-' + item.id) : undefined}>
                                     <div className="timeline-dot"><Icon icon={item.icon} style={{ fontSize: '11px' }} /></div>
                                     <div className="font-semibold text-slate-800 text-sm leading-snug">{item.label}</div>
                                     <div className="text-xs text-slate-400 mt-0.5">{item.date}</div>
@@ -2422,7 +2399,13 @@
         };
         /* ===== DOSSIERS CLIENTS ===== */
         const ProCases = ({ setPage }) => {
-            const [cases, setCases] = useState(() => loadAllProCases());
+            const [cases, setCases] = useState(() => {
+                try {
+                    const newCases = JSON.parse(localStorage.getItem('proCases') || '[]');
+                    const oldCases = JSON.parse(localStorage.getItem('proCasesRaw') || '[]');
+                    return [...newCases, ...oldCases];
+                } catch { return MOCK_PRO_CASES_V2; }
+            });
             const [searchQuery, setSearchQuery] = useState('');
             const [filterActivity, setFilterActivity] = useState('');
 
@@ -2449,13 +2432,9 @@
 
             const deleteCase = (id) => {
                 if (!window.confirm('Supprimer ce dossier définitivement ?')) return;
-                try {
-                    const wizardCases = JSON.parse(localStorage.getItem('proCases') || '[]').filter(c => c.id !== id);
-                    const rawCases = JSON.parse(localStorage.getItem('proCasesRaw') || '[]').filter(c => c.id !== id);
-                    localStorage.setItem('proCases', JSON.stringify(wizardCases));
-                    localStorage.setItem('proCasesRaw', JSON.stringify(rawCases));
-                } catch (e) { }
-                setCases(loadAllProCases());
+                const updated = cases.filter(c => c.id !== id);
+                setCases(updated);
+                localStorage.setItem('proCasesRaw', JSON.stringify(updated));
             };
 
             return (
@@ -2527,22 +2506,16 @@
                                                             <div className="font-semibold text-slate-700">{comp.kwhTotal.toLocaleString('fr-FR')} kWh</div>
                                                             <div className="text-xs text-slate-400">{comp.intensity} kWh/m²</div>
                                                         </div>
-                                                    ) : (c.annualConsumption || c.intensityPerSqm) ? (
-                                                        <div>
-                                                            <div className="font-semibold text-slate-700">{(c.annualConsumption || 0).toLocaleString('fr-FR')} kWh</div>
-                                                            <div className="text-xs text-slate-400">{c.intensityPerSqm || '—'} kWh/m²</div>
-                                                        </div>
                                                     ) : <span className="text-slate-400 text-xs">—</span>}
                                                 </td>
                                                 <td>
                                                     {comp ? <div className="font-bold text-green-600">{comp.totalSavingsEur.toLocaleString('fr-FR')} €/an</div>
-                                                        : c.estimatedSavingsPerYear ? <div className="font-bold text-green-600">{c.estimatedSavingsPerYear.toLocaleString('fr-FR')} €/an</div>
-                                                            : (c.annualSavingsLabel ? <span className="text-slate-500 text-xs">{c.annualSavingsLabel}</span> : <span className="text-slate-400 text-xs">—</span>)}
+                                                        : <span className="text-slate-400 text-xs">—</span>}
                                                 </td>
                                                 <td><span className="text-xs text-slate-400">{c.createdAt || c.lastUpdated || '—'}</span></td>
                                                 <td className="text-right">
                                                     <div className="flex items-center justify-end gap-2">
-                                                        <button type="button" onClick={() => setPage('report-' + c.id)} className="pro-btn pro-btn-secondary px-3 py-1.5 text-xs hover:border-blue-300 hover:text-blue-700">
+                                                        <button type="button" onClick={() => setPage('case-report-' + c.id)} className="pro-btn pro-btn-secondary px-3 py-1.5 text-xs hover:border-blue-300 hover:text-blue-700">
                                                             <Icon icon="solar:document-text-bold" style={{ fontSize: '13px' }} /> Voir rapport
                                                         </button>
                                                         <button type="button" onClick={() => deleteCase(c.id)} className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors">
@@ -2566,9 +2539,18 @@
 
         /* ===== RAPPORT DOSSIER — redirige vers ProReport ===== */
         /* ===== ProCaseReport — Rapport pour dossiers générés via le wizard 7 modules ===== */
-        const ProCaseReport = ({ caseId, setPage, sharedCase }) => {
-            const [cases] = useState(() => loadAllProCases());
-            const c = sharedCase || cases.find(x => x.id === caseId) || (!sharedCase ? findRawCaseById(caseId) : null);
+        const ProCaseReport = ({ caseId, setPage }) => {
+            const [cases] = useState(() => {
+                try {
+                    const wizardCases = JSON.parse(localStorage.getItem('proCases') || '[]');
+                    const rawCases = JSON.parse(localStorage.getItem('proCasesRaw') || '[]');
+                    // Fusionner : cas wizard + cas localStorage + mocks statiques en fallback
+                    const allStoredIds = [...wizardCases, ...rawCases].map(function (c) { return c.id; });
+                    const mocksNotStored = MOCK_PRO_CASES_V2.filter(function (m) { return !allStoredIds.includes(m.id); });
+                    return [...wizardCases, ...rawCases, ...mocksNotStored];
+                } catch (e) { return MOCK_PRO_CASES_V2; }
+            });
+            const c = cases.find(x => x.id === caseId);
             const isProAuth = localStorage.getItem('proAuth') === 'true';
 
             if (!c) return (
@@ -2579,7 +2561,7 @@
                 </div>
             );
 
-            const r = c.engineResult || (c.formData ? ENGINE_PRO.compute(c.formData) : null);
+            const r = c.engineResult;
 
             const handlePrintPdf = () => {
                 const orig = document.title;
@@ -2588,17 +2570,11 @@
                 document.title = orig;
             };
             const handleShare = () => {
-                const { phone, email, contact_telephone, telephone, contact_email, ...publicData } = c.formData || {};
-                const shareData = { ...c, id: c.id, clientName: c.clientName, engineResult: r, formData: publicData };
-                delete shareData.phone;
-                delete shareData.email;
-                if (shareData.contact) {
-                    const { phone: contactPhone, email: contactEmail, ...safeContact } = shareData.contact;
-                    shareData.contact = safeContact;
-                }
+                const { phone, email, ...publicData } = c.formData || {};
+                const shareData = { id: c.id, clientName: c.clientName, engineResult: c.engineResult, formData: publicData };
                 let encoded;
                 try { encoded = btoa(unescape(encodeURIComponent(JSON.stringify(shareData)))); } catch (e) { encoded = btoa(JSON.stringify(shareData)); }
-                const url = window.location.href.split('#')[0] + '#report=' + encoded;
+                const url = window.location.href.split('#')[0] + '#case=' + encoded;
                 if (navigator.clipboard) navigator.clipboard.writeText(url).then(() => alert('Lien copié !')).catch(() => prompt('Lien :', url));
                 else prompt('Lien :', url);
             };
@@ -2610,20 +2586,14 @@
                 <div className="p-4 md:p-8 max-w-5xl mx-auto">
                     {/* Barre navigation */}
                     <div className="no-print flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 bg-white p-4 rounded-xl border border-slate-200 shadow-sm sticky top-4 z-40">
-                        {isProAuth ? (
-                            <button onClick={() => setPage('cases')} className="inline-flex items-center gap-2 text-slate-500 hover:text-blue-600 font-bold px-4 py-2 hover:bg-slate-50 rounded-lg transition-colors">
-                                <Icon icon="solar:round-alt-arrow-left-bold" className="text-xl" /> Retour Dossiers
-                            </button>
-                        ) : (
-                            <button onClick={() => setPage('cases')} className="inline-flex items-center gap-2 text-slate-500 hover:text-blue-600 font-bold px-4 py-2 hover:bg-slate-50 rounded-lg transition-colors">
-                                <Icon icon="solar:round-alt-arrow-left-bold" className="text-xl" /> Fermer le rapport
-                            </button>
-                        )}
+                        <button onClick={() => setPage('cases')} className="inline-flex items-center gap-2 text-slate-500 hover:text-blue-600 font-bold px-4 py-2 hover:bg-slate-50 rounded-lg transition-colors">
+                            <Icon icon="solar:round-alt-arrow-left-bold" className="text-xl" /> Retour Dossiers
+                        </button>
                         <div className="flex gap-2">
                             <button onClick={handlePrintPdf} className="pro-btn bg-slate-800 text-white hover:bg-slate-700">
                                 <Icon icon="solar:printer-bold" /> Télécharger PDF
                             </button>
-                            {isProAuth && !sharedCase && (
+                            {isProAuth && (
                                 <button onClick={handleShare} className="pro-btn pro-btn-primary">
                                     <Icon icon="solar:link-bold" /> Partager
                                 </button>
@@ -2927,7 +2897,7 @@
                                 )}
 
                                 {/* Qualification prospect — pro uniquement */}
-                                {isProAuth && !sharedCase && (
+                                {isProAuth && (
                                     <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-6 no-print">
                                         <h3 className="text-sm font-bold text-indigo-800 uppercase tracking-wider mb-4 flex items-center gap-2">
                                             <Icon icon="solar:star-bold" className="text-indigo-500" /> Qualification prospect (vue pro uniquement)
@@ -3340,27 +3310,13 @@
                         resultBasis: result.isKwhPrioritaire
                             ? ['Consommations réelles saisies (kWh)', 'Activité et surface connues', 'Correctifs zone et année appliqués']
                             : ['Surface et activité connues', 'Estimation sectorielle (ratio ADEME/ECNA)', 'Consommations non saisies — précision limitée'],
-                        actionPlan: result.actionPlan || [],
-                        providerQuestions: result.providerQuestions || [],
-                        technicalCompleteness: result.technicalCompleteness,
-                        totalCapex: result.totalCapex,
-                        totalCapexNet: result.totalCapexNet,
-                        aidesEstimees: result.aidesTotal,
-                        roiGlobal: result.roiGlobal,
-                        projectionData: result.projectionData,
-                        tauxInflation: result.tauxInflation,
-                        horizonAns: result.horizonAns,
-                        graphiquePubliable: result.graphiquePubliable,
-                        co2Total: result.co2Total,
-                        co2Evite: result.co2Evite,
-                        emissionsActuelles: result.emissionsActuelles,
                     };
                     const existingCases = JSON.parse(localStorage.getItem('proCases') || '[]');
                     localStorage.setItem('proCases', JSON.stringify([newCase, ...existingCases]));
                     localStorage.setItem('newDiagnosticLatestSubmission', JSON.stringify(form));
                     localStorage.setItem('newDiagnosticLatestReport', JSON.stringify(newCase));
                     localStorage.removeItem('proDiagDraft');
-                    setPage('report-' + newCase.id);
+                    setPage('case-report-' + newCase.id);
                 }, 1800);
             };
 
@@ -3838,9 +3794,1255 @@
             );
         };
 
-        /* ===== RAPPORT PRO ===== */
-        const ProReport = ({ cId, setPage, sharedCase }) => {
-            return <ProCaseReport caseId={cId} setPage={setPage} sharedCase={sharedCase} />;
+        /* ===== RAPPORT PRO (V2 avec 12 sections) ===== */
+        /* ===== DASHBOARD QUALIFICATION PRO ===== */
+        const DashboardQualificationPro = ({ c, formData }) => {
+            const [notes, setNotes] = useState(() => localStorage.getItem(`notes_${c.id}`) || '');
+            const [status, setStatus] = useState(() => localStorage.getItem(`status_${c.id}`) || 'Nouveau');
+
+            useEffect(() => {
+                localStorage.setItem(`notes_${c.id}`, notes);
+            }, [notes]);
+            useEffect(() => {
+                localStorage.setItem(`status_${c.id}`, status);
+            }, [status]);
+
+            const score = scoreMaturite(formData);
+            const stars = Array.from({ length: 5 }, (_, i) => i < score ? '★' : '☆').join('');
+
+            return (
+                <div className="bg-slate-900 text-white rounded-xl p-6 shadow-xl mb-8 no-print">
+                    <div className="flex justify-between items-center mb-4 border-b border-slate-700 pb-4">
+                        <h3 className="text-xl font-bold flex items-center gap-2 text-blue-400">
+                            <Icon icon="solar:shield-user-bold" /> Qualification Prospect
+                        </h3>
+                        <div className="flex gap-2">
+                            <button className="px-3 py-1 bg-slate-800 hover:bg-slate-700 rounded text-xs font-semibold">Exporter CSV</button>
+                            <button className="px-3 py-1 bg-slate-800 hover:bg-slate-700 rounded text-xs font-semibold">Dupliquer</button>
+                            <button className="px-3 py-1 bg-red-900/50 hover:bg-red-900 rounded text-xs text-red-400 font-semibold">Archiver</button>
+                        </div>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-6">
+                        <div>
+                            {/* FIX audit-2026-03-07 — champs alignés sur sortie alpha form */}
+                            {/* FIX #E audit-2026-03-07 — aliases 7-mod form : contact_nom, contact_societe, contact_telephone, contact_email */}
+                            <div className="font-bold text-lg mb-1">👤 {formData.contact_nom || formData.contact || formData.contact_name || c.projectName} {(formData.contact_societe || formData.societe || formData.contact_company) ? `(${formData.contact_societe || formData.societe || formData.contact_company})` : ''}</div>
+                            <div className="text-slate-400 text-sm mb-4">📞 {formData.contact_telephone || formData.telephone || formData.contact_phone || 'N/A'}  ✉️ {formData.contact_email || formData.email || 'N/A'}</div>
+
+                            <div className="grid grid-cols-2 gap-y-3 gap-x-4 text-sm mb-4 bg-slate-800/50 p-4 rounded-lg">
+                                <div className="text-slate-400">Score maturité :</div>
+                                <div className="font-bold text-yellow-400 text-lg tracking-widest">{stars}</div>
+                                <div className="text-slate-400">Statut :</div>
+                                <div>
+                                    <select className="bg-slate-800 border border-slate-600 rounded px-2 py-1 outline-none font-semibold text-white" value={status} onChange={e => setStatus(e.target.value)}>
+                                        <option>Nouveau</option><option>Contacté</option><option>Devis envoyé</option><option>Gagné</option><option>Perdu</option>
+                                    </select>
+                                </div>
+                                {/* FIX audit-2026-03-07 — champs alignés sur sortie alpha form */}
+                                <div className="text-slate-400">Objectif :</div>
+                                <div className="font-medium">{formData.objectif || formData.objectif_principal || 'Non précisé'}</div>
+                                <div className="text-slate-400">Horizon :</div>
+                                <div className="font-medium">{formData.horizon || formData.horizon_decision || 'Non précisé'}</div>
+                                <div className="text-slate-400">Budget :</div>
+                                <div className="font-medium">{formData.budget || formData.budget_travaux || 'Non précisé'}</div>
+                                <div className="text-slate-400">Multi-sites :</div>
+                                <div className="font-medium">{(formData.multi_sites === 'oui' || formData.multi_sites === true) ? 'Oui' : 'Non'}</div>
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col gap-4">
+                            <div>
+                                <div className="text-sm font-semibold text-slate-400 mb-1">Contexte / Urgence :</div>
+                                <div className="text-sm italic text-slate-300 bg-slate-800/30 p-3 rounded border border-slate-700/50">
+                                    {/* FIX audit-2026-03-07 — champ 'contexte' (alpha form) */}
+                                    "{formData.contexte || formData.contexte_verbatim || formData.contexte_urgence || 'Aucun verbatim saisi'}"
+                                </div>
+                            </div>
+                            <div className="flex-1 flex flex-col">
+                                <div className="text-sm font-semibold text-slate-400 mb-1">Notes internes :</div>
+                                <textarea
+                                    className="w-full flex-1 bg-slate-800 border border-slate-700 rounded-lg p-3 text-sm resize-none outline-none focus:border-blue-500"
+                                    placeholder="Historique des échanges..."
+                                    value={notes}
+                                    onChange={e => setNotes(e.target.value)}
+                                ></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        /* ===== 12 PARTIES DU RAPPORT ===== */
+        // FIX audit-2026-03-07 — labels activité pour affichage humain (aligné sur alpha form ACTIVITE_LABELS)
+        const ACTIVITE_LABELS_RAPPORT = {
+            bureaux: 'Bureaux / Services', commerce_nonalim: 'Commerce non-alimentaire',
+            commerce_alim: 'Commerce alimentaire', hotellerie: 'Hôtellerie',
+            restauration: 'Restauration', enseignement: 'Enseignement',
+            entrepot_chauffe: 'Entrepôt chauffé', entrepot_froid: 'Entrepôt non chauffé',
+            sante_cabinet: 'Santé / Cabinet médical',
+        };
+
+        const PartieEnTete = ({ c }) => {
+            const formData = c.formData || {};
+            const proLogoName = localStorage.getItem('proLogoName') || 'DiagTertiaire Pro';
+            const proLogoImg = localStorage.getItem('proLogoImg') || '';
+
+            const getConfidenceLevel = () => {
+                const hasConsos = formData.elec_kwh || formData.gaz_kwh || formData.elec_eur || formData.gaz_eur
+                    || formData.conso_elec_kwh || formData.conso_gaz_val || formData.cout_elec_eur || formData.cout_gaz_eur;
+                if (hasConsos) return { level: 'Élevé', color: 'bg-green-100 text-green-800', badge: '🟢', desc: '(conso réelles 12 mois saisies)' };
+                if (formData.surface) return { level: 'Moyen', color: 'bg-yellow-100 text-yellow-800', badge: '🟡', desc: '(données partielles ou estimées)' };
+                return { level: 'Indicatif', color: 'bg-red-100 text-red-800', badge: '🔴', desc: '(aucune consommation saisie — ratio sectoriel)' };
+            };
+            const confidence = getConfidenceLevel();
+
+            return (
+                <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 print-page">
+                    <div className="flex justify-between items-start mb-8 border-b border-slate-100 pb-6">
+                        <div className="flex items-center gap-4">
+                            {proLogoImg ? <img src={proLogoImg} className="h-12 object-contain" /> : <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-xl"><Icon icon="solar:buildings-2-bold" /></div>}
+                            <div>
+                                <h2 className="text-xl font-black text-slate-800">{proLogoName}</h2>
+                                <p className="text-sm text-slate-500 font-medium">Diagnostic Énergétique</p>
+                            </div>
+                        </div>
+                        <div className="text-right">
+                            <div className="text-2xl font-black text-slate-900">Pré-diagnostic énergétique</div>
+                            <div className="text-sm font-mono text-slate-400 mt-1">ID: {c.id} | {c.date}</div>
+                        </div>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-8 mb-8">
+                        <div>
+                            <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-3">Le Bâtiment</h3>
+                            {/* FIX audit-2026-03-07 — clientName + activite label + statut alignés sur alpha form */}
+                            {/* FIX #E audit-2026-03-07 — aliases contact_nom, contact_societe, batiment_adresse, surface_utile */}
+                            <div className="text-xl font-bold text-slate-800 mb-1">{formData.contact_societe || formData.societe || formData.clientName || formData.contact_nom || formData.contact || 'Bâtiment'}</div>
+                            <div className="text-slate-600 mb-4">{formData.batiment_adresse || formData.adresse || 'Adresse non renseignée'}</div>
+                            <div className="grid grid-cols-2 gap-y-2 text-sm text-slate-700">
+                                <div className="font-semibold">Activité :</div><div>{ACTIVITE_LABELS_RAPPORT[c.activite] || c.activite || 'Tertiaire'}</div>
+                                <div className="font-semibold">Surface :</div><div>{formData.surface || formData.surface_utile || 100} m² SU</div>
+                                <div className="font-semibold">Zone :</div><div>H{formData.zone_climatique || formData.zone || '2'}</div>
+                                <div className="font-semibold">Statut :</div><div>{formData.statut || formData.statut_occupant || 'Non précisé'}</div>
+                            </div>
+                        </div>
+                        <div className="bg-slate-50 p-5 rounded-xl border border-slate-100 flex flex-col justify-center">
+                            <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-3">Niveau de confiance global</h3>
+                            <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border font-bold text-sm ${confidence.color} self-start mb-2`}>
+                                {confidence.badge} Confiance : {confidence.level}
+                            </div>
+                            <span className="text-xs text-slate-500">{confidence.desc}</span>
+                        </div>
+                    </div>
+
+                    <div className="bg-blue-50/50 p-5 rounded-xl border border-blue-100 text-sm text-slate-700 leading-relaxed font-medium mt-6 shadow-inner">
+                        <strong>Note :</strong> Ce pré-diagnostic est un outil d'orientation basé sur des données déclaratives et des références sectorielles ADEME. Il ne constitue pas un audit énergétique réglementaire ni un DPE certifié. L'Indice DiagTertiaire est un indicateur d'orientation interne, distinct de la classification OPERAT réglementaire.
+                    </div>
+                </div>
+            );
+        };
+
+        const PartieSyntheseExecutive = ({ c }) => {
+            const getPhrase = () => {
+                const ratio = c.ref?.med > 0 ? (c.intensity / c.ref.med).toFixed(1) : '—';
+                // FIX audit-2026-03-07 — utiliser le label humain (pas la clé brute)
+                const activiteLabel = ACTIVITE_LABELS_RAPPORT[c.activite] || (c.activite ? c.activite.replace(/_/g, ' ') : 'ce bâtiment');
+                if (c.score === 'D' || c.score === 'E') return `Ce bâtiment (${activiteLabel}) consomme ${ratio}× plus qu'un bâtiment similaire bien géré. Un potentiel d'économies significatif est accessible dès maintenant.`;
+                if (c.score === 'C') return `Ce bâtiment (${activiteLabel}) se situe dans la moyenne du secteur (${ratio}× la médiane). Des optimisations ciblées peuvent améliorer significativement la performance.`;
+                return `Ce bâtiment (${activiteLabel}) fait partie des plus performants de sa catégorie (${ratio}× la médiane). Des ajustements fins restent possibles.`;
+            };
+
+            return (
+                <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 print-page mt-8">
+                    <h2 className="text-2xl font-black text-slate-800 mb-8 border-b border-slate-100 pb-4">2. Synthèse Exécutive</h2>
+
+                    <div className="flex flex-col md:flex-row gap-8 items-center mb-10">
+                        <div className="flex-1 text-center md:text-left">
+                            <div className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-2">Indice DiagTertiaire</div>
+                            <div className="text-7xl font-black tabular-nums tracking-tighter" style={{ color: SCORING.find(s => s.grade === c.score)?.color || '#000' }}>{c.score}</div>
+                            <div className="text-xl font-bold mt-2 text-slate-700">{c.positioning}</div>
+                        </div>
+                        <div className="w-full md:w-2/3 bg-slate-50 p-6 rounded-xl border border-slate-200">
+                            <div className="text-lg text-slate-700 leading-relaxed font-semibold italic">"{getPhrase()}"</div>
+                        </div>
+                    </div>
+
+                    <div className="grid md:grid-cols-3 gap-6 mb-10">
+                        <div className="p-6 bg-white border border-slate-200 rounded-xl shadow-sm text-center line-height-tight">
+                            <div className="text-sm font-bold text-slate-400 mb-2 uppercase">Consommation</div>
+                            <div className="text-3xl font-black text-slate-800">{c.kwhTotal.toLocaleString('fr-FR')}</div>
+                            <div className="text-sm font-semibold text-slate-500 mt-1">kWh/an</div>
+                        </div>
+                        <div className="p-6 bg-white border border-slate-200 rounded-xl shadow-sm text-center">
+                            <div className="text-sm font-bold text-slate-400 mb-2 uppercase">Coût énergétique est.</div>
+                            <div className="text-3xl font-black text-slate-800">{c.estimatedBill.toLocaleString('fr-FR')}</div>
+                            <div className="text-sm font-semibold text-slate-500 mt-1">€/an</div>
+                        </div>
+                        <div className="p-6 bg-green-50 border border-green-200 rounded-xl shadow-sm text-center">
+                            <div className="text-sm font-bold text-green-700 mb-2 uppercase">Potentiel Économies</div>
+                            <div className="text-3xl font-black text-green-600">-{c.totalSavingsEur.toLocaleString('fr-FR')}</div>
+                            <div className="text-sm font-semibold text-green-700 mt-1">€/an</div>
+                        </div>
+                    </div>
+
+                    <h3 className="text-lg font-bold text-slate-800 mb-4">Actions Prioritaires Recommandées</h3>
+                    <div className="grid md:grid-cols-3 gap-4 mb-8">
+                        {c.topActions.slice(0, 3).map((a, i) => (
+                            <div key={i} className="p-4 border border-slate-200 rounded-xl shadow-sm font-medium">
+                                <div className="font-bold text-blue-700 mb-2 leading-snug">{i + 1}. {a.nom}</div>
+                                <div className="flex justify-between text-sm mb-1"><span className="text-slate-500">Gain est.</span><span className="font-bold text-green-600">{Math.round(a.gain_eur).toLocaleString('fr-FR')} €/an</span></div>
+                                <div className="flex justify-between text-sm mb-1"><span className="text-slate-500">Invest. est.</span><span className="font-semibold">{Math.round(a.capex).toLocaleString('fr-FR')} €</span></div>
+                                <div className="flex justify-between text-sm"><span className="text-slate-500">ROI</span><span className="font-bold">{a.roi.toFixed(1)} ans</span></div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="flex bg-slate-800 rounded-xl p-4 divide-x divide-slate-700">
+                        <div className="flex-1 text-center px-4">
+                            <div className="text-slate-400 text-xs font-bold uppercase mb-1">Impact CO2</div>
+                            <div className="text-white font-bold">{Math.round(c.co2Evite).toLocaleString('fr-FR')} kg CO2 évités/an</div>
+                        </div>
+                        <div className="flex-1 text-center px-4">
+                            <div className="text-slate-400 text-xs font-bold uppercase mb-1">ROI Global Estimé</div>
+                            <div className="text-white font-bold">{(c.totalSavingsEur > 0 ? (c.totalCapex / c.totalSavingsEur).toFixed(1) : 0)} ans</div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const PartieBenchmarkSectoriel = ({ c }) => {
+            const { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } = window.Recharts;
+            const dataChart = [
+                { name: "Top 25% Secteur", val: c.ref.q1, fill: "#059669" },
+                { name: "Médiane", val: c.ref.med, fill: "#64748B" },
+                { name: "Votre Bâtiment", val: c.intensity, fill: SCORING.find(s => s.grade === c.score)?.color || '#1D4ED8' },
+                { name: "Flop 25%", val: c.ref.q3, fill: "#F97316" }
+            ];
+
+            const cible = Math.round(c.intensity - (c.topActions.reduce((acc, a) => acc + a.gain_kwh, 0) / (c.formData.surface || 100)));
+
+            return (
+                <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 mt-8 print-page">
+                    <h2 className="text-2xl font-black text-slate-800 mb-6 border-b border-slate-100 pb-4">3. Positionnement Sectoriel</h2>
+
+                    <div className="h-80 w-full mb-8">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart layout="vertical" data={dataChart} margin={{ top: 20, right: 30, left: 100, bottom: 5 }}>
+                                <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                                <XAxis type="number" unit=" kWh/m²" />
+                                <YAxis dataKey="name" type="category" width={120} tick={{ fontWeight: 'bold', fontSize: 12 }} />
+                                <Tooltip cursor={{ fill: 'transparent' }} />
+                                <ReferenceLine x={cible} stroke="#10B981" strokeDasharray="3 3" label={{ position: 'top', value: `Objectif: ${cible}`, fill: '#10B981', fontWeight: 'bold' }} />
+                                <Bar dataKey="val" radius={[0, 4, 4, 0]}>
+                                    {dataChart.map((entry, index) => (
+                                        <Recharts.Cell key={`cell-${index}`} fill={entry.fill} />
+                                    ))}
+                                </Bar>
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left text-sm text-slate-700 border-collapse">
+                            <thead>
+                                <tr className="bg-slate-50 border-y border-slate-200">
+                                    <th className="p-3 font-bold">Indicateur</th>
+                                    <th className="p-3 font-bold">Valeur</th>
+                                    <th className="p-3 font-bold">Écart Médiane</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 font-medium">
+                                <tr>
+                                    <td className="p-3 font-bold text-slate-900">Votre Bâtiment</td>
+                                    <td className="p-3 font-bold text-blue-600">{c.intensity} kWh/m²/an</td>
+                                    <td className="p-3">{c.intensity > c.ref.med ? '+' : ''}{Math.round(((c.intensity - c.ref.med) / c.ref.med) * 100)}%</td>
+                                </tr>
+                                <tr>
+                                    <td className="p-3">Meilleurs 25%</td>
+                                    <td className="p-3">{c.ref.q1} kWh/m²/an</td>
+                                    <td className="p-3 text-slate-400">référence haute</td>
+                                </tr>
+                                <tr>
+                                    <td className="p-3">Médiane relative secteur</td>
+                                    <td className="p-3">{c.ref.med} kWh/m²/an</td>
+                                    <td className="p-3 text-slate-400">référence centrale</td>
+                                </tr>
+                                <tr className="bg-green-50 text-green-800">
+                                    <td className="p-3 font-bold">Objectif recommandé</td>
+                                    <td className="p-3 font-bold">{cible} kWh/m²/an</td>
+                                    <td className="p-3 font-bold">-{Math.round(((c.intensity - cible) / c.intensity) * 100)}% à atteindre</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div className="mt-4 text-xs text-slate-500 italic max-w-3xl">Source : ADEME / Enquête ECNA 2022 — Énergie finale tous usages, hors process métier — Surface Utile (SU). {(c.formData.activite === 'commerce_alim' || c.formData.activite === 'restauration') ? "Note : cette activité intègre une part de process métier (cuisson, froid) qui pèse fortement dans la consommation et limite les leviers bâtimentaires." : ""}</div>
+                </div>
+            );
+        };
+
+        const PartieRepartitionPostes = ({ c }) => {
+            const { PieChart, Pie, Cell, Tooltip: PieTooltip, ResponsiveContainer } = window.Recharts;
+            const activite = c.activite || 'bureaux';
+            const pc = POSTES[activite] || POSTES['bureaux'];
+            // FIX audit-2026-03-07 — prix moyen pondéré pour calcul €/an par poste
+            const avgPrice = c.avgPrice || (c.kwhTotal > 0 ? c.estimatedBill / c.kwhTotal : PRIX_ENERGIE.electricite);
+
+            const dataPie = [
+                { name: 'Chauffage', value: pc.chauffage, fill: '#EF4444' },
+                { name: 'Éclairage', value: pc.eclairage, fill: '#EAB308' },
+                { name: 'Ventilation', value: pc.ventil, fill: '#14B8A6' },
+                { name: 'Climatisation', value: pc.clim, fill: '#3B82F6' },
+                { name: 'ECS', value: pc.ecs, fill: '#F97316' },
+                { name: 'Process', value: pc.process, fill: '#8B5CF6' },
+                { name: 'Autres', value: pc.autres, fill: '#94A3B8' }
+            ].filter(d => d.value > 0).sort((a, b) => b.value - a.value);
+
+            return (
+                <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 mt-8 print-page">
+                    <h2 className="text-2xl font-black text-slate-800 mb-6 border-b border-slate-100 pb-4">4. Répartition Estimée par Postes</h2>
+                    <div className="flex flex-col md:flex-row gap-8 items-center mb-8">
+                        <div className="w-full md:w-1/3 h-64">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                    <Pie data={dataPie} cx="50%" cy="50%" innerRadius={60} outerRadius={90} dataKey="value" stroke="none">
+                                        {dataPie.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.fill} />)}
+                                    </Pie>
+                                    <PieTooltip formatter={(value) => `${value}%`} />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        </div>
+                        <div className="w-full md:w-2/3">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left text-sm text-slate-700 border-collapse">
+                                    <thead>
+                                        {/* FIX audit-2026-03-07 — colonnes kWh/an et €/an ajoutées (spec Partie 4) */}
+                                        <tr className="bg-slate-50 border-y border-slate-200">
+                                            <th className="p-3 font-bold">Poste</th>
+                                            <th className="p-3 font-bold">% est.</th>
+                                            <th className="p-3 font-bold">kWh/an</th>
+                                            <th className="p-3 font-bold">€/an</th>
+                                            <th className="p-3 font-bold">Levier</th>
+                                            <th className="p-3 font-bold text-center">Action liée</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100 font-medium">
+                                        {dataPie.map((d, i) => {
+                                            const levier = d.value > 20 ? '●●● Fort' : d.value > 10 ? '●● Moyen' : '● Faible';
+                                            const posteKey = { 'Chauffage': 'chauffage', 'Éclairage': 'eclairage', 'Ventilation': 'ventil', 'Climatisation': 'clim', 'ECS': 'ecs', 'Process': 'process', 'Autres': 'autres' }[d.name] || '';
+                                            const actionId = c.topActions.find(a => a.poste === posteKey)?.id || '—';
+                                            // FIX audit-2026-03-07 — kWh/an et €/an par poste
+                                            const kwhPoste = Math.round(c.kwhTotal * d.value / 100);
+                                            const eurPoste = Math.round(kwhPoste * avgPrice);
+                                            return (
+                                                <tr key={i}>
+                                                    <td className="p-3 font-bold text-slate-900 flex items-center gap-2">
+                                                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: d.fill }}></div>
+                                                        {d.name} {d.name === 'Ventilation' && activite === 'sante_cabinet' ? '⚠️' : ''}
+                                                    </td>
+                                                    <td className="p-3">{d.value}%</td>
+                                                    <td className="p-3 text-slate-600">{kwhPoste.toLocaleString('fr-FR')}</td>
+                                                    <td className="p-3 text-slate-600">{eurPoste.toLocaleString('fr-FR')} €</td>
+                                                    <td className="p-3 text-slate-500">{levier}</td>
+                                                    <td className="p-3 text-center">
+                                                        {actionId !== '—' ? <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-md">{actionId}</span> : '—'}
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="text-xs text-slate-500 italic max-w-3xl">Disclaimer : Répartition statistique estimée à partir des références sectorielles ADEME, pondérée par vos données déclaratives. Non mesurée sur site. {activite === 'sante_cabinet' ? '⚠️ Estimation ventilation réglementaire — Arrêté 25/04/2017' : ''}</div>
+                </div>
+            );
+        };
+
+        const PartieActionsRecommandees = ({ c }) => {
+            return (
+                <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 mt-8 print-page">
+                    <h2 className="text-2xl font-black text-slate-800 mb-6 border-b border-slate-100 pb-4">5. Actions Recommandées</h2>
+                    <div className="grid grid-cols-1 gap-6 mb-8">
+                        {c.topActions.map((a, i) => {
+                            let badgeDesc = a.source === 'SOURCE_STRONG' ? '✅ Validé ADEME' : a.source === 'SOURCE_PARTIAL' ? '⚠️ Est. sectorielle' : '🔶 Indicatif';
+                            return (
+                                <div key={i} className="border-2 border-slate-200 rounded-2xl overflow-hidden shadow-sm flex flex-col hover:border-blue-400 transition-colors">
+                                    <div className="bg-slate-50 p-4 border-b border-slate-200 flex flex-wrap justify-between items-center gap-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-black text-sm">{i + 1}</div>
+                                            <h3 className="font-bold text-lg text-slate-800">{a.nom} <span className="text-xs text-slate-400 uppercase tracking-widest ml-2 bg-slate-200/50 px-2 py-1 rounded">[{a.poste}]</span></h3>
+                                        </div>
+                                        <div className="flex gap-2 items-center">
+                                            {a.cee && <span className="text-xs font-bold text-blue-800 bg-blue-100 px-2 py-1 rounded border border-blue-200">CEE {a.fiche_cee}</span>}
+                                            <span className="text-xs font-bold text-slate-600 bg-white px-2 py-1 rounded border border-slate-200 shadow-sm">{badgeDesc}</span>
+                                        </div>
+                                    </div>
+                                    <div className="p-5 bg-white">
+                                        <p className="text-sm text-slate-600 font-medium mb-4 leading-relaxed">{a.description}</p>
+                                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t border-slate-100 mt-2">
+                                            <div>
+                                                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Gain annuel</div>
+                                                <div className="text-green-600 font-black text-lg">+{Math.round(a.gain_eur).toLocaleString('fr-FR')} €/an</div>
+                                            </div>
+                                            <div>
+                                                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Investissement</div>
+                                                <div className="text-slate-800 font-black text-lg">{Math.round(a.capex).toLocaleString('fr-FR')} €</div>
+                                            </div>
+                                            <div>
+                                                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Retour (ROI)</div>
+                                                <div className="text-slate-800 font-black text-lg">{a.roi.toFixed(1)} ans</div>
+                                            </div>
+                                            <div>
+                                                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">CO2 Évité</div>
+                                                <div className="text-slate-800 font-black text-lg">{Math.round(a.gain_kwh * (c.formData.energie_principale === 'gaz' ? 0.227 : 0.079)).toLocaleString('fr-FR')} kg/an</div>
+                                            </div>
+                                        </div>
+                                        {a.id === 'ACT04' && <div className="mt-4 text-xs italic text-orange-700 bg-orange-50 p-3 rounded">Gain estimé sous réserve d'un encrassement avéré. Un diagnostic réseau préalable est recommandé.</div>}
+                                    </div>
+                                    <div className="bg-slate-50 border-t border-slate-200 p-3 text-xs text-slate-500 font-medium flex gap-4 pl-5">
+                                        <span><strong>Vérif RGE :</strong> rge-ademe.fr</span>
+                                        <span><strong>Intervenant :</strong> {a.intervenant}</span>
+                                    </div>
+                                </div>
+                            )
+                        })}
+                    </div>
+                </div>
+            );
+        };
+
+        const PartieProjection10ans = ({ c }) => {
+            const {
+                BarChart, Bar, Cell, LabelList,
+                XAxis, YAxis, CartesianGrid,
+                Area, ComposedChart, Line,
+                Tooltip: CTooltip, Legend: CLineLegend,
+                ReferenceLine, ResponsiveContainer,
+            } = window.Recharts;
+
+            // ── Taux d'inflation pondéré par source d'énergie ──────────────────────
+            const elecEur = c.elecCost || (c.kwhElec || 0) * PRIX_ENERGIE.electricite;
+            const gazEur = c.gasCost || (c.kwhGaz || 0) * PRIX_ENERGIE.gaz;
+            const totalEurBase = Math.max(elecEur + gazEur, 1);
+            const partElec = elecEur / totalEurBase;
+            const partGaz = gazEur / totalEurBase;
+            const autreEnergie = c.formData.autre_energie || 'reseau_chaleur';
+            const taux = partElec * INFLATION_ENERGIE.electricite
+                + partGaz * INFLATION_ENERGIE.gaz
+                + Math.max(0, 1 - partElec - partGaz) * (INFLATION_ENERGIE[autreEnergie] || INFLATION_ENERGIE.reseau_chaleur);
+            const tauxPct = (taux * 100).toFixed(1);
+            const hasGaz = gazEur > 0;
+
+            // ── Aides estimées (TVA 5,5% + CEE plancher) ──────────────────────────
+            const actions = c.topActions || [];
+            let aides_total = 0;
+            const detail_aides = [];
+            for (const action of actions) {
+                if (action.cee && action.fiche_cee) {
+                    const aide_cee = action.capex * 0.015; // SOURCE_PARTIAL — minimum défendable
+                    aides_total += aide_cee;
+                    detail_aides.push(`CEE ${action.fiche_cee} : ${Math.round(aide_cee).toLocaleString('fr-FR')} €`);
+                }
+                const tva_eco = action.capex * (0.20 - 0.055) / 1.20;
+                aides_total += tva_eco;
+            }
+            const capex_brut = c.totalCapex || 0;
+            const capex_net = Math.max(0, capex_brut - aides_total);
+
+            // ── Évaluation règles de publication ──────────────────────────────────
+            const economies_annuelles = c.totalSavingsEur || 0;
+            const cout_annuel = c.estimatedBill || 0;
+            const roi_global = economies_annuelles > 0 ? capex_net / economies_annuelles : 999;
+            const ratio_capex_facture = cout_annuel > 0 ? capex_brut / cout_annuel : 0;
+            const economies_pct = cout_annuel > 0 ? economies_annuelles / cout_annuel : 0;
+
+            let publication;
+            if (roi_global < 0.5) {
+                publication = {
+                    afficher: false,
+                    message_pro: `ROI calculé < 6 mois (${(roi_global * 12).toFixed(1)} mois). Vérifier les données de consommation saisies — résultat inhabituel.`,
+                    action: 'Vérifier les consommations saisies avant de partager ce rapport.',
+                };
+            } else if (roi_global > 20) {
+                publication = {
+                    afficher: false,
+                    message_pro: `ROI global estimé à ${roi_global.toFixed(0)} ans. Ce graphique ne sera pas affiché dans le rapport client.`,
+                    action: 'Afficher uniquement les actions avec ROI < 15 ans.',
+                };
+            } else if (ratio_capex_facture > 5) {
+                publication = {
+                    afficher: false,
+                    message_pro: `Le CAPEX estimé (${capex_brut.toLocaleString('fr-FR')} €) représente ${ratio_capex_facture.toFixed(1)}× la facture annuelle. Hors périmètre d'un pré-diagnostic.`,
+                    action: 'Retirer les actions structurelles lourdes et recalculer.',
+                };
+            } else if (economies_pct < 0.01) {
+                publication = {
+                    afficher: false,
+                    message_pro: 'Les économies estimées sont inférieures à 1% de la facture. Données insuffisantes pour une projection fiable.',
+                    action: null,
+                };
+            } else {
+                const horizon = roi_global > 10 ? 15 : 10;
+                publication = {
+                    afficher: true,
+                    horizon,
+                    roi_global,
+                    badge: roi_global <= 5 ? 'excellent' : roi_global <= 10 ? 'bon' : 'acceptable',
+                    warning: roi_global > 10 ? `Investissement rentabilisé en ${roi_global.toFixed(1)} ans — graphique sur ${horizon} ans.` : null,
+                };
+            }
+
+            if (!publication.afficher) {
+                return (
+                    <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 mt-8 print-page">
+                        <h2 className="text-2xl font-black text-slate-800 mb-6 border-b border-slate-100 pb-4">6. Projection Économique</h2>
+                        <div className="bg-orange-50 border border-orange-200 rounded-xl p-6 mb-4">
+                            <div className="font-bold text-orange-800 text-lg mb-2">⚠ Graphique non affiché</div>
+                            <p className="text-orange-700 mb-3">{publication.message_pro}</p>
+                            {publication.action && (
+                                <p className="text-sm text-orange-600 italic">Action recommandée : {publication.action}</p>
+                            )}
+                        </div>
+                        <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+                            <p className="text-sm text-slate-600 italic">
+                                Les données disponibles ne permettent pas d'établir une projection financière fiable. Un audit approfondi est recommandé.
+                            </p>
+                        </div>
+                    </div>
+                );
+            }
+
+            // ── Construction données projection ────────────────────────────────────
+            const horizon = publication.horizon;
+            const chartData = [];
+            chartData.push({
+                label: 'Auj.',
+                sans_travaux: 0,
+                avec_travaux: Math.round(capex_net),
+                avec_travaux_low: Math.round(capex_net * 0.85),
+                avec_travaux_high: Math.round(capex_net * 1.20),
+                economies_nettes: -Math.round(capex_net),
+            });
+            let cumSans = 0, cumAvec = capex_net, cumLow = capex_net * 0.85, cumHigh = capex_net * 1.20;
+            let roiLabel = null;
+            for (let an = 1; an <= horizon; an++) {
+                const f = Math.pow(1 + taux, an);
+                const cout_an = cout_annuel * f;
+                const eco_an = economies_annuelles * f;
+                cumSans += cout_an;
+                cumAvec += cout_an - eco_an;
+                cumLow += cout_an - eco_an * 1.15;
+                cumHigh += cout_an - eco_an * 0.85;
+                const eco_nettes = Math.round(cumSans - cumAvec);
+                if (!roiLabel && eco_nettes > 0) roiLabel = `A+${an}`;
+                chartData.push({
+                    label: `A+${an}`,
+                    sans_travaux: Math.round(cumSans),
+                    avec_travaux: Math.round(cumAvec),
+                    avec_travaux_low: Math.round(cumLow),
+                    avec_travaux_high: Math.round(cumHigh),
+                    economies_nettes: eco_nettes,
+                });
+            }
+
+            // ── Construction données décomposition postes ──────────────────────────
+            const activite = c.formData.activite || 'bureaux';
+            const postesActiv = POSTES[activite] || POSTES.bureaux;
+            const postesKeys = ['chauffage', 'clim', 'ventil', 'eclairage', 'ecs', 'process', 'autres'];
+            const COULEURS_POSTES = {
+                chauffage: '#F97316', clim: '#06B6D4', ventil: '#3B82F6',
+                eclairage: '#F59E0B', ecs: '#8B5CF6', process: '#EC4899', autres: '#94A3B8',
+            };
+            const gainsParPoste = {};
+            for (const poste of postesKeys) {
+                gainsParPoste[poste] = actions.filter(a => a.poste === poste).reduce((s, a) => s + a.gain.med, 0);
+            }
+            const decompoActuel = { scenario: 'Situation actuelle' };
+            const decompoApres = { scenario: 'Après travaux' };
+            const activePostes = [];
+            for (const poste of postesKeys) {
+                const eur = cout_annuel * ((postesActiv[poste] || 0) / 100);
+                if (eur < 50) continue;
+                decompoActuel[poste] = Math.round(eur);
+                decompoApres[poste] = Math.round(eur * (1 - (gainsParPoste[poste] || 0)));
+                activePostes.push(poste);
+            }
+            const decompoData = [decompoActuel, decompoApres];
+
+            // ── Construction données ROI par action ────────────────────────────────
+            const roiData = actions
+                .filter(a => a.roi > 0 && a.roi <= 20)
+                .map(a => ({
+                    nom_court: a.nom.length > 28 ? a.nom.substring(0, 25) + '...' : a.nom,
+                    nom_complet: a.nom,
+                    roi_ans: parseFloat(a.roi.toFixed(1)),
+                    investissement: Math.round(a.capex),
+                    economie_annuelle: Math.round(a.gain_eur),
+                    cee: a.cee,
+                    couleur_roi: a.roi <= 3 ? '#059669' : a.roi <= 7 ? '#F59E0B' : '#EF4444',
+                }))
+                .sort((a, b) => a.roi_ans - b.roi_ans);
+
+            return (
+                <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 mt-8 print-page">
+                    <h2 className="text-2xl font-black text-slate-800 mb-2 border-b border-slate-100 pb-4">6. Projection Économique {horizon} ans</h2>
+
+                    {/* Badges publication */}
+                    <div className="flex flex-wrap items-center gap-2 mb-6">
+                        {publication.badge === 'excellent' && (
+                            <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-bold">ROI excellent</span>
+                        )}
+                        {publication.warning && (
+                            <span className="bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-sm font-bold">⚠ Horizon {horizon} ans</span>
+                        )}
+                        <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-full text-xs">
+                            Inflation : {tauxPct}%/an pondéré
+                            {hasGaz
+                                ? ` (élec ${(INFLATION_ENERGIE.electricite * 100).toFixed(1)}% + gaz ${(INFLATION_ENERGIE.gaz * 100).toFixed(1)}%)`
+                                : ` (élec ${(INFLATION_ENERGIE.electricite * 100).toFixed(1)}%)`}
+                        </span>
+                    </div>
+
+                    {/* ── GRAPHIQUE 1 : Projection principale ── */}
+                    <h3 className="text-lg font-bold text-slate-700 mb-2">Coûts cumulés avec et sans travaux</h3>
+                    <div className="h-[380px] w-full mb-4">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <ComposedChart data={chartData} margin={{ top: 30, right: 40, bottom: 10, left: 20 }}>
+                                <defs>
+                                    <linearGradient id="zoneEcoPro" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor="#10B981" stopOpacity={0.22} />
+                                        <stop offset="100%" stopColor="#10B981" stopOpacity={0.03} />
+                                    </linearGradient>
+                                    <linearGradient id="zoneIncertPro" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor="#94A3B8" stopOpacity={0.14} />
+                                        <stop offset="100%" stopColor="#94A3B8" stopOpacity={0.03} />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                                <XAxis dataKey="label" tick={{ fontSize: 12, fill: '#64748b' }} />
+                                <YAxis
+                                    tickFormatter={v => `${(v / 1000).toFixed(0)}k€`}
+                                    width={75}
+                                    tick={{ fontSize: 11, fill: '#64748b' }}
+                                    domain={['auto', 'auto']}
+                                />
+                                <CTooltip
+                                    formatter={(v, name) => [
+                                        `${Math.round(v).toLocaleString('fr-FR')} €`,
+                                        name === 'sans_travaux' ? 'Sans travaux (cumulé)' :
+                                            name === 'avec_travaux' ? 'Avec travaux net aides (cumulé)' : name
+                                    ]}
+                                    contentStyle={{ borderRadius: '8px', border: '1px solid #E2E8F0' }}
+                                />
+                                <CLineLegend verticalAlign="top" height={36} />
+                                {/* Zone d'incertitude (fourchette ±15% économies) */}
+                                <Area type="monotone" dataKey="avec_travaux_high" stroke="none" fill="url(#zoneIncertPro)" legendType="none" />
+                                <Area type="monotone" dataKey="avec_travaux_low" stroke="none" fill="#F8FAFC" legendType="none" />
+                                {/* Zone économies entre les deux courbes */}
+                                <Area type="monotone" dataKey="sans_travaux" stroke="none" fill="url(#zoneEcoPro)" legendType="none" />
+                                {/* Courbes principales */}
+                                <Line type="monotone" dataKey="sans_travaux" stroke="#EF4444" strokeWidth={2.5} strokeDasharray="8 4" dot={false} name="Sans travaux" />
+                                <Line type="monotone" dataKey="avec_travaux" stroke="#10B981" strokeWidth={3} dot={false} name="Avec travaux (net aides)" />
+                                {roiLabel && (
+                                    <ReferenceLine x={roiLabel} stroke="#1B4FD8" strokeDasharray="4 2" strokeWidth={1.5}
+                                        label={{ value: `✓ Rentable — ${roiLabel}`, position: 'insideTopLeft', fill: '#1B4FD8', fontSize: 11, fontWeight: '600' }}
+                                    />
+                                )}
+                            </ComposedChart>
+                        </ResponsiveContainer>
+                    </div>
+
+                    {/* CAPEX dual : brut vs net après aides */}
+                    <div className="mb-6 p-4 bg-slate-50 rounded-xl border border-slate-200">
+                        <div className="text-xs font-bold text-slate-500 uppercase mb-2">Investissement initial</div>
+                        <div className="relative h-8 bg-slate-200 rounded-lg overflow-hidden mb-2">
+                            <div className="absolute inset-0 flex items-center px-3">
+                                <span className="text-xs font-bold text-slate-600 z-10">Brut : {capex_brut.toLocaleString('fr-FR')} €</span>
+                            </div>
+                            {capex_brut > 0 && (
+                                <div className="absolute inset-y-0 left-0 bg-blue-500 rounded-lg flex items-center px-3"
+                                    style={{ width: `${Math.min(100, Math.round((capex_net / capex_brut) * 100))}%` }}>
+                                    <span className="text-xs font-bold text-white whitespace-nowrap">Net : {capex_net.toLocaleString('fr-FR')} €</span>
+                                </div>
+                            )}
+                        </div>
+                        <div className="text-xs text-slate-500">
+                            Aides estimées : –{Math.round(aides_total).toLocaleString('fr-FR')} € (TVA 5,5% + CEE min.)
+                            <span className="italic ml-1">Montants réels pouvant être supérieurs.</span>
+                        </div>
+                    </div>
+
+                    {/* Tableau récapitulatif */}
+                    <div className="bg-slate-50 border border-slate-200 rounded-xl overflow-hidden mb-8">
+                        <table className="w-full text-left text-sm text-slate-700 border-collapse">
+                            <thead>
+                                <tr className="bg-slate-100 border-b border-slate-200">
+                                    <th className="p-3 font-bold">Horizon</th>
+                                    <th className="p-3 font-bold">Sans travaux</th>
+                                    <th className="p-3 font-bold">Avec travaux</th>
+                                    <th className="p-3 font-bold text-green-700">Économies nettes</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-200 font-medium">
+                                <tr>
+                                    <td className="p-3 font-bold">Investissement net</td>
+                                    <td className="p-3 text-slate-400">—</td>
+                                    <td className="p-3 font-bold">{capex_net.toLocaleString('fr-FR')} €</td>
+                                    <td className="p-3 text-slate-400">—</td>
+                                </tr>
+                                {[3, 5, 10, horizon].filter((v, i, a) => a.indexOf(v) === i && v <= horizon).map(an => (
+                                    <tr key={an} className={an === horizon ? 'bg-green-50' : ''}>
+                                        <td className="p-3 font-bold">Cumul {an} ans</td>
+                                        <td className="p-3">{(chartData[an]?.sans_travaux || 0).toLocaleString('fr-FR')} €</td>
+                                        <td className="p-3">{(chartData[an]?.avec_travaux || 0).toLocaleString('fr-FR')} €</td>
+                                        <td className={`p-3 font-bold ${(chartData[an]?.economies_nettes || 0) > 0 ? 'text-green-700' : 'text-red-600'}`}>
+                                            {(chartData[an]?.economies_nettes || 0) > 0 ? '+' : ''}{(chartData[an]?.economies_nettes || 0).toLocaleString('fr-FR')} €
+                                        </td>
+                                    </tr>
+                                ))}
+                                <tr className="bg-slate-100 font-bold">
+                                    <td className="p-3">ROI global</td>
+                                    <td className="p-3 text-slate-400">—</td>
+                                    <td className="p-3 text-slate-400">—</td>
+                                    <td className="p-3 text-slate-800">{publication.roi_global.toFixed(1)} ans</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* ── GRAPHIQUE 2 : Décomposition postes ── */}
+                    <h3 className="text-lg font-bold text-slate-700 mb-2">Répartition du coût annuel par poste</h3>
+                    <div className="h-[260px] w-full mb-8">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={decompoData} margin={{ top: 10, right: 20, bottom: 10, left: 20 }}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
+                                <XAxis dataKey="scenario" tick={{ fontSize: 13, fontWeight: '600' }} />
+                                <YAxis tickFormatter={v => `${v.toLocaleString('fr-FR')} €`} tick={{ fontSize: 11 }} />
+                                <CTooltip formatter={(v, name) => [`${v.toLocaleString('fr-FR')} €/an`, name.charAt(0).toUpperCase() + name.slice(1)]} />
+                                {activePostes.map(poste => (
+                                    <Bar key={poste} dataKey={poste} stackId="a"
+                                        fill={COULEURS_POSTES[poste]}
+                                        name={poste.charAt(0).toUpperCase() + poste.slice(1)} />
+                                ))}
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+
+                    {/* ── GRAPHIQUE 3 : ROI par action ── */}
+                    {roiData.length > 0 && (
+                        <div>
+                            <h3 className="text-lg font-bold text-slate-700 mb-1">Retour sur investissement par action</h3>
+                            <p className="text-xs text-slate-500 mb-2">Trié par rentabilité — les actions à gauche sont prioritaires</p>
+                            <div style={{ height: roiData.length * 52 + 60 }} className="w-full">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart data={roiData} layout="vertical" margin={{ top: 10, right: 130, bottom: 10, left: 180 }}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" horizontal={false} />
+                                        <XAxis type="number"
+                                            domain={[0, Math.min(20, Math.max(...roiData.map(a => a.roi_ans)) + 1)]}
+                                            tickFormatter={v => `${v} ans`}
+                                            tick={{ fontSize: 11 }}
+                                        />
+                                        <YAxis type="category" dataKey="nom_court" tick={{ fontSize: 12 }} width={175} />
+                                        <CTooltip content={({ payload }) => {
+                                            if (!payload || !payload.length) return null;
+                                            const d = payload[0].payload;
+                                            return (
+                                                <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 8, padding: '8px 12px', fontSize: 12 }}>
+                                                    <strong>{d.nom_complet}</strong>
+                                                    <div>ROI : {d.roi_ans} ans</div>
+                                                    <div>Investissement : {d.investissement.toLocaleString('fr-FR')} €</div>
+                                                    <div>Économie/an : {d.economie_annuelle.toLocaleString('fr-FR')} €</div>
+                                                    {d.cee && <div style={{ color: '#059669', fontWeight: 'bold' }}>✓ Aide CEE possible</div>}
+                                                </div>
+                                            );
+                                        }} />
+                                        <ReferenceLine x={10} stroke="#94A3B8" strokeDasharray="4 2"
+                                            label={{ value: '10 ans', position: 'top', fontSize: 10, fill: '#94A3B8' }} />
+                                        <Bar dataKey="roi_ans" radius={[0, 4, 4, 0]}>
+                                            {roiData.map((entry, i) => (
+                                                <Cell key={i} fill={entry.couleur_roi} />
+                                            ))}
+                                            <LabelList dataKey="investissement"
+                                                position="right"
+                                                formatter={v => `${v.toLocaleString('fr-FR')} €`}
+                                                style={{ fontSize: 11, fill: '#64748B' }}
+                                            />
+                                        </Bar>
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
+                            <div className="flex flex-wrap gap-4 mt-2 text-xs text-slate-600">
+                                <span><span className="inline-block w-3 h-3 rounded mr-1" style={{ background: '#059669' }}></span>ROI &lt; 3 ans — Prioritaire</span>
+                                <span><span className="inline-block w-3 h-3 rounded mr-1" style={{ background: '#F59E0B' }}></span>ROI 3–7 ans — Recommandé</span>
+                                <span><span className="inline-block w-3 h-3 rounded mr-1" style={{ background: '#EF4444' }}></span>ROI &gt; 7 ans — Long terme</span>
+                            </div>
+                            {roiData[0]?.roi_ans <= 5 && (
+                                <div className="mt-3 text-sm text-green-700 font-semibold">
+                                    ← Commencer par : <strong>{roiData[0].nom_complet}</strong> — rentable en {roiData[0].roi_ans} ans
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Hypothèses complètes */}
+                    <details className="mt-6">
+                        <summary className="text-xs text-slate-500 cursor-pointer hover:text-slate-700">Hypothèses de calcul</summary>
+                        <ul className="mt-2 text-xs text-slate-500 space-y-1 list-disc pl-4">
+                            <li>Inflation électricité : {(INFLATION_ENERGIE.electricite * 100).toFixed(1)}%/an <em>(SOURCE_PARTIAL — à revalider annuellement)</em></li>
+                            {hasGaz && <li>Inflation gaz : {(INFLATION_ENERGIE.gaz * 100).toFixed(1)}%/an <em>(volatilité structurelle post-2021 intégrée — SOURCE_PARTIAL)</em></li>}
+                            <li>Taux moyen pondéré appliqué : {tauxPct}%/an</li>
+                            <li>Aides déduites : TVA 5,5% + CEE estimés au minimum (1,5% du CAPEX — valeur prudente)</li>
+                            <li>Fourchette d'incertitude sur économies : ±15%</li>
+                            <li>Périmètre : actions retenues uniquement</li>
+                        </ul>
+                        {detail_aides.length > 0 && (
+                            <p className="mt-2 text-xs text-slate-500 italic">
+                                <strong>CEE : </strong>{detail_aides.slice(0, 5).join(' • ')}{detail_aides.length > 5 ? ' ...' : ''}
+                            </p>
+                        )}
+                        <p className="mt-1 text-xs text-orange-600 italic">
+                            Aides estimées au minimum défendable (TVA 5,5% + CEE plancher). Les montants réels peuvent être significativement supérieurs.
+                        </p>
+                    </details>
+                </div>
+            );
+        };
+
+        const PartieImpactCO2 = ({ c }) => {
+            const eqArbres = Math.round(c.co2Evite / 25);
+            const eqVoitures = Math.round(c.co2Evite / 2100); // FIX audit-2026-03-07 — base ADEME 2 100 kg CO2/voiture/an
+
+            return (
+                <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 mt-8 print-page break-inside-avoid">
+                    <h2 className="text-2xl font-black text-slate-800 mb-6 border-b border-slate-100 pb-4">7. Impact Environnemental (CO2)</h2>
+                    <div className="grid md:grid-cols-2 gap-8 items-center mb-6">
+                        <div>
+                            <div className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-2">Bilan Carbone Actuel</div>
+                            <div className="text-4xl font-black text-slate-800 mb-6">{Math.round(c.emissionsActuelles).toLocaleString('fr-FR')} <span className="text-xl text-slate-500">kg CO2e/an</span></div>
+
+                            <div className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-2">Potentiel de Réduction</div>
+                            <div className="text-4xl font-black text-green-600 mb-2">-{Math.round(c.co2Evite).toLocaleString('fr-FR')} <span className="text-xl text-green-700">kg/an</span></div>
+                            {c.emissionsActuelles > 0 && (
+                                <div className="inline-flex bg-green-100 text-green-800 font-bold px-3 py-1 rounded-full text-sm">
+                                    -{Math.round((c.co2Evite / c.emissionsActuelles) * 100)} % d'émissions
+                                </div>
+                            )}
+                        </div>
+                        <div className="bg-slate-50 border border-slate-200 rounded-xl p-6">
+                            <h3 className="text-sm font-bold text-slate-500 uppercase mb-4 text-center">Équivalences</h3>
+                            <div className="flex justify-around items-center">
+                                <div className="text-center">
+                                    <div className="text-4xl mb-2">🌳</div>
+                                    <div className="text-2xl font-black text-slate-800">{eqArbres}</div>
+                                    <div className="text-xs font-bold text-slate-500">Arbres plantés<br />(cap. 1 an)</div>
+                                </div>
+                                <div className="w-px h-16 bg-slate-200"></div>
+                                <div className="text-center">
+                                    <div className="text-4xl mb-2">🚗</div>
+                                    <div className="text-2xl font-black text-slate-800">{eqVoitures}</div>
+                                    <div className="text-xs font-bold text-slate-500">Voitures retirées<br />(10 000 km)</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="text-xs text-slate-500 italic">Source : Base Carbone ADEME v23. Émissions liées à la phase d'usage de l'énergie (Scope 2). Non constitutif d'un Bilan GES réglementaire.</div>
+                </div>
+            );
+        };
+
+        const PartieAidesFinancieres = ({ c }) => {
+            const hasCEE = c.topActions.some(a => a.cee);
+            return (
+                <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 mt-8 print-page break-inside-avoid">
+                    <h2 className="text-2xl font-black text-slate-800 mb-6 border-b border-slate-100 pb-4">8. Plan de Financement & Aides</h2>
+                    <div className="grid md:grid-cols-3 gap-6">
+                        <div className={`p-6 border-2 rounded-xl transition-colors ${hasCEE ? 'border-blue-400 bg-blue-50' : 'border-slate-200 bg-slate-50 grayscale opacity-50'}`}>
+                            <h3 className="font-bold text-lg text-blue-900 mb-2">Certificats d'Économies d'Énergie (CEE)</h3>
+                            <p className="text-sm text-slate-600 mb-4">{hasCEE ? 'Plusieurs actions recommandées sont éligibles aux fiches standards CEE tertiaire (BAT).' : 'Aucune action de la sélection n\'est couverte par une fiche standard CEE.'}</p>
+                            {hasCEE && (
+                                <ul className="text-xs font-bold text-blue-800 space-y-1">
+                                    {c.topActions.filter(a => a.cee).map((a, i) => <li key={i}>• Fiche {a.fiche_cee}</li>)}
+                                </ul>
+                            )}
+                        </div>
+                        <div className="p-6 border-2 border-slate-200 rounded-xl bg-white shadow-sm">
+                            <h3 className="font-bold text-lg text-slate-800 mb-2">TVA à taux réduit</h3>
+                            <p className="text-sm text-slate-600 mb-4">Sous conditions de recours à un professionnel, le taux de TVA peut être réduit à 10% voire 5.5% pour les travaux d'amélioration de la qualité énergétique.</p>
+                            <span className="text-xs font-bold text-slate-500 border border-slate-300 px-2 py-1 rounded bg-slate-50">Applicable selon statut</span>
+                        </div>
+                        <div className="p-6 border-2 border-slate-200 rounded-xl bg-white shadow-sm">
+                            <h3 className="font-bold text-lg text-slate-800 mb-2">MaPrimeRénov' Tertiaire</h3>
+                            <p className="text-sm text-slate-600 mb-4">Dispositif spécifique pour les TPE/PME (sur certains postes d'isolation ou de chauffage), sous conditions d'éligibilité strictes à valider.</p>
+                            <span className="text-xs font-bold text-slate-500 border border-slate-300 px-2 py-1 rounded bg-slate-50">À vérifier (CA, effectif)</span>
+                        </div>
+                    </div>
+                    {/* Card estimation investissement net */}
+                    <div className="mt-6 bg-slate-800 text-white rounded-xl p-6">
+                        <h3 className="font-bold text-lg text-slate-200 mb-4 flex items-center gap-2"><Icon icon="solar:calculator-bold" className="text-blue-400" /> Estimation investissement net</h3>
+                        <div className="space-y-2 text-sm font-mono mb-4">
+                            <div className="flex justify-between">
+                                <span className="text-slate-400">Investissement brut total :</span>
+                                <span className="font-bold text-white">{c.totalCapex.toLocaleString('fr-FR')} €</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-slate-400">Économie TVA 5,5% vs 20% (indicatif) :</span>
+                                <span className="font-bold text-green-400">-{Math.round(c.totalCapex * (0.20 - 0.055) / 1.20).toLocaleString('fr-FR')} €</span>
+                            </div>
+                            <div className="border-t border-slate-600 pt-2 flex justify-between">
+                                <span className="text-slate-300 font-semibold">Reste à charge estimé :</span>
+                                <span className="font-black text-blue-300 text-base">{Math.round(c.totalCapex - c.totalCapex * (0.20 - 0.055) / 1.20).toLocaleString('fr-FR')} €</span>
+                            </div>
+                        </div>
+                        <p className="text-xs text-slate-500">→ À affiner avec les devis réels et chiffrages CEE. Les CEE sont obtenus avant signature du devis.</p>
+                    </div>
+
+                    <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-sm font-medium text-yellow-800 flex gap-3 items-start">
+                        <span className="text-xl shrink-0">⚠️</span>
+                        <span>L'obtention des aides CEE et de la plupart des primes nécessite l'intervention d'une entreprise qualifiée <strong>RGE</strong> valide pour le domaine de travaux concerné, à la date de signature du devis.</span>
+                    </div>
+                </div>
+            );
+        };
+
+        const PartieIntervenants = ({ c }) => {
+            const intervenants = [...new Set(c.topActions.map(a => a.intervenant))];
+
+            // Build 3-horizon table dynamically from actions
+            const horizons = [
+                { label: 'Immédiat < 3 mois', color: 'bg-green-50 border-green-200', textColor: 'text-green-800', actions: c.topActions.filter(a => a.roi <= 3) },
+                { label: 'Court terme 3–12 mois', color: 'bg-blue-50 border-blue-200', textColor: 'text-blue-800', actions: c.topActions.filter(a => a.roi > 3 && a.roi <= 7) },
+                { label: 'Moyen terme 1–3 ans', color: 'bg-amber-50 border-amber-200', textColor: 'text-amber-800', actions: c.topActions.filter(a => a.roi > 7) },
+            ];
+
+            return (
+                <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 mt-8 print-page break-inside-avoid">
+                    <h2 className="text-2xl font-black text-slate-800 mb-6 border-b border-slate-100 pb-4">9. Intervenants & Planning d'Action</h2>
+
+                    {/* Planning 3 horizons */}
+                    <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2"><Icon icon="solar:calendar-bold" className="text-blue-600" /> Planning par horizon</h3>
+                    <div className="overflow-x-auto mb-8">
+                        <table className="w-full text-sm border-collapse">
+                            <thead>
+                                <tr className="bg-slate-50 border-y border-slate-200">
+                                    <th className="p-3 font-bold text-left text-slate-700">Horizon</th>
+                                    <th className="p-3 font-bold text-left text-slate-700">Actions</th>
+                                    <th className="p-3 font-bold text-right text-slate-700">Investissement</th>
+                                    <th className="p-3 font-bold text-right text-slate-700">Économies/an</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {horizons.map((h, hi) => {
+                                    if (h.actions.length === 0) return null;
+                                    const invest = h.actions.reduce((s, a) => s + a.capex, 0);
+                                    const eco = h.actions.reduce((s, a) => s + a.gain_eur, 0);
+                                    return (
+                                        <tr key={hi} className={`border-b border-slate-100 ${h.color}`}>
+                                            <td className={`p-3 font-bold ${h.textColor}`}>{h.label}</td>
+                                            <td className="p-3 text-slate-700">{h.actions.map(a => a.nom).join(' · ')}</td>
+                                            <td className="p-3 text-right font-semibold text-slate-700">{invest.toLocaleString('fr-FR')} €</td>
+                                            <td className="p-3 text-right font-bold text-green-600">+{Math.round(eco).toLocaleString('fr-FR')} €/an</td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* Corps de métiers */}
+                    <div className="p-5 border border-slate-200 rounded-xl bg-blue-50/50 flex items-start gap-4 mb-6">
+                        <div className="text-3xl shrink-0">🏗️</div>
+                        <div>
+                            <h3 className="font-bold text-blue-900 text-lg mb-1">Corps de métiers requis</h3>
+                            <ul className="list-disc pl-5 text-slate-700 font-medium space-y-1 text-sm">
+                                {intervenants.map((interv, i) => (
+                                    <li key={i}>{interv} {c.topActions.find(a => a.intervenant === interv && a.rge_requis) ? <span className="text-xs font-bold text-blue-700 ml-1">[RGE requis — vérif : rge-ademe.fr]</span> : ''}</li>
+                                ))}
+                            </ul>
+                        </div>
+                    </div>
+
+                    {/* CTA */}
+                    <div className="text-center p-6 bg-slate-900 rounded-xl">
+                        <p className="text-slate-300 text-sm mb-4">Besoin d'être accompagné dans la mise en œuvre ?</p>
+                        <button className="pro-btn bg-blue-600 text-white hover:bg-blue-700 mx-auto">
+                            <Icon icon="solar:user-speak-bold" /> Être mis en relation avec un expert certifié →
+                        </button>
+                    </div>
+                </div>
+            );
+        };
+
+        const PartieContexteReglementaire = ({ c }) => {
+            const surface = parseFloat(c.formData?.surface || 100);
+            const isAssujetti = surface >= 1000;
+            const isProche = surface >= 800 && surface < 1000;
+            const objectif = c.formData?.objectif_principal || '';
+            const showSection = isAssujetti || isProche || objectif === 'conformite_reglementaire';
+
+            if (!showSection) return null;
+
+            const objectifAtteint2030 = c.intensity <= (c.ref?.med * 0.6);
+
+            return (
+                <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 mt-8 print-page break-inside-avoid">
+                    <h2 className="text-2xl font-black text-slate-800 mb-6 border-b border-slate-100 pb-4 flex items-center gap-3">
+                        <Icon icon="solar:shield-warning-bold" className="text-red-600 text-3xl" />
+                        10. Contexte Réglementaire (Décret Tertiaire)
+                    </h2>
+
+                    {isAssujetti ? (
+                        <div className="p-6 bg-red-50 border border-red-200 rounded-xl mb-6">
+                            <h3 className="font-bold text-red-900 text-lg mb-3">Votre surface ({surface} m²) vous assujettit au Décret Tertiaire (DEET).</h3>
+                            <p className="text-slate-700 mb-4 leading-relaxed font-medium">Vous devez déclarer vos consommations annuelles sur la plateforme OPERAT et atteindre des objectifs de réduction décennaux.</p>
+                            <div className="grid md:grid-cols-3 gap-4 mb-4">
+                                {[{ yr: '2030', val: '-40%' }, { yr: '2040', val: '-50%' }, { yr: '2050', val: '-60%' }].map(o => (
+                                    <div key={o.yr} className="bg-white p-4 rounded-lg border border-red-100 text-center">
+                                        <div className="text-sm font-bold text-red-800 mb-1">Objectif {o.yr}</div>
+                                        <div className="text-2xl font-black text-slate-800">{o.val}</div>
+                                        <div className="text-xs text-slate-500 uppercase mt-1">vs année de réf.</div>
+                                    </div>
+                                ))}
+                            </div>
+                            <p className="text-sm text-red-800 font-semibold italic">*Ou atteinte d'un seuil en valeur absolue selon la catégorie d'activité.</p>
+                        </div>
+                    ) : (
+                        <div className="p-6 bg-amber-50 border border-amber-200 rounded-xl mb-6">
+                            <h3 className="font-bold text-amber-900 text-lg mb-2">
+                                {isProche ? `Votre bâtiment (${surface} m²) est proche du seuil de 1 000 m² du Décret Tertiaire.` : `Votre bâtiment (${surface} m²) est en dessous du seuil du Décret Tertiaire (1 000 m²).`}
+                            </h3>
+                            <p className="text-slate-700 text-sm leading-relaxed">
+                                À titre indicatif, votre intensité actuelle de <strong>{c.intensity} kWh/m²/an</strong> {objectifAtteint2030 ? 'atteint déjà' : "n'atteint pas encore"} l'objectif 2030 pour votre activité.
+                                {isProche && " Un agrandissement futur pourrait vous soumettre à l'obligation."}
+                            </p>
+                        </div>
+                    )}
+
+                    <div className="grid md:grid-cols-2 gap-4 text-sm">
+                        <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl">
+                            <h4 className="font-bold text-slate-800 mb-2 flex items-center gap-2"><Icon icon="solar:database-bold" className="text-blue-600" /> Déclaration OPERAT</h4>
+                            <p className="text-slate-600 leading-relaxed">{isAssujetti ? "La déclaration annuelle sur operat.ademe.fr est obligatoire. Ce rapport ne s'y substitue pas." : "Si votre bâtiment dépasse 1 000 m², la déclaration OPERAT sera obligatoire."}</p>
+                        </div>
+                        <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl">
+                            <h4 className="font-bold text-slate-800 mb-2 flex items-center gap-2"><Icon icon="solar:buildings-2-bold" className="text-indigo-600" /> Audit énergétique réglementaire</h4>
+                            <p className="text-slate-600 leading-relaxed">Les grandes entreprises (&gt; 250 salariés ou &gt; 50 M€ CA) sont soumises à un audit réglementaire tous les 4 ans (art. L.233-1 Code de l'énergie).</p>
+                        </div>
+                    </div>
+
+                    <div className="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-lg text-xs text-blue-800 font-medium">
+                        L'Indice DiagTertiaire est un indicateur d'orientation interne — distinct de la classification OPERAT réglementaire et non substituable à une déclaration officielle.
+                    </div>
+                </div>
+            );
+        };
+
+        const PartieAnnexeTechnique = ({ c }) => {
+            const [isOpen, setIsOpen] = useState(false);
+            const formatVal = (v) => v === undefined || v === null || v === '' ? 'Non renseigné' : String(v);
+            return (
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 mt-8 print-page break-inside-avoid overflow-hidden">
+                    <button
+                        onClick={() => setIsOpen(!isOpen)}
+                        className="w-full p-8 flex items-center justify-between hover:bg-slate-50 transition-colors no-print"
+                    >
+                        <h2 className="text-2xl font-black text-slate-800">11. Annexe Technique</h2>
+                        <Icon icon={isOpen ? "solar:alt-arrow-up-bold" : "solar:alt-arrow-down-bold"} className="text-slate-400 text-2xl" />
+                    </button>
+                    {/* Always visible in print — FIX #F audit-2026-03-07 — inline style supprimé (écrasait @media print) */}
+                    <h2 className="text-2xl font-black text-slate-800 p-8 pb-0 hidden print-show">11. Annexe Technique</h2>
+                    <div className={isOpen ? 'block' : 'hidden print-show'} style={{}}>
+                        <div className="p-8 pt-0 border-t border-slate-100">
+                            <div className="grid md:grid-cols-2 gap-x-12 gap-y-8">
+                                <div>
+                                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4 border-b pb-2">Identité & Bâtiment</h3>
+                                    <table className="w-full text-sm text-slate-700 font-medium">
+                                        <tbody>
+                                            <tr className="border-b border-slate-100"><td className="py-2">Client</td><td className="py-2 font-bold text-right">{formatVal(c.formData.clientName)}</td></tr>
+                                            <tr className="border-b border-slate-100"><td className="py-2">Contact</td><td className="py-2 font-bold text-right">{formatVal(c.formData.contact_name)}</td></tr>
+                                            <tr className="border-b border-slate-100"><td className="py-2">Activité</td><td className="py-2 font-bold text-right">{c.activite}</td></tr>
+                                            <tr className="border-b border-slate-100"><td className="py-2">Surface (SU)</td><td className="py-2 font-bold text-right">{formatVal(c.formData.surface)} m²</td></tr>
+                                            <tr className="border-b border-slate-100"><td className="py-2">Année const.</td><td className="py-2 font-bold text-right">{formatVal(c.formData.age_batiment)}</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div>
+                                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4 border-b pb-2">Équipements & Énergie</h3>
+                                    <table className="w-full text-sm text-slate-700 font-medium">
+                                        <tbody>
+                                            <tr className="border-b border-slate-100"><td className="py-2">Énergie princip.</td><td className="py-2 font-bold text-right">{formatVal(c.formData.energie_principale)}</td></tr>
+                                            <tr className="border-b border-slate-100"><td className="py-2">Chauffage</td><td className="py-2 font-bold text-right">{formatVal(c.formData.chauffage_type)}</td></tr>
+                                            <tr className="border-b border-slate-100"><td className="py-2">Âge chauffage</td><td className="py-2 font-bold text-right">{formatVal(c.formData.chauffage_age)}</td></tr>
+                                            <tr className="border-b border-slate-100"><td className="py-2">Ventilation</td><td className="py-2 font-bold text-right">{formatVal(c.formData.vmc_type)}</td></tr>
+                                            <tr className="border-b border-slate-100"><td className="py-2">Éclairage</td><td className="py-2 font-bold text-right">{formatVal(c.formData.eclairage_type)}</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            {/* Hypothèses de calcul */}
+                            <div className="mt-8 border-t border-slate-100 pt-6">
+                                <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-3">Hypothèses de calcul</h3>
+                                <div className="grid md:grid-cols-2 gap-4 text-sm text-slate-600 font-medium">
+                                    <div>Benchmark retenu : médiane {c.activite} = {c.ref?.med} kWh/m²/an (ADEME ECNA 2022)</div>
+                                    <div>Prix énergie : {c.formData?.energie_principale === 'gaz' ? '0,105' : '0,196'} €/kWh (CRE T3 2024)</div>
+                                    <div>Facteurs CO2 : Base Carbone ADEME v23</div>
+                                    <div>Inflation projetée : 3%/an</div>
+                                </div>
+                                <div className="mt-3 p-3 bg-slate-50 rounded-lg text-xs text-slate-500 font-mono">
+                                    ID calcul : {c.id} | Généré le {c.date} | Version : pro-alpha-1
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const PartiePiedDePage = ({ c }) => {
+            const proLogoName = localStorage.getItem('proLogoName') || 'DiagTertiaire Pro';
+            return (
+                <div className="bg-slate-900 text-white p-12 rounded-2xl shadow-sm mt-8 text-center print-page break-inside-avoid">
+                    <div className="w-16 h-16 bg-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-3xl mx-auto mb-6"><Icon icon="solar:buildings-2-bold" /></div>
+                    <h2 className="text-3xl font-black text-white mb-2">{proLogoName}</h2>
+                    <p className="text-slate-400 text-lg mb-8 max-w-xl mx-auto">Votre partenaire de confiance pour la transition énergétique de votre patrimoine immobilier.</p>
+                    <div className="inline-block bg-slate-800 border border-slate-700 rounded-xl p-6 text-left">
+                        <h3 className="font-bold text-blue-400 mb-2 uppercase tracking-widest text-sm">Contactez votre expert référent</h3>
+                        <div className="text-lg font-bold mb-1">M. Jean Dupont</div>
+                        <div className="text-slate-400">Ingénieur Thermicien | {proLogoName}</div>
+                        <div className="mt-4 flex gap-4 font-mono text-sm">
+                            <span>📞 01 23 45 67 89</span>
+                            <span>✉️ expert@{proLogoName.toLowerCase().replace(/\s/g, '')}.fr</span>
+                        </div>
+                    </div>
+                    <div className="mt-8 text-xs text-slate-600 font-mono">
+                        Rapport généré par {proLogoName} — {c?.date || new Date().toLocaleDateString()} — ID : {c?.id || '—'}
+                        <br />Pré-diagnostic indicatif — non substituable à un audit réglementaire
+                    </div>
+                </div>
+            );
+        };
+
+        const ProReport = ({ cId, setPage }) => {
+            // Load raw case from multiple sources
+            const rawCase = useMemo(() => {
+                // 1. Check MOCK cases
+                let rc = MOCK_PRO_CASES_V2.find(x => x.id === cId);
+                // 2. Check localStorage proCasesRaw
+                if (!rc) {
+                    try {
+                        const stored = JSON.parse(localStorage.getItem('proCasesRaw') || '[]');
+                        rc = stored.find(x => x.id === cId);
+                    } catch (e) { }
+                }
+                // 3. Fall back to last generated report
+                if (!rc) {
+                    try {
+                        const latest = JSON.parse(localStorage.getItem('newDiagnosticLatestReport') || '{}');
+                        if (latest && latest.formData) rc = latest;
+                    } catch (e) { }
+                }
+                return rc || null;
+            }, [cId]);
+
+            // Compute all report fields from formData
+            const c = useMemo(() => {
+                if (!rawCase || !rawCase.formData) return null;
+                const computed = ENGINE_PRO.compute(rawCase.formData);
+                // Save to localStorage for sharing
+                const reportToSave = {
+                    id: rawCase.id || computed.id,
+                    timestamp: Date.now(),
+                    formData: rawCase.formData,
+                    version: 'pro-alpha-1',
+                };
+                try { localStorage.setItem('newDiagnosticLatestReport', JSON.stringify(reportToSave)); } catch (e) { }
+                return {
+                    ...computed,
+                    id: rawCase.id || computed.id,
+                    date: rawCase.createdAt || computed.date,
+                    projectName: rawCase.projectName || rawCase.formData?.clientName || 'Diagnostic',
+                    formData: rawCase.formData,
+                    activite: computed.formData?.activite || computed.activite || 'bureaux',
+                };
+            }, [rawCase]);
+
+            const isProAuth = localStorage.getItem('proAuth') === 'true';
+
+            if (!c) return (
+                <div className="p-8 text-center">
+                    <div className="text-red-500 font-bold text-lg mb-4">Rapport introuvable.</div>
+                    <p className="text-slate-500 mb-6">Ce dossier n'existe pas ou a été supprimé.</p>
+                    {setPage && <button onClick={() => setPage('cases')} className="pro-btn pro-btn-secondary">← Retour aux dossiers</button>}
+                </div>
+            );
+
+            const handlePrintPdf = () => {
+                const originalTitle = document.title;
+                document.title = `Rapport_${c.formData?.clientName || 'Pro'}_${c.id}`;
+                window.print();
+                document.title = originalTitle;
+            };
+
+            const handleShare = () => {
+                // FIX #G audit-2026-03-07 — strip pro-only fields before encoding in client URL (data leak)
+                const { contact_telephone, telephone, contact_email, email, contact_nom, ...publicFormData } = c.formData || {};
+                const shareData = { id: c.id, date: c.date, formData: publicFormData, projectName: c.projectName };
+                let encoded;
+                try { encoded = btoa(unescape(encodeURIComponent(JSON.stringify(shareData)))); } catch (e) { encoded = btoa(JSON.stringify(shareData)); }
+                const url = window.location.href.split('#')[0] + '#report=' + encoded;
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(url).then(() => alert('Lien client copié dans le presse-papiers !')).catch(() => prompt('Copiez ce lien :', url));
+                } else {
+                    prompt('Copiez ce lien pour le partager avec votre client :', url);
+                }
+            };
+
+            return (
+                <div className="p-4 md:p-8 max-w-5xl mx-auto">
+                    {/* Barre navigation + actions */}
+                    <div className="no-print flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 bg-white p-4 rounded-xl border border-slate-200 shadow-sm sticky top-4 z-40">
+                        {isProAuth ? (
+                            <button onClick={() => setPage('cases')} className="inline-flex items-center gap-2 text-slate-500 hover:text-blue-600 font-bold px-4 py-2 hover:bg-slate-50 rounded-lg transition-colors">
+                                <Icon icon="solar:round-alt-arrow-left-bold" className="text-xl" /> Retour Dossiers Pro
+                            </button>
+                        ) : (
+                            <div className="font-bold text-slate-600 px-4 py-2">Espace Client — Vue partagée</div>
+                        )}
+                        <div className="flex gap-2">
+                            <button onClick={handlePrintPdf} className="pro-btn bg-slate-800 text-white hover:bg-slate-700">
+                                <Icon icon="solar:printer-bold" /> Télécharger PDF
+                            </button>
+                            {isProAuth && (
+                                <button onClick={handleShare} className="pro-btn pro-btn-primary">
+                                    <Icon icon="solar:link-bold" /> Partager avec le client
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Dashboard qualification — pro seulement, jamais dans URL partagée */}
+                    {isProAuth && <DashboardQualificationPro c={c} formData={c.formData} />}
+
+                    {/* Rapport complet 12 parties */}
+                    <div id="full-report-content" className="prose max-w-none">
+                        <PartieEnTete c={c} />
+                        <PartieSyntheseExecutive c={c} />
+                        <PartieBenchmarkSectoriel c={c} />
+                        <PartieRepartitionPostes c={c} />
+                        <PartieActionsRecommandees c={c} />
+                        <PartieProjection10ans c={c} />
+                        <PartieImpactCO2 c={c} />
+                        <PartieAidesFinancieres c={c} />
+                        <PartieIntervenants c={c} />
+                        <PartieContexteReglementaire c={c} />
+                        <PartieAnnexeTechnique c={c} />
+                        <PartiePiedDePage c={c} />
+                    </div>
+                </div>
+            );
         };
 
         /* ===== SETTINGS PRO (Paramétrages SaaS avec Aperçu Marque Blanche et sans tirets) ===== */
@@ -4285,7 +5487,7 @@
 
             // Shared report view — no auth required, no sidebar
             if (sharedReport) {
-                return <ProReport cId={sharedReport.id || 'shared'} sharedCase={sharedReport} setPage={() => { window.location.hash = ''; setSharedReport(null); }} />;
+                return <ProReport cId="shared" setPage={() => { window.location.hash = ''; setSharedReport(null); }} />;
             }
 
             if (!auth) {
@@ -4311,8 +5513,8 @@
                 if (page === 'new') return <ProNewDiag setPage={setPage} />;
                 if (page === 'settings') return <ProSettings />;
                 if (page === 'plans') return <ProPlans onDemoClick={openDemoModal} />;
-                if (page.startsWith('case-report-')) return <ProReport cId={page.replace('case-report-', '')} setPage={setPage} />;
-                if (page.startsWith('report-')) return <ProReport cId={page.replace('report-', '')} setPage={setPage} />;
+                if (page.startsWith('case-report-')) return <ProCaseReport caseId={page.replace('case-report-', '')} setPage={setPage} />;
+                if (page.startsWith('report-')) return <ProReport cId={page.replace('report-', '')} setPage={setPage} openDemo={openDemoModal} />;
                 return <ProDashboard setPage={setPage} openDemo={openDemoModal} />;
             };
 
@@ -4355,5 +5557,3 @@
 </body>
 
 </html>
-
-

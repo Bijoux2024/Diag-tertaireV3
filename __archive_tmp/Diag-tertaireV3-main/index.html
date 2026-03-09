@@ -45,22 +45,6 @@
             --radius-md: 12px;
             --radius-lg: 16px;
             --radius-xl: 20px;
-            --site-gutter: clamp(1rem, 3vw, 1.5rem);
-            --nav-height-mobile: 64px;
-            --nav-height-desktop: 74px;
-        }
-
-        *,
-        *::before,
-        *::after {
-            box-sizing: border-box;
-        }
-
-        html,
-        body {
-            max-width: 100%;
-            overflow-x: clip;
-            -webkit-text-size-adjust: 100%;
         }
 
         body {
@@ -72,27 +56,6 @@
             font-size: 16px;
             line-height: 1.6;
             letter-spacing: -0.3px;
-        }
-
-        img,
-        svg,
-        video,
-        canvas {
-            max-width: 100%;
-            height: auto;
-        }
-
-        button,
-        a,
-        input,
-        select,
-        textarea {
-            touch-action: manipulation;
-        }
-
-        :focus-visible {
-            outline: 2px solid rgba(29, 78, 216, 0.45);
-            outline-offset: 2px;
         }
 
         @media (max-width: 768px) {
@@ -282,7 +245,6 @@
             color: white;
             border-radius: 12px;
             padding: 1.125rem 2.5rem;
-            min-height: 44px;
             font-size: 1.0625rem;
             font-weight: 700;
             letter-spacing: -0.2px;
@@ -454,85 +416,6 @@
 
         .new-diagnostic-report .report-muted {
             color: #475569;
-        }
-
-        @media (max-width: 1023px) {
-            .btn-primary {
-                padding: 0.95rem 1.5rem;
-                font-size: 1rem;
-            }
-
-            .h-\[74px\] {
-                height: var(--nav-height-mobile) !important;
-            }
-        }
-
-        @media (min-width: 768px) {
-            .h-\[74px\] {
-                height: var(--nav-height-desktop) !important;
-            }
-        }
-
-        @media (max-width: 767px) {
-            .chip {
-                font-size: 11px;
-                padding: 4px 9px;
-            }
-
-            .new-diagnostic-form {
-                padding-top: 1.5rem !important;
-                padding-bottom: 2rem !important;
-                padding-inline: var(--site-gutter) !important;
-            }
-
-            .new-diagnostic-report-shell {
-                padding-top: 0 !important;
-            }
-
-            .new-diagnostic-report-shell .max-w-5xl,
-            .new-diagnostic-report-shell .max-w-4xl {
-                padding-inline: var(--site-gutter) !important;
-            }
-
-            .h-\[320px\] {
-                height: clamp(220px, 60vw, 320px) !important;
-            }
-
-            nav .max-w-6xl,
-            footer .max-w-6xl {
-                padding-inline: var(--site-gutter) !important;
-            }
-
-            footer .grid {
-                gap: 1.5rem !important;
-            }
-
-            footer .pt-6.border-t {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            details.group {
-                border-radius: 12px !important;
-            }
-
-            .new-diagnostic-form input,
-            .new-diagnostic-form select,
-            .new-diagnostic-form textarea,
-            .new-diagnostic-report input,
-            .new-diagnostic-report select,
-            .new-diagnostic-report textarea {
-                min-height: 44px;
-            }
-
-            .new-diagnostic-report .report-card.p-8 {
-                padding: 1rem !important;
-            }
-
-            .new-diagnostic-report .grid.grid-cols-3,
-            .new-diagnostic-report .grid.grid-cols-2 {
-                grid-template-columns: 1fr !important;
-            }
         }
     </style>
 </head>
@@ -981,7 +864,7 @@
         const PageHome = ({ navigate }) => (
             <div className="fade-in">
                 {/* HERO — VERROUILLAGE FINAL */}
-                <section className="relative w-full overflow-hidden" style={{ paddingTop: 'clamp(4.75rem, 10vw, 8rem)', paddingBottom: 'clamp(4.25rem, 9vw, 8rem)', background: '#FFFFFF' }}>
+                <section className="relative w-full overflow-hidden" style={{ paddingTop: '8rem', paddingBottom: '8rem', background: '#FFFFFF' }}>
                     {/* GLOW — halos structurés */}
                     <div className="absolute inset-0 pointer-events-none z-0" aria-hidden="true">
                         <div className="absolute top-0 left-0"
@@ -1006,7 +889,7 @@
                                 </div>
 
                                 {/* Titre — signature */}
-                                <h1 style={{ fontSize: 'clamp(1.95rem, 8.2vw, 3.75rem)', lineHeight: 1.04, fontWeight: 800, letterSpacing: '-1.5px', color: '#0A1929', marginBottom: '1.875rem', maxWidth: '30rem' }}>
+                                <h1 style={{ fontSize: 'clamp(2.35rem, 5.8vw, 3.75rem)', lineHeight: 1.02, fontWeight: 800, letterSpacing: '-2.2px', color: '#0A1929', marginBottom: '1.875rem', maxWidth: '30rem' }}>
                                     Votre local tertiaire consomme-t-il trop ?
                                 </h1>
 
@@ -1356,105 +1239,71 @@
                     </div>
                 </section>
 
-                {/* SECTION PRO ORIENTEE USAGES METIER */}
-                <section style={{ padding: '4.5rem 0 5.5rem', background: '#F8FAFC', borderTop: '1px solid #E2E8F0' }}>
+                {/* NOUVELLE SECTION B2B ORIENTÉE USAGES (Itération 3) */}
+                <section style={{ padding: '5rem 0 6rem', background: '#F8FAFC', borderTop: '1px solid #E2E8F0' }}>
                     <div className="max-w-6xl mx-auto px-4">
-                        <div className="text-center mb-10 md:mb-12">
-                            <div style={{ display: 'inline-flex', padding: '0.375rem 1rem', background: 'white', border: '1px solid #E2E8F0', borderRadius: '999px', marginBottom: '1.1rem', alignItems: 'center', gap: '8px', boxShadow: '0 2px 4px rgba(15,23,42,0.02)' }}>
+                        <div className="text-center mb-12">
+                            <div style={{ display: 'inline-flex', padding: '0.375rem 1rem', background: 'white', border: '1px solid #E2E8F0', borderRadius: '999px', marginBottom: '1.25rem', alignItems: 'center', gap: '8px', boxShadow: '0 2px 4px rgba(15,23,42,0.02)' }}>
                                 <Icon icon="solar:buildings-2-bold" style={{ color: '#1D4ED8', fontSize: '1rem' }} />
                                 <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Espace Professionnel</span>
                             </div>
-                            <h2 style={{ fontSize: 'clamp(1.6rem, 4vw, 2.35rem)', fontWeight: 800, color: '#0C1D30', marginBottom: '1rem', letterSpacing: '-0.45px', lineHeight: 1.2 }}>
-                                Un poste de pilotage pour vos dossiers énergétiques tertiaires
+                            <h2 style={{ fontSize: 'clamp(1.75rem, 4vw, 2.5rem)', fontWeight: 800, color: '#0C1D30', marginBottom: '1.25rem', letterSpacing: '-0.5px' }}>
+                                Un espace pro pour qualifier, cadrer et suivre vos dossiers
                             </h2>
-                            <p style={{ fontSize: '1rem', color: '#4B5B71', maxWidth: '44rem', margin: '0 auto', lineHeight: 1.7 }}>
-                                Vous gardez une lecture claire des enjeux opérationnels, économiques et commerciaux, de la qualification initiale jusqu'au partage du rapport.
+                            <p style={{ fontSize: '1.125rem', color: '#4B5B71', maxWidth: '42rem', margin: '0 auto', lineHeight: 1.65 }}>
+                                Une interface conçue pour structurer vos premiers échanges, visualiser vos dossiers et partager des pré-diagnostics plus crédibles.
                             </p>
                         </div>
 
-                        <div className="grid lg:grid-cols-2 gap-6 mb-8">
-                            <div style={{ background: 'white', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 4px 12px rgba(15,23,42,0.06)', padding: '1.5rem' }}>
-                                <h3 style={{ fontSize: '1.0625rem', fontWeight: 700, color: '#0C1D30', marginBottom: '0.9rem' }}>Cas d'usage cabinet</h3>
-                                <ul style={{ display: 'grid', gap: '0.7rem' }}>
-                                    {[
-                                        "Qualifier rapidement un prospect avant proposition d'audit.",
-                                        "Prioriser les dossiers à fort potentiel d'économies.",
-                                        "Structurer les relances avec un statut clair par dossier.",
-                                        "Préparer un échange client avec une synthèse exploitable."
-                                    ].map((text, i) => (
-                                        <li key={i} style={{ display: 'flex', gap: '0.55rem', alignItems: 'flex-start', color: '#334155', fontSize: '0.9rem', lineHeight: 1.65 }}>
-                                            <Icon icon="solar:check-circle-bold" style={{ color: '#1D4ED8', fontSize: '1rem', marginTop: '2px', flexShrink: 0 }} />
-                                            <span>{text}</span>
-                                        </li>
-                                    ))}
-                                </ul>
+                        <div className="grid md:grid-cols-3 gap-6 mb-12">
+                            {/* Bénéfice 1 */}
+                            <div style={{ background: 'white', padding: '2rem', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)', transition: 'transform 0.2s, box-shadow 0.2s' }} className="hover:-translate-y-1 hover:shadow-lg">
+                                <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.5rem' }}>
+                                    <Icon icon="solar:folder-with-files-bold-duotone" style={{ fontSize: '1.5rem', color: '#1D4ED8' }} />
+                                </div>
+                                <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0C1D30', marginBottom: '0.75rem' }}>Portefeuille de dossiers</h3>
+                                <p style={{ fontSize: '0.9375rem', color: '#475569', lineHeight: 1.6 }}>Centralisez vos cas, suivez leur statut et identifiez les dossiers à relancer.</p>
                             </div>
 
-                            <div style={{ background: 'white', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 4px 12px rgba(15,23,42,0.06)', padding: '1.5rem' }}>
-                                <h3 style={{ fontSize: '1.0625rem', fontWeight: 700, color: '#0C1D30', marginBottom: '0.9rem' }}>Ce que vous pilotez au quotidien</h3>
-                                <div className="grid grid-cols-2 gap-3">
-                                    {[
-                                        { title: 'Portefeuille', value: 'Dossiers actifs' },
-                                        { title: 'Statuts', value: 'Nouveau • Projet • Clos' },
-                                        { title: 'Performance', value: 'Scores A à E' },
-                                        { title: 'Économie', value: 'Ordres de grandeur €/an' }
-                                    ].map((item, i) => (
-                                        <div key={i} style={{ border: '1px solid #E2E8F0', background: '#F8FAFC', borderRadius: '12px', padding: '0.8rem' }}>
-                                            <p style={{ fontSize: '0.69rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700, marginBottom: '0.2rem' }}>{item.title}</p>
-                                            <p style={{ fontSize: '0.88rem', color: '#0F172A', fontWeight: 600, lineHeight: 1.5 }}>{item.value}</p>
-                                        </div>
-                                    ))}
+                            {/* Bénéfice 2 */}
+                            <div style={{ background: 'white', padding: '2rem', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)', transition: 'transform 0.2s, box-shadow 0.2s' }} className="hover:-translate-y-1 hover:shadow-lg">
+                                <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.5rem' }}>
+                                    <Icon icon="solar:document-text-bold-duotone" style={{ fontSize: '1.5rem', color: '#1D4ED8' }} />
                                 </div>
+                                <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0C1D30', marginBottom: '0.75rem' }}>Rapports partageables</h3>
+                                <p style={{ fontSize: '0.9375rem', color: '#475569', lineHeight: 1.6 }}>Générez des restitutions plus structurées pour cadrer une discussion avec un client ou un prestataire.</p>
                             </div>
-                        </div>
 
-                        <div className="grid md:grid-cols-3 gap-4 md:gap-5 mb-10">
-                            {[
-                                {
-                                    icon: 'solar:folder-with-files-bold-duotone',
-                                    title: 'Qualification structurée',
-                                    text: "Chaque dossier conserve ses identifiants, son contexte, ses hypothèses et son niveau d'avancement."
-                                },
-                                {
-                                    icon: 'solar:document-text-bold-duotone',
-                                    title: 'Restitution crédible',
-                                    text: "Les rapports servent de support décisionnel pour cadrer les prochaines étapes avec vos clients."
-                                },
-                                {
-                                    icon: 'solar:users-group-two-rounded-bold-duotone',
-                                    title: 'Usage équipe',
-                                    text: "Vous préparez un fonctionnement multi-utilisateurs, avec branding cabinet et logique de portefeuille."
-                                }
-                            ].map((item, i) => (
-                                <div key={i} style={{ background: 'white', padding: '1.4rem', borderRadius: '14px', border: '1px solid #E2E8F0', boxShadow: '0 3px 10px rgba(15,23,42,0.05)' }}>
-                                    <div style={{ width: '44px', height: '44px', borderRadius: '11px', background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem' }}>
-                                        <Icon icon={item.icon} style={{ fontSize: '1.35rem', color: '#1D4ED8' }} />
-                                    </div>
-                                    <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#0C1D30', marginBottom: '0.55rem' }}>{item.title}</h3>
-                                    <p style={{ fontSize: '0.88rem', color: '#475569', lineHeight: 1.65 }}>{item.text}</p>
+                            {/* Bénéfice 3 */}
+                            <div style={{ background: 'white', padding: '2rem', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)', transition: 'transform 0.2s, box-shadow 0.2s' }} className="hover:-translate-y-1 hover:shadow-lg">
+                                <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.5rem' }}>
+                                    <Icon icon="solar:users-group-two-rounded-bold-duotone" style={{ fontSize: '1.5rem', color: '#1D4ED8' }} />
                                 </div>
-                            ))}
+                                <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0C1D30', marginBottom: '0.75rem' }}>Branding et collaboration</h3>
+                                <p style={{ fontSize: '0.9375rem', color: '#475569', lineHeight: 1.6 }}>Projetez un usage cabinet avec personnalisation, partage et organisation multi-utilisateurs.</p>
+                            </div>
                         </div>
 
                         <div className="text-center">
                             <a
-                                href="pro.html"
+                                href="index.saaspro.html"
                                 style={{
                                     display: 'inline-flex', alignItems: 'center', gap: '8px',
                                     background: '#1D4ED8', color: 'white', border: 'none',
-                                    padding: '0.95rem 2.2rem', borderRadius: '12px',
+                                    padding: '1rem 2.5rem', borderRadius: '12px',
                                     fontWeight: 600, fontSize: '1rem', textDecoration: 'none',
                                     transition: 'all 0.2s ease', boxShadow: '0 4px 14px rgba(29,78,216,0.25)'
                                 }}
                                 onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(29,78,216,0.3)'; }}
                                 onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 14px rgba(29,78,216,0.25)'; }}
                             >
-                                Accéder à l'espace pro
-                                <Icon icon="solar:arrow-right-linear" style={{ fontSize: '1.2rem' }} />
+                                Découvrir l'espace pro
+                                <Icon icon="solar:arrow-right-linear" style={{ fontSize: '1.25rem' }} />
                             </a>
                         </div>
                     </div>
                 </section>
+
                 {/* VISUAL SEPARATOR */}
                 <div style={{ height: '3px', background: 'linear-gradient(90deg, #102A43, #2563EB, #102A43)' }} />
             </div>
@@ -5661,7 +5510,7 @@
                     : `inline-flex items-center h-10 px-3 rounded-lg text-sm font-semibold transition-colors ${currentPage === page ? 'text-[#1D4ED8] bg-[#EEF2FF]' : 'text-[#475569] hover:text-[#102A43] hover:bg-[#F8FAFC]'}`;
 
                 if (external) {
-                    return <a href="pro.html" className={classes}>{label}</a>;
+                    return <a href="index.saaspro.html" className={classes}>{label}</a>;
                 }
 
                 return (
@@ -5805,7 +5654,7 @@
                                     <div>
                                         <h4 className="text-sm font-bold text-white mb-4">Professionnel</h4>
                                         <ul className="space-y-2.5">
-                                            <li><a href="pro.html" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Espace pro</a></li>
+                                            <li><a href="index.saaspro.html" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Espace pro</a></li>
                                             <li><button type="button" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Devenir partenaire</button></li>
                                             <li><button type="button" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">API et Intégrations</button></li>
                                         </ul>

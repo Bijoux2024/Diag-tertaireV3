@@ -1,0 +1,4253 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DiagTertiaire - Performance Énergétique Tertiaire</title>
+
+    <!-- Polices -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Bibliothèques externes -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/prop-types/prop-types.min.js"></script>
+    <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
+    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+      /* Global & Reset */
+      :root{
+        --bg: #F8FAFC;
+        --text: #0F172A;
+        --muted: #475569;
+        --border: #E2E8F0;
+        --navy-dark: #102A43;
+        --blue-premium: #1D4ED8;
+        --blue-light: #EFF6FF;
+        --amber: #F59E0B;
+        --green: #16A34A;
+        --card: #FFFFFF;
+      }
+      body { font-family: 'Inter', sans-serif; background-color: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; font-size: 17px; line-height: 1.55; }
+      @media (max-width: 768px) { body { font-size: 16px; } }
+
+      /* Custom Range Slider */
+      input[type=range] { -webkit-appearance: none; appearance: none; background: transparent; }
+      input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 20px; width: 20px; border-radius: 50%; background: #1E3A5F; cursor: pointer; margin-top: -8px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+      input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #E5E7EB; border-radius: 2px; }
+      input[type=range]:focus { outline: none; }
+
+      /* Print Styles */
+      @media print {
+          .no-print { display: none !important; }
+          .print-only { display: block !important; }
+          body { background: white; }
+          .shadow-lg, .shadow-md, .shadow-sm, .shadow-xl { box-shadow: none !important; }
+          .break-inside-avoid { break-inside: avoid; }
+          .bg-slate-50 { background-color: white !important; }
+          nav { display: none; }
+      }
+
+      /* Animations */
+      .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+      @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+      .blur-overlay { filter: blur(5px); pointer-events: none; user-select: none; }
+      /* Hero halo and micro animations */
+      .hero-halo{ box-shadow: 0 10px 30px rgba(16,42,67,0.08); border-radius: 18px; }
+      .chip{ display:inline-flex; gap:8px; align-items:center; padding:6px 10px; border-radius:999px; background:var(--blue-light); color:var(--navy-dark); font-weight:600; font-size:13px; border:1px solid rgba(29,78,216,0.06); }
+      .fade-up{ transform: translateY(8px); opacity:0; animation: fadeUp 0.5s ease-out forwards; }
+      @keyframes fadeUp{ to{ transform:none; opacity:1 } }
+      .btn-primary{ background:var(--navy-dark); color:white; border-radius:12px; padding:12px 18px; font-weight:700; }
+      .btn-primary:hover{ background:var(--blue-premium); transform:translateY(-2px); box-shadow:0 8px 24px rgba(29,78,216,0.12); }
+      .mockup-float{ transition:box-shadow 220ms, transform 220ms; }
+      .mockup-float:hover{ transform:translateY(-6px); box-shadow:0 18px 40px rgba(16,42,67,0.12); }
+    </style>
+</head>
+<body class="antialiased text-[#374151] bg-[#F8F9FA]">
+    <div id="root"></div>
+
+    <script type="text/babel">
+      /* ╔═══════════════════════════════════════════════════════════════════════════╗
+         ║                           DIAGTERTIAIRE                                   ║
+         ║                   Pré-diagnostic énergétique tertiaire                    ║
+         ║                                                                           ║
+         ║  NAVIGATION RAPIDE :                                                      ║
+         ║  → SECTION 1  : Imports & Setup React                   (lignes 53-56)  ║
+         ║  → SECTION 2  : Constantes Métier                       (lignes 60-145) ║
+         ║  → SECTION 3  : Configuration & Helpers                 (lignes 150-378)║
+         ║  → SECTION 4  : Composants UI Réutilisables            (lignes 165-378)║
+         ║  → SECTION 5  : Formulaire Multi-Étapes                (lignes 379-1925)║
+         ║  → SECTION 6  : Moteur de Calcul & Export PDF          (lignes 1928+)  ║
+         ║  → SECTION 7  : Pages (Home, Méthode, Exemple, Pro)    (lignes 2920+)  ║
+         ║  → SECTION 8  : App Root & Navigation                  (lignes 3959+)  ║
+         ╚═══════════════════════════════════════════════════════════════════════════╝ */
+
+      /* ═══════════════════════════════════════════════════════════════════════════
+         SECTION 1: IMPORTS & SETUP REACT
+         
+         Imports des hooks React et de Recharts pour les graphiques
+         ═══════════════════════════════════════════════════════════════════════════ */
+      const { useState, useEffect, useCallback, useRef } = React;
+      const RechartsObj = window.Recharts || {};
+      const { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, LabelList } = RechartsObj;
+
+      /* ═══════════════════════════════════════════════════════════════════════════
+         SECTION 2: CONSTANTES MÉTIER
+         
+         Données de référence pour le diagnostic :
+         - ACTIVITIES    : Activités tertiaires avec consommation de référence (kWh/m²/an)
+         - YEARS         : Périodes de construction avec coefficient d'isolation
+         - HEATING       : Types de systèmes de chauffage
+         - OCCUPATION    : Régimes d'occupation du bâtiment
+         - WORKS_LIST    : Liste des travaux de rénovation possibles
+         - ECS_SYSTEMS   : Systèmes d'eau chaude sanitaire
+         - DEFAULT_FORM  : État initial du formulaire
+         
+         ⚠️  IMPORTANT : Les IDs (ex: 'office', 'pre1975', 'gas') sont utilisés 
+             partout dans le code. Ne pas modifier sans propagation complète.
+         ═══════════════════════════════════════════════════════════════════════════ */
+      const ACTIVITIES = [
+          { id: 'office', label: 'Bureaux', icon: 'solar:buildings-2-linear', refKwh: 180 },
+          { id: 'retail', label: 'Commerce / Retail', icon: 'solar:shop-linear', refKwh: 350 },
+          { id: 'hotel', label: 'Hôtel', icon: 'solar:bed-linear', refKwh: 280 },
+          { id: 'health', label: 'Santé', icon: 'solar:heart-pulse-linear', refKwh: 320 },
+          { id: 'education', label: 'Enseignement', icon: 'solar:book-linear', refKwh: 150 },
+          { id: 'warehouse', label: 'Entrepôt', icon: 'solar:box-linear', refKwh: 90 },
+          { id: 'mixed', label: 'Usage mixte', icon: 'solar:transfer-horizontal-linear', refKwh: 220 },
+      ];
+
+      const YEARS = [
+          { id: 'pre1975', label: 'Avant 1975', sub: 'Isolation souvent absente', coef: 1.45 },
+          { id: '1975-1990', label: '1975 – 1990', sub: 'Premières réglementations', coef: 1.28 },
+          { id: '1990-2005', label: '1990 – 2005', sub: 'Isolation partielle', coef: 1.12 },
+          { id: '2005-2012', label: '2005 – 2012', sub: 'RT 2005', coef: 1.05 },
+          { id: 'post2012', label: 'Après 2012', sub: 'RT 2012 ou RE 2020', coef: 1.0 },
+      ];
+
+      const HEATING = [
+          { id: 'gas', label: 'Chaudière gaz', icon: 'solar:flame-linear' },
+          { id: 'elec', label: 'Électrique', icon: 'solar:bolt-linear' },
+          { id: 'pac', label: 'Pompe à chaleur', icon: 'solar:water-drops-linear' },
+          { id: 'oil', label: 'Fioul', icon: 'solar:fuel-linear' },
+          { id: 'ac', label: 'Climatisation rév.', icon: 'solar:snowflake-linear' },
+          { id: 'unknown', label: 'Je ne sais pas', icon: 'solar:question-circle-linear' },
+      ];
+
+      const OCCUPATION_OPTS = [
+          { id: 'semaine', label: 'Semaine uniquement', sub: 'Lun–Ven, ~45h/semaine', icon: 'solar:calendar-linear' },
+          { id: '6j', label: '6 jours sur 7', sub: 'Lundi–Samedi', icon: 'solar:calendar-add-linear' },
+          { id: '7j', label: '7 jours sur 7', sub: 'Occupation continue', icon: 'solar:refresh-circle-linear' },
+          { id: 'etendu', label: 'Horaires étendus', sub: 'Soirs et weekends inclus', icon: 'solar:moon-linear' }
+      ];
+
+      const WORKS_LIST = [
+          { id: 'roof', label: 'Isolation toiture' },
+          { id: 'walls', label: 'Isolation des murs' },
+          { id: 'windows', label: 'Remplacement fenêtres' },
+          { id: 'heating', label: 'Nouveau système chauffage' },
+          { id: 'led', label: 'Passage LED complet' },
+          { id: 'regulation', label: 'Régulation / programmation' },
+      ];
+
+      // --- ECS (eau chaude sanitaire) ---
+// Sert au moteur pré-audit pour pondérer le poste ECS selon le système déclaré.
+// [CRITIQUE] Les IDs (ex: elec_ecs, gas_ecs...) sont consommés par getEcsSystemFactor().
+
+     const ECS_SYSTEMS = [
+  { id: 'none_ecs', label: 'Non concerné / très faible', icon: 'solar:close-circle-linear' },
+  { id: 'elec_ecs', label: 'Chauffe-eau électrique', icon: 'solar:bolt-linear' },
+  { id: 'gas_ecs', label: 'Chaudière gaz', icon: 'solar:flame-linear' },
+  { id: 'pac_ecs', label: 'PAC eau chaude', icon: 'solar:water-drops-linear' },
+  { id: 'solar_ecs', label: 'Solaire thermique', icon: 'solar:sun-linear' },
+  { id: 'unknown_ecs', label: 'Je ne sais pas', icon: 'solar:question-circle-linear' },
+];
+
+      const DEFAULT_FORM = {
+          address: '',
+          activity: '',
+          activityMixPct: 50,
+          year: '',
+          surface: 300,
+          levels: 1,
+          heating: '',
+          heatingAge: '',
+          occupation: '',
+          consumptionMode: 'kwh',
+          elecKwh: '',
+          gasKwh: '',
+          elecEuro: '',
+          gasEuro: '',
+          noData: false,
+
+      /* ═══════════════════════════════════════════════════════════════════════════
+         SECTION 4: COMPOSANTS UI RÉUTILISABLES
+         
+         Composants de base pour construire l'interface :
+         - Icon          : Wrapper pour icônes Iconify
+         - Button        : Boutons avec variants (primary, secondary, ghost, green)
+         - Input         : Champs de saisie avec label et suffixe optionnel
+         - CardSelect    : Cartes cliquables avec icône (pour choix multiples)
+         - RadioFull     : Boutons radio stylisés
+         - SectionCard   : Conteneur de section avec ombre
+         - Stepper       : Barre de progression du formulaire
+         - FormHeader    : En-tête de formulaire avec titre/sous-titre
+         ═══════════════════════════════════════════════════════════════════════════ */
+          works: [],
+          hasWorks: 'no',
+          ecsSystem: '',
+          firstName: '',
+          email: '',
+          phone: '',
+          consent: false
+      };
+
+      const LS_KEY = 'diagtertiaire_v1';
+      
+      
+      
+
+      /* ═══════════════════════════════════════════════════════════════════════════
+         SECTION 3: CONFIGURATION & HELPERS
+         
+         - LocalStorage : Sauvegarde/restauration de la session utilisateur
+         - URLs         : Calendly, email de contact
+         - Helpers      : Formatage, calculs DPE, prix énergies, aides
+         ═══════════════════════════════════════════════════════════════════════════ */
+      const CTA_CALENDLY_URL = 'https://calendly.com/TON-LIEN'; // à remplacer
+const CTA_EMAIL = 'contact@diagtertiaire.fr';
+
+      /* --- HELPERS --- */
+      const saveToLS = (data) => {
+          try { localStorage.setItem(LS_KEY, JSON.stringify(data)); } catch(e) {}
+      };
+      const loadFromLS = () => {
+          try {
+              const d = localStorage.getItem(LS_KEY);
+              return d ? JSON.parse(d) : null;
+          } catch(e) { return null; }
+      };
+      const clearLS = () => {
+          try { localStorage.removeItem(LS_KEY); } catch(e) {}
+      };
+
+      /* --- UI COMPONENTS --- */
+     const Icon = ({ icon, className = "", style = {} }) => (
+    <iconify-icon
+        icon={icon}
+        class={`${className} text-2xl`}
+        style={{ strokeWidth: '1.5', ...style }}
+    ></iconify-icon>
+);
+      const Button = ({ children, onClick, disabled, variant = 'primary', className = '', type = 'button' }) => {
+          const base = "px-6 py-3 rounded-lg font-semibold text-sm transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 flex items-center justify-center gap-2";
+          const styles = {
+              primary: "bg-[#1E3A5F] text-white hover:bg-[#162B47] focus:ring-[#1E3A5F] disabled:opacity-50 disabled:cursor-not-allowed shadow-sm",
+              secondary: "bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 focus:ring-slate-200",
+              ghost: "text-slate-500 hover:text-[#1E3A5F]",
+              green: "bg-[#2ECC71] text-white hover:bg-[#27AE60] focus:ring-[#2ECC71] shadow-sm"
+          };
+          return (
+              <button type={type} onClick={onClick} disabled={disabled} className={`${base} ${styles[variant]} ${className}`}>
+                  {children}
+              </button>
+          );
+      };
+
+      const CardSelect = ({ selected, onClick, icon, label, sub }) => (
+          <div
+              onClick={onClick}
+              className={`cursor-pointer border rounded-xl p-4 transition-all duration-200 flex flex-col items-center text-center gap-3 h-full relative group
+              ${selected ? 'bg-[#EEF2FF] border-[#1E3A5F] border-[2px] shadow-sm' : 'bg-white border-slate-200 hover:border-[#1E3A5F]/50 hover:shadow-sm'}`}
+          >
+              <div className={`p-2 rounded-full transition-colors ${selected ? 'bg-[#1E3A5F] text-white' : 'bg-slate-100 text-slate-400 group-hover:text-slate-600'}`}>
+                  <Icon icon={icon} />
+              </div>
+              <div>
+                  <div className={`text-sm ${selected ? 'font-semibold text-[#1E3A5F]' : 'font-medium text-slate-600'}`}>{label}</div>
+                  {sub && <div className="text-xs text-slate-400 mt-1 leading-tight">{sub}</div>}
+              </div>
+          </div>
+      );
+
+      const RadioFull = ({ selected, onClick, label, sub }) => (
+          <div onClick={onClick} className={`cursor-pointer border rounded-lg p-3 flex items-center justify-between transition-all ${selected ? 'border-[#1E3A5F] bg-[#EEF2FF] border-[2px]' : 'border-slate-200 bg-white hover:bg-slate-50'}`}>
+              <div className="flex flex-col">
+                  <span className={`text-sm ${selected ? 'font-semibold text-[#1E3A5F]' : 'font-medium text-slate-700'}`}>{label}</span>
+                  <span className="text-xs text-slate-400 italic">{sub}</span>
+              </div>
+              <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${selected ? 'border-[#1E3A5F]' : 'border-slate-300'}`}>
+                  {selected && <div className="w-2.5 h-2.5 rounded-full bg-[#1E3A5F]"></div>}
+              </div>
+          </div>
+      );
+
+      const SectionCard = ({ children, className = "" }) => (
+          <div className={`bg-white rounded-xl shadow-md border border-slate-100 p-4 md:p-8 ${className}`}>
+              {children}
+          </div>
+      );
+
+      const Input = ({ type = "text", value, onChange, placeholder, label, suffix, min, max, note }) => (
+          <div className="flex flex-col gap-2 w-full">
+              {label && <label className="text-sm font-medium text-[#374151]">{label}</label>}
+              <div className="relative">
+                  <input
+                      type={type} value={value} onChange={onChange} placeholder={placeholder} min={min} max={max}
+                      className="w-full border border-slate-300 rounded-lg px-4 py-2.5 text-sm focus:border-[#1E3A5F] focus:ring-1 focus:ring-[#1E3A5F] outline-none transition-colors text-[#1E3A5F]"
+                  />
+                  {suffix && <span className="absolute right-4 top-2.5 text-sm text-slate-400">{suffix}</span>}
+              </div>
+              {note && <p className="text-sm text-[#9CA3AF] italic">{note}</p>}
+          </div>
+      );
+
+      const Stepper = ({ currentStep }) => {
+          const steps = [
+              { id: 1, label: 'Bâtiment', pct: 25 },
+              { id: 2, label: 'Énergie', pct: 50 },
+              { id: 3, label: 'Contact', pct: 75 },
+              { id: 4, label: 'Rapport', pct: 100 }
+          ];
+          const progressPercentage = steps.find(s => s.id === currentStep)?.pct || 25;
+
+          return (
+              <div className="mb-8 no-print w-full max-w-2xl mx-auto">
+                  <div className="flex justify-between mb-3 px-1">
+                      {steps.map((s) => (
+                          <div key={s.id} className={`text-xs font-semibold tracking-wide transition-colors ${s.id <= currentStep ? 'text-[#1E3A5F]' : 'text-slate-300'}`}>
+                              {s.label.toUpperCase()}
+                          </div>
+                      ))}
+                  </div>
+                  <div className="h-1 bg-[#E5E7EB] rounded-full w-full overflow-hidden">
+                      <div
+                          className="h-full bg-[#1E3A5F] transition-all duration-500 ease-out rounded-full"
+                          style={{ width: `${progressPercentage}%` }}
+                      ></div>
+                  </div>
+              </div>
+          );
+      };
+
+      const FormHeader = ({ title, subtitle }) => (
+          <div className="bg-white border-b border-slate-100 pb-6 mb-6 text-center">
+              <h2 className="text-2xl tracking-tight font-semibold text-[#1E3A5F] mb-2">{title}</h2>
+              <p className="text-[#6B7280]">{subtitle}</p>
+          </div>
+      );
+
+      const SectionTitle = ({ children, sub }) => (
+          <div className="text-center mb-10">
+              <h2 className="text-2xl md:text-3xl tracking-tight font-semibold text-[#1E3A5F] mb-2">{children}</h2>
+              {sub && <p className="text-[#6B7280] text-sm">{sub}</p>}
+          </div>
+      );
+
+      /* --- CHART ERROR BOUNDARY --- */
+      class ChartErrorBoundary extends React.Component {
+          constructor(props) { super(props); this.state = { hasError: false }; }
+          static getDerivedStateFromError(error) { return { hasError: true }; }
+          render() {
+              if (this.state.hasError) {
+                  return (
+                      <div className="h-64 flex flex-col items-center justify-center bg-slate-50 rounded-xl border border-slate-200 text-center p-6">
+                          <Icon icon="solar:chart-2-linear" className="text-slate-300 mb-3" />
+                          <p className="text-slate-500 font-medium text-sm mb-2">Graphique indisponible</p>
+                          <p className="text-slate-400 text-xs">Valeurs disponibles en texte ci-dessous</p>
+                          {this.props.fallbackData && (
+                              <div className="mt-4 flex flex-col gap-1 w-full max-w-xs">
+                                  {this.props.fallbackData.map((d, i) => (
+                                      <div key={i} className="flex justify-between text-xs bg-white border border-slate-100 rounded px-3 py-1.5">
+                                          <span className="text-slate-600">{d.name}</span>
+                                          <span className="font-semibold text-[#1E3A5F]">{d.val} kWh/m²</span>
+                                      </div>
+                                  ))}
+                              </div>
+                          )}
+                      </div>
+                  );
+              }
+              return this.props.children;
+          }
+      }
+
+      /* --- PDF EXPORT --- */
+
+      
+
+const exportPDF = async (data, analysis = {}) => {
+  // Construire le HTML
+  const htmlContent = buildPDFHtml(data, analysis);
+  
+  // Appeler PDFShift
+  try {
+    const response = await fetch("/api/pdf", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+     body: JSON.stringify({
+  html: htmlContent,
+  filename: `DiagTertiaire_rapport_${new Date().toISOString().slice(0, 10)}.pdf`
+})
+    });
+    
+if (!response.ok) {
+  const err = await response.json().catch(() => ({}));
+  console.error("Erreur PDF:", err);
+  alert("Erreur export PDF: " + (err.details || err.error || "inconnue"));
+  return;
+}
+
+const blob = await response.blob();
+const url = window.URL.createObjectURL(blob);
+
+const a = document.createElement("a");
+a.href = url;
+a.download = "rapport-diagnostic.pdf";
+document.body.appendChild(a);
+a.click();
+
+      /* ═══════════════════════════════════════════════════════════════════════════
+         SECTION 5: FORMULAIRE MULTI-ÉTAPES (DIAGNOSTIC)
+         
+         Flow utilisateur en 4 étapes :
+         
+         → STEP 1 (StepBuilding)  : Activité, surface, année de construction
+         → STEP 2 (StepEnergy)    : Chauffage, consommation, travaux déjà réalisés
+         → STEP 3 (StepLead)      : Capture du lead (email, consentement)
+         → STEP 4 (StepReport)    : Affichage du rapport avec export PDF
+         
+         Chaque composant Step :
+         - Reçoit data + update callback + onNext/onBack
+         - Valide les champs avant de permettre le passage à l'étape suivante
+         - Sauvegarde automatiquement dans localStorage (voir App)
+         ═══════════════════════════════════════════════════════════════════════════ */
+a.remove();
+
+window.URL.revokeObjectURL(url);
+    
+  } catch (error) {
+    console.error('Erreur génération PDF:', error);
+    alert('Erreur lors de la génération du PDF. Vérifiez votre clé API PDFShift.');
+  }
+};
+
+   
+
+      const MiniDPEGauge = ({ kwhPerM2, dpeLabel, dpeColor }) => (
+          <div className="bg-white rounded-xl border border-slate-100 p-5 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                  <span className="text-sm font-semibold text-[#1E3A5F]">Classe énergétique estimée</span>
+                  <span className="text-xs text-slate-400 italic">ordre de grandeur</span>
+              </div>
+              <div className="flex gap-1.5 items-end mb-3">
+                  {['A','B','C','D','E','F','G'].map((l, i) => {
+                      const colors = ['#1A9E5C','#4CB84C','#B2D24F','#F5E54A','#F5A623','#E8622A','#D4252A'];
+                      const heights = ['h-4','h-6','h-8','h-10','h-12','h-14','h-16'];
+                      const isActive = l === dpeLabel;
+                      return (
+                          <div key={l}
+                              className={`flex-1 ${heights[i]} rounded-sm flex items-center justify-center text-xs font-semibold transition-all ${isActive ? 'ring-2 ring-offset-1 ring-[#1E3A5F] scale-110' : 'opacity-60'}`}
+                              style={{ backgroundColor: colors[i], color: i < 3 ? '#1a1a1a' : '#fff' }}
+                          >
+                              {l}
+                          </div>
+                      );
+                  })}
+              </div>
+              <div className="text-center">
+                  <span className="text-2xl tracking-tight font-semibold" style={{ color: dpeColor }}>{dpeLabel}</span>
+                  <span className="text-slate-500 text-sm ml-2">• {kwhPerM2} kWh/m²/an</span>
+              </div>
+          </div>
+      );
+const StepBuilding = ({ data, update, onNext }) => {
+  const isValid = data.activity && data.year && Number(data.surface) > 0;
+
+  return (
+    <div className="fade-in max-w-3xl mx-auto">
+      <SectionCard>
+        <FormHeader
+          title="Décrivez votre bâtiment"
+          subtitle="Quelques informations suffisent pour une première estimation"
+        />
+
+        <div className="space-y-8">
+          <div>
+            <h3 className="text-sm font-semibold text-[#1E3A5F] mb-3">Type d'activité</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {ACTIVITIES.map((a) => (
+                <CardSelect
+                  key={a.id}
+                  selected={data.activity === a.id}
+                  onClick={() => update('activity', a.id)}
+                  icon={a.icon}
+                  label={a.label}
+                />
+              ))}
+            </div>
+
+            {data.activity === 'mixed' && (
+              <div className="mt-4 bg-slate-50 border border-slate-200 rounded-xl p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-sm font-medium text-slate-700">
+                    Répartition Bureaux / Commerce
+                  </label>
+                  <span className="text-xs text-slate-500">
+                    Bureaux {data.activityMixPct}% • Commerce {100 - (data.activityMixPct || 0)}%
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={data.activityMixPct ?? 50}
+                  onChange={(e) => update('activityMixPct', Number(e.target.value))}
+                  className="w-full"
+                />
+              </div>
+            )}
+          </div>
+
+          <div>
+            <h3 className="text-sm font-semibold text-[#1E3A5F] mb-3">Période de construction</h3>
+            <div className="grid md:grid-cols-2 gap-3">
+              {YEARS.map((y) => (
+                <RadioFull
+                  key={y.id}
+                  selected={data.year === y.id}
+                  onClick={() => update('year', y.id)}
+                  label={y.label}
+                  sub={y.sub}
+                />
+              ))}
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            <Input
+              type="number"
+              label="Surface totale"
+              suffix="m²"
+              min={1}
+              value={data.surface}
+              onChange={(e) => update('surface', Number(e.target.value || 0))}
+              placeholder="Ex: 300"
+            />
+            <Input
+              type="number"
+              label="Nombre de niveaux"
+              min={1}
+              value={data.levels}
+              onChange={(e) => update('levels', Number(e.target.value || 1))}
+              placeholder="Ex: 1"
+            />
+          </div>
+
+          <div className="flex justify-end">
+            <Button onClick={onNext} disabled={!isValid}>
+              Continuer →
+            </Button>
+          </div>
+        </div>
+      </SectionCard>
+    </div>
+  );
+};
+
+const StepEnergy = ({ data, update, onNext, onBack }) => {
+  const hasEnergyData =
+  
+    data.noData ||
+    (data.consumptionMode === 'kwh'
+      ? (Number(data.elecKwh || 0) + Number(data.gasKwh || 0) > 0)
+      : (Number(data.elecEuro || 0) + Number(data.gasEuro || 0) > 0));
+  const ecsRelevantActivities = ['restaurant', 'hotel', 'health', 'mixed'];
+  const showEcsBlock = ecsRelevantActivities.includes(data.activity);
+     const isValid =
+    data.heating &&
+    data.heatingAge &&
+    data.occupation &&
+    data.hasWorks &&
+    (data.noData || hasEnergyData) &&
+    (!showEcsBlock || !!data.ecsSystem);
+
+  const toggleWork = (workId) => {
+    const current = Array.isArray(data.works) ? data.works : [];
+    if (current.includes(workId)) {
+      update('works', current.filter((id) => id !== workId));
+    } else {
+      update('works', [...current, workId]);
+    }
+  };
+
+  return (
+    <div className="fade-in max-w-3xl mx-auto">
+      <SectionCard>
+        <FormHeader
+          title="Vos équipements et consommations"
+          subtitle="On affine l’estimation énergétique et les priorités d’action"
+        />
+
+        <div className="space-y-8">
+          <div>
+            <h3 className="text-sm font-semibold text-[#1E3A5F] mb-3">Système de chauffage principal</h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {HEATING.map((h) => (
+                <CardSelect
+                  key={h.id}
+                  selected={data.heating === h.id}
+                  onClick={() => update('heating', h.id)}
+                  icon={h.icon}
+                  label={h.label}
+                />
+              ))}
+            </div>
+          </div>
+                    {showEcsBlock && (
+            <div>
+              <h3 className="text-sm font-semibold text-[#1E3A5F] mb-3">
+                Production d’eau chaude sanitaire (ECS)
+              </h3>
+              <p className="text-xs text-slate-500 mb-3">
+                Champ important pour les activités avec besoins d’eau chaude (restaurant, hôtel, santé).
+              </p>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {ECS_SYSTEMS.map((ecs) => (
+                  <CardSelect
+                    key={ecs.id}
+                    selected={data.ecsSystem === ecs.id}
+                    onClick={() => update('ecsSystem', ecs.id)}
+                    icon={ecs.icon}
+                    label={ecs.label}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div>
+            <h3 className="text-sm font-semibold text-[#1E3A5F] mb-3">Âge du système de chauffage</h3>
+            <div className="grid md:grid-cols-3 gap-3">
+              {['< 5 ans', '5 à 15 ans', '> 15 ans'].map((age) => (
+                <RadioFull
+                  key={age}
+                  selected={data.heatingAge === age}
+                  onClick={() => update('heatingAge', age)}
+                  label={age}
+                  sub={age === '> 15 ans' ? 'Souvent moins performant' : ' '}
+                />
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-semibold text-[#1E3A5F] mb-3">Occupation du bâtiment</h3>
+            <div className="grid md:grid-cols-2 gap-3">
+              {OCCUPATION_OPTS.map((o) => (
+                <CardSelect
+                  key={o.id}
+                  selected={data.occupation === o.id}
+                  onClick={() => update('occupation', o.id)}
+                  icon={o.icon}
+                  label={o.label}
+                  sub={o.sub}
+                />
+              ))}
+            </div>
+          </div>
+
+          <div className="border border-slate-200 rounded-xl p-4 bg-slate-50">
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <h3 className="text-sm font-semibold text-[#1E3A5F]">Consommation annuelle</h3>
+              <label className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={!!data.noData}
+                  onChange={(e) => update('noData', e.target.checked)}
+                />
+                Je n’ai pas mes données (estimation automatique)
+              </label>
+            </div>
+
+            {!data.noData && (
+              <>
+                <div className="flex gap-2 mb-4">
+                  <button
+                    type="button"
+                    onClick={() => update('consumptionMode', 'kwh')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold border ${
+                      data.consumptionMode === 'kwh'
+                        ? 'bg-[#1E3A5F] text-white border-[#1E3A5F]'
+                        : 'bg-white text-slate-600 border-slate-300'
+                    }`}
+                  >
+                    En kWh
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => update('consumptionMode', 'euro')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold border ${
+                      data.consumptionMode === 'euro'
+                        ? 'bg-[#1E3A5F] text-white border-[#1E3A5F]'
+                        : 'bg-white text-slate-600 border-slate-300'
+                    }`}
+                  >
+                    En €
+                  </button>
+                </div>
+
+                {data.consumptionMode === 'kwh' ? (
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <Input
+                      type="number"
+                      label="Électricité"
+                      suffix="kWh/an"
+                      value={data.elecKwh}
+                      onChange={(e) => update('elecKwh', e.target.value)}
+                      placeholder="Ex: 45000"
+                    />
+                    <Input
+                      type="number"
+                      label="Gaz"
+                      suffix="kWh/an"
+                      value={data.gasKwh}
+                      onChange={(e) => update('gasKwh', e.target.value)}
+                      placeholder="Ex: 120000"
+                    />
+                  </div>
+                ) : (
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <Input
+                      type="number"
+                      label="Facture électricité"
+                      suffix="€/an"
+                      value={data.elecEuro}
+                      onChange={(e) => update('elecEuro', e.target.value)}
+                      placeholder="Ex: 12000"
+                    />
+                    <Input
+                      type="number"
+                      label="Facture gaz"
+                      suffix="€/an"
+                      value={data.gasEuro}
+                      onChange={(e) => update('gasEuro', e.target.value)}
+                      placeholder="Ex: 8000"
+                    />
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+
+          <div>
+            <h3 className="text-sm font-semibold text-[#1E3A5F] mb-3">Des travaux ont-ils déjà été réalisés ?</h3>
+            <div className="grid md:grid-cols-2 gap-3 mb-3">
+              <RadioFull
+                selected={data.hasWorks === 'no'}
+                onClick={() => {
+                  update('hasWorks', 'no');
+                  update('works', []);
+                }}
+                label="Non"
+                sub="Aucun poste significatif récemment"
+              />
+              <RadioFull
+                selected={data.hasWorks === 'yes'}
+                onClick={() => update('hasWorks', 'yes')}
+                label="Oui"
+                sub="Je sélectionne les postes déjà traités"
+              />
+            </div>
+
+            {data.hasWorks === 'yes' && (
+              <div className="grid md:grid-cols-2 gap-2">
+                {WORKS_LIST.map((w) => {
+                  const checked = (data.works || []).includes(w.id);
+                  return (
+                    <label
+                      key={w.id}
+                      className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition-colors ${
+                        checked
+                          ? 'bg-[#EEF2FF] border-[#1E3A5F]'
+                          : 'bg-white border-slate-200 hover:bg-slate-50'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => toggleWork(w.id)}
+                      />
+                      <span className="text-sm text-slate-700">{w.label}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center justify-between pt-2">
+            <button
+              type="button"
+              onClick={onBack}
+              className="text-slate-500 hover:text-slate-700 text-sm font-medium"
+            >
+              ← Retour
+            </button>
+
+            <Button onClick={onNext} disabled={!isValid}>
+              Continuer →
+            </Button>
+          </div>
+        </div>
+      </SectionCard>
+    </div>
+  );
+};
+      const StepLead = ({ data, update, onNext, onBack }) => {
+          const isValid = data.firstName && data.email && data.consent;
+
+          const activityRef = ACTIVITIES.find(a => a.id === data.activity) || ACTIVITIES[0];
+          const yearRef = YEARS.find(y => y.id === data.year) || YEARS[0];
+          const getMixedRef = (pct) => Math.round((180 * pct / 100) + (350 * (100 - pct) / 100));
+          const refBase = data.activity === 'mixed' ? getMixedRef(data.activityMixPct) : activityRef.refKwh;
+
+          const sysCoef = data.heatingAge === '> 15 ans' ? 1.15 : data.heatingAge === '5 à 15 ans' ? 1.05 : 1.1;
+          let consumptionTotalKwh = 0;
+
+          if (data.noData) {
+              consumptionTotalKwh = refBase * data.surface * yearRef.coef * sysCoef;
+          } else {
+              consumptionTotalKwh = data.consumptionMode === 'kwh'
+                  ? (parseFloat(data.elecKwh)||0) + (parseFloat(data.gasKwh)||0)
+                  : ((parseFloat(data.elecEuro)||0)/0.25) + ((parseFloat(data.gasEuro)||0)/0.12);
+              if (consumptionTotalKwh === 0) consumptionTotalKwh = refBase * data.surface * yearRef.coef * sysCoef;
+          }
+
+        const kwhPerM2 = Math.round(consumptionTotalKwh / data.surface);
+const dpe = getDPE(kwhPerM2);
+
+          return (
+              <div className="fade-in max-w-lg mx-auto space-y-6">
+                  <div className="space-y-3">
+                      <MiniDPEGauge kwhPerM2={kwhPerM2} dpeLabel={dpe.l} dpeColor={dpe.c} />
+
+                      <div className="relative rounded-xl overflow-hidden border border-slate-100 shadow-sm">
+                          <div className="blur-overlay bg-white p-5 space-y-3">
+                              {[1,2,3].map(i => (
+                                  <div key={i} className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
+                                      <div className="w-8 h-8 rounded-full bg-[#1E3A5F]/20 flex-shrink-0"></div>
+                                      <div className="space-y-1.5 flex-1">
+                                          <div className="h-3 bg-slate-200 rounded w-3/4"></div>
+                                          <div className="h-2.5 bg-slate-100 rounded w-1/2"></div>
+                                      </div>
+                                      <div className="h-6 w-16 bg-green-100 rounded"></div>
+                                  </div>
+                              ))}
+                          </div>
+                          <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/60 backdrop-blur-sm">
+                              <div className="bg-[#1E3A5F] text-white rounded-xl px-5 py-4 text-center shadow-lg max-w-xs mx-4">
+                                  <Icon icon="solar:lock-keyhole-linear" className="mb-2 block mx-auto text-3xl" />
+                                  <p className="font-semibold text-sm mb-1">Débloquez vos 3 priorités</p>
+                                  <p className="text-xs text-blue-200">Entrez votre email ci-dessous pour accéder au rapport complet et au plan d'action personnalisé.</p>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+
+                  <SectionCard>
+                      <div className="text-center space-y-2 mb-6">
+                          <div className="w-16 h-16 bg-[#2ECC71]/10 rounded-full flex items-center justify-center mx-auto mb-4 text-[#2ECC71]">
+                              <Icon icon="solar:document-check-linear" className="text-4xl" />
+                          </div>
+                          <h2 className="text-2xl tracking-tight font-semibold text-[#1E3A5F]">Votre estimation est prête</h2>
+                          <p className="text-[#6B7280]">Entrez votre email pour accéder à votre rapport complet et recevoir un plan d'action concret.</p>
+                      </div>
+
+                      <div className="space-y-5">
+                          <Input label="Prénom" placeholder="Votre prénom" value={data.firstName} onChange={(e) => update('firstName', e.target.value)} />
+                          <Input type="email" label="Email professionnel" placeholder="vous@entreprise.com" value={data.email} onChange={(e) => update('email', e.target.value)} />
+                          <Input type="tel" label="Téléphone (optionnel)" placeholder="06 XX XX XX XX" value={data.phone} onChange={(e) => update('phone', e.target.value)} note="Pour être recontacté si vous le souhaitez" />
+
+                          <label className="flex gap-3 items-start cursor-pointer group p-3 border border-transparent hover:bg-slate-50 rounded-lg transition-colors">
+                              <div className="relative flex items-center mt-0.5">
+                                  <input
+                                      type="checkbox" checked={data.consent} onChange={(e) => update('consent', e.target.checked)}
+                                      className="peer h-4 w-4 cursor-pointer appearance-none rounded border border-slate-300 bg-white checked:border-[#1E3A5F] checked:bg-[#1E3A5F] transition-all"
+                                  />
+                                  <Icon icon="solar:check-linear" className="absolute left-0 top-0 text-white opacity-0 peer-checked:opacity-100 pointer-events-none text-xs" />
+                              </div>
+                              <span className="text-xs text-slate-500 leading-relaxed group-hover:text-slate-700">
+                                  J'accepte de recevoir mon rapport et des recommandations sur la rénovation énergétique. Désabonnement en 1 clic.
+                              </span>
+                          </label>
+
+                          <Button onClick={onNext} disabled={!isValid} className="w-full justify-center text-base py-4 shadow-lg shadow-[#1E3A5F]/20">
+                              Accéder à mon rapport →
+                          </Button>
+                      </div>
+                  </SectionCard>
+
+                  <div className="flex justify-center">
+                      <button type="button" onClick={onBack} className="text-slate-400 text-sm hover:text-slate-600 font-medium">Retour</button>
+                  </div>
+              </div>
+          );
+      };
+      /* --- REPORT ENGINE (source unique de calculs rapport écran + PDF) --- */
+
+const ENERGY_PRICES = {
+  elec: 0.25,        // Prix TTC réaliste 2026
+  gas: 0.12,         // Prix TTC réaliste 2026 (corrigé)
+  oil: 0.13,
+  pac: 0.10,
+  ac: 0.18,
+  unknown: 0.18
+};
+
+const formatInt = (v) => Math.round(Number(v || 0)).toLocaleString('fr-FR');
+const formatEuro = (v) => `${formatInt(v)} €`;
+const formatRangeEuro = (min, max) => `${formatInt(min)} - ${formatInt(max)} €`;
+
+const formatRoiYears = (cost, annualSaving) => {
+  const c = Number(cost || 0);
+  const s = Number(annualSaving || 0);
+
+  if (s <= 0) return 'Non calculable';
+
+  const roi = c / s;
+  if (roi < 0.1) return '< 0,1 an';
+  if (roi < 2) return `${roi.toFixed(1).replace('.', ',')} an`;
+  return `${roi.toFixed(1).replace('.', ',')} ans`;
+};
+
+const getEnergyPrice = (heatingId) => {
+  return ENERGY_PRICES[heatingId] ?? ENERGY_PRICES.unknown;
+};
+
+const getHeatingLabel = (heatingId) => {
+  const h = HEATING.find(x => x.id === heatingId);
+  return h ? h.label : 'Non précisé';
+};
+
+const getOccupationLabel = (occId) => {
+  const o = OCCUPATION_OPTS.find(x => x.id === occId);
+  return o ? o.label : 'Non précisé';
+};
+
+const getMixedRef = (pct = 50) => {
+  // Conservé volontairement simple (bureaux + retail)
+  return Math.round((180 * pct / 100) + (350 * (100 - pct) / 100));
+};
+function getActivityPosteShares(activity) {
+  const map = {
+    office:        { heating: 0.38, ecs: 0.05, lighting: 0.22, auxiliaries: 0.20, specific: 0.15 },
+    retail:        { heating: 0.30, ecs: 0.08, lighting: 0.30, auxiliaries: 0.15, specific: 0.17 },
+    restaurant:    { heating: 0.22, ecs: 0.22, lighting: 0.18, auxiliaries: 0.16, specific: 0.22 },
+    hotel:         { heating: 0.25, ecs: 0.28, lighting: 0.18, auxiliaries: 0.14, specific: 0.15 },
+    health:    { heating: 0.30, ecs: 0.20, lighting: 0.18, auxiliaries: 0.17, specific: 0.15 },
+    warehouse:     { heating: 0.42, ecs: 0.03, lighting: 0.22, auxiliaries: 0.18, specific: 0.15 },
+    mixed:         { heating: 0.33, ecs: 0.10, lighting: 0.22, auxiliaries: 0.18, specific: 0.17 }
+  };
+  return map[activity] || map.mixed;
+}
+
+function getEcsImpactFactor(form) {
+  const ecs = form.ecsSystem || 'unknown_ecs';
+
+  if (ecs === 'none_ecs') return 0.35;
+  if (ecs === 'elec_ecs') return 1.15;
+  if (ecs === 'gas_ecs') return 1.00;
+  if (ecs === 'pac_ecs') return 0.75;
+  if (ecs === 'solar_ecs') return 0.55;
+
+  return 1.00; // unknown_ecs
+}
+
+function computeConsumptionBreakdown(totalKwh, form) {
+  const shares = getActivityPosteShares(form.activity || 'mixed');
+  const ecsFactor = getEcsImpactFactor(form);
+
+  // Ajuste l'ECS puis renormalise pour rester à 100%
+  const raw = {
+    heating: shares.heating,
+    ecs: shares.ecs * ecsFactor,
+    lighting: shares.lighting,
+    auxiliaries: shares.auxiliaries,
+    specific: shares.specific
+  };
+
+  const sum = Object.values(raw).reduce((a, b) => a + b, 0) || 1;
+
+  const normalized = {
+    heating: raw.heating / sum,
+    ecs: raw.ecs / sum,
+    lighting: raw.lighting / sum,
+    auxiliaries: raw.auxiliaries / sum,
+    specific: raw.specific / sum
+  };
+
+  const breakdown = {
+    heating: Math.round(totalKwh * normalized.heating),
+    ecs: Math.round(totalKwh * normalized.ecs),
+    lighting: Math.round(totalKwh * normalized.lighting),
+    auxiliaries: Math.round(totalKwh * normalized.auxiliaries),
+    specific: Math.round(totalKwh * normalized.specific)
+  };
+
+  // petit correctif d'arrondi pour retomber exactement sur totalKwh
+  const currentSum = Object.values(breakdown).reduce((a, b) => a + b, 0);
+  const delta = Math.round(totalKwh - currentSum);
+  if (delta !== 0) breakdown.heating += delta;
+
+  return { shares: normalized, breakdown };
+}
+
+function getActionGainsByPoste(form) {
+  const activity = form.activity || 'mixed';
+  const yearId = form.year || '2005-2012';
+  const heatingAgeLabel = form.heatingAge || '5 à 15 ans';
+  const hasRecentWorks = form.hasWorks === 'yes' && Array.isArray(form.works) && form.works.length > 0;
+  const ecsSystem = form.ecsSystem || 'unknown_ecs';
+
+  const isVeryOldBuilding = yearId === 'pre1975';
+  const isOldBuilding = yearId === 'pre1975' || yearId === '1975-1990' || yearId === '1990-2005';
+  const isOldHeating = heatingAgeLabel === '> 15 ans';
+
+  const oldBuildingBoost = isOldBuilding ? 1.15 : 1.0;
+  const veryOldBuildingBoost = isVeryOldBuilding ? 1.25 : oldBuildingBoost;
+  const oldHeatingBoost = isOldHeating ? 1.15 : 1.0;
+  const recentWorksPenalty = hasRecentWorks ? 0.85 : 1.0;
+
+  const ledBoost = (activity === 'retail' || activity === 'office') ? 1.15 : 1.0;
+  const ecsBoost = (activity === 'hotel' || activity === 'restaurant' || activity === 'health') ? 1.20 : 0.80;
+  const ecsSystemBoost =
+    ecsSystem === 'elec_ecs' ? 1.15 :
+    (ecsSystem === 'pac_ecs' || ecsSystem === 'solar_ecs' ? 0.75 : 1.0);
+
+  return {
+    roof: {
+      heating: 0.16 * veryOldBuildingBoost * recentWorksPenalty,
+      ecs: 0,
+      lighting: 0,
+      auxiliaries: 0,
+      specific: 0
+    },
+    regulation: {
+      heating: 0.10 * oldHeatingBoost,
+      ecs: 0.03,
+      lighting: 0,
+      auxiliaries: 0.06,
+      specific: 0
+    },
+    windows: {
+      heating: 0.07 * oldBuildingBoost * recentWorksPenalty,
+      ecs: 0,
+      lighting: 0,
+      auxiliaries: 0,
+      specific: 0
+    },
+    heating: {
+      heating: 0.20 * oldHeatingBoost,
+      ecs: 0.04,
+      lighting: 0,
+      auxiliaries: 0.03,
+      specific: 0
+    },
+    led: {
+      heating: 0,
+      ecs: 0,
+      lighting: 0.28 * ledBoost * recentWorksPenalty,
+      auxiliaries: 0.02,
+      specific: 0
+    },
+    ecs: {
+      heating: 0,
+      ecs: 0.22 * ecsBoost * ecsSystemBoost * recentWorksPenalty,
+      lighting: 0,
+      auxiliaries: 0,
+      specific: 0
+    }
+  };
+}
+const parseCostRange = (costStr) => {
+  if (!costStr || typeof costStr !== 'string') return { min: 0, max: 0 };
+
+  // Exemples gérés :
+  // "6 000 - 25 000 €"
+  // "6 000 à 25 000 €"
+  // "1500-8000 €"
+  const nums = String(costStr)
+    .replace(/[€]/g, '')
+    .replace(/à/gi, ' ')
+    .replace(/[–-]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .match(/\d+/g);
+
+  if (!nums || nums.length === 0) return { min: 0, max: 0 };
+
+  const values = nums.map(Number);
+
+  // Cas "6 000 25 000" -> [6,000,25,000]
+  if (values.length === 4 && values[1] < 1000 && values[3] < 1000) {
+    return {
+      min: values[0] * 1000 + values[1],
+      max: values[2] * 1000 + values[3]
+    };
+  }
+
+  if (values.length >= 2) {
+    return {
+      min: Math.min(...values),
+      max: Math.max(...values)
+    };
+  }
+
+  return { min: values[0], max: values[0] };
+};
+
+// Estimation simple des aides (CEE / MaPrimeRénov' si applicable) par type d'action.
+// [IMPORTANT] Valeurs indicatives uniquement (pré-audit) -> à confirmer par audit/devis.
+
+const estimateAidRanges = (priorityId, surface, isDecretEligible) => {
+  // Fourchettes prudentes et génériques (non contractuelles)
+  let cee = null;
+  let mpr = null;
+  let decret = null;
+
+  if (priorityId === 'roof') {
+    cee = {
+      min: surface * 8,
+      max: surface * 22,
+      label: `CEE : ${formatRangeEuro(surface * 8, surface * 22)}`
+    };
+    mpr = {
+      label: `MaPrimeRénov' : montant variable selon statut et éligibilité`
+    };
+  }
+
+  if (priorityId === 'windows') {
+    cee = {
+      min: surface * 4,
+      max: surface * 12,
+      label: `CEE : ${formatRangeEuro(surface * 4, surface * 12)}`
+    };
+    mpr = {
+      label: `MaPrimeRénov' : montant variable selon statut et éligibilité`
+    };
+  }
+
+  if (priorityId === 'heating') {
+    cee = {
+      min: 1500,
+      max: 8000,
+      label: `CEE : ${formatRangeEuro(1500, 8000)}`
+    };
+    mpr = {
+      label: `MaPrimeRénov' : montant variable selon statut et éligibilité`
+    };
+  }
+
+  if (priorityId === 'regulation' || priorityId === 'gtb') {
+    cee = {
+      min: 800,
+      max: 4000,
+      label: `CEE : ${formatRangeEuro(800, 4000)}`
+    };
+    mpr = {
+      label: `MaPrimeRénov' : généralement non prioritaire / à vérifier`
+    };
+  }
+
+  if (priorityId === 'led') {
+    cee = {
+      min: 500,
+      max: 2500,
+      label: `CEE : ${formatRangeEuro(500, 2500)}`
+    };
+    mpr = {
+      label: `MaPrimeRénov' : généralement non applicable`
+    };
+  }
+
+  if (isDecretEligible) {
+    decret = {
+      label: `Bâtiment potentiellement soumis au Décret Tertiaire (analyse de conformité à prévoir)`
+    };
+  }
+
+  return { cee, mpr, decret };
+};
+const getDPE = (val) => {
+  if (val <= 70) return { l: 'A', c: '#1A9E5C', w: '40%' };
+  if (val <= 110) return { l: 'B', c: '#4CB84C', w: '48%' };
+  if (val <= 180) return { l: 'C', c: '#B2D24F', w: '56%' };
+  if (val <= 250) return { l: 'D', c: '#F5E54A', w: '64%' };
+  if (val <= 330) return { l: 'E', c: '#F5A623', w: '72%' };
+  if (val <= 420) return { l: 'F', c: '#E8622A', w: '80%' };
+  return { l: 'G', c: '#D4252A', w: '88%' };
+};
+// Fonction pour générer le HTML du PDF - À UTILISER AVEC PDFSHIFT
+const buildPDFHtml = (data, analysis) => {
+  const { priorities, kwhPerM2, refBase, dpe, activityRef, yearRef, heatingLabel } = analysis;
+  
+  return `
+    <!DOCTYPE html>
+    <html lang="fr">
+      <head>
+        <meta charset="UTF-8">
+        <style>
+          @page { size: A4; margin: 0; }
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
+            font-size: 10pt;
+            color: #374151;
+            line-height: 1.4;
+          }
+          .page { 
+            width: 210mm; 
+            min-height: 297mm; 
+            padding: 20mm 15mm;
+            page-break-after: always;
+            position: relative;
+          }
+          
+          .header { 
+            background: #1E3A5F; 
+            color: white; 
+            padding: 20px; 
+            border-radius: 8px;
+            margin-bottom: 20px;
+          }
+          .header h1 { 
+            font-size: 18pt; 
+            margin-bottom: 5px;
+            font-weight: 700;
+          }
+          .header p { 
+            font-size: 9pt; 
+            opacity: 0.8; 
+          }
+          
+          .info-box {
+            background: #F7FAFC;
+            border: 1px solid #E2E8F0;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 20px;
+          }
+          .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+          }
+          .info-item { font-size: 9pt; }
+          .info-label { 
+            color: #64748B; 
+            margin-bottom: 3px;
+            font-size: 8pt;
+          }
+          .info-value { 
+            font-weight: 600; 
+            color: #1E3A5F; 
+          }
+          
+          .section-title {
+            font-size: 12pt;
+            font-weight: 700;
+            color: #1E3A5F;
+            margin: 20px 0 10px;
+          }
+          
+          .dpe-gauge { margin: 15px 0; }
+          .dpe-bar {
+            display: flex;
+            align-items: center;
+            height: 28px;
+            border-radius: 4px;
+            padding: 0 10px;
+            color: white;
+            font-weight: 700;
+            margin-bottom: 3px;
+            font-size: 11pt;
+          }
+          .dpe-A { background: #1A9E5C; width: 120px; }
+          .dpe-B { background: #4CB84C; width: 150px; }
+          .dpe-C { background: #B2D24F; width: 180px; }
+          .dpe-D { background: #F5E54A; width: 210px; color: #1a1a1a; }
+          .dpe-E { background: #F5A623; width: 240px; }
+          .dpe-F { background: #E8622A; width: 270px; }
+          .dpe-G { background: #D4252A; width: 300px; }
+          .dpe-active {
+            border: 3px solid #1E3A5F;
+            position: relative;
+            box-shadow: 0 2px 8px rgba(30, 58, 95, 0.2);
+          }
+          .dpe-value {
+            position: absolute;
+            left: calc(100% + 10px);
+            top: 50%;
+            transform: translateY(-50%);
+            background: white;
+            border: 2px solid #1E3A5F;
+            padding: 5px 12px;
+            border-radius: 4px;
+            color: #1E3A5F;
+            font-weight: 700;
+            white-space: nowrap;
+            font-size: 10pt;
+          }
+          
+          .action-card {
+            background: white;
+            border: 1px solid #E2E8F0;
+            border-left: 4px solid #3B82F6;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 15px;
+            page-break-inside: avoid;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+          }
+          .action-title {
+            font-size: 11pt;
+            font-weight: 700;
+            color: #1E3A5F;
+            margin-bottom: 5px;
+          }
+          .action-tag {
+            display: inline-block;
+            background: #EEF2FF;
+            color: #3B82F6;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 7pt;
+            font-weight: 600;
+            margin-bottom: 10px;
+          }
+          .action-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 12px;
+          }
+          .action-metric { font-size: 8pt; }
+          .action-label {
+            color: #64748B;
+            margin-bottom: 3px;
+            font-size: 7pt;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+          }
+          .action-value {
+            font-weight: 700;
+            color: #1E3A5F;
+            font-size: 10pt;
+          }
+          .action-gain { color: #2ECC71; }
+          
+          .aids-box {
+            background: #FFF9E6;
+            border-radius: 4px;
+            padding: 10px;
+            margin-top: 12px;
+            border-left: 3px solid #F59E0B;
+          }
+          .aids-title {
+            font-size: 8pt;
+            font-weight: 700;
+            color: #92400E;
+            margin-bottom: 5px;
+          }
+          .aids-item {
+            font-size: 7.5pt;
+            color: #92400E;
+            margin-bottom: 3px;
+            line-height: 1.4;
+          }
+          
+          .cta-box {
+            background: #1E3A5F;
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            text-align: center;
+          }
+          .cta-title {
+            font-size: 11pt;
+            font-weight: 700;
+            margin-bottom: 10px;
+            letter-spacing: 0.5px;
+          }
+          .cta-list {
+            text-align: left;
+            margin: 10px 0;
+            font-size: 8pt;
+            line-height: 1.6;
+          }
+          
+          .footer {
+            position: absolute;
+            bottom: 15mm;
+            left: 15mm;
+            right: 15mm;
+            border-top: 1px solid #E2E8F0;
+            padding-top: 10px;
+            font-size: 7pt;
+            color: #94A3B8;
+            display: flex;
+            justify-content: space-between;
+          }
+          
+          .hypotheses-list {
+            font-size: 8pt;
+            color: #64748B;
+            line-height: 1.6;
+          }
+          .hypotheses-list li { margin-bottom: 5px; }
+        </style>
+      </head>
+      <body>
+        <div class="page">
+          <div class="header">
+            <h1>Rapport DiagTertiaire</h1>
+            <p>Diagnostic énergétique simplifié - Rapport d'aide à la décision</p>
+          </div>
+          
+          <div class="info-box">
+            <div class="info-grid">
+              <div class="info-item">
+                <div class="info-label">Activité</div>
+                <div class="info-value">${activityRef.label}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Surface</div>
+                <div class="info-value">${data.surface} m²</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Année</div>
+                <div class="info-value">${yearRef.label}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Chauffage</div>
+                <div class="info-value">${heatingLabel}</div>
+              </div>
+            </div>
+          </div>
+          
+          <h2 class="section-title">Synthèse de performance</h2>
+          
+          <div class="dpe-gauge">
+            ${['A', 'B', 'C', 'D', 'E', 'F', 'G'].map(letter => `
+              <div class="dpe-bar dpe-${letter} ${dpe.l === letter ? 'dpe-active' : ''}">
+                ${letter}
+                ${dpe.l === letter ? `<span class="dpe-value">${kwhPerM2} kWh/m²/an</span>` : ''}
+              </div>
+            `).join('')}
+          </div>
+          
+          <div class="info-box" style="margin-top: 20px;">
+            <div class="info-grid">
+              <div class="info-item">
+                <div class="info-label">Référence sectorielle</div>
+                <div class="info-value">${refBase} kWh/m²/an</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Objectif de performance</div>
+                <div class="info-value" style="color: #2ECC71;">${Math.round(refBase * 0.8)} kWh/m²/an</div>
+              </div>
+            </div>
+          </div>
+          
+          <h2 class="section-title">Hypothèses de calcul</h2>
+          <ul class="hypotheses-list">
+            <li>Prix énergie (TTC) : ${heatingLabel.includes('gaz') ? 'Gaz' : 'Électricité'} = ${analysis.avgPrice.toFixed(2)} €/kWh</li>
+            <li>Référence : ${activityRef.label} = ${refBase} kWh/m²/an (référence sectorielle)</li>
+            <li>Objectif : 80% de la référence sectorielle</li>
+            <li>Coûts : base marché 2026 (±30%)</li>
+          </ul>
+          
+          <div class="footer">
+            <span>DiagTertiaire - ${new Date().toLocaleDateString('fr-FR')}</span>
+            <span>Page 1/2</span>
+          </div>
+        </div>
+        
+        <div class="page">
+          <h2 class="section-title">Plan d'actions priorisé</h2>
+          <p style="font-size: 8pt; color: #64748B; margin-bottom: 15px;">
+            Recommandations à confirmer par visite technique.
+          </p>
+          
+          ${priorities.slice(0, 3).map((p, i) => `
+            <div class="action-card">
+              <div class="action-title">${i + 1}. ${p.title}</div>
+              <div class="action-tag">${p.tag}</div>
+              
+              <div class="action-grid">
+                <div class="action-metric">
+                  <div class="action-label">Économies énergie</div>
+                  <div class="action-value">${Number(p.gainKwh || 0).toLocaleString('fr-FR')} kWh/an</div>
+                </div>
+                <div class="action-metric">
+                  <div class="action-label">Gain financier</div>
+                  <div class="action-value action-gain">${p.gainEuro.toLocaleString('fr-FR')} €/an</div>
+                </div>
+                <div class="action-metric">
+                  <div class="action-label">Coût estimatif</div>
+                  <div class="action-value">${p.costMin.toLocaleString('fr-FR')} à ${p.costMax.toLocaleString('fr-FR')} €</div>
+                </div>
+                <div class="action-metric">
+                  <div class="action-label">ROI (hors aides)</div>
+                  <div class="action-value">
+                    ${(() => {
+  const gross = Number(p.roiGrossYears || 0);
+  const net = Number(p.roiNetYears || 0);
+  if (net > 0 && gross > 0) {
+    return `${net.toLocaleString('fr-FR')} ans (net) | ${gross.toLocaleString('fr-FR')} ans (brut)`;
+  }
+  if (gross > 0) return `${gross.toLocaleString('fr-FR')} ans (brut)`;
+  return "À estimer";
+})()}
+                  </div>
+                </div>
+              </div>
+              
+              <div class="aids-box">
+                <div class="aids-title">💸 Aides indicatives</div>
+                <div class="aids-item">• Aides estimées : ${(Number(p.subsidyMin || 0)).toLocaleString('fr-FR')} à ${(Number(p.subsidyMax || 0)).toLocaleString('fr-FR')} €</div>
+<div class="aids-item">• Montant à confirmer selon devis et éligibilité réelle</div>
+              </div>
+            </div>
+          `).join('')}
+          
+          <div class="cta-box">
+            <div class="cta-title">VALIDATION AVEC UN EXPERT</div>
+            <div class="cta-list">
+              15 minutes offertes :<br>
+              • Valider les priorités<br>
+              • Estimer les aides<br>
+              • Orienter vers les bons interlocuteurs
+            </div>
+            <p style="margin-top: 12px; font-weight: 600;">
+              📅 diagtertiaire.fr/rdv | contact@diagtertiaire.fr
+            </p>
+          </div>
+          
+          <div class="footer">
+            <span>DiagTertiaire - ${new Date().toLocaleDateString('fr-FR')}</span>
+            <span>Page 2/2</span>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+};
+      /* ===== PHASE B - MOTEUR MULTI-POSTES (PRE-AUDIT CREDIBLE) ===== */
+// Objectif : produire une estimation directionnelle crédible (pas un audit réglementaire)
+// en répartissant la consommation totale sur 5 postes, puis en calculant les gains par action.
+// [DEPENDANCE] Utilisé par buildReportData() pour générer priorités, ROI, projections.
+
+      const POSTE_KEYS = ['heating', 'ecs', 'lighting', 'auxiliaries', 'specific'];
+
+// --- Profils de répartition par activité ---
+// Chaque profil représente une répartition "typique" des consommations (%)
+// entre chauffage, ECS, éclairage, auxiliaires, usages spécifiques.
+// [CRITIQUE] Clés d'activité alignées avec ACTIVITIES (ex: 'health' et non 'healthcare')
+
+      const ACTIVITY_POSTE_PROFILES = {
+          office:     { heating: 0.38, ecs: 0.03, lighting: 0.24, auxiliaries: 0.20, specific: 0.15 },
+          retail:     { heating: 0.30, ecs: 0.05, lighting: 0.30, auxiliaries: 0.15, specific: 0.20 },
+          hotel:      { heating: 0.28, ecs: 0.27, lighting: 0.16, auxiliaries: 0.14, specific: 0.15 },
+          health: { heating: 0.26, ecs: 0.18, lighting: 0.18, auxiliaries: 0.20, specific: 0.18 },
+          education:  { heating: 0.42, ecs: 0.05, lighting: 0.20, auxiliaries: 0.18, specific: 0.15 },
+          warehouse:  { heating: 0.32, ecs: 0.02, lighting: 0.22, auxiliaries: 0.16, specific: 0.28 },
+          mixed:      { heating: 0.33, ecs: 0.08, lighting: 0.22, auxiliaries: 0.17, specific: 0.20 },
+          default:    { heating: 0.34, ecs: 0.07, lighting: 0.22, auxiliaries: 0.18, specific: 0.19 },
+      };
+
+      // --- Sensibilité ECS par activité ---
+// Coefficient multiplicateur du poste ECS selon l'activité.
+// Exemple : hôtel / santé => ECS plus structurant ; bureau / entrepôt => ECS faible.
+
+      const ECS_ACTIVITY_WEIGHT = {
+          office: 0.4,
+          retail: 0.7,
+          hotel: 1.6,
+          health: 1.25,
+          education: 0.9,
+          warehouse: 0.2,
+          mixed: 1.0,
+      };
+
+      // --- Pondération ECS selon système déclaré ---
+// Permet d'ajuster le poids du poste ECS si l'utilisateur déclare un système pertinent.
+// 'none_ecs' réduit fortement le poste ECS ; PAC/solaire peuvent renforcer le poste ECS estimé.
+
+      const ECS_SYSTEM_FACTORS = {
+          none: 0.10,
+          low: 0.35,
+          elec: 1.15,
+          gas: 1.00,
+          pac: 0.75,
+          solar: 0.55,
+          unknown: 1.00
+      };
+      
+
+      function normalizePosteProfile(profile) {
+          const safe = { ...ACTIVITY_POSTE_PROFILES.default, ...(profile || {}) };
+          const sum = POSTE_KEYS.reduce((acc, k) => acc + (Number(safe[k]) || 0), 0) || 1;
+          const out = {};
+          POSTE_KEYS.forEach((k) => {
+              out[k] = (Number(safe[k]) || 0) / sum;
+          });
+          return out;
+      }
+
+      function buildPosteProfile(form) {
+          const activityId = normalizeActivityId(form?.activity || 'mixed');
+          const base = normalizePosteProfile(ACTIVITY_POSTE_PROFILES[activityId] || ACTIVITY_POSTE_PROFILES.default);
+
+          const profile = { ...base };
+
+          // Ajustement ECS selon activité + système ECS déclaré
+          const ecsSystem = form?.ecsSystem || 'unknown';
+          const ecsActivityWeight = ECS_ACTIVITY_WEIGHT[activityId] ?? 1.0;
+          const ecsSystemFactor = ECS_SYSTEM_FACTORS[ecsSystem] ?? 1.0;
+
+          let ecsBoost = ecsActivityWeight * ecsSystemFactor;
+
+          // Si l'utilisateur indique "peu ou pas d'ECS", on réduit nettement
+          if (ecsSystem === 'none' || ecsSystem === 'low') {
+              ecsBoost = Math.min(ecsBoost, 0.5);
+          }
+
+          // Applique un boost/nerf relatif sur le poste ECS
+          profile.ecs = Math.max(0.01, profile.ecs * ecsBoost);
+
+          // Ajustement léger chauffage selon âge du bâtiment
+          const yearBoostMap = {
+              pre1975: 1.10,
+              '1975-1990': 1.07,
+              '1990-2005': 1.03,
+              '2005-2012': 0.98,
+              post2012: 0.92
+          };
+          const yearBoost = yearBoostMap[form?.year] ?? 1.0;
+          profile.heating = Math.max(0.05, profile.heating * yearBoost);
+
+          // Ajustement éclairage / auxiliaires selon occupation
+          const occupationBoostMap = {
+              semaine: { lighting: 0.95, auxiliaries: 0.95, specific: 0.95 },
+              '6j':     { lighting: 1.00, auxiliaries: 1.00, specific: 1.00 },
+              '7j':     { lighting: 1.08, auxiliaries: 1.10, specific: 1.05 },
+              etendu:   { lighting: 1.12, auxiliaries: 1.08, specific: 1.08 }
+          };
+          const occ = occupationBoostMap[form?.occupation] || occupationBoostMap['6j'];
+          profile.lighting = Math.max(0.05, profile.lighting * occ.lighting);
+          profile.auxiliaries = Math.max(0.05, profile.auxiliaries * occ.auxiliaries);
+          profile.specific = Math.max(0.05, profile.specific * occ.specific);
+
+          return normalizePosteProfile(profile);
+      }
+
+      function splitConsumptionByPostes(totalKwh, posteProfile) {
+          const total = Math.max(0, Number(totalKwh) || 0);
+          const profile = normalizePosteProfile(posteProfile);
+          const out = {};
+
+          POSTE_KEYS.forEach((k) => {
+              out[k] = Math.round(total * profile[k]);
+          });
+
+          // correction d'arrondi pour retomber exactement sur le total
+          const currentSum = POSTE_KEYS.reduce((acc, k) => acc + out[k], 0);
+          const diff = total - currentSum;
+          out.heating += diff;
+
+          return out;
+      }
+
+      function getPosteLabels() {
+          return {
+              heating: 'Chauffage',
+              ecs: 'ECS',
+              lighting: 'Éclairage',
+              auxiliaries: 'Ventilation / auxiliaires',
+              specific: 'Usages spécifiques'
+          };
+      }
+
+      function estimateAidesRange(costMin, costMax, form) {
+          const activity = form?.activity || 'mixed';
+
+          // Taux indicatifs (pré-audit), volontairement prudents
+          let tauxMin = 0.10;
+          let tauxMax = 0.25;
+
+          if (['office', 'education'].includes(activity)) {
+              tauxMin = 0.12;
+              tauxMax = 0.28;
+          }
+
+          if (['hotel', 'health'].includes(activity)) {
+              tauxMin = 0.08;
+              tauxMax = 0.22;
+          }
+
+          const aideMin = Math.round(costMin * tauxMin);
+          const aideMax = Math.round(costMax * tauxMax);
+
+          return {
+              min: Math.max(0, aideMin),
+              max: Math.max(aideMin, aideMax),
+              rateMin: tauxMin,
+              rateMax: tauxMax
+          };
+      }
+
+      function roiYearsFrom(cost, annualGainEuro) {
+          if (!annualGainEuro || annualGainEuro <= 0) return null;
+          return +(cost / annualGainEuro).toFixed(1);
+      }
+      // ===== PHASE B - MOTEUR MULTI-POSTES (PRE-AUDIT) =====
+const ACTIVITY_POSTE_SHARES = {
+  office:     { heating: 0.38, ecs: 0.05, lighting: 0.27, auxiliaries: 0.20, specific: 0.10 },
+  retail:     { heating: 0.32, ecs: 0.06, lighting: 0.34, auxiliaries: 0.18, specific: 0.10 },
+  hotel:      { heating: 0.28, ecs: 0.26, lighting: 0.18, auxiliaries: 0.16, specific: 0.12 },
+  restaurant: { heating: 0.20, ecs: 0.28, lighting: 0.18, auxiliaries: 0.14, specific: 0.20 },
+  health:     { heating: 0.26, ecs: 0.22, lighting: 0.20, auxiliaries: 0.20, specific: 0.12 },
+  warehouse:  { heating: 0.42, ecs: 0.03, lighting: 0.22, auxiliaries: 0.23, specific: 0.10 },
+  mixed:      { heating: 0.34, ecs: 0.10, lighting: 0.24, auxiliaries: 0.20, specific: 0.12 }
+};
+
+const ACTION_POSTE_IMPACTS = {
+  led:        { lighting: 0.35 },
+  regulation: { heating: 0.12, auxiliaries: 0.08 },
+  heating:    { heating: 0.22 },
+  ecs:        { ecs: 0.20 },
+  insulation: { heating: 0.18 },
+  ventilation:{ auxiliaries: 0.16, heating: 0.04 }
+};
+
+function clamp01(v) {
+  return Math.max(0, Math.min(1, Number(v || 0)));
+}
+
+function round1(v) {
+  return Math.round(Number(v || 0) * 10) / 10;
+}
+function normalizeActivityId(activity) {
+  const raw = String(activity || 'mixed').toLowerCase().trim();
+
+  const aliases = {
+    healthcare: 'health',
+    healthc: 'health',
+    sante: 'health'
+  };
+
+  const normalized = aliases[raw] || raw;
+  const validIds = new Set(ACTIVITIES.map(a => a.id));
+
+  return validIds.has(normalized) ? normalized : 'mixed';
+}
+
+
+function getActionImpactsByContext(actionKey, data) {
+  const base = ACTION_POSTE_IMPACTS[actionKey] || {};
+
+  // Modulateurs simples et crédibles (pré-audit)
+  const buildingYear = Number(data.buildingYear || 0);
+  const isOldBuilding = buildingYear > 0 && buildingYear < 2000;
+  const longHours = Number(data.openingHours || 0) >= 60;
+
+  const activity = data.activity || "mixed";
+  const isHotelLike = ["hotel", "health", "restaurant"].includes(activity);
+  const isOfficeLike = ["office"].includes(activity);
+  const isRetailLike = ["retail"].includes(activity);
+
+  const out = { ...base };
+
+  // LED plus pertinente sur retail / longues amplitudes
+  if (actionKey === "led") {
+    if (isRetailLike || longHours) {
+      out.lighting = clamp01((out.lighting || 0) * 1.15);
+    }
+    if (isOfficeLike && !longHours) {
+      out.lighting = clamp01((out.lighting || 0) * 0.95);
+    }
+  }
+
+  // ECS plus pertinente pour hôtel / santé / restauration
+  if (actionKey === "ecs") {
+    if (isHotelLike) {
+      out.ecs = clamp01((out.ecs || 0) * 1.2);
+    } else if (activity === "warehouse") {
+      out.ecs = clamp01((out.ecs || 0) * 0.6);
+    }
+  }
+
+  // Isolation / chauffage plus pertinents sur bâtiment ancien
+  if (actionKey === "insulation" && isOldBuilding) {
+    out.heating = clamp01((out.heating || 0) * 1.15);
+  }
+  if (actionKey === "heating" && isOldBuilding) {
+    out.heating = clamp01((out.heating || 0) * 1.1);
+  }
+
+  // Régulation plus utile si horaires étendus
+  if (actionKey === "regulation" && longHours) {
+    out.heating = clamp01((out.heating || 0) * 1.1);
+    out.auxiliaries = clamp01((out.auxiliaries || 0) * 1.1);
+  }
+
+  return out;
+}
+
+// Répartit la consommation totale (kWh/an) sur les 5 postes selon le profil calculé.
+// Retourne des kWh annuels par poste (heating, ecs, lighting, aux, specific).
+// [CRITIQUE] Le total retourné doit rester cohérent avec totalKwh (arrondis contrôlés).
+
+function computeSavingsFromPostes(postes, impacts, avgPrice) {
+  const heatingKwh = Math.round((postes.heating || 0) * (impacts.heating || 0));
+  const ecsKwh = Math.round((postes.ecs || 0) * (impacts.ecs || 0));
+  const lightingKwh = Math.round((postes.lighting || 0) * (impacts.lighting || 0));
+  const auxiliariesKwh = Math.round((postes.auxiliaries || 0) * (impacts.auxiliaries || 0));
+  const specificKwh = Math.round((postes.specific || 0) * (impacts.specific || 0));
+
+  const totalKwh = heatingKwh + ecsKwh + lightingKwh + auxiliariesKwh + specificKwh;
+  const totalEuro = Math.round(totalKwh * avgPrice);
+
+  return {
+    byPoste: {
+      heatingKwh,
+      ecsKwh,
+      lightingKwh,
+      auxiliariesKwh,
+      specificKwh
+    },
+    totalKwh,
+    totalEuro
+  };
+}
+
+function computeRoiMetrics(costMin, costMax, subsidyMin, subsidyMax, annualSavingsEuro) {
+  const safeSavings = Math.max(1, Number(annualSavingsEuro || 0));
+
+  const grossCostMid = (Number(costMin || 0) + Number(costMax || 0)) / 2;
+  const netCostMid = Math.max(
+    0,
+    grossCostMid - ((Number(subsidyMin || 0) + Number(subsidyMax || 0)) / 2)
+  );
+
+  const roiGrossYears = grossCostMid / safeSavings;
+  const roiNetYears = netCostMid / safeSavings;
+
+  return {
+    grossCostMid: Math.round(grossCostMid),
+    netCostMid: Math.round(netCostMid),
+    roiGrossYears: round1(roiGrossYears),
+    roiNetYears: round1(roiNetYears)
+  };
+}
+
+function computeRoiFromCostsAndSavings({ costMin, costMax, annualSavingsEuro, aids }) {
+  const ceeMin = Number(aids?.cee?.min || 0);
+  const ceeMax = Number(aids?.cee?.max || 0);
+  const mprMin = Number(aids?.mpr?.min || 0);
+  const mprMax = Number(aids?.mpr?.max || 0);
+
+  const subsidyMin = ceeMin + mprMin;
+  const subsidyMax = ceeMax + mprMax;
+
+  return computeRoiMetrics(costMin, costMax, subsidyMin, subsidyMax, annualSavingsEuro);
+}
+
+// Normalise un profil de postes pour garantir une somme = 1.0
+// [CRITIQUE] Evite les dérives après pondérations (occupation, ECS, etc.)
+
+const normalizePosteShares = (shares) => {
+  const total = Object.values(shares || {}).reduce((s, v) => s + Number(v || 0), 0) || 1;
+  const out = {};
+  Object.keys(shares || {}).forEach((k) => { out[k] = Number(shares[k] || 0) / total; });
+  return out;
+};
+
+const getEcsWeightFactor = (ecsSystem, activity) => {
+  const ecs = (ecsSystem || '').toLowerCase();
+  const a = (activity || '').toLowerCase();
+
+  // Activités où l'ECS est structurellement importante
+  const highEcsActivities = ['hotel', 'restaurant', 'health'];
+
+  if (ecs.includes('non') || ecs.includes('faible')) return 0.35;
+  if (ecs.includes('je ne sais pas')) return highEcsActivities.includes(a) ? 1.0 : 0.7;
+  if (ecs.includes('solaire')) return 0.75;
+  if (ecs.includes('pac')) return 0.85;
+  if (ecs.includes('gaz') || ecs.includes('élect') || ecs.includes('elect')) return 1.0;
+
+  return highEcsActivities.includes(a) ? 1.0 : 0.7;
+};
+
+// Génère le catalogue d'actions de travaux / optimisations avec :
+// - impacts par poste (ex: LED -> lighting, ECS -> ecs, régulation -> heating+aux)
+// - gains énergétiques estimés
+// - gains €
+// - aides estimées
+// - ROI brut / net
+// [DEPENDANCE] Les priorités du rapport sont construites à partir de ce catalogue.
+
+const buildActionCatalog = ({ data, surface, postes, avgPrice, isDecretEligible }) => {
+  const ecsFactor = getEcsWeightFactor(data.ecsSystem, data.activity);
+  const heatingAgeOld = data.heatingAge === '> 15 ans';
+  const oldBuilding = ['pre1975', '1975-1990'].includes(data.year);
+
+  // [METIER] Action ECS renforcée pour hôtel / restaurant / health (ECS souvent significative)
+  const actions = [
+    {
+      id: 'roof',
+      tag: 'Enveloppe',
+      title: "Isolation toiture / combles",
+      costMin: 6000,
+      costMax: 25000,
+      impacts: { heating: oldBuilding ? 0.22 : 0.16 },
+      relevanceBoost: oldBuilding ? 1.2 : 1.0
+    },
+    {
+      id: 'regulation',
+      tag: 'Pilotage',
+      title: "Régulation / programmation",
+      costMin: 1500,
+      costMax: 8000,
+      impacts: { heating: heatingAgeOld ? 0.12 : 0.09, auxiliaries: 0.08 },
+      relevanceBoost: heatingAgeOld ? 1.15 : 1.0
+    },
+    {
+      id: 'windows',
+      tag: 'Confort',
+      title: "Menuiseries / étanchéité",
+      costMin: 5000,
+      costMax: 30000,
+      impacts: { heating: oldBuilding ? 0.12 : 0.07 },
+      relevanceBoost: oldBuilding ? 1.1 : 0.95
+    },
+    {
+      id: 'heating',
+      tag: 'Performance',
+      title: "Remplacement chauffage",
+      costMin: 12000,
+      costMax: 30000,
+      impacts: { heating: heatingAgeOld ? 0.26 : 0.18 },
+      relevanceBoost: heatingAgeOld ? 1.25 : 0.9
+    },
+    {
+      id: 'led',
+      tag: 'ROI rapide',
+      title: "Relamping LED complet",
+      costMin: 3000,
+      costMax: 12000,
+      impacts: { lighting: data.activity === 'retail' ? 0.28 : 0.22 },
+      relevanceBoost: ['retail', 'office', 'health'].includes(data.activity) ? 1.1 : 1.0
+    },
+    {
+      id: 'ecs',
+      tag: 'Eau chaude',
+      title: "Optimisation production ECS",
+      costMin: 2500,
+      costMax: 18000,
+      impacts: { ecs: 0.18 * ecsFactor },
+      relevanceBoost: ['hotel', 'restaurant', 'health'].includes(data.activity) ? 1.25 : 0.8
+    }
+  ];
+
+  return actions.map((a) => {
+    const gainKwhVal = Math.round(
+      Object.entries(a.impacts || {}).reduce((sum, [poste, pct]) => {
+        const posteKwh = Number(postes[poste] || 0);
+        return sum + (posteKwh * Number(pct || 0));
+      }, 0)
+    );
+
+
+      /* ═══════════════════════════════════════════════════════════════════════════
+         SECTION 6: MOTEUR DE CALCUL & EXPORT PDF
+         
+         ▸ buildReportData(data)
+           Fonction centrale qui transforme les données du formulaire en rapport complet.
+           
+           Entrées  : Objet data (activité, surface, année, consommation, etc.)
+           Sorties  : Objet avec {
+             kwhPerM2, dpe, priorities, 
+             projections, aides, timeline
+           }
+           
+           Logique :
+           1. Récupération références (activité, année, chauffage)
+           2. Calcul consommation totale (ou estimation si pas de données)
+           3. Calcul DPE (A-G)
+           4. Sélection des 3 actions prioritaires selon profil
+           5. Calcul ROI et aides pour chaque action
+         
+         ▸ exportPDF(data, analysis)
+           Génère le PDF du rapport via jsPDF.
+           TODO: Migrer vers PDFShift pour un rendu professionnel.
+         ═══════════════════════════════════════════════════════════════════════════ */
+    const gainEuro = Math.round(gainKwhVal * avgPrice);
+    const gainPctTotal = Math.max(0, Math.round((gainKwhVal / Math.max(1, Object.values(postes).reduce((s, v) => s + v, 0))) * 100));
+    const aids = estimateAidRanges(a.id, surface, isDecretEligible);
+
+    const aidsMin = Math.max(0, Number(aids?.cee?.min || 0) + Number(aids?.mpr?.min || 0));
+    const aidsMax = Math.max(0, Number(aids?.cee?.max || 0) + Number(aids?.mpr?.max || 0));
+
+    const costMid = Math.round((a.costMin + a.costMax) / 2);
+    const aidsMid = Math.round((aidsMin + aidsMax) / 2);
+    const netMid = Math.max(0, costMid - aidsMid);
+
+    const roiBrutYears = gainEuro > 0 ? Math.round((costMid / gainEuro) * 10) / 10 : null;
+    const roiNetYears = gainEuro > 0 ? Math.round((netMid / gainEuro) * 10) / 10 : null;
+
+    // Score de priorité (simple mais crédible)
+    const roiScore = roiNetYears ? Math.max(0, 12 - roiNetYears) : 0;
+    const absoluteGainScore = gainEuro / 500; // normalisation grossière
+    const priorityScore = (roiScore * 1.2) + absoluteGainScore + (a.relevanceBoost || 1);
+
+    return {
+      ...a,
+      gainKwhVal,
+      gainKwhPct: `${gainPctTotal}%`,
+      gainEuro,
+      aids,
+      aidsMin,
+      aidsMax,
+      roiBrutYears,
+      roiNetYears,
+      priorityScore
+    };
+  });
+};
+/* ===== GENERATION DU RAPPORT (SOURCE UNIQUE ECRAN + PDF) ===== */
+// Cette fonction centralise tous les calculs du rapport :
+// consommation, DPE estimé, écart à la référence, répartition multi-postes,
+// priorités, ROI, projections 5/10 ans, timeline.
+// [CRITIQUE] Toute modification ici impacte l'écran ET le PDF.
+
+
+/* ─────────────────────────────────────────────────────────────────────
+   getDefaultConsumption : Estimation consommation si pas de données
+   
+   Calcule une estimation basée sur activité + surface
+   ───────────────────────────────────────────────────────────────────── */
+const getDefaultConsumption = (activityId, surface) => {
+  const activity = ACTIVITIES.find(a => a.id === activityId);
+  const refKwh = activity ? activity.refKwh : 220;
+  const yearCoef = 1.2;  // Bâtiment ancien-moyen
+  const sysCoef = 1.1;   // Système vieillissant
+  return Math.round(refKwh * surface * yearCoef * sysCoef);
+};
+
+const buildReportData = (data) => {
+  const activityId = normalizeActivityId(data.activity);
+  const yearRef = YEARS.find(y => y.id === data.year) || YEARS[0];
+  const activityRef = ACTIVITIES.find(a => a.id === activityId) || ACTIVITIES.find(a => a.id === 'mixed') || ACTIVITIES[0];
+
+  const refBase = activityId === 'mixed'
+    ? getMixedRef(data.activityMixPct || 50)
+    : activityRef.refKwh;
+
+  const heatingLabel = getHeatingLabel(data.heating);
+  const occupationLabel = getOccupationLabel(data.occupation);
+  const surface = Math.max(1, Number(data.surface || 1));
+
+  // Prix énergie (corrigé)
+  const avgPrice = getEnergyPrice(data.heating);
+
+
+ // --- Détermination de la consommation annuelle ---
+// Priorité : kWh déclarés > € déclarés (convertis) > estimation par défaut.
+// [IMPORTANT] On reste sur un modèle pré-audit (ordre de grandeur).
+
+let consumptionTotalKwh = 0;
+let consumptionSource = 'estimate'; // 'declared_kwh' | 'declared_euro' | 'estimate'
+
+if (data.elecKwh || data.gasKwh) {
+  consumptionTotalKwh = (Number(data.elecKwh) || 0) + (Number(data.gasKwh) || 0);
+  consumptionSource = 'declared_kwh';
+} else if (data.elecEuro || data.gasEuro) {
+  const e = (Number(data.elecEuro) || 0) / ENERGY_PRICES.electricity;
+  const g = (Number(data.gasEuro) || 0) / ENERGY_PRICES.gas;
+  consumptionTotalKwh = Math.round(e + g);
+  consumptionSource = 'declared_euro';
+} else {
+  consumptionTotalKwh = getDefaultConsumption(data.activity, surface);
+  consumptionSource = 'estimate';
+}
+
+consumptionTotalKwh = Math.max(consumptionTotalKwh, 500);
+
+
+  const kwhPerM2 = Math.round(consumptionTotalKwh / surface);
+
+  const dpe = typeof getDPE === 'function' ? getDPE(kwhPerM2) : { l: 'D', c: '#F59E0B', w: '70%' };
+
+  const refTotal = refBase * surface;
+  const diffPctRaw = ((kwhPerM2 - refBase) / refBase) * 100;
+  const diffPct = Math.round(diffPctRaw);
+  const totalCost = Math.round(consumptionTotalKwh * avgPrice);
+const wasteKwh = Math.max(0, consumptionTotalKwh - refTotal);
+const wasteEuro = Math.round(wasteKwh * avgPrice);
+
+
+  const isDecretEligible = surface >= 1000;
+ // ===== Répartition multi-postes (moteur pré-audit unifié) =====
+
+ // Construit le profil final de répartition des postes à partir des données du formulaire.
+// Etapes typiques :
+// 1) Base par activité
+// 2) Ajustement occupation
+// 3) Ajustement ECS (activité + système déclaré)
+// 4) Normalisation
+// [DEPENDANCE] Appelé dans buildReportData() avant splitConsumptionByPostes()
+
+
+// --- Moteur multi-postes (coeur du pré-audit) ---
+// 1) Construction du profil de répartition
+// 2) Répartition des kWh par poste
+// 3) Calcul du catalogue d'actions et des priorités
+
+const posteProfile = buildPosteProfile(data);
+const postes = splitConsumptionByPostes(consumptionTotalKwh, posteProfile);
+  
+  // ===== Priorités multi-postes =====
+  const allActions = buildActionCatalog({
+    data,
+    surface,
+    postes,
+    avgPrice,
+    isDecretEligible
+  });
+
+const doneWorks = Array.isArray(data.works) ? data.works : [];
+
+  let preferredOrder = [];
+  if (data.year === 'pre1975' || data.year === '1975-1990') {
+    preferredOrder = ['roof', 'regulation', 'windows', 'heating', 'led', 'ecs'];
+  } else {
+    preferredOrder = ['regulation', 'led', 'roof', 'heating', 'ecs', 'windows'];
+  }
+
+  if (data.heatingAge === '> 15 ans') {
+    preferredOrder = ['heating', ...preferredOrder.filter(id => id !== 'heating')];
+  }
+
+  // Priorité renforcée ECS pour activités concernées
+ if (['hotel', 'restaurant', 'health'].includes(activityId)) {
+  preferredOrder = ['ecs', ...preferredOrder.filter(id => id !== 'ecs')];
+}
+
+  const orderMap = new Map(preferredOrder.map((id, idx) => [id, idx]));
+
+  const posteLabelMap = {
+  heating: "Chauffage",
+  ecs: "ECS",
+  lighting: "Éclairage",
+  auxiliaries: "Ventilation / auxiliaires",
+  specific: "Usages spécifiques"
+};
+
+// --- Priorisation des actions ---
+// Tri hybride : ordre métier (année / âge système / activité) + score économique.
+// Exclut les travaux déjà réalisés (doneWorks).
+
+const priorities = allActions
+  .map((action) => {
+    const isDone = doneWorks.includes(action.id);
+    const orderRank = orderMap.has(action.id) ? orderMap.get(action.id) : 999;
+
+    // Poste principal = poste le plus impacté dans action.impacts
+    const primaryPoste = Object.entries(action.impacts || {})
+      .sort((a, b) => Number(b[1] || 0) - Number(a[1] || 0))[0]?.[0] || "heating";
+
+    // Détail gains par poste (pour affichage dans le rapport)
+    const savingsBreakdown = Object.entries(action.impacts || {})
+  .map(([posteKey, pct]) => {
+    const posteKwh = Number(postes?.[posteKey] || 0);
+    const kwh = Math.round(posteKwh * Number(pct || 0));
+    const euro = Math.round(kwh * avgPrice);
+    return {
+      poste: posteKey,
+      label: posteLabelMap[posteKey] || posteKey,
+      kwh,
+      euro
+    };
+  })
+  .filter((x) => x.kwh > 0);
+
+    const grossCostMid = Math.round((Number(action.costMin || 0) + Number(action.costMax || 0)) / 2);
+const netCostMid = Math.max(
+  0,
+  grossCostMid - Math.round((Number(action.aidsMin || 0) + Number(action.aidsMax || 0)) / 2)
+);
+
+
+
+const roi = computeRoiFromCostsAndSavings({
+  costMin: Number(action.costMin || 0),
+  costMax: Number(action.costMax || 0),
+  annualSavingsEuro: Number(action.gainEuro || 0),
+  aids: {
+    cee: { min: Number(action.aids?.cee?.min || 0), max: Number(action.aids?.cee?.max || 0) },
+    mpr: { min: Number(action.aids?.mpr?.min || 0), max: Number(action.aids?.mpr?.max || 0) }
+  }
+});
+
+// Score business simple + ordre métier
+const baseScore =
+  ((Number(action.gainEuro || 0)) * 1.2) +
+  ((Number(action.gainKwhVal || 0)) * 0.05) -
+  (netCostMid * 0.02);
+
+    const orderBonus = Math.max(0, 20 - orderRank);
+    const donePenalty = isDone ? 100000 : 0;
+
+    const priorityScore = baseScore + orderBonus - donePenalty;
+
+    return {
+      id: action.id,
+      title: action.title,
+     tag: action.tag,
+
+      // Gains consolidés (déjà calculés dans buildActionCatalog)
+      gainKwh: Math.round(Number(action.gainKwhVal || 0)),
+      gainEuro: Math.round(Number(action.gainEuro || 0)),
+      savingsByPoste: savingsBreakdown,
+
+      // Coûts / aides
+      costMin: Math.round(Number(action.costMin || 0)),
+      costMax: Math.round(Number(action.costMax || 0)),
+subsidyMin: Math.round(Number(action.aidsMin || 0)),
+subsidyMax: Math.round(Number(action.aidsMax || 0)),
+
+roiGrossYears: roi.roiGrossYears,
+roiNetYears: roi.roiNetYears,
+
+      // Champs de tri
+      netCostMid,
+      grossCostMid,
+      isDone,
+      orderRank,
+      priorityScore
+    };
+  })
+  .filter((item) => item.gainKwh > 0 && !item.isDone)
+  .sort((a, b) => {
+    if ((a.orderRank || 999) !== (b.orderRank || 999)) {
+      return (a.orderRank || 999) - (b.orderRank || 999);
+    }
+    return (b.priorityScore || 0) - (a.priorityScore || 0);
+  });
+
+  // --- Coût de l'inaction (projection simple) ---
+// Projection basée sur les 3 actions prioritaires (ordre de grandeur, sans inflation énergie).
+// [TODO] Ajouter scénario +10% / +20% prix énergie.
+
+const top3Priorities = priorities.slice(0, 3);
+
+const annualSavingsIfTop3Raw = top3Priorities.reduce((sum, p) => sum + (Number(p.gainEuro || 0)), 0);
+
+// Garde-fou métier : on ne peut pas économiser plus que la facture annuelle actuelle
+const annualSavingsIfTop3 = Math.min(Math.max(0, annualSavingsIfTop3Raw), Math.max(0, totalCost));
+
+const top3GrossCostMin = top3Priorities.reduce((sum, p) => sum + Number(p.costMin || 0), 0);
+const top3GrossCostMax = top3Priorities.reduce((sum, p) => sum + Number(p.costMax || 0), 0);
+
+const top3SubsidyMin = top3Priorities.reduce((sum, p) => sum + Number(p.subsidyMin || 0), 0);
+const top3SubsidyMax = top3Priorities.reduce((sum, p) => sum + Number(p.subsidyMax || 0), 0);
+
+const top3NetCostMin = Math.max(0, top3GrossCostMin - top3SubsidyMin);
+const top3NetCostMax = Math.max(0, top3GrossCostMax - top3SubsidyMax);
+
+const projection5Y = annualSavingsIfTop3 * 5;
+const projection10Y = annualSavingsIfTop3 * 10;
+
+  // --- Plan d'action recommandé (post-diagnostic) ---
+// Timeline réaliste orientée décision : audit / chiffrage / arbitrage / suivi.
+
+  const timeline = [
+    { step: 1, title: "Audit / visite technique", desc: "Valider les postes prioritaires et les hypothèses de consommation." },
+    { step: 2, title: "Chiffrage et aides", desc: "Confirmer les devis et l'éligibilité réelle aux aides." },
+    { step: 3, title: "Planification travaux", desc: "Prioriser les actions selon budget, usage et contraintes d'exploitation." },
+    { step: 4, title: isDecretEligible ? "Suivi conformité Décret Tertiaire" : "Suivi des gains", desc: isDecretEligible ? "Structurer la trajectoire 2030/2040/2050." : "Vérifier les économies après travaux." }
+  ];
+
+  // --- Payload final du rapport ---
+// [DEPENDANCE] Consommé par le rendu écran + export PDF.
+// Ajouter ici toute nouvelle donnée nécessaire au rapport, plutôt que recalculer dans le JSX.
+
+  return {
+    activityRef,
+    yearRef,
+    heatingLabel,
+    occupationLabel,
+    surface,
+    refBase,
+    refTotal,
+    consumptionTotalKwh,
+    consumptionSource,
+    postes,
+    kwhPerM2,
+    dpe,
+    avgPrice,
+    totalCost,
+    diffPct,
+    diffPctRaw,
+    wasteKwh,
+    wasteEuro,
+    isDecretEligible,
+    priorities,
+   annualSavingsIfTop3,
+top3GrossCostMin,
+top3GrossCostMax,
+top3SubsidyMin,
+top3SubsidyMax,
+top3NetCostMin,
+top3NetCostMax,
+projection5Y,
+projection10Y,
+timeline,
+    disclaimer: {
+      precision: "Ordre de grandeur (±30%)",
+      legalShort: "Estimation directionnelle basée sur données déclaratives et références sectorielles. Non contractuel."
+    }
+  };
+};
+
+ const StepReport = ({ data }) => {
+  const [rechartsReady, setRechartsReady] = useState(false);
+
+  // ===== SOURCE UNIQUE DE DONNEES RAPPORT =====
+  const report = buildReportData(data);
+
+const {
+  activityRef,
+  yearRef,
+  heatingLabel,
+  occupationLabel,
+  surface,
+  refBase,
+  refTotal,
+  consumptionTotalKwh,
+  kwhPerM2,
+  dpe,
+  avgPrice,
+  totalCost,
+  diffPct,
+  wasteKwh,
+  wasteEuro,
+  isDecretEligible,
+  priorities,
+  annualSavingsIfTop3 = 0,
+  top3GrossCostMin = 0,
+  top3GrossCostMax = 0,
+  top3SubsidyMin = 0,
+  top3SubsidyMax = 0,
+  top3NetCostMin = 0,
+  top3NetCostMax = 0,
+  projection5Y = [],
+  projection10Y = [],
+  timeline = [],
+  disclaimer = {}
+} = report || {};
+
+  // ===== CHARGEMENT RECHARTS =====
+  useEffect(() => {
+    const checkRecharts = () => {
+      if (window.Recharts && window.Recharts.BarChart) setRechartsReady(true);
+      else setTimeout(checkRecharts, 100);
+    };
+    checkRecharts();
+  }, []);
+
+  // ===== FORMATTERS LOCAUX =====
+  const euro = (v) => `${Math.round(Number(v || 0)).toLocaleString('fr-FR')} €`;
+  const intFmt = (v) => Math.round(Number(v || 0)).toLocaleString('fr-FR');
+
+  const targetVal = isDecretEligible ? Math.round(refBase * 0.6) : Math.round(refBase * 0.8);
+
+  const chartData = [
+    { name: 'Votre bâtiment', val: kwhPerM2, fill: '#1E3A5F' },
+    { name: `Référence ${activityRef?.label || 'secteur'}`, val: refBase, fill: '#95A5A6' },
+    { name: isDecretEligible ? 'Objectif 2030' : 'Objectif perf.', val: targetVal, fill: '#2ECC71' },
+  ];
+  const chartMaxVal = Math.max(...chartData.map(d => Number(d.val || 0)), 1);
+
+const ChartFallbackBars = ({ items }) => (
+  <div className="h-full w-full rounded-xl border border-slate-200 bg-slate-50 p-3">
+    <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center gap-2 text-slate-600">
+        <Icon icon="solar:chart-2-linear" className="text-base" />
+        <span className="text-xs font-medium">Graphique simplifié</span>
+      </div>
+      <span className="text-[11px] text-slate-400">fallback</span>
+    </div>
+
+    <div className="space-y-3">
+      {items.map((d, i) => {
+        const widthPct = Math.max(8, Math.round((Number(d.val || 0) / chartMaxVal) * 100));
+        return (
+          <div key={i}>
+            <div className="flex items-center justify-between gap-2 mb-1">
+              <span className="text-xs text-slate-600 truncate">{d.name}</span>
+              <span className="text-xs font-semibold text-[#1E3A5F] whitespace-nowrap">
+                {intFmt(d.val)} kWh/m²
+              </span>
+            </div>
+            <div className="h-2.5 bg-white border border-slate-200 rounded-full overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-500"
+                style={{ width: `${widthPct}%`, backgroundColor: d.fill }}
+              />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+
+    <p className="mt-3 text-[11px] text-slate-400">
+      Affichage de secours. Les valeurs restent identiques au rapport.
+    </p>
+  </div>
+);
+
+  const handleExportPDF = (e) => {
+    e.preventDefault();
+    exportPDF(data, report);
+  };
+
+  // ===== INTERPRETATION RAPIDE (DYNAMIQUE) =====
+  const getPerformanceMessage = () => {
+    if (diffPct <= -10) {
+      return {
+        tone: 'good',
+        title: 'Performance plutôt favorable',
+        line1: `Votre bâtiment est environ ${Math.abs(diffPct)}% en dessous de la référence sectorielle, ce qui est plutôt bon.`,
+        line2: `Le potentiel principal se situe souvent dans l'optimisation fine (pilotage, réglages, maintenance, usages).`,
+        line3: `Prochaine étape recommandée : confirmer les gains rapides avant d'engager des travaux lourds.`
+      };
+    }
+    if (diffPct > -10 && diffPct <= 15) {
+      return {
+        tone: 'mid',
+        title: 'Performance dans la moyenne',
+        line1: `Votre bâtiment est proche de la référence sectorielle (${diffPct > 0 ? '+' : ''}${diffPct}%).`,
+        line2: `Il y a généralement un potentiel d'économie intéressant avec des actions ciblées et bien priorisées.`,
+        line3: `Prochaine étape recommandée : valider les hypothèses avec vos factures et un chiffrage rapide.`
+      };
+    }
+    return {
+      tone: 'alert',
+      title: 'Performance à améliorer en priorité',
+      line1: `Votre bâtiment est au-dessus de la référence sectorielle (${diffPct > 0 ? '+' : ''}${diffPct}%).`,
+      line2: `Cela suggère un surcoût potentiel significatif et justifie une priorisation des actions à ROI rapide.`,
+      line3: `Prochaine étape recommandée : audit ciblé ou visite technique pour confirmer les postes les plus rentables.`
+    };
+  };
+
+  const perfMsg = getPerformanceMessage();
+
+  const perfStyles = {
+    good: {
+      box: 'bg-emerald-50 border-emerald-200',
+      title: 'text-emerald-900',
+      text: 'text-emerald-800',
+      iconBg: 'bg-emerald-100',
+      icon: 'text-emerald-600'
+    },
+    mid: {
+      box: 'bg-blue-50 border-blue-200',
+      title: 'text-blue-900',
+      text: 'text-blue-800',
+      iconBg: 'bg-blue-100',
+      icon: 'text-blue-600'
+    },
+    alert: {
+      box: 'bg-amber-50 border-amber-200',
+      title: 'text-amber-900',
+      text: 'text-amber-800',
+      iconBg: 'bg-amber-100',
+      icon: 'text-amber-600'
+    }
+  }[perfMsg.tone];
+
+  // ===== PROJECTIONS =====
+  const statusQuo5Y = totalCost * 5;
+const statusQuo10Y = totalCost * 10;
+
+const optimized5Y = Math.max(0, statusQuo5Y - projection5Y);
+const optimized10Y = Math.max(0, statusQuo10Y - projection10Y);
+
+// Lecture "business" : économies cumulées moins investissement net indicatif (top 3)
+const top3NetCostMid = Math.round((Number(top3NetCostMin || 0) + Number(top3NetCostMax || 0)) / 2);
+const netGainAfterInvestment5Y = projection5Y - top3NetCostMid;
+const netGainAfterInvestment10Y = projection10Y - top3NetCostMid;
+
+  // ===== PETIT HELPER POUR KPI CARD =====
+  const KpiCard = ({ icon, label, value, sub, accent = 'text-[#1E3A5F]', iconBg = 'bg-slate-100' }) => (
+    <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+      <div className="flex items-start justify-between gap-3">
+        <div className={`w-10 h-10 rounded-lg ${iconBg} flex items-center justify-center`}>
+          <Icon icon={icon} className="text-lg" />
+        </div>
+        <span className="text-[11px] text-slate-400 italic">ordre de grandeur</span>
+      </div>
+      <p className="text-xs text-slate-500 mt-3">{label}</p>
+      <p className={`text-xl tracking-tight font-semibold mt-1 ${accent}`}>{value}</p>
+      {sub && <p className="text-xs text-slate-400 mt-1">{sub}</p>}
+    </div>
+  );
+
+  return (
+    <div className="fade-in pb-20 max-w-5xl mx-auto w-full">
+      {/* ===== A. HERO / SYNTHÈSE ===== */}
+      <div className="mb-6 bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+        <div className="bg-[#1E3A5F] p-5 md:p-6 text-white">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1 text-xs font-semibold mb-3">
+                <Icon icon="solar:shield-check-linear" className="text-sm" />
+                Estimation indicative
+              </div>
+              <h1 className="text-2xl md:text-3xl tracking-tight font-semibold">
+                Votre pré-diagnostic énergétique tertiaire
+              </h1>
+              <p className="text-blue-100 text-sm mt-2">
+                Estimation directionnelle pour aider à prioriser les prochaines décisions
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-2">
+              <button
+                type="button"
+                onClick={handleExportPDF}
+                className="bg-white text-[#1E3A5F] px-4 py-2.5 rounded-lg text-sm font-semibold hover:bg-slate-100 transition-colors flex items-center justify-center gap-2"
+              >
+                <Icon icon="solar:file-download-linear" className="text-base" />
+                Exporter PDF
+              </button>
+
+              <a
+                href={CTA_CALENDLY_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-[#1D4ED8] text-white px-6 py-4 rounded-lg font-semibold hover:bg-[#1E40AF] transition-colors flex items-center justify-center gap-2"
+              >
+                <Icon icon="solar:calendar-linear" className="text-base" />
+                Prendre rendez-vous
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div className="px-5 py-4 border-t border-slate-100 bg-slate-50 text-xs text-slate-500 flex flex-wrap items-center gap-4">
+          <span className="inline-flex items-center gap-1">
+            <Icon icon="solar:calendar-mark-linear" className="text-sm" />
+            Généré le {new Date().toLocaleDateString('fr-FR')}
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <Icon icon="solar:info-circle-linear" className="text-sm" />
+            {disclaimer?.precision || 'Ordre de grandeur (±30%)'}
+          </span>
+        </div>
+      </div>
+
+      {/* ===== B. KPI CARDS ===== */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <KpiCard
+          icon="solar:bolt-linear"
+          label="Consommation estimée"
+          value={`${intFmt(kwhPerM2)} kWh/m²/an`}
+          sub={`${intFmt(consumptionTotalKwh)} kWh/an au total`}
+          iconBg="bg-blue-50"
+          accent="text-[#1E3A5F]"
+        />
+        <KpiCard
+          icon="solar:wallet-money-linear"
+          label="Coût énergétique annuel"
+          value={euro(totalCost)}
+          sub={`Base prix énergie: ${avgPrice?.toFixed(2)?.replace('.', ',') || '0,00'} €/kWh`}
+          iconBg="bg-emerald-50"
+          accent="text-emerald-700"
+        />
+        <KpiCard
+          icon="solar:chart-square-linear"
+          label="Classe énergétique estimée"
+          value={dpe?.l || 'N/A'}
+          sub={`${intFmt(refBase)} kWh/m²/an de référence`}
+          iconBg="bg-amber-50"
+          accent="text-amber-700"
+        />
+        <KpiCard
+          icon="solar:piggy-bank-linear"
+          label="Potentiel d'économie annuel"
+          value={euro(annualSavingsIfTop3)}
+          sub={`Top 3 actions prioritaires`}
+          iconBg="bg-purple-50"
+          accent="text-purple-700"
+        />
+      </div>
+
+      {/* ===== JAUGE DPE + COMPARAISON ===== */}
+      <div className="grid lg:grid-cols-2 gap-6 mb-8">
+        <SectionCard>
+          <h2 className="text-lg tracking-tight font-semibold text-[#1E3A5F] mb-4">
+            Positionnement énergétique estimé
+          </h2>
+
+          <div className="flex flex-col gap-1 mb-4 relative">
+            {['A','B','C','D','E','F','G'].map((l, i) => {
+              const info = getDPE(
+                i === 0 ? 0 :
+                i === 1 ? 71 :
+                i === 2 ? 111 :
+                i === 3 ? 181 :
+                i === 4 ? 251 :
+                i === 5 ? 331 : 421
+              );
+
+              return (
+                <div
+                  key={l}
+                  className="relative h-8 flex items-center rounded-r-md transition-all"
+                  style={{ width: info.w, backgroundColor: info.c }}
+                >
+                  <div className="w-8 flex justify-center font-semibold text-white pl-2 drop-shadow-md">{l}</div>
+
+                  {dpe?.l === l && (
+  <div className="absolute top-0 right-1 h-full flex items-center z-10">
+    <div className="w-2.5 h-2.5 rounded-full bg-white border-2 border-[#1E3A5F] shadow-sm"></div>
+  </div>
+)}
+                </div>
+              );
+            })}
+          </div>
+<div className="mb-3 flex flex-wrap items-center gap-2">
+  <span className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5">
+    <span className="text-xs text-slate-500">Classe estimée</span>
+    <span
+      className="inline-flex items-center justify-center w-6 h-6 rounded-md text-white text-xs font-bold"
+      style={{ backgroundColor: dpe?.c || '#64748B' }}
+    >
+      {dpe?.l || '-'}
+    </span>
+  </span>
+
+  <span className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5">
+    <Icon icon="solar:bolt-linear" className="text-sm" style={{ color: '#1E3A5F' }} />
+    <span className="text-xs text-slate-500">Consommation estimée</span>
+    <span className="text-sm font-semibold text-[#1E3A5F] whitespace-nowrap">
+      {intFmt(kwhPerM2)} kWh/m²/an
+    </span>
+  </span>
+</div>
+          <p className="text-xs text-slate-500">
+            Lecture simplifiée pour tertiaire. La classe est indicative et doit être confirmée par un audit si décision de travaux.
+          </p>
+        </SectionCard>
+
+        <SectionCard>
+          <h2 className="text-lg tracking-tight font-semibold text-[#1E3A5F] mb-1">
+            Consommation vs référence
+          </h2>
+          <p className="text-xs text-slate-400 italic mb-4">
+            Valeurs indicatives basées sur des moyennes sectorielles
+          </p>
+
+          <ChartErrorBoundary fallbackData={chartData}>
+            <div className="h-64 w-full">
+              {rechartsReady ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart layout="vertical" data={chartData} margin={{ top: 0, right: 70, left: 0, bottom: 0 }}>
+                    <XAxis type="number" hide />
+                    <YAxis
+                      dataKey="name"
+                      type="category"
+                      width={150}
+                      tick={{ fontSize: 12, fill: '#374151', fontWeight: 500 }}
+                    />
+                    <Tooltip cursor={{ fill: 'transparent' }} />
+                    <Bar dataKey="val" radius={[0, 4, 4, 0]} barSize={24}>
+                      {chartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                      ))}
+                      <LabelList
+                        dataKey="val"
+                        position="right"
+                        fill="#374151"
+                        fontSize={12}
+                        fontWeight="600"
+                        formatter={(val) => `${val} kWh/m²`}
+                      />
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+<ChartFallbackBars items={chartData} />              )}
+            </div>
+          </ChartErrorBoundary>
+        </SectionCard>
+      </div>
+
+      {/* ===== C. LECTURE RAPIDE ===== */}
+      <div className={`mb-8 rounded-xl border p-5 ${perfStyles.box}`}>
+        <div className="flex items-start gap-3">
+          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${perfStyles.iconBg}`}>
+            <Icon icon="solar:notes-linear" className={`text-lg ${perfStyles.icon}`} />
+          </div>
+          <div className="flex-1">
+            <h3 className={`text-sm font-semibold mb-2 ${perfStyles.title}`}>{perfMsg.title}</h3>
+            <div className={`text-sm leading-relaxed space-y-1 ${perfStyles.text}`}>
+              <p>{perfMsg.line1}</p>
+              <p>{perfMsg.line2}</p>
+              <p>{perfMsg.line3}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ===== D. PROFIL BATIMENT ===== */}
+      <SectionCard className="mb-8">
+        <h2 className="text-lg tracking-tight font-semibold text-[#1E3A5F] mb-4">Profil du bâtiment</h2>
+
+        <div className="grid md:grid-cols-2 gap-3">
+          {[
+            { label: 'Activité', value: activityRef?.label || 'Non renseigné', icon: 'solar:buildings-2-linear' },
+            { label: 'Surface', value: `${intFmt(surface)} m²`, icon: 'solar:ruler-cross-pen-linear' },
+            { label: 'Période de construction', value: yearRef?.label || 'Non renseigné', icon: 'solar:calendar-linear' },
+            { label: 'Chauffage principal', value: heatingLabel || 'Non renseigné', icon: 'solar:flame-linear' },
+            { label: 'Occupation', value: occupationLabel || 'Non renseigné', icon: 'solar:users-group-rounded-linear' },
+            {
+              label: 'Mode de donnée',
+              value: data?.noData ? 'Estimation automatique' : (data?.consumptionMode === 'euro' ? 'Factures en €' : 'Consommations en kWh'),
+              icon: 'solar:database-linear'
+            },
+          ].map((row, i) => (
+            <div key={i} className="bg-slate-50 border border-slate-200 rounded-lg p-3 flex items-start gap-3">
+              <div className="w-8 h-8 rounded-md bg-white border border-slate-200 flex items-center justify-center">
+                <Icon icon={row.icon} className="text-sm" />
+              </div>
+              <div>
+                <p className="text-xs text-slate-500">{row.label}</p>
+                <p className="text-sm font-semibold text-slate-800">{row.value}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-4 grid md:grid-cols-3 gap-3">
+          <div className="border border-slate-200 rounded-lg p-3">
+            <p className="text-xs text-slate-500">Référence sectorielle</p>
+            <p className="text-sm font-semibold text-[#1E3A5F]">{intFmt(refBase)} kWh/m²/an</p>
+          </div>
+          <div className="border border-slate-200 rounded-lg p-3">
+            <p className="text-xs text-slate-500">Écart estimé</p>
+            <p className={`text-sm font-semibold ${diffPct > 0 ? 'text-amber-700' : 'text-emerald-700'}`}>
+              {diffPct > 0 ? '+' : ''}{diffPct}% vs référence
+            </p>
+          </div>
+          <div className="border border-slate-200 rounded-lg p-3">
+            <p className="text-xs text-slate-500">Surcoût potentiel</p>
+            <p className="text-sm font-semibold text-slate-800">{euro(wasteEuro)}</p>
+          </div>
+        </div>
+      </SectionCard>
+
+      {/* ===== E. ACTIONS PRIORITAIRES ===== */}
+      <div className="mb-8">
+        <h2 className="text-xl tracking-tight font-semibold text-[#1E3A5F] mb-2">Actions prioritaires</h2>
+        <p className="text-sm text-slate-500 mb-4">
+          Priorisation indicative à confirmer par visite technique et devis
+        </p>
+
+        {priorities.length === 0 ? (
+          <div className="bg-white rounded-xl border border-slate-200 p-4 text-sm text-slate-600">
+            Vous avez déjà réalisé plusieurs actions pertinentes. Les gains restants se situent souvent dans les réglages,
+            la maintenance, le pilotage et l'ajustement des usages.
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {priorities.map((p, i) => {
+
+
+              const avgCost = (p.costMin + p.costMax) / 2;
+              const effort =
+                avgCost < 7000 ? 'Faible' :
+                avgCost < 18000 ? 'Moyen' : 'Élevé';
+
+              const effortStyle =
+                effort === 'Faible' ? 'bg-emerald-100 text-emerald-700' :
+                effort === 'Moyen' ? 'bg-amber-100 text-amber-700' :
+                'bg-rose-100 text-rose-700';
+
+              return (
+                <div key={i} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                  <div className="px-4 py-3 bg-slate-50 border-b border-slate-100 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-semibold text-slate-400">PRIORITÉ #{i + 1}</span>
+                      <span className="text-xs font-semibold px-2 py-1 rounded bg-white border border-slate-200 text-[#1E3A5F]">
+                        {p.tag}
+                      </span>
+                    </div>
+                    <span className={`text-xs font-semibold px-2 py-1 rounded ${effortStyle}`}>
+                      Effort {effort}
+                    </span>
+                  </div>
+
+                  <div className="p-4">
+                    <h3 className="text-base md:text-lg font-semibold text-[#1E3A5F] mb-4">{p.title}</h3>
+
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
+  <div className="border border-slate-200 rounded-lg p-3">
+    <p className="text-[11px] text-slate-500">Gain énergie</p>
+    <p className="text-sm font-semibold text-slate-800">{intFmt(p.gainKwh)} kWh/an</p>
+  </div>
+
+  <div className="border border-slate-200 rounded-lg p-3">
+    <p className="text-[11px] text-slate-500">Gain financier</p>
+    <p className="text-sm font-semibold text-emerald-700">{euro(p.gainEuro)}/an</p>
+  </div>
+
+  <div className="border border-slate-200 rounded-lg p-3">
+    <p className="text-[11px] text-slate-500">Coût estimatif</p>
+    <p className="text-sm font-semibold text-slate-800">
+      {intFmt(p.costMin)} à {intFmt(p.costMax)} €
+    </p>
+  </div>
+
+  <div className="border border-slate-200 rounded-lg p-3">
+    <p className="text-[11px] text-slate-500">ROI</p>
+    <p className="text-sm font-semibold text-[#1E3A5F]">
+      {p.roiNetYears ? `${String(p.roiNetYears).replace('.', ',')} ans net` : 'À estimer'}
+    </p>
+    <p className="text-[11px] text-slate-500 mt-1">
+      {p.roiGrossYears ? `${String(p.roiGrossYears).replace('.', ',')} ans brut` : ''}
+    </p>
+  </div>
+
+  <div className="border border-slate-200 rounded-lg p-3">
+    <p className="text-[11px] text-slate-500">Aides estimées</p>
+    <p className="text-sm font-semibold text-slate-800">
+      {(p.subsidyMin || p.subsidyMax)
+        ? `${intFmt(p.subsidyMin || 0)} à ${intFmt(p.subsidyMax || 0)} €`
+        : 'À vérifier'}
+    </p>
+  </div>
+</div>
+
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* ===== F. PROJECTIONS 5 ANS / 10 ANS ===== */}
+      <div className="mb-8">
+        <h2 className="text-xl tracking-tight font-semibold text-[#1E3A5F] mb-2">Projection financière</h2>
+        <p className="text-sm text-slate-500 mb-4">
+          Simulation simple à partir des économies annuelles estimées (hors inflation et évolution des prix énergie)
+        </p>
+
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-base font-semibold text-[#1E3A5F]">Projection à 5 ans</h3>
+              <span className="text-xs font-semibold px-2 py-1 rounded bg-slate-100 text-slate-600">5 ans</span>
+            </div>
+
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between gap-3">
+                <span className="text-slate-500">Statu quo (sans optimisation)</span>
+                <span className="font-semibold text-slate-800">{euro(statusQuo5Y)}</span>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span className="text-slate-500">Avec optimisations (estim.)</span>
+                <span className="font-semibold text-slate-800">{euro(optimized5Y)}</span>
+              </div>
+              <div className="pt-2 mt-2 border-t border-slate-100 space-y-2">
+  <div className="flex justify-between gap-3">
+    <span className="text-slate-700 font-medium">Économie potentielle cumulée</span>
+    <span className="font-semibold text-emerald-700">{euro(projection5Y)}</span>
+  </div>
+
+  <div className="flex justify-between gap-3">
+    <span className="text-slate-500">Investissement top 3 (net, indicatif)</span>
+    <span className="font-medium text-slate-700">
+      {intFmt(top3NetCostMin)} à {intFmt(top3NetCostMax)} €
+    </span>
+  </div>
+
+  <div className="flex justify-between gap-3">
+    <span className="text-slate-700 font-medium">Gain net cumulé (ordre de grandeur)</span>
+    <span className={`font-semibold ${netGainAfterInvestment5Y >= 0 ? 'text-emerald-700' : 'text-amber-700'}`}>
+      {euro(netGainAfterInvestment5Y)}
+    </span>
+  </div>
+</div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-base font-semibold text-[#1E3A5F]">Projection à 10 ans</h3>
+              <span className="text-xs font-semibold px-2 py-1 rounded bg-slate-100 text-slate-600">10 ans</span>
+            </div>
+
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between gap-3">
+                <span className="text-slate-500">Statu quo (sans optimisation)</span>
+                <span className="font-semibold text-slate-800">{euro(statusQuo10Y)}</span>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span className="text-slate-500">Avec optimisations (estim.)</span>
+                <span className="font-semibold text-slate-800">{euro(optimized10Y)}</span>
+              </div>
+              <div className="pt-2 mt-2 border-t border-slate-100 space-y-2">
+  <div className="flex justify-between gap-3">
+    <span className="text-slate-700 font-medium">Économie potentielle cumulée</span>
+    <span className="font-semibold text-emerald-700">{euro(projection10Y)}</span>
+  </div>
+
+  <div className="flex justify-between gap-3">
+    <span className="text-slate-500">Investissement top 3 (net, indicatif)</span>
+    <span className="font-medium text-slate-700">
+      {intFmt(top3NetCostMin)} à {intFmt(top3NetCostMax)} €
+    </span>
+  </div>
+
+  <div className="flex justify-between gap-3">
+    <span className="text-slate-700 font-medium">Gain net cumulé (ordre de grandeur)</span>
+    <span className={`font-semibold ${netGainAfterInvestment10Y >= 0 ? 'text-emerald-700' : 'text-amber-700'}`}>
+      {euro(netGainAfterInvestment10Y)}
+    </span>
+  </div>
+</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ===== G. TIMELINE 3 MOIS ===== */}
+      <SectionCard className="mb-8">
+        <h2 className="text-xl tracking-tight font-semibold text-[#1E3A5F] mb-2">Plan d'action sur 3 mois</h2>
+        <p className="text-sm text-slate-500 mb-5">
+          Objectif : passer d'une estimation à une décision chiffrée
+        </p>
+
+        <div className="space-y-4">
+          {(timeline || []).map((t, i) => {
+            const periodLabel =
+              i === 0 ? 'Semaine 1 à 2' :
+              i === 1 ? 'Semaine 2 à 4' :
+              i === 2 ? 'Mois 2' : 'Mois 2 à 3';
+
+            return (
+              <div key={i} className="flex items-start gap-3">
+                <div className="flex flex-col items-center">
+                  <div className="w-9 h-9 rounded-full bg-[#EEF2FF] border border-[#1E3A5F]/20 flex items-center justify-center text-[#1E3A5F] font-semibold text-sm">
+                    {t.step}
+                  </div>
+                  {i < (timeline.length - 1) && <div className="w-px h-10 bg-slate-200 mt-2"></div>}
+                </div>
+
+                <div className="flex-1 bg-slate-50 border border-slate-200 rounded-lg p-3">
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-1">
+                    <p className="text-sm font-semibold text-slate-800">{t.title}</p>
+                    <span className="text-xs text-slate-500">{periodLabel}</span>
+                  </div>
+                  <p className="text-sm text-slate-600 mt-1">{t.desc}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </SectionCard>
+
+      {/* ===== H. HYPOTHESES & LIMITES ===== */}
+      <div className="mb-8 bg-amber-50 border border-amber-200 rounded-xl p-4">
+        <div className="flex items-start gap-3">
+          <div className="w-9 h-9 rounded-lg bg-amber-100 flex items-center justify-center">
+            <Icon icon="solar:danger-triangle-linear" className="text-amber-600 text-base" />
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold text-amber-900 mb-2">Hypothèses et limites</h3>
+           <ul className="text-sm text-amber-800 space-y-1">
+  <li>• Rapport indicatif basé sur des données déclaratives et des références sectorielles.</li>
+  <li>• Estimations directionnelles non contractuelles (consommations, gains, coûts, ROI).</li>
+  <li>• Ne remplace ni un audit réglementaire, ni une visite technique, ni un devis d’entreprise.</li>
+  <li>• Aides affichées à titre indicatif, à confirmer selon éligibilité réelle et devis.</li>
+  <li>• Validation terrain recommandée avant tout engagement de travaux ou de budget.</li>
+  {isDecretEligible && <li>• Votre surface suggère un sujet potentiel Décret Tertiaire à vérifier.</li>}
+</ul>
+          </div>
+        </div>
+      </div>
+
+      {/* ===== I. CTA FINAL SOBRE ===== */}
+      <div className="bg-[#1E3A5F] rounded-2xl p-6 md:p-8 shadow-xl text-white">
+        <div className="grid md:grid-cols-2 gap-6 items-center">
+          <div>
+            <h3 className="text-xl tracking-tight font-semibold mb-2">
+
+              Besoin d'un cadrage plus fiable pour passer à l'action ?
+            </h3>
+            <p className="text-sm text-blue-100 leading-relaxed">
+              Ce pré-diagnostic est utile pour prioriser. La suite logique est de valider les hypothèses, chiffrer correctement les postes et vérifier les aides mobilisables selon votre situation réelle.
+            </p>
+
+            <div className="mt-4 flex flex-wrap gap-2 text-xs">
+              <span className="px-2 py-1 rounded bg-white/10 border border-white/10">Validation des priorités</span>
+              <span className="px-2 py-1 rounded bg-white/10 border border-white/10">Aides et ROI</span>
+              <span className="px-2 py-1 rounded bg-white/10 border border-white/10">Plan d'action concret</span>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <button
+              type="button"
+              onClick={handleExportPDF}
+              className="w-full bg-white text-[#1E3A5F] py-3 rounded-lg font-semibold hover:bg-slate-100 transition-colors flex items-center justify-center gap-2"
+            >
+              <Icon icon="solar:file-download-linear" className="text-base" />
+              Télécharger le rapport PDF
+            </button>
+
+            <a
+              href={CTA_CALENDLY_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full bg-[#1D4ED8] text-white px-6 py-4 rounded-lg font-semibold hover:bg-[#1E40AF] transition-colors flex items-center justify-center gap-2"
+            >
+              <Icon icon="solar:calendar-linear" className="text-base" />
+              Réserver un échange
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+      /* --- PAGES --- */
+
+      /* ═══════════════════════════════════════════════════════════════════════════
+         COPY: SOURCE UNIQUE DE TEXTES MARKETING (LP)
+         Toutes les modifications de textes de la landing page se font ici.
+         ═══════════════════════════════════════════════════════════════════════════ */
+      const COPY = {
+        cta: {
+          primary: "Recevoir mon pré-diagnostic gratuit",
+          secondaryHome: "",
+          secondaryReport: "",
+        },
+        home: {
+          h1: "Faut-il vraiment lancer une étude pour votre local tertiaire ?",
+          subtitle: "Pré-diagnostic gratuit, non réglementaire, en 3 minutes.",
+          badges: [],
+          segmentation: {},
+          sections: {
+            getResults: [],
+            howItWorks: [],
+            useCasesTitle: "",
+            useCases: [],
+            proTitle: "",
+            proLink: "",
+          },
+          faq: [],
+        },
+      };
+
+      /* ═══════════════════════════════════════════════════════════════════════════
+         SECTION 7: PAGES
+
+         → PageHome      : Landing page avec sections marketing + CTA
+         → PageMethod    : Explication de la méthodologie
+         → PageExample   : Exemple de rapport (avec fake data)
+         → PagePro       : Offre pour les professionnels
+         → RestoreBanner : Bannière de reprise de session
+
+         Toutes les pages reçoivent navigate() pour le routing.
+         ═══════════════════════════════════════════════════════════════════════════ */
+
+const PageHome = ({ navigate }) => (
+  <div className="fade-in">
+    {/* HERO */}
+    <section className="relative overflow-hidden py-16 lg:py-20">
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-12 left-8 w-80 h-80 rounded-full" style={{background: 'radial-gradient(circle at 20% 20%, rgba(29,78,216,0.06), transparent 30%)'}} />
+        <div className="absolute bottom-8 right-10 w-72 h-72 rounded-full" style={{background: 'radial-gradient(circle at 80% 80%, rgba(245,158,11,0.05), transparent 30%)'}} />
+      </div>
+
+      <div className="relative max-w-6xl mx-auto px-4 grid md:grid-cols-2 gap-10 items-center">
+        <div className="pr-4">
+          <div className="flex flex-wrap items-center gap-3 mb-4">
+            <span className="chip">Hôtels</span>
+            <span className="chip">Commerces</span>
+            <span className="chip">Bureaux</span>
+            <span className="chip">Cabinets</span>
+            <span className="chip">Restaurants</span>
+            <span className="chip">Services</span>
+          </div>
+
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold leading-tight text-[#102A43] mb-3">
+            Faut-il vraiment lancer une étude pour votre local tertiaire ?
+          </h1>
+
+          <p className="text-lg text-[#475569] mb-5">
+            Pré-diagnostic gratuit pour savoir, en quelques minutes, si une étude plus poussée,
+            souvent facturée <strong>1 000 €+</strong>, est vraiment nécessaire.
+          </p>
+
+          <div className="flex items-center gap-4">
+            <button
+              type="button"
+              onClick={() => navigate('diagnostic')}
+              className="btn-primary inline-flex items-center gap-3 shadow-lg hover:shadow-xl"
+            >
+              Recevoir mon pré-diagnostic gratuit
+              <Icon icon="solar:arrow-right-linear" />
+            </button>
+
+            <div className="text-xs text-[#475569]">3 minutes • Sans engagement • Rapport PDF par email</div>
+          </div>
+
+          <p className="mt-4 text-sm text-[#475569]">Développé avec l'expertise de professionnels de la performance énergétique</p>
+        </div>
+
+        {/* LARGE PREMIUM MOCKUP HERO */}
+        <div className="hidden md:flex justify-end">
+          <div className="hero-halo mockup-float relative">
+            <div className="absolute -inset-4 bg-gradient-to-br from-[#1D4ED8] to-[#102A43] opacity-12 rounded-3xl blur-2xl" />
+            <div className="relative rounded-2xl border border-[#E2E8F0] bg-white shadow-2xl" style={{width: '480px'}}>
+              {/* Page 1 - Front */}
+              <div className="rounded-2xl overflow-hidden">
+                {/* Header mockup */}
+                <div className="bg-gradient-to-r from-[#102A43] to-[#1D4ED8] text-white p-5">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-xs font-semibold opacity-80 uppercase tracking-widest mb-1">Votre pré-diagnostic</p>
+                      <p className="text-lg font-bold">Bureau • 450 m²</p>
+                    </div>
+                    <div className="rounded-lg bg-[#F59E0B] text-[#102A43] text-xs font-bold px-2.5 py-1">PDF</div>
+                  </div>
+                </div>
+
+                {/* Content mockup */}
+                <div className="p-5 space-y-4">
+                  {/* DPE */}
+                  <div className="flex items-center gap-3">
+                    <div className="w-16 h-16 rounded-lg bg-[#FFF4DF] flex items-center justify-center shadow-sm border border-[#F0DFC0]">
+                      <span className="text-2xl font-bold text-[#102A43]">D</span>
+                    </div>
+                    <div>
+                      <p className="text-xs text-[#475569] font-medium">Classe estimée</p>
+                      <p className="text-base font-bold text-[#102A43]">D – Moyenne</p>
+                      <p className="text-xs text-[#64748B]">245 kWh/m²/an</p>
+                    </div>
+                  </div>
+
+                  {/* Savings */}
+                  <div className="rounded-lg bg-gradient-to-r from-[#16A34A] to-[#22C55E] text-white p-3.5 shadow-sm">
+                    <p className="text-xs font-semibold opacity-90 mb-0.5">Économies potentielles</p>
+                    <p className="text-xl font-bold">≈ 3 600 €/an</p>
+                  </div>
+
+                  {/* Top actions */}
+                  <div className="border-t border-[#E2E8F0] pt-3">
+                    <p className="text-xs font-bold text-[#102A43] uppercase tracking-wide mb-2">Priorités</p>
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between p-2 rounded bg-[#F8FAFC] border border-[#E2E8F0]">
+                        <span className="text-xs font-semibold text-[#102A43]">Régulation</span>
+                        <span className="text-xs font-bold text-[#16A34A]">2-4 ans</span>
+                      </div>
+                      <div className="flex items-center justify-between p-2 rounded bg-[#F8FAFC] border border-[#E2E8F0]">
+                        <span className="text-xs font-semibold text-[#102A43]">Isolation toiture</span>
+                        <span className="text-xs font-bold text-[#F59E0B]">Priorité</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer mockup */}
+                <div className="bg-[#F8FAFC] px-5 py-2.5 text-center border-t border-[#E2E8F0]">
+                  <p className="text-xs text-[#475569] font-medium">Rapport PDF complet par email</p>
+                </div>
+              </div>
+            </div>
+            {/* Page 2 shadow */}
+            <div className="absolute -bottom-1.5 -right-1.5 w-full h-full rounded-2xl border border-[#E2E8F0] bg-white opacity-25" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {/* ISSUE (problem) */}
+    <section className="py-8 bg-white">
+      <div className="max-w-3xl mx-auto px-4 text-center fade-up">
+        <h2 className="text-2xl md:text-3xl font-bold text-[#102A43] mb-4">Le tertiaire ne se juge pas avec des repères résidentiels</h2>
+        <p className="text-base text-[#475569] leading-relaxed">Un local professionnel ne se juge pas comme un logement. De mauvais repères faussent la lecture des consommations, retardent les bonnes décisions et peuvent pousser à lancer une étude trop tôt.</p>
+      </div>
+    </section>
+
+    {/* BENEFITS */}
+    <section className="py-10 bg-[#EFF6FF]">
+      <div className="max-w-5xl mx-auto px-4">
+        <h3 className="text-2xl md:text-3xl font-bold text-[#102A43] text-center mb-10">Un rapport utile pour décider avant d'aller plus loin</h3>
+        <div className="grid sm:grid-cols-3 gap-6">
+          <div className="bg-white rounded-2xl p-6 shadow-md border-l-4 border-[#1D4ED8] hover:shadow-lg transition-shadow">
+            <div className="text-base font-bold text-[#1D4ED8] mb-3">Situer votre bâtiment</div>
+            <p className="text-sm text-[#475569] leading-relaxed">Comprenez rapidement si votre niveau de consommation semble cohérent avec votre usage.</p>
+          </div>
+          <div className="bg-white rounded-2xl p-6 shadow-md border-l-4 border-[#16A34A] hover:shadow-lg transition-shadow">
+            <div className="text-base font-bold text-[#16A34A] mb-3">Prioriser les bons leviers</div>
+            <p className="text-sm text-[#475569] leading-relaxed">Identifiez les premiers postes à surveiller, les gains possibles et les actions à envisager.</p>
+          </div>
+          <div className="bg-white rounded-2xl p-6 shadow-md border-l-4 border-[#F59E0B] hover:shadow-lg transition-shadow">
+            <div className="text-base font-bold text-[#F59E0B] mb-3">Décider sans engager trop tôt</div>
+            <p className="text-sm text-[#475569] leading-relaxed">Obtenez un premier filtre clair avant une étude plus poussée.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {/* EXPERT */}
+    <section className="py-12 bg-white">
+      <div className="max-w-4xl mx-auto px-4">
+        <div className="bg-gradient-to-r from-[#EFF6FF] to-[#F8FAFC] rounded-2xl border border-[#1D4ED8] border-opacity-40 p-8">
+          <h3 className="text-xl font-bold text-[#102A43] mb-3">Un regard expert quand c'est pertinent</h3>
+          <p className="text-base text-[#475569] leading-relaxed">Pour les bâtiments les plus consommateurs, un rendez-vous visio gratuit peut être proposé pour relire le diagnostic, valider les données clés et identifier les actions les plus pertinentes.</p>
+        </div>
+      </div>
+    </section>
+
+    {/* PROCESS */}
+    <section className="py-14 bg-[#EFF6FF]">
+      <div className="max-w-5xl mx-auto px-4">
+        <h3 className="text-2xl md:text-3xl font-bold text-[#102A43] text-center mb-10">Comment ça marche</h3>
+        <div className="grid sm:grid-cols-3 gap-6">
+          <div className="bg-white rounded-2xl p-6 shadow-md hover:shadow-lg transition-shadow">
+            <div className="w-10 h-10 rounded-full bg-[#1D4ED8] text-white flex items-center justify-center font-bold text-lg mb-4">1</div>
+            <h4 className="text-base font-bold text-[#102A43] mb-2">Vous renseignez</h4>
+            <p className="text-sm text-[#475569] leading-relaxed">Quelques informations simples : consommations, systèmes en place, âge du bâtiment, travaux déjà réalisés.</p>
+          </div>
+          <div className="bg-white rounded-2xl p-6 shadow-md hover:shadow-lg transition-shadow">
+            <div className="w-10 h-10 rounded-full bg-[#16A34A] text-white flex items-center justify-center font-bold text-lg mb-4">2</div>
+            <h4 className="text-base font-bold text-[#102A43] mb-2">Nous analysons</h4>
+            <p className="text-sm text-[#475569] leading-relaxed">Votre situation est comparée à des repères adaptés aux usages tertiaires.</p>
+          </div>
+          <div className="bg-white rounded-2xl p-6 shadow-md hover:shadow-lg transition-shadow">
+            <div className="w-10 h-10 rounded-full bg-[#F59E0B] text-white flex items-center justify-center font-bold text-lg mb-4">3</div>
+            <h4 className="text-base font-bold text-[#102A43] mb-2">Vous recevez</h4>
+            <p className="text-sm text-[#475569] leading-relaxed">Un rapport PDF clair, avec une première lecture utile pour décider.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {/* REASSURANCE */}
+    <section className="py-10 bg-white">
+      <div className="max-w-3xl mx-auto px-4">
+        <div className="bg-[#FEF3C7] border border-[#FCD34D] rounded-xl p-6 text-center">
+          <p className="text-sm text-[#92400E]"><strong>Pré-diagnostic non réglementaire.</strong> Il ne remplace pas un audit complet. Il vous aide à savoir s'il est utile d'en lancer un.</p>
+        </div>
+      </div>
+    </section>
+
+    {/* CTA FINAL */}
+    <section className="py-16 md:py-20 bg-gradient-to-br from-[#102A43] via-[#1D4ED8] to-[#1E3A5F] text-white relative overflow-hidden">
+      <div className="absolute -top-20 -right-20 w-40 h-40 bg-white opacity-5 rounded-full blur-3xl" />
+      <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-white opacity-5 rounded-full blur-3xl" />
+      <div className="max-w-4xl mx-auto px-4 text-center relative z-10">
+        <h2 className="text-3xl md:text-4xl font-bold mb-4">Obtenez un premier niveau de clarté avant d'engager plus de temps ou de budget.</h2>
+        <button type="button" onClick={() => navigate('diagnostic')} className="bg-white text-[#102A43] px-8 py-4 rounded-xl font-bold text-lg hover:bg-slate-100 transition-all shadow-lg hover:shadow-xl hover:translate-y-[-2px]">
+          Recevoir mon pré-diagnostic gratuit
+        </button>
+        <p className="mt-4 text-sm opacity-90">3 minutes • Sans engagement • Rapport PDF par email</p>
+      </div>
+    </section>
+  </div>
+);
+            const PageMethod = ({ navigate }) => (
+        <div className="fade-in bg-[#F8FAFC]">
+          <section className="py-14 md:py-18 px-4 bg-gradient-to-b from-white to-[#F3F7FB] border-b border-slate-100">
+            <div className="max-w-6xl mx-auto">
+              <div className="max-w-3xl">
+                <div className="inline-flex items-center gap-2 bg-[#EEF2FF] text-[#1E3A5F] px-3 py-1 rounded-full text-xs font-semibold mb-4">
+                  <Icon icon="solar:shield-check-linear" className="text-sm" />
+                  Notre approche
+                </div>
+
+                <h1 className="text-3xl md:text-4xl tracking-tight font-semibold text-[#1E3A5F] mb-4 leading-tight">
+                  Une estimation utile pour décider
+                </h1>
+
+                <p className="text-slate-600 leading-relaxed text-sm md:text-base">
+                  DiagTertiaire est un <strong>pré-diagnostic</strong> : un outil de cadrage rapide pour comprendre
+                  si la consommation d’un bâtiment tertiaire est cohérente, identifier les leviers les plus probables
+                  et décider s’il faut lancer un audit complet.
+                </p>
+              </div>
+
+              <div className="mt-8 grid md:grid-cols-2 gap-5">
+                <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+                  <h3 className="text-sm font-semibold text-[#1E3A5F] mb-3 flex items-center gap-2">
+                    <Icon icon="solar:check-circle-linear" className="text-base text-emerald-600" />
+                    Ce que DiagTertiaire fait
+                  </h3>
+                  <ul className="space-y-2 text-sm text-slate-600">
+                    <li className="flex items-start gap-2"><Icon icon="solar:arrow-right-linear" className="text-sm mt-0.5 text-[#1E3A5F] shrink-0" /><span>Estime la performance et l’écart à une référence sectorielle</span></li>
+                    <li className="flex items-start gap-2"><Icon icon="solar:arrow-right-linear" className="text-sm mt-0.5 text-[#1E3A5F] shrink-0" /><span>Priorise les postes d’action (chauffage, éclairage, pilotage…)</span></li>
+                    <li className="flex items-start gap-2"><Icon icon="solar:arrow-right-linear" className="text-sm mt-0.5 text-[#1E3A5F] shrink-0" /><span>Donne des ordres de grandeur coûts / gains / ROI</span></li>
+                    <li className="flex items-start gap-2"><Icon icon="solar:arrow-right-linear" className="text-sm mt-0.5 text-[#1E3A5F] shrink-0" /><span>Fournit une base de discussion avant audit ou devis</span></li>
+                  </ul>
+                </div>
+
+                <div className="bg-[#FFF8EE] rounded-2xl border border-amber-200 p-5 shadow-sm">
+                  <h3 className="text-sm font-semibold text-amber-800 mb-3 flex items-center gap-2">
+                    <Icon icon="solar:shield-warning-linear" className="text-base text-amber-600" />
+                    Ce que DiagTertiaire ne remplace pas
+                  </h3>
+                  <ul className="space-y-2 text-sm text-slate-700">
+                    <li className="flex items-start gap-2"><Icon icon="solar:close-circle-linear" className="text-sm mt-0.5 text-amber-600 shrink-0" /><span>Un audit réglementaire ou une visite technique terrain</span></li>
+                    <li className="flex items-start gap-2"><Icon icon="solar:close-circle-linear" className="text-sm mt-0.5 text-amber-600 shrink-0" /><span>Un devis entreprise ou un dimensionnement CVC détaillé</span></li>
+                    <li className="flex items-start gap-2"><Icon icon="solar:close-circle-linear" className="text-sm mt-0.5 text-amber-600 shrink-0" /><span>Une promesse contractuelle d’économies</span></li>
+                    <li className="flex items-start gap-2"><Icon icon="solar:close-circle-linear" className="text-sm mt-0.5 text-amber-600 shrink-0" /><span>Une validation définitive des aides disponibles</span></li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="mt-5 bg-white rounded-2xl border border-slate-200 p-5">
+                <h3 className="text-sm font-semibold text-[#1E3A5F] mb-2">Pourquoi ce pré-diagnostic existe</h3>
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  L’objectif est de vous donner un <strong>premier niveau de lecture fiable</strong> avant d’engager du temps,
+                  un budget d’audit ou des travaux. Vous obtenez un cadrage rapide pour décider plus sereinement.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <section className="py-14 px-4 bg-white border-b border-slate-100">
+            <div className="max-w-6xl mx-auto">
+              <SectionTitle sub="Une logique simple, transparente et orientée décision">
+                Comment l’estimation est construite
+              </SectionTitle>
+
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {[
+                  { icon: 'solar:buildings-2-linear', color: '#1E3A5F', title: 'Référence sectorielle', desc: "Chaque activité tertiaire a sa consommation de référence (bureaux, commerce, santé...)."},
+                  { icon: 'solar:calendar-linear', color: '#F39C12', title: 'Ajustement bâtiment', desc: "L’âge du bâtiment et des équipements affine l’ordre de grandeur estimé."},
+                  { icon: 'solar:wallet-money-linear', color: '#10B981', title: 'Lecture économique', desc: "L’estimation est convertie en coût annuel pour une lecture décisionnelle immédiate."},
+                  { icon: 'solar:chart-2-linear', color: '#7C3AED', title: 'Priorisation', desc: "Le rapport propose des actions types avec gains, coûts et ROI indicatifs."},
+                ].map((item, i) => (
+                  <div key={i} className="bg-slate-50 rounded-xl border border-slate-200 p-4 hover:shadow-sm transition-shadow">
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3" style={{ backgroundColor: `${item.color}15` }}>
+                      <Icon icon={item.icon} className="text-lg" style={{ color: item.color }} />
+                    </div>
+                    <h3 className="text-sm font-semibold text-slate-900 mb-1">{item.title}</h3>
+                    <p className="text-xs text-slate-600 leading-relaxed">{item.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        </div>
+      );
+
+      const PageExample = ({ navigate }) => {
+        const FAKE_DATA = {
+          activity: 'office',
+          activityMixPct: 0,
+          year: 'pre1975',
+          surface: 450,
+          levels: 2,
+          heating: 'gas',
+          heatingAge: '> 15 ans',
+          occupation: 'semaine',
+          consumptionMode: 'kwh',
+          elecKwh: 45000,
+          gasKwh: 146700,
+          noData: false,
+          works: [],
+          hasWorks: 'no',
+          ecsSystem: '',
+          firstName: 'Jean',
+          email: 'jean@exemple.com',
+          consent: true
+        };
+
+        return (
+          <div className="fade-in bg-[#F8FAFC] min-h-screen">
+            <section className="py-12 px-4 border-b border-slate-100 bg-white">
+              <div className="max-w-5xl mx-auto text-center">
+                <div className="inline-flex items-center gap-2 bg-[#FFF8EE] text-amber-800 px-3 py-1 rounded-full text-xs font-semibold mb-4">
+                  <Icon icon="solar:document-text-linear" className="text-sm" />
+                  Exemple de rapport
+                </div>
+                <h1 className="text-3xl tracking-tight font-semibold text-[#1E3A5F] mb-2">
+                  À quoi ressemble votre rapport
+                </h1>
+                <p className="text-slate-600 text-sm md:text-base">
+                  Exemple simulé pour un bureau de 450 m² construit avant 1975.
+                </p>
+                <div className="mt-5 flex flex-wrap justify-center gap-3">
+                  <button type="button" onClick={() => navigate('diagnostic')} className="bg-[#1D4ED8] text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-[#1E40AF] transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5">
+                  Lancer mon diagnostic gratuit
+                  </button>
+                  <button type="button" onClick={() => navigate('methode')} className="bg-white border border-slate-300 text-slate-700 px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-slate-50 transition-colors">
+                    Voir l’approche
+                  </button>
+                </div>
+              </div>
+            </section>
+
+            <div className="max-w-4xl mx-auto px-4 py-10">
+              <StepReport data={FAKE_DATA} />
+            </div>
+          </div>
+        );
+      };
+
+      /* ═══════════════════════════════════════════════════════════════════════════
+   PAGE PRO DEMO - Interface complète marque blanche
+   
+   Sections :
+   1. Hero avec démo upload logo interactive
+   2. Fonctionnalités disponibles vs roadmap
+   3. Tableau pricing avec badges de statut
+   4. Cas d'usage professionnels
+   5. FAQ
+   6. CTA final avec formulaire
+   
+   À insérer dans index_final.html en remplacement de PagePro actuel
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+const PageProDemo = ({ navigate }) => {
+  // État pour la démo interactive
+  const [demoLogo, setDemoLogo] = useState(null);
+  const [demoColor, setDemoColor] = useState('#1E3A5F');
+  const [showPreview, setShowPreview] = useState(false);
+  const [contactForm, setContactForm] = useState({ name: '', email: '', company: '', message: '' });
+  const [formSubmitted, setFormSubmitted] = useState(false);
+
+  // Upload logo
+  const handleLogoUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setDemoLogo(reader.result);
+        setShowPreview(true);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Soumission formulaire contact
+  const handleContactSubmit = (e) => {
+    e.preventDefault();
+    console.log('Contact Pro:', contactForm);
+    setFormSubmitted(true);
+    // TODO: Envoi email ou intégration CRM
+  };
+
+  // Composant Badge de statut
+  const FeatureBadge = ({ status }) => {
+    const badges = {
+      available: { label: 'Disponible', color: 'bg-[#2ECC71] text-white', icon: 'solar:check-circle-bold' },
+      soon: { label: 'Juin 2026', color: 'bg-amber-500 text-white', icon: 'solar:clock-circle-linear' },
+      planned: { label: 'Sept 2026', color: 'bg-slate-400 text-white', icon: 'solar:calendar-linear' }
+    };
+    const badge = badges[status] || badges.planned;
+    
+    return (
+      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ${badge.color}`}>
+        <Icon icon={badge.icon} className="text-xs" />
+        {badge.label}
+      </span>
+    );
+  };
+
+  return (
+    <div className="fade-in bg-[#F8FAFC]">
+      
+      {/* ═══════════════════════════════════════════════════════════════
+          SECTION 1 : HERO AVEC DÉMO INTERACTIVE
+          ═══════════════════════════════════════════════════════════════ */}
+      <section className="bg-gradient-to-br from-[#1E3A5F] via-[#233E64] to-[#1E3A5F] py-20 px-4 relative overflow-hidden">
+        {/* Décoration background */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-10 left-10 w-72 h-72 bg-[#2ECC71] rounded-full blur-3xl"></div>
+          <div className="absolute bottom-10 right-10 w-96 h-96 bg-blue-400 rounded-full blur-3xl"></div>
+        </div>
+
+        <div className="max-w-7xl mx-auto relative z-10">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 px-4 py-2 rounded-full text-sm font-semibold text-white mb-6">
+              <Icon icon="solar:star-bold" className="text-[#2ECC71]" />
+              Espace Professionnel
+            </div>
+            
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
+              Votre outil de pré-diagnostic<br />
+              <span className="text-[#2ECC71]">en marque blanche</span>
+            </h1>
+            
+            <p className="text-lg md:text-xl text-blue-100 max-w-3xl mx-auto leading-relaxed">
+              Proposez DiagTertiaire à vos clients avec votre identité visuelle.
+              Testez la démo interactive ci-dessous.
+            </p>
+          </div>
+
+          {/* Démo interactive */}
+          <div className="max-w-5xl mx-auto bg-white rounded-2xl shadow-2xl overflow-hidden">
+            <div className="bg-gradient-to-r from-slate-50 to-slate-100 px-6 py-4 border-b border-slate-200">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-red-400"></div>
+                <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
+                <div className="w-3 h-3 rounded-full bg-green-400"></div>
+                <span className="ml-3 text-xs font-mono text-slate-500">demo.diagtertiaire.fr</span>
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-8 p-8">
+              {/* Colonne gauche : Upload */}
+              <div>
+                <h3 className="text-xl font-semibold text-slate-900 mb-4">
+                  Personnalisez votre interface
+                </h3>
+
+                {/* Upload logo */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Votre logo
+                  </label>
+                  <div className="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-[#1E3A5F] transition-colors cursor-pointer">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleLogoUpload}
+                      className="hidden"
+                      id="logo-upload"
+                    />
+                    <label htmlFor="logo-upload" className="cursor-pointer">
+                      {demoLogo ? (
+                        <img src={demoLogo} alt="Logo" className="max-h-20 mx-auto mb-2" />
+                      ) : (
+                        <Icon icon="solar:upload-linear" className="text-4xl text-slate-400 mb-2 block mx-auto" />
+                      )}
+                      <p className="text-sm text-slate-600">
+                        {demoLogo ? 'Changer le logo' : 'Cliquez pour uploader votre logo'}
+                      </p>
+                      <p className="text-xs text-slate-400 mt-1">PNG, JPG, SVG - Max 2MB</p>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Choix couleur */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Couleur principale
+                  </label>
+                  <div className="flex gap-3">
+                    {['#1E3A5F', '#2ECC71', '#3B82F6', '#8B5CF6', '#EF4444', '#F59E0B'].map(color => (
+                      <button
+                        key={color}
+                        onClick={() => setDemoColor(color)}
+                        className={`w-12 h-12 rounded-lg border-2 transition-all ${
+                          demoColor === color ? 'border-slate-900 scale-110' : 'border-slate-200 hover:scale-105'
+                        }`}
+                        style={{ backgroundColor: color }}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setShowPreview(!showPreview)}
+                  className="w-full bg-[#1E3A5F] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#162B47] transition-colors flex items-center justify-center gap-2"
+                >
+                  <Icon icon={showPreview ? "solar:eye-closed-linear" : "solar:eye-linear"} />
+                  {showPreview ? 'Masquer l\'aperçu' : 'Voir l\'aperçu'}
+                </button>
+              </div>
+
+              {/* Colonne droite : Preview */}
+              <div>
+                <h3 className="text-xl font-semibold text-slate-900 mb-4">
+                  Aperçu en temps réel
+                </h3>
+
+                {showPreview ? (
+                  <div className="border border-slate-200 rounded-xl overflow-hidden shadow-lg">
+                    {/* En-tête avec logo */}
+                    <div className="px-6 py-4 flex items-center justify-between" style={{ backgroundColor: demoColor }}>
+                      {demoLogo ? (
+                        <img src={demoLogo} alt="Logo" className="h-8" />
+                      ) : (
+                        <div className="text-white font-bold text-lg">Votre Logo</div>
+                      )}
+                      <div className="text-white text-xs opacity-75">Rapport DiagTertiaire</div>
+                    </div>
+
+                    {/* Contenu simulé */}
+                    <div className="p-6 bg-white">
+                      <div className="mb-4">
+                        <div className="text-xs text-slate-500 mb-1">Performance énergétique</div>
+                        <div className="text-3xl font-bold" style={{ color: demoColor }}>Classe D</div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                          <div className="h-full rounded-full" style={{ backgroundColor: demoColor, width: '65%' }}></div>
+                        </div>
+                        <div className="text-xs text-slate-600">245 kWh/m²/an</div>
+                      </div>
+
+                      <div className="mt-4 pt-4 border-t border-slate-100">
+                        <div className="text-xs font-semibold text-slate-700 mb-2">Actions prioritaires</div>
+                        <div className="space-y-2">
+                          {['Isolation toiture', 'Régulation', 'LED'].map((action, i) => (
+                            <div key={i} className="flex items-center gap-2 text-xs">
+                              <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: demoColor }}></div>
+                              <span className="text-slate-600">{action}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="h-full flex flex-col items-center justify-center text-center p-8 bg-slate-50 rounded-xl border border-slate-200">
+                    <Icon icon="solar:document-text-linear" className="text-6xl text-slate-300 mb-4" />
+                    <p className="text-sm text-slate-500">
+                      Uploadez votre logo et choisissez une couleur<br />pour voir l'aperçu
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Trust indicators */}
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-sm text-blue-200">
+            <div className="flex items-center gap-2">
+              <Icon icon="solar:shield-check-bold" className="text-[#2ECC71]" />
+              <span>Données sécurisées</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Icon icon="solar:clock-circle-bold" className="text-[#2ECC71]" />
+              <span>Déploiement immédiat</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Icon icon="solar:star-bold" className="text-[#2ECC71]" />
+              <span>Support dédié</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════
+          SECTION 2 : ROADMAP FONCTIONNALITÉS
+          ═══════════════════════════════════════════════════════════════ */}
+      <section className="py-16 px-4 bg-white">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+              Fonctionnalités & Roadmap
+            </h2>
+            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+              Découvrez ce qui est disponible aujourd'hui et ce qui arrive bientôt
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {/* Starter */}
+            <div className="bg-gradient-to-br from-white to-slate-50 border-2 border-[#2ECC71] rounded-2xl p-6 relative">
+              <div className="absolute -top-3 left-6">
+                <FeatureBadge status="available" />
+              </div>
+
+              <div className="text-center mb-6">
+                <h3 className="text-2xl font-bold text-slate-900 mb-2">Starter</h3>
+                <p className="text-sm text-slate-600">Démarrez rapidement</p>
+              </div>
+
+              <ul className="space-y-3 mb-6">
+                {[
+                  'Logo personnalisé sur PDF',
+                  'Rapport PDF téléchargeable',
+                  'Jusqu\'à 50 diagnostics/mois',
+                  'Support email',
+                  'Accès interface web',
+                  'Statistiques de base'
+                ].map((feature, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm">
+                    <Icon icon="solar:check-circle-bold" className="text-[#2ECC71] shrink-0 mt-0.5" />
+                    <span className="text-slate-700">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <div className="pt-4 border-t border-slate-200">
+                <div className="text-2xl font-bold text-slate-900 mb-1">Nous contacter</div>
+                <p className="text-xs text-slate-500 mb-4">Prix sur mesure selon vos besoins</p>
+                <a href="#contact" className="block w-full bg-[#1D4ED8] text-white px-6 py-4 rounded-lg font-semibold hover:bg-[#1E40AF] transition-colors">
+                  Demander un devis
+                </a>
+              </div>
+            </div>
+
+            {/* Pro */}
+            <div className="bg-gradient-to-br from-white to-blue-50 border-2 border-amber-500 rounded-2xl p-6 relative">
+              <div className="absolute -top-3 left-6">
+                <FeatureBadge status="soon" />
+              </div>
+
+              <div className="text-center mb-6">
+                <h3 className="text-2xl font-bold text-slate-900 mb-2">Pro</h3>
+                <p className="text-sm text-slate-600">Pour les cabinets</p>
+              </div>
+
+              <ul className="space-y-3 mb-6">
+                {[
+                  { text: 'Tout Starter +', available: true },
+                  { text: 'Multi-utilisateurs (5 comptes)', available: false },
+                  { text: 'Base de données clients', available: false },
+                  { text: 'Export Excel & CSV', available: false },
+                  { text: 'Jusqu\'à 500 diagnostics/mois', available: false },
+                  { text: 'Statistiques avancées', available: false },
+                  { text: 'Support prioritaire', available: false }
+                ].map((feature, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm">
+                    <Icon 
+                      icon={feature.available ? "solar:check-circle-bold" : "solar:clock-circle-linear"} 
+                      className={`${feature.available ? 'text-[#2ECC71]' : 'text-amber-500'} shrink-0 mt-0.5`} 
+                    />
+                    <span className={feature.available ? 'text-slate-700' : 'text-slate-500'}>
+                      {feature.text}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+
+              <div className="pt-4 border-t border-slate-200">
+                <div className="text-2xl font-bold text-slate-900 mb-1">Juin 2026</div>
+                <p className="text-xs text-slate-500 mb-4">Rejoignez la beta dès maintenant</p>
+                <a href="#contact" className="block w-full bg-amber-500 text-white text-center px-4 py-3 rounded-lg font-semibold hover:bg-amber-600 transition-colors">
+                  Rejoindre la beta
+                </a>
+              </div>
+            </div>
+
+            {/* Enterprise */}
+            <div className="bg-gradient-to-br from-white to-slate-50 border-2 border-slate-300 rounded-2xl p-6 relative">
+              <div className="absolute -top-3 left-6">
+                <FeatureBadge status="planned" />
+              </div>
+
+              <div className="text-center mb-6">
+                <h3 className="text-2xl font-bold text-slate-900 mb-2">Enterprise</h3>
+                <p className="text-sm text-slate-600">Solutions sur mesure</p>
+              </div>
+
+              <ul className="space-y-3 mb-6">
+                {[
+                  { text: 'Tout Pro +', available: true },
+                  { text: 'Domaine personnalisé', available: false },
+                  { text: 'SSO / Active Directory', available: false },
+                  { text: 'Utilisateurs illimités', available: false },
+                  { text: 'Diagnostics illimités', available: false },
+                  { text: 'SLA garanti 99.9%', available: false },
+                  { text: 'Account manager dédié', available: false }
+                ].map((feature, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm">
+                    <Icon 
+                      icon={feature.available ? "solar:check-circle-bold" : "solar:calendar-linear"} 
+                      className={`${feature.available ? 'text-[#2ECC71]' : 'text-slate-400'} shrink-0 mt-0.5`} 
+                    />
+                    <span className={feature.available ? 'text-slate-700' : 'text-slate-500'}>
+                      {feature.text}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+
+              <div className="pt-4 border-t border-slate-200">
+                <div className="text-2xl font-bold text-slate-900 mb-1">Sur devis</div>
+                <p className="text-xs text-slate-500 mb-4">Solutions personnalisées</p>
+                <a href="#contact" className="block w-full bg-slate-700 text-white text-center px-4 py-3 rounded-lg font-semibold hover:bg-slate-800 transition-colors">
+                  Être rappelé
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════
+          SECTION 3 : CAS D'USAGE
+          ═══════════════════════════════════════════════════════════════ */}
+      <section className="py-16 px-4 bg-slate-50">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+              Qui utilise DiagTertiaire Pro ?
+            </h2>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              {
+                icon: 'solar:calculator-minimalistic-linear',
+                title: 'Experts-comptables',
+                desc: 'Proposez un service premium à vos clients tertiaires. Démarquez-vous avec un outil digital professionnel.',
+                testimonial: '"On a qualifié 12 prospects en 1 mois. L\'outil paie son abonnement tout seul."',
+                author: 'Cabinet MGF, Paris'
+              },
+              {
+                icon: 'solar:buildings-3-linear',
+                title: 'Bureaux d\'études',
+                desc: 'Qualifiez vos prospects en 5 minutes avant audit. Gagnez du temps sur les premiers contacts.',
+                testimonial: '"Avant on perdait 2h par prospect. Maintenant 15 min suffisent pour savoir si ça vaut le coup."',
+                author: 'ThermoConseil, Lyon'
+              },
+              {
+                icon: 'solar:hammer-linear',
+                title: 'Artisans & installateurs',
+                desc: 'Démontrez votre expertise avec un rapport professionnel. Facilitez la prise de décision client.',
+                testimonial: '"Mes clients adorent recevoir un PDF avec mon logo. Ça fait sérieux et ça convertit mieux."',
+                author: 'ÉcoTherm 33, Bordeaux'
+              }
+            ].map((usecase, i) => (
+              <div key={i} className="bg-white rounded-xl p-6 shadow-sm hover:shadow-lg transition-shadow">
+                <div className="w-12 h-12 bg-[#1E3A5F]/10 rounded-xl flex items-center justify-center mb-4">
+                  <Icon icon={usecase.icon} className="text-2xl text-[#1E3A5F]" />
+                </div>
+                
+                <h3 className="text-xl font-semibold text-slate-900 mb-2">{usecase.title}</h3>
+                <p className="text-sm text-slate-600 mb-4">{usecase.desc}</p>
+                
+                <div className="bg-slate-50 rounded-lg p-4 border-l-4 border-[#2ECC71]">
+                  <p className="text-sm italic text-slate-700 mb-2">{usecase.testimonial}</p>
+                  <p className="text-xs font-semibold text-slate-500">{usecase.author}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════
+          SECTION 4 : FAQ
+          ═══════════════════════════════════════════════════════════════ */}
+      <section className="py-16 px-4 bg-white">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+              Questions fréquentes
+            </h2>
+          </div>
+
+          <div className="space-y-4">
+            {[
+              {
+                q: 'Puis-je tester avant de m\'engager ?',
+                r: 'Oui, vous pouvez essayer la démo interactive ci-dessus gratuitement. Nous proposons également un essai gratuit de 14 jours sur l\'offre Starter.'
+              },
+              {
+                q: 'Comment fonctionne la marque blanche ?',
+                r: 'Vous uploadez votre logo et choisissez vos couleurs. Le rapport PDF généré inclut automatiquement votre identité visuelle. Simple et rapide.'
+              },
+              {
+                q: 'Que se passe-t-il si je dépasse mon quota de diagnostics ?',
+                r: 'Vous recevez une notification à 80% puis 100% de votre quota. Vous pouvez upgrader à tout moment ou acheter un pack supplémentaire.'
+              },
+              {
+                q: 'Les fonctionnalités "en développement" sont-elles garanties ?',
+                r: 'Notre roadmap est indicative. Si une fonctionnalité annoncée n\'est pas livrée dans les 6 mois suivant la date prévue, nous proposons un remboursement ou une migration gratuite.'
+              },
+              {
+                q: 'Puis-je migrer d\'une offre à l\'autre ?',
+                r: 'Oui, vous pouvez upgrader ou downgrader à tout moment. Le changement est effectif le mois suivant, au prorata.'
+              },
+              {
+                q: 'Proposez-vous des formations ?',
+                r: 'Oui, chaque abonnement inclut un webinaire d\'onboarding de 30 minutes. L\'offre Enterprise inclut une formation sur site si besoin.'
+              }
+            ].map((faq, i) => (
+              <details key={i} className="group border border-slate-200 rounded-xl overflow-hidden hover:border-[#1E3A5F] transition-colors">
+                <summary className="cursor-pointer px-6 py-4 bg-white hover:bg-slate-50 flex items-center justify-between font-semibold text-slate-900 transition-colors">
+                  {faq.q}
+                  <Icon icon="solar:alt-arrow-down-linear" className="text-slate-400 group-open:rotate-180 transition-transform" />
+                </summary>
+                <div className="px-6 py-4 bg-slate-50 border-t border-slate-100">
+                  <p className="text-sm text-slate-600 leading-relaxed">{faq.r}</p>
+                </div>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════
+          SECTION 5 : FORMULAIRE DE CONTACT
+          ═══════════════════════════════════════════════════════════════ */}
+      <section id="contact" className="py-20 px-4 bg-gradient-to-br from-[#1E3A5F] to-[#162B47]">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              Prêt à démarrer ?
+            </h2>
+            <p className="text-lg text-blue-100">
+              Laissez-nous vos coordonnées, nous vous recontactons sous 24h
+            </p>
+          </div>
+
+          {!formSubmitted ? (
+            <div className="bg-white rounded-2xl p-8 shadow-2xl">
+              <form onSubmit={handleContactSubmit} className="space-y-6">
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Nom complet *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={contactForm.name}
+                      onChange={(e) => setContactForm({...contactForm, name: e.target.value})}
+                      className="w-full border border-slate-300 rounded-lg px-4 py-3 text-sm focus:border-[#1E3A5F] focus:ring-1 focus:ring-[#1E3A5F] outline-none"
+                      placeholder="Jean Dupont"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Email professionnel *
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      value={contactForm.email}
+                      onChange={(e) => setContactForm({...contactForm, email: e.target.value})}
+                      className="w-full border border-slate-300 rounded-lg px-4 py-3 text-sm focus:border-[#1E3A5F] focus:ring-1 focus:ring-[#1E3A5F] outline-none"
+                      placeholder="vous@entreprise.com"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Entreprise / Cabinet
+                  </label>
+                  <input
+                    type="text"
+                    value={contactForm.company}
+                    onChange={(e) => setContactForm({...contactForm, company: e.target.value})}
+                    className="w-full border border-slate-300 rounded-lg px-4 py-3 text-sm focus:border-[#1E3A5F] focus:ring-1 focus:ring-[#1E3A5F] outline-none"
+                    placeholder="Nom de votre structure"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Message / Besoins spécifiques
+                  </label>
+                  <textarea
+                    value={contactForm.message}
+                    onChange={(e) => setContactForm({...contactForm, message: e.target.value})}
+                    rows="4"
+                    className="w-full border border-slate-300 rounded-lg px-4 py-3 text-sm focus:border-[#1E3A5F] focus:ring-1 focus:ring-[#1E3A5F] outline-none resize-none"
+                    placeholder="Décrivez brièvement votre besoin..."
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full bg-[#1D4ED8] text-white px-6 py-4 rounded-lg font-semibold hover:bg-[#1E40AF] transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 flex items-center justify-center gap-2 text-lg"
+                >
+                  Envoyer ma demande
+                  <Icon icon="solar:arrow-right-linear" className="text-xl" />
+                </button>
+
+                <p className="text-xs text-center text-slate-500">
+                  En soumettant ce formulaire, vous acceptez d'être recontacté par notre équipe.
+                </p>
+              </form>
+            </div>
+          ) : (
+            <div className="bg-white rounded-2xl p-12 text-center shadow-2xl">
+              <div className="w-16 h-16 bg-[#2ECC71]/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Icon icon="solar:check-circle-bold" className="text-4xl text-[#2ECC71]" />
+              </div>
+              <h3 className="text-2xl font-bold text-slate-900 mb-3">
+                Message envoyé !
+              </h3>
+              <p className="text-slate-600 mb-6">
+                Nous avons bien reçu votre demande. Notre équipe vous recontactera sous 24h.
+              </p>
+              <button
+                onClick={() => navigate('home')}
+                className="inline-flex items-center gap-2 bg-[#1D4ED8] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#1E40AF] transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5"
+              >
+                Retour à l'accueil
+                <Icon icon="solar:home-linear" />
+              </button>
+            </div>
+          )}
+        </div>
+      </section>
+    </div>
+  );
+};
+
+
+
+      const RestoreBanner = ({ onDismiss, onRestart }) => (
+        <div className="w-full bg-[#EEF2FF] border-b border-[#1E3A5F]/20 px-4 py-2.5 flex items-center justify-between gap-4 no-print">
+          <div className="flex items-center gap-2 text-[#1E3A5F] text-sm">
+            <Icon icon="solar:history-linear" className="shrink-0 text-base" />
+            <span className="font-medium">Reprendre votre estimation en cours ?</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <button type="button" onClick={onRestart} className="text-xs font-semibold text-red-600 hover:text-red-800 underline">
+              Effacer
+            </button>
+            <button type="button" onClick={onDismiss} className="text-slate-400 hover:text-slate-600">
+              <Icon icon="solar:close-circle-linear" className="text-base" />
+            </button>
+          </div>
+        </div>
+      );
+      
+      /* --- APP ROOT --- */
+
+      /* ═══════════════════════════════════════════════════════════════════════════
+         SECTION 8: APP ROOT - NAVIGATION & ÉTAT GLOBAL
+         
+         Composant principal qui gère :
+         - Routing client-side (currentPage: home/diagnostic/methode/exemple/pro)
+         - État du formulaire (formData)
+         - Étape courante du diagnostic (diagStep: 1-4)
+         - Sauvegarde auto dans localStorage
+         - Restauration de session
+         
+         Navigation :
+         - navigate(page) change currentPage et scroll to top
+         - Dans diagnostic : setDiagStep(1-4) pour les étapes
+         ═══════════════════════════════════════════════════════════════════════════ */
+
+      const App = () => {
+          const [currentPage, setCurrentPage] = useState('home');
+          const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+          const [diagStep, setDiagStep] = useState(1);
+          const [showRestoreBanner, setShowRestoreBanner] = useState(false);
+
+          const [formData, setFormData] = useState(() => {
+              const saved = loadFromLS();
+              return (saved && saved._hasData) ? { ...DEFAULT_FORM, ...saved } : { ...DEFAULT_FORM };
+          });
+
+          useEffect(() => {
+              const saved = loadFromLS();
+              if (saved && saved._hasData) setShowRestoreBanner(true);
+          }, []);
+
+          const saveTimeout = useRef(null);
+          useEffect(() => {
+              if (saveTimeout.current) clearTimeout(saveTimeout.current);
+              saveTimeout.current = setTimeout(() => {
+                  const hasData = !!(formData.address || formData.activity || formData.year);
+                  if (hasData) saveToLS({ ...formData, _hasData: true });
+              }, 600);
+              return () => { if (saveTimeout.current) clearTimeout(saveTimeout.current); };
+          }, [formData]);
+
+          const updateForm = useCallback((field, value) => {
+              setFormData(prev => ({ ...prev, [field]: value }));
+          }, []);
+
+          const handleRestart = () => {
+              clearLS();
+              setFormData({ ...DEFAULT_FORM });
+              setDiagStep(1);
+              setShowRestoreBanner(false);
+          };
+
+          const navigate = (page) => {
+              setCurrentPage(page);
+              setIsMobileMenuOpen(false);
+              window.scrollTo(0, 0);
+          };
+
+          const NavLink = ({ page, label }) => (
+              <button type="button"
+                  onClick={() => navigate(page)}
+                  className={`text-sm font-medium transition-colors ${currentPage === page ? 'text-[#1E3A5F] font-semibold border-b-2 border-[#1E3A5F]' : 'text-[#6B7280] hover:text-[#1E3A5F]'}`}
+              >
+                  {label}
+              </button>
+          );
+
+          return (
+              <div className="min-h-screen flex flex-col">
+                  {showRestoreBanner && <RestoreBanner onDismiss={() => setShowRestoreBanner(false)} onRestart={handleRestart} />}
+
+                  <nav className="bg-white border-b border-slate-200 sticky top-0 z-50">
+                      <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
+                          <div className="flex items-center gap-2 text-[#1E3A5F] cursor-pointer" onClick={() => navigate('home')}>
+                              <Icon icon="solar:buildings-2-linear" />
+                              <span className="font-semibold text-lg">DiagTertiaire</span>
+                          </div>
+
+                          <div className="hidden md:flex gap-8">
+                              <NavLink page="home" label="Accueil" />
+                              <NavLink page="methode" label="Approche" />
+                              <NavLink page="exemple" label="Rapport" />
+                              <NavLink page="pro" label="Espace Pro" />
+                          </div>
+
+                          <div className="hidden md:block">
+    <button
+        type="button"
+        onClick={() => navigate('diagnostic')}
+        className="bg-[#1E3A5F] text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-[#162B47] transition-colors"
+    >
+        Lancer mon diagnostic gratuit
+    </button>
+</div>
+
+                          <button type="button" className="md:hidden text-[#1E3A5F]" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+                              <Icon icon={isMobileMenuOpen ? "solar:close-square-linear" : "solar:hamburger-menu-linear"} />
+                          </button>
+                      </div>
+
+                      {isMobileMenuOpen && (
+    <div className="md:hidden bg-white border-t border-slate-100 p-4 flex flex-col gap-4">
+        <NavLink page="home" label="Accueil" />
+        <NavLink page="methode" label="Approche" />
+        <NavLink page="exemple" label="Rapport" />
+        <NavLink page="pro" label="Espace Pro" />
+
+        <button
+            type="button"
+            onClick={() => {
+                navigate('diagnostic');
+                setIsMobileMenuOpen(false);
+            }}
+            className="mt-1 w-full bg-[#1E3A5F] text-white py-2.5 rounded-lg text-sm font-semibold hover:bg-[#162B47] transition-colors"
+        >
+            Lancer le diagnostic
+        </button>
+    </div>
+)}
+                  </nav>
+
+                  <main className="flex-1">
+                      {currentPage === 'home' && <PageHome navigate={navigate} />}
+
+                      {currentPage === 'diagnostic' && (
+                          <div className="max-w-4xl mx-auto px-4 py-8">
+                              {diagStep < 4 && <Stepper currentStep={diagStep} />}
+
+                              {diagStep === 1 && <StepBuilding data={formData} update={updateForm} onNext={() => setDiagStep(2)} />}
+                              {diagStep === 2 && <StepEnergy data={formData} update={updateForm} onNext={() => setDiagStep(3)} onBack={() => setDiagStep(1)} />}
+                              {diagStep === 3 && <StepLead data={formData} update={updateForm} onNext={() => setDiagStep(4)} onBack={() => setDiagStep(2)} />}
+                              {diagStep === 4 && <StepReport data={formData} />}
+                          </div>
+                      )}
+
+                      {currentPage === 'methode' && <PageMethod navigate={navigate} />}
+                      {currentPage === 'exemple' && <PageExample navigate={navigate} />}
+                      {currentPage === 'pro' && <PageProDemo navigate={navigate} />}
+                  </main>
+
+                  {currentPage !== 'diagnostic' && (
+                      <footer className="bg-[#1A3454] py-10">
+          <div className="max-w-6xl mx-auto px-4">
+            <div className="grid md:grid-cols-4 gap-6 md:gap-8 mb-7">
+              
+              <div>
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+                    <iconify-icon icon="solar:buildings-2-linear" style={{color:'white', fontSize:'18px'}} />
+                  </div>
+                  <span className="font-bold text-white">DiagTertiaire</span>
+                </div>
+                <p className="text-sm text-slate-300/90 leading-relaxed mb-4">Pré-diagnostic énergétique tertiaire orienté décision, basé sur références sectorielles.</p>
+                <div className="space-y-2">
+                  <button type="button" onClick={() => navigate('home')} className="block text-sm text-slate-300 hover:text-white transition-colors">À propos</button>
+                  <button type="button" className="block text-sm text-slate-300 hover:text-white transition-colors">Notre méthodologie</button>
+                  <a href="mailto:contact@diagtertiaire.fr" className="block text-sm text-slate-300 hover:text-white transition-colors">Contact</a>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-bold text-white mb-3">Ressources</h4>
+                <ul className="space-y-2">
+                  <li><button type="button" className="text-sm text-slate-300 hover:text-white transition-colors">Guide du décret tertiaire</button></li>
+                  <li><button type="button" className="text-sm text-slate-300 hover:text-white transition-colors">Références sectorielles</button></li>
+                  <li><button type="button" className="text-sm text-slate-300 hover:text-white transition-colors">Blog</button></li>
+                  <li><button type="button" onClick={() => navigate('exemple')} className="text-sm text-slate-300 hover:text-white transition-colors">Exemple de rapport</button></li>
+                </ul>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-bold text-white mb-3">Légal</h4>
+                <ul className="space-y-2">
+                  <li><button type="button" className="text-sm text-slate-300 hover:text-white transition-colors">Mentions légales</button></li>
+                  <li><button type="button" className="text-sm text-slate-300 hover:text-white transition-colors">Politique de confidentialité</button></li>
+                  <li><button type="button" className="text-sm text-slate-300 hover:text-white transition-colors">CGU</button></li>
+                  <li><button type="button" className="text-sm text-slate-300 hover:text-white transition-colors">Gestion des cookies</button></li>
+                </ul>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-bold text-white mb-3">Professionnel</h4>
+                <ul className="space-y-2">
+                  <li><button type="button" onClick={() => navigate('pro')} className="text-sm text-slate-300 hover:text-white transition-colors">Espace pro</button></li>
+                  <li><button type="button" className="text-sm text-slate-300 hover:text-white transition-colors">Devenir partenaire</button></li>
+                  <li><button type="button" className="text-sm text-slate-300 hover:text-white transition-colors">API & Intégrations</button></li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="pt-5 border-t border-white/10 flex flex-wrap justify-between items-center gap-3">
+              <p className="text-xs text-slate-400">© 2026 DiagTertiaire • Estimations basées sur références sectorielles</p>
+              <div className="flex items-center gap-3">
+                {['SSL','RGPD','🇫🇷 FR'].map((b, i) => (
+                  <span key={i} className="text-xs text-slate-400 bg-white/5 px-2 py-1 rounded">{b}</span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </footer>
+                  )}
+              </div>
+          );
+      };
+
+      const root = ReactDOM.createRoot(document.getElementById('root'));
+      root.render(<App />);
+    </script>
+  
+</body></html>
+  

@@ -1,0 +1,16 @@
+// Note a moi-meme ne pas supprimer
+
+ Visualiser en local
+npx serve .
+Ouvre http://localhost:3000 dans ton navigateur.
+
+Publier sur Vercel
+npx vercel --prod
+
+
+git status
+git add .
+git commit -m "Update"
+git push origin main
+
+//

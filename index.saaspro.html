@@ -1028,15 +1028,10 @@
                 if (isFallback) kwhTotal = ref.med * area;
 
                 const intensity = kwhTotal / area;
-                const ratio = ref.med > 0 ? intensity / ref.med : 1;
-
-                // === SCORE A–E ===
-                let score = 'C', positioning = 'Dans la médiane';
-                if (ratio < 0.6) { score = 'A'; positioning = 'Très performant'; }
-                else if (ratio < 0.9) { score = 'B'; positioning = 'Performant'; }
-                else if (ratio < 1.2) { score = 'C'; positioning = 'Dans la médiane'; }
-                else if (ratio < 1.7) { score = 'D'; positioning = 'Surconsommation notable'; }
-                else { score = 'E'; positioning = 'Très énergivore'; }
+                const scoring = computeScoreFromIntensity(intensity, ref.med);
+                const score = scoring.score;
+                const positioning = scoring.positioning;
+                const ratio = scoring.ratio;
 
                 // === PRIX MOYEN PONDÉRÉ ===
                 const billElec = parseFloat(data.elecEuro || data.elec_euro || data.elec_eur || data.cout_elec_eur) || 0;
@@ -1611,16 +1606,16 @@
                 gainKwh: Math.round((a.savingsEuro / (c.annualCost || 1)) * (c.annualConsumption || 0)),
                 scope: a.scope || 'autres',
             }));
-            const positioningMap = {
-                A: 'Très en dessous de la médiane - Très performant',
-                B: 'En dessous de la médiane - Performant',
-                C: 'Dans la médiane sectorielle',
-                D: 'Au-dessus de la médiane - Surconsommation',
-                E: 'Très au-dessus de la médiane - Énergivore'
-            };
+            const benchmarkMedian = c.benchmark?.median || c.benchmark?.med || 0;
+            const intensity = c.intensityPerSqm || (extractSurfaceValue(c) > 0
+                ? Math.round((c.annualConsumption || 0) / extractSurfaceValue(c))
+                : 0);
+            const scoring = computeScoreFromIntensity(intensity, benchmarkMedian);
+            const score = (benchmarkMedian > 0 && intensity > 0) ? scoring.score : (c.score || scoring.score);
+            const positioning = scoring.positioning;
             return {
-                score: c.score,
-                intensity: c.intensityPerSqm,
+                score,
+                intensity,
                 kwhTotal: c.annualConsumption,
                 totalBill: c.annualCost,
                 totalSavingsEur: c.estimatedSavingsPerYear,
@@ -1629,10 +1624,10 @@
                 co2Apres,
                 isFallback: false,
                 badgeConfiance: c.scoreConfidence || 'Élevé',
-                positioning: positioningMap[c.score] || 'Dans la médiane sectorielle',
+                positioning,
                 ref: {
                     q1: c.benchmark?.q1 || 0,
-                    med: c.benchmark?.median || 0,
+                    med: benchmarkMedian,
                     q3: c.benchmark?.q3 || 0,
                     unit: 'kWh EF/m²/an (énergie finale)',
                     scope: c.activity || '-'
@@ -1663,15 +1658,144 @@
         }
 
         function getSectorialThresholds(ref) {
-            const med = (ref && ref.med) ? ref.med : 200;
+            if (!ref || !ref.med) return null;
+            const med = ref.med;
+            // Flat values used in THRESHOLD_LABELS: A=seuil max A, B=seuil max B, etc.
             return {
-                A: { max: Math.round(med * 0.6) },
-                B: { min: Math.round(med * 0.6), max: Math.round(med * 0.9) },
-                C: { min: Math.round(med * 0.9), max: Math.round(med * 1.2) },
-                D: { min: Math.round(med * 1.2), max: Math.round(med * 1.7) },
-                E: { min: Math.round(med * 1.7) },
+                A: Math.round(med * 0.60),
+                B: Math.round(med * 0.90),
+                C: Math.round(med * 1.20),
+                D: Math.round(med * 1.70),
+                E: '> ' + Math.round(med * 1.70),
             };
         }
+
+        function computeScoreFromIntensity(intensityValue, medianValue) {
+            const intensity = parseFloat(intensityValue) || 0;
+            const median = parseFloat(medianValue) || 0;
+            const ratioRaw = median > 0 ? intensity / median : 1;
+            // Évite les effets de flottants sur les seuils (ex: 1.1999999)
+            const ratio = parseFloat(ratioRaw.toFixed(4));
+            if (ratio < 0.6) return { score: 'A', positioning: 'Très performant', ratio };
+            if (ratio < 0.9) return { score: 'B', positioning: 'Performant', ratio };
+            if (ratio < 1.2) return { score: 'C', positioning: 'Dans la médiane', ratio };
+            if (ratio < 1.7) return { score: 'D', positioning: 'Surconsommation notable', ratio };
+            return { score: 'E', positioning: 'Très énergivore', ratio };
+        }
+
+        function parseSurfaceValue(raw) {
+            if (raw === null || raw === undefined) return 0;
+            if (typeof raw === 'number') return raw > 0 ? raw : 0;
+            if (typeof raw !== 'string') return 0;
+            const normalized = raw.replace(/\s/g, '').replace(',', '.');
+            const cleaned = normalized.replace(/[^\d.]/g, '');
+            const parsed = parseFloat(cleaned);
+            return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+        }
+
+        function extractSurfaceValue(caseData) {
+            if (!caseData) return 0;
+            const fd = caseData.formData || {};
+            const direct = parseSurfaceValue(
+                fd.surface ||
+                fd.surface_utile ||
+                fd.area ||
+                caseData.buildingArea ||
+                caseData.surface
+            );
+            if (direct > 0) return direct;
+
+            const label = caseData.surfaceLabel;
+            if (typeof label === 'string' && label.toLowerCase().includes('m²')) {
+                return parseSurfaceValue(label);
+            }
+            return 0;
+        }
+
+        function buildCompactBenchmarkData(buildingValue, medianValue) {
+            const building = Math.round(parseFloat(buildingValue) || 0);
+            const median = Math.round(parseFloat(medianValue) || 0);
+            const buildingColor = building < median ? '#10B981' : '#EF4444';
+            return [
+                { name: 'Votre bâtiment', value: building, fill: buildingColor },
+                { name: 'Médiane', value: median, fill: '#F59E0B' },
+            ].filter(d => d.value > 0);
+        }
+
+        function normalizeEngineResult(result, fallbackMedian) {
+            if (!result) return null;
+            const median = parseFloat(result.ref?.med || fallbackMedian || 0) || 0;
+            const scoring = computeScoreFromIntensity(result.intensity, median);
+            return {
+                ...result,
+                score: scoring.score,
+                positioning: scoring.positioning,
+                ratio: parseFloat(scoring.ratio.toFixed(2)),
+                ref: {
+                    ...(result.ref || {}),
+                    med: median || result.ref?.med || 0,
+                },
+            };
+        }
+
+        function getCapexBrutValue(source) {
+            if (!source) return 0;
+            const explicit = Number(source.totalCapexBrut ?? source.totalCapex);
+            if (Number.isFinite(explicit) && explicit > 0) return Math.round(explicit);
+
+            const net = Number(source.totalCapexNet);
+            const aides = Number(source.aidesTotal ?? source.aidesEstimees);
+            if (Number.isFinite(net) && Number.isFinite(aides) && (net > 0 || aides > 0)) {
+                return Math.max(0, Math.round(net + aides));
+            }
+
+            const actions = source.topActions || source.actions || [];
+            const fromActions = actions.reduce((sum, a) => sum + (Number(a?.capex) || 0), 0);
+            if (fromActions > 0) return Math.round(fromActions);
+
+            if (Number.isFinite(net) && net > 0) return Math.round(net);
+            return 0;
+        }
+
+        function formatIntWithSpaces(value) {
+            const n = Number(value) || 0;
+            const rounded = Math.round(n);
+            return String(rounded).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+        }
+
+        const ProjectionTooltipCompact = ({ active, payload, label }) => {
+            if (!active || !Array.isArray(payload) || payload.length === 0) return null;
+
+            const byKey = {};
+            payload.forEach(item => {
+                const key = item?.dataKey || item?.name;
+                if ((key === 'sans_travaux' || key === 'avec_travaux') && !byKey[key]) {
+                    byKey[key] = item;
+                }
+            });
+
+            const rows = ['sans_travaux', 'avec_travaux']
+                .filter(k => byKey[k])
+                .map(k => ({ key: k, value: Number(byKey[k].value || 0) }));
+
+            if (!rows.length) return null;
+
+            const meta = {
+                sans_travaux: { label: 'Sans travaux (cumulé)', color: '#EF4444' },
+                avec_travaux: { label: 'Avec travaux (cumulé)', color: '#10B981' },
+            };
+
+            return (
+                <div className="bg-white border border-slate-200 rounded-lg p-3 shadow text-sm">
+                    <div className="font-bold text-slate-800 mb-2">{label}</div>
+                    {rows.map(row => (
+                        <div key={row.key} style={{ color: meta[row.key].color }}>
+                            {meta[row.key].label} : {row.value.toLocaleString('fr-FR')} €
+                        </div>
+                    ))}
+                </div>
+            );
+        };
 
         function getQualificationStars(score) {
             score = score || 0;
@@ -2450,12 +2574,20 @@
             const casesComputed = useMemo(() => cases.map(c => {
                 let computed = c.engineResult || null;
                 try { if (!computed && c.formData) computed = ENGINE_PRO.compute(c.formData); } catch (e) { }
-                return { ...c, _computed: computed };
+                if (!computed) computed = buildEngineResultFromMock(c);
+                computed = normalizeEngineResult(computed, c.benchmark?.median || c.benchmark?.med || 0);
+                return { ...c, _computed: computed, _surface: extractSurfaceValue(c) };
             }), [cases]);
 
             const totalSavings = casesComputed.reduce((acc, c) => acc + (c._computed?.totalSavingsEur || c.estimatedSavingsPerYear || 0), 0);
             const avgSavingsPerCase = casesComputed.length > 0 ? Math.round(totalSavings / casesComputed.length) : 0;
-            const completedCount = casesComputed.filter(c => c._computed || c.engineResult || c.score).length;
+            const completedCount = casesComputed.filter(c =>
+                c.engineResult || c.id?.startsWith('case_') || c.reportGeneratedAt
+            ).length;
+            const inProgressCount = casesComputed.filter(c =>
+                !c.engineResult && !c.id?.startsWith('case_') && !c.reportGeneratedAt
+                && (c.formData?.contactName || c.formData?.company || c.clientName)
+            ).length;
             const completionRate = casesComputed.length > 0 ? Math.round((completedCount / casesComputed.length) * 100) : 0;
             const scoreDistrib = { A: 0, B: 0, C: 0, D: 0, E: 0 };
             casesComputed.forEach(c => {
@@ -2465,7 +2597,15 @@
 
             const timeline = casesComputed
                 .filter(c => c.createdAt || c.lastUpdated)
-                .map(c => ({ date: c.createdAt || c.lastUpdated, label: `Rapport : ${c.projectName || c.formData?.clientName || c.id}`, icon: 'solar:document-text-bold', id: c.id }))
+                .map(c => {
+                    const surfacePart = c._surface > 0 ? ` · ${Math.round(c._surface).toLocaleString('fr-FR')} m²` : '';
+                    return {
+                        date: c.createdAt || c.lastUpdated,
+                        label: `Rapport : ${c.projectName || c.formData?.clientName || c.id}${surfacePart}`,
+                        icon: 'solar:document-text-bold',
+                        id: c.id
+                    };
+                })
                 .sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
 
             return (
@@ -2506,15 +2646,18 @@
                             <div className="flex items-center gap-2 text-slate-500 font-semibold text-sm mb-4">
                                 <Icon icon="solar:wallet-bold" className="text-green-600 text-xl" /> Économies moyennes
                             </div>
-                            <div className="text-3xl font-extrabold text-slate-900">{avgSavingsPerCase.toLocaleString('fr-FR')} €</div>
-                            <div className="text-xs text-slate-400 mt-2 font-medium">estimées / an · par dossier</div>
+                            <div className="text-3xl font-extrabold text-slate-900">{avgSavingsPerCase.toLocaleString('fr-FR')} euros</div>
+                            <div className="text-xs text-slate-400 mt-2 font-medium">economie par client et par an apres travaux</div>
+                            <div className="text-xs text-emerald-600 font-bold mt-1">sur {casesComputed.length} dossier{casesComputed.length > 1 ? 's' : ''} analyses</div>
                         </div>
                         <div className="kpi-card">
                             <div className="flex items-center gap-2 text-slate-500 font-semibold text-sm mb-4">
                                 <Icon icon="solar:check-circle-bold" className="text-emerald-600 text-xl" /> Taux de complétion
                             </div>
                             <div className="text-4xl font-extrabold text-slate-900">{completionRate}%</div>
-                            <div className="text-xs text-slate-400 mt-2 font-medium">{completedCount}/{cases.length} dossiers complétés</div>
+                            <div className="text-xs text-slate-400 mt-2 font-medium">
+                                {completedCount} complete{completedCount > 1 ? 's' : ''} / {inProgressCount} en cours
+                            </div>
                         </div>
                     </div>
 
@@ -2558,8 +2701,10 @@
                 if (!computed && Object.keys(fd).length > 0) {
                     try { computed = ENGINE_PRO.compute(fd); } catch (e) { }
                 }
+                if (!computed) computed = buildEngineResultFromMock(c);
+                computed = normalizeEngineResult(computed, c.benchmark?.median || c.benchmark?.med || 0);
                 const actLabel = fd.activity || fd.activite || c.activity || c._actLabel || 'Tertiaire';
-                const area = parseFloat(fd.surface || fd.area || c.surfaceLabel || 0);
+                const area = extractSurfaceValue(c);
                 const displayName = c.clientName || c.projectName || fd.clientName || '-';
                 return { ...c, _computed: computed, _actLabel: actLabel, _area: area, _displayName: displayName };
             }), [cases]);
@@ -2761,9 +2906,10 @@
                 </div>
             );
 
-            const r = c.engineResult
+            const rawResult = c.engineResult
                 || (c.formData ? ENGINE_PRO.compute(c.formData) : null)
                 || buildEngineResultFromMock(c);
+            const r = normalizeEngineResult(rawResult, c.benchmark?.median || c.benchmark?.med || 0);
 
             // Lecture logo - fraiche au render + reactive sur event storage
             const proLogoImg = (() => { try { return localStorage.getItem('proLogoImg') || ''; } catch (e) { return ''; } })();
@@ -2798,33 +2944,38 @@
 
             const COLORS = { chauffage: '#F97316', clim: '#06B6D4', ventil: '#3B82F6', eclairage: '#F59E0B', ecs: '#8B5CF6', autres: '#94A3B8' };
             const LABELS = { chauffage: 'Chauffage', clim: 'Climatisation', ventil: 'Ventilation', eclairage: 'Éclairage', ecs: 'ECS', autres: 'Autres' };
-            const OBJECTIF_LABELS = { facture: 'Réduction des charges', reduction_charges: 'Réduction des charges', conformite: 'Conformité réglementaire', valo: 'Valorisation du bien', valorisation_patrimoine: 'Valorisation du patrimoine' };
-            const HORIZON_LABELS = { immediat: 'Immédiat (< 3 mois)', moyen: 'Moyen terme (3-12 mois)', long: 'Long terme (> 1 an)', court_terme: 'Court terme', '1an': 'Court terme (3-12 mois)', '3ans': 'Moyen terme (1-3 ans)', '5ans': 'Long terme (3-5 ans)' };
-            const BUDGET_LABELS = { moins_5k: '< 5 000 €', '5k_20k': '5 000 - 20 000 €', '20k_50k': '20 000 - 50 000 €', plus_50k: '> 50 000 €', non_defini: 'Non défini', '10k-30k': '10 000 - 30 000 €', '30k-100k': '30 000 - 100 000 €', plus_100k: '> 100 000 €' };
+            const OBJECTIF_LABELS = { reduction_charges: 'Reduction des charges', conformite_reglementaire: 'Conformite reglementaire (Decret Tertiaire)', valorisation_patrimoine: 'Valorisation du patrimoine', confort_occupants: 'Amelioration du confort', demarche_rse: 'Demarche RSE', facture: 'Reduction des charges', conformite: 'Conformite reglementaire', valo: 'Valorisation patrimoine' };
+            const HORIZON_LABELS = { immediat: 'Immediat (moins de 3 mois)', court_terme: 'Court terme (3-12 mois)', '1an': 'Court terme (3-12 mois)', moyen: 'Moyen terme (1-3 ans)', long: 'Long terme (plus de 3 ans)', '3ans': 'Moyen terme', '5ans': 'Long terme' };
+            const BUDGET_LABELS = { moins_5k: 'Moins de 5 000 euros', '5k_20k': '5 000 a 20 000 euros', '10k-30k': '10 000 a 30 000 euros', '20k_50k': '20 000 a 50 000 euros', '30k-100k': '30 000 a 100 000 euros', '50k_200k': '50 000 a 200 000 euros', plus_100k: 'Plus de 100 000 euros', plus_200k: 'Plus de 200 000 euros', non_defini: 'Non defini', plus_50k: 'Plus de 50 000 euros' };
 
             return (
                 <div className="p-4 md:p-8 max-w-5xl mx-auto">
                     {/* Barre navigation */}
-                    <div className="no-print flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 bg-white p-4 rounded-xl border border-slate-200 shadow-sm sticky top-4 z-40">
+                    <div className="no-print flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6 bg-white p-3 sm:p-4 rounded-xl border border-slate-200 shadow-sm sticky top-0 z-40">
                         {isProAuth ? (
-                            <button onClick={() => setPage('cases')} className="inline-flex items-center gap-2 text-slate-500 hover:text-blue-600 font-bold px-4 py-2 hover:bg-slate-50 rounded-lg transition-colors">
-                                <Icon icon="solar:round-alt-arrow-left-bold" className="text-xl" />
-                                <span className="hidden sm:inline">Retour </span>Dossiers
+                            <button onClick={() => setPage('cases')} className="inline-flex items-center gap-2 text-slate-500 hover:text-blue-600 font-bold text-sm px-3 py-2 hover:bg-slate-50 rounded-lg transition-colors">
+                                <Icon icon="solar:round-alt-arrow-left-bold" className="text-lg" />
+                                <span className="hidden sm:inline">Retour Dossiers</span>
+                                <span className="sm:hidden">Retour</span>
                             </button>
                         ) : (
-                            <button onClick={() => setPage('cases')} className="inline-flex items-center gap-2 text-slate-500 hover:text-blue-600 font-bold px-4 py-2 hover:bg-slate-50 rounded-lg transition-colors">
-                                <Icon icon="solar:round-alt-arrow-left-bold" className="text-xl" />
-                                <span className="hidden sm:inline">Fermer le </span>rapport
+                            <button onClick={() => setPage('cases')} className="inline-flex items-center gap-2 text-slate-500 hover:text-blue-600 font-bold text-sm px-3 py-2 hover:bg-slate-50 rounded-lg transition-colors">
+                                <Icon icon="solar:round-alt-arrow-left-bold" className="text-lg" />
+                                <span className="hidden sm:inline">Retour</span>
+                                <span className="sm:hidden">Retour</span>
                             </button>
                         )}
-                        <div className="flex flex-wrap gap-2">
-                            <button onClick={handlePrintPdf} className="pro-btn bg-slate-800 text-white hover:bg-slate-700">
+                        <div className="flex gap-2 w-full sm:w-auto">
+                            <button onClick={handlePrintPdf} className="pro-btn bg-slate-800 text-white hover:bg-slate-700 flex-1 sm:flex-none text-sm px-3 py-2">
                                 <Icon icon="solar:printer-bold" />
-                                <span className="hidden sm:inline">Télécharger </span>PDF
+                                <span className="hidden sm:inline">Telecharger PDF</span>
+                                <span className="sm:hidden">PDF</span>
                             </button>
                             {isProAuth && !sharedCase && (
-                                <button onClick={handleShare} className="pro-btn pro-btn-primary">
-                                    <Icon icon="solar:link-bold" /> Partager
+                                <button onClick={handleShare} className="pro-btn pro-btn-primary flex-1 sm:flex-none text-sm px-3 py-2">
+                                    <Icon icon="solar:link-bold" />
+                                    <span className="hidden sm:inline">Partager</span>
+                                    <span className="sm:hidden">Lien</span>
                                 </button>
                             )}
                         </div>
@@ -2881,44 +3032,6 @@
                         </div>
                     )}
 
-                    {/* CO2 equivalences parlantes */}
-                    {r && (() => {
-                        const co2Evite = Math.max(0, r.co2Total - r.co2Apres);
-                        if (co2Evite <= 0) return null;
-                        const eq = getCO2Equivalences(co2Evite);
-                        return (
-                            <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-6 mb-8">
-                                <h3 className="text-base font-bold text-emerald-800 mb-4 flex items-center gap-2">
-                                    <Icon icon="solar:leaf-bold" className="text-emerald-600 text-xl" />
-                                    Impact CO<span className="align-sub text-xs">2</span> des travaux préconisés
-                                </h3>
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
-                                    <div className="bg-white rounded-xl border border-emerald-100 p-4">
-                                        <div className="text-3xl mb-1">🌳</div>
-                                        <div className="text-2xl font-extrabold text-emerald-700">{eq.arbres.toLocaleString('fr-FR')}</div>
-                                        <div className="text-xs text-slate-500 mt-1">arbres absorbant autant en 1 an</div>
-                                        <div className="text-xs text-slate-400 italic">(22 kg CO2/arbre/an - ADEME)</div>
-                                    </div>
-                                    <div className="bg-white rounded-xl border border-emerald-100 p-4">
-                                        <div className="text-3xl mb-1">🚗</div>
-                                        <div className="text-2xl font-extrabold text-emerald-700">{eq.voitures}</div>
-                                        <div className="text-xs text-slate-500 mt-1">voitures retirées de la circulation</div>
-                                        <div className="text-xs text-slate-400 italic">(2 100 kg CO2/véhicule/an)</div>
-                                    </div>
-                                    <div className="bg-white rounded-xl border border-emerald-100 p-4">
-                                        <div className="text-3xl mb-1">📍</div>
-                                        <div className="text-2xl font-extrabold text-emerald-700">{eq.km.toLocaleString('fr-FR')}</div>
-                                        <div className="text-xs text-slate-500 mt-1">km évités en voiture thermique</div>
-                                        <div className="text-xs text-slate-400 italic">(0,193 kg CO2/km)</div>
-                                    </div>
-                                </div>
-                                <div className="mt-3 text-center text-xs text-emerald-700 font-semibold">
-                                    Economie de {co2Evite.toLocaleString('fr-FR')} kg CO2/an estimée apres travaux
-                                </div>
-                            </div>
-                        );
-                    })()}
-
                     {/* Étiquettes DiagTertiaire - avant/après travaux */}
                     {r && (() => {
                         const SCORE_CONFIG = {
@@ -2931,44 +3044,52 @@
                         // Score après travaux : calculer la nouvelle intensité
                         const savingsPct = r.kwhTotal > 0 ? r.totalSavingsKwh / r.kwhTotal : 0;
                         const intensiteApres = Math.round(r.intensity * (1 - savingsPct));
-                        const ratioApres = r.ref?.med > 0 ? intensiteApres / r.ref.med : 1;
-                        let scoreApres = 'E';
-                        if (ratioApres < 0.6) scoreApres = 'A';
-                        else if (ratioApres < 0.9) scoreApres = 'B';
-                        else if (ratioApres < 1.2) scoreApres = 'C';
-                        else if (ratioApres < 1.7) scoreApres = 'D';
+                        const scoreApres = computeScoreFromIntensity(intensiteApres, r.ref?.med || 0).score;
                         const cfgAvant = SCORE_CONFIG[r.score] || SCORE_CONFIG['C'];
                         const cfgApres = SCORE_CONFIG[scoreApres] || SCORE_CONFIG['C'];
 
                         const EtiquetteBande = ({ score, intensite, label, sectorRef }) => {
                             const ORDER = ['A', 'B', 'C', 'D', 'E'];
                             const thresholds = getSectorialThresholds(sectorRef);
+                            const THRESHOLD_LABELS = thresholds ? {
+                                A: '< ' + thresholds.A + ' kWh',
+                                B: thresholds.A + ' - ' + thresholds.B + ' kWh',
+                                C: thresholds.B + ' - ' + thresholds.C + ' kWh',
+                                D: thresholds.C + ' - ' + thresholds.D + ' kWh',
+                                E: '> ' + thresholds.D + ' kWh',
+                            } : {};
                             return (
-                                <div className="rounded-xl overflow-hidden border border-slate-200 shadow-sm w-full max-w-xs">
-                                    <div className="bg-slate-800 text-white text-xs font-bold px-3 py-1.5 tracking-wider uppercase">{label}</div>
+                                <div className="rounded-xl overflow-hidden border border-slate-200 shadow-sm w-full sm:w-auto sm:max-w-xs">
+                                    <div className="bg-slate-800 text-white text-xs font-bold px-3 py-1.5 tracking-wider uppercase">
+                                        {label}
+                                    </div>
                                     {ORDER.map(s => {
                                         const cfg = SCORE_CONFIG[s];
                                         const isActive = s === score;
-                                        const t = thresholds[s];
-                                        const rangeStr = t.max && t.min ? `${t.min}-${t.max}` : t.max ? `< ${t.max}` : `> ${t.min}`;
                                         return (
-                                            <div key={s} className="flex items-center gap-2 px-3 py-1"
-                                                style={{ background: isActive ? cfg.color : 'transparent', transition: 'all 0.2s' }}>
-                                                <div className="w-7 h-7 rounded flex items-center justify-center font-extrabold text-base shrink-0"
-                                                    style={{ background: cfg.color, color: 'white', opacity: isActive ? 1 : 0.25 }}>{s}</div>
-                                                {isActive ? (
-                                                    <div className="text-white">
-                                                        <div className="text-sm font-bold">{intensite} kWh/m²/an</div>
-                                                        <div className="text-xs opacity-80">{cfg.text}</div>
-                                                    </div>
-                                                ) : (
-                                                    <div className="text-xs text-slate-400">{rangeStr} kWh/m²/an</div>
-                                                )}
+                                            <div key={s} className="flex items-center gap-2 px-3 py-1.5 border-b border-slate-50 last:border-0"
+                                                style={{ background: isActive ? cfg.color : 'transparent' }}>
+                                                <div className="w-7 h-7 rounded flex items-center justify-center font-extrabold text-sm shrink-0"
+                                                    style={{ background: cfg.color, color: 'white', opacity: isActive ? 1 : 0.3 }}>
+                                                    {s}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    {isActive ? (
+                                                        <div className="text-white">
+                                                            <div className="text-sm font-bold leading-tight">{intensite} kWh/m2/an</div>
+                                                            <div className="text-xs opacity-80">{cfg.text}</div>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="text-xs text-slate-400 font-medium truncate">
+                                                            {THRESHOLD_LABELS[s] || ''}
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
                                         );
                                     })}
                                     <div className="bg-slate-50 px-3 py-1 text-xs text-slate-400 italic border-t border-slate-100">
-                                        Indice DiagTertiaire - indicatif
+                                        Indice DiagTertiaire - indicatif - secteur {sectorRef?.scope || ''}
                                     </div>
                                 </div>
                             );
@@ -2981,7 +3102,7 @@
                                     <Icon icon="solar:tag-price-bold" className="text-blue-600" /> Indice DiagTertiaire - avant / après travaux
                                 </h3>
                                 <p className="text-xs text-slate-400 mb-6">Indicateur indicatif - non opposable, hors cadre OPERAT réglementaire.</p>
-                                <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+                                <div className="flex flex-col items-center gap-6 sm:flex-row sm:justify-center">
                                     <EtiquetteBande score={r.score} intensite={r.intensity} label="Étiquette actuelle" sectorRef={r.ref} />
                                     <div className="flex flex-col items-center gap-1 text-slate-400">
                                         <Icon icon="solar:arrow-right-bold" className="text-3xl text-emerald-500" />
@@ -2999,12 +3120,7 @@
                             .filter(([, v]) => v.pct > 0)
                             .map(([k, v]) => ({ name: LABELS[k] || k, value: v.kwh, eur: v.eur, pct: v.pct, fill: COLORS[k] || '#94A3B8', scope: k }));
 
-                        const benchmarkData = [
-                            { name: 'Votre bâtiment', value: r.intensity, fill: r.score === 'D' || r.score === 'E' ? '#EF4444' : r.score === 'C' ? '#F59E0B' : '#10B981' },
-                            { name: 'Q1 (bon)', value: r.ref?.q1, fill: '#10B981' },
-                            { name: 'Médiane', value: r.ref?.med, fill: '#F59E0B' },
-                            { name: 'Q3 (élevé)', value: r.ref?.q3, fill: '#EF4444' },
-                        ];
+                        const benchmarkData = buildCompactBenchmarkData(r.intensity, r.ref?.med || 0);
 
                         const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
                         const roiData = (r.topActions || [])
@@ -3037,11 +3153,11 @@
                                         </Recharts.ResponsiveContainer>
                                         <div className="space-y-2">
                                             {postesData.sort((a, b) => b.value - a.value).map((d, i) => (
-                                                <div key={i} className="flex items-center gap-3 text-sm">
+                                                <div key={i} className="flex items-center gap-5 text-sm py-0.5">
                                                     <div className="w-3 h-3 rounded-full shrink-0" style={{ background: d.fill }} />
                                                     <span className="flex-1 font-medium text-slate-700">{d.name}</span>
-                                                    <span className="text-slate-500">{d.pct}%</span>
-                                                    <span className="font-bold text-slate-800 w-20 text-right">{d.eur?.toLocaleString('fr-FR')} €</span>
+                                                    <span className="w-14 text-right text-slate-500 tabular-nums">{d.pct}%</span>
+                                                    <span className="font-bold text-slate-800 w-28 text-right tabular-nums">{d.eur?.toLocaleString('fr-FR')} €</span>
                                                 </div>
                                             ))}
                                         </div>
@@ -3055,7 +3171,7 @@
                                     </h3>
                                     <p className="text-xs text-slate-400 mb-5">{r.ref?.unit} - {r.ref?.scope} - Source : ADEME / Enquête ECNA 2022</p>
                                     <Recharts.ResponsiveContainer width="100%" height={220}>
-                                        <Recharts.BarChart data={benchmarkData} layout="vertical" margin={{ top: 5, right: isMobile ? 10 : 80, bottom: 5, left: 10 }}>
+                                        <Recharts.BarChart data={benchmarkData} layout="vertical" margin={{ top: 5, right: isMobile ? 10 : 80, bottom: 5, left: 10 }} barSize={26}>
                                             <Recharts.CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" horizontal={false} />
                                             <Recharts.XAxis type="number" tickFormatter={v => `${v} kWh`} tick={{ fontSize: 11 }} />
                                             <Recharts.YAxis type="category" dataKey="name" tick={{ fontSize: 12, fontWeight: 600 }} width={isMobile ? 80 : 120} />
@@ -3125,7 +3241,7 @@
                                                 <Recharts.CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
                                                 <Recharts.XAxis dataKey="annee" tick={{ fontSize: 11 }} />
                                                 <Recharts.YAxis tickFormatter={v => v >= 1000 ? `${(v / 1000).toFixed(0)}k€` : `${v}€`} tick={{ fontSize: 11 }} domain={['auto', 'auto']} />
-                                                <Recharts.Tooltip formatter={(v, name) => [`${v?.toLocaleString('fr-FR')} €`, name === 'sans_travaux' ? 'Sans travaux (cumulé)' : 'Avec travaux (cumulé)']} />
+                                                <Recharts.Tooltip content={props => <ProjectionTooltipCompact {...props} />} />
                                                 <Recharts.Area type="monotone" dataKey="sans_travaux" stroke="none" fill="url(#zoneEco)" />
                                                 <Recharts.Line type="monotone" dataKey="sans_travaux" stroke="#EF4444" strokeWidth={2.5} strokeDasharray="7 3" dot={false} name="sans_travaux" />
                                                 <Recharts.Line type="monotone" dataKey="avec_travaux" stroke="#10B981" strokeWidth={3} dot={false} name="avec_travaux" />
@@ -3223,8 +3339,8 @@
                                 ))}
                             </div>
                             <div className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-100 text-xs text-blue-700">
-                                <strong>Invest. brut total :</strong> {r.totalCapexBrut?.toLocaleString('fr-FR')} € ·
-                                <strong> Aides estimées :</strong> {r.aidesTotal?.toLocaleString('fr-FR')} € ·
+                                <strong>Invest. brut total :</strong> {getCapexBrutValue(r).toLocaleString('fr-FR')} € ·
+                                <strong> Aides estimées :</strong> {(Math.round(Number(r.aidesTotal || 0))).toLocaleString('fr-FR')} € ·
                                 <strong> Invest. net :</strong> {r.totalCapexNet?.toLocaleString('fr-FR')} €
                                 <div className="mt-1 text-blue-500">Aides : TVA 5,5% + CEE plancher 1,5%. Montants réels pouvant être supérieurs - faire chiffrer par un installateur RGE.</div>
                             </div>
@@ -3253,6 +3369,20 @@
                                     fill: a.roi <= 3 ? '#059669' : a.roi <= 7 ? '#F59E0B' : '#EF4444',
                                 };
                             });
+
+                        const benchmarkMedianFromCase = c.benchmark?.median || c.benchmark?.med || 0;
+                        const benchmarkMedianFromData = (c.benchmark_data || []).find(function (d) {
+                            const n = String(d.name || '').toLowerCase();
+                            return n.includes('médiane') || n.includes('mediane');
+                        })?.value || 0;
+                        const benchmarkMedian = benchmarkMedianFromCase || benchmarkMedianFromData;
+                        const buildingFromData = (c.benchmark_data || []).find(function (d) {
+                            return String(d.name || '').toLowerCase().includes('votre');
+                        })?.value || 0;
+                        const buildingIntensity = c.intensityPerSqm
+                            || (c.buildingArea > 0 ? Math.round((c.annualConsumption || 0) / c.buildingArea) : 0)
+                            || buildingFromData;
+                        const benchmarkData = buildCompactBenchmarkData(buildingIntensity, benchmarkMedian);
 
                         return (
                             <div className="space-y-6 mb-8">
@@ -3293,7 +3423,7 @@
                                             })}
                                         </div>
                                         <div className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-100 text-xs text-blue-700">
-                                            <strong>Invest. brut total :</strong> {(c.totalCapex || 0).toLocaleString('fr-FR')} € ·
+                                            <strong>Invest. brut total :</strong> {getCapexBrutValue(c).toLocaleString('fr-FR')} € ·
                                             <strong> Aides estimées :</strong> {(c.aidesEstimees || 0).toLocaleString('fr-FR')} € ·
                                             <strong> Invest. net :</strong> {(c.totalCapexNet || 0).toLocaleString('fr-FR')} €
                                             <div className="mt-1 text-blue-500">Aides : TVA 5,5% + CEE plancher. Montants réels pouvant être supérieurs - faire chiffrer par un installateur RGE.</div>
@@ -3319,11 +3449,11 @@
                                         <div className="space-y-2">
                                             {postesData.slice().sort(function (a, b) { return b.value - a.value; }).map(function (d, i) {
                                                 return (
-                                                    <div key={i} className="flex items-center gap-3 text-sm">
+                                                    <div key={i} className="flex items-center gap-5 text-sm py-0.5">
                                                         <div className="w-3 h-3 rounded-full shrink-0" style={{ background: d.fill }} />
                                                         <span className="flex-1 font-medium text-slate-700">{d.name}</span>
-                                                        <span className="text-slate-400">{d.pct}%</span>
-                                                        <span className="font-bold text-slate-800 w-20 text-right">{(d.eur || 0).toLocaleString('fr-FR')} €</span>
+                                                        <span className="w-14 text-right text-slate-500 tabular-nums">{d.pct}%</span>
+                                                        <span className="font-bold text-slate-800 w-28 text-right tabular-nums">{(d.eur || 0).toLocaleString('fr-FR')} €</span>
                                                     </div>
                                                 );
                                             })}
@@ -3338,13 +3468,13 @@
                                     </h3>
                                     <p className="text-xs text-slate-400 mb-5">kWh EF/m²/an - Source : ADEME / ECNA 2022</p>
                                     <Recharts.ResponsiveContainer width="100%" height={200}>
-                                        <Recharts.BarChart data={c.benchmark_data} layout="vertical" margin={{ top: 5, right: isMobile2 ? 10 : 80, bottom: 5, left: 10 }}>
+                                        <Recharts.BarChart data={benchmarkData} layout="vertical" margin={{ top: 5, right: isMobile2 ? 10 : 80, bottom: 5, left: 10 }} barSize={26}>
                                             <Recharts.CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" horizontal={false} />
                                             <Recharts.XAxis type="number" tickFormatter={function (v) { return '' + v; }} tick={{ fontSize: 11 }} />
                                             <Recharts.YAxis type="category" dataKey="name" tick={{ fontSize: 12, fontWeight: 600 }} width={isMobile2 ? 80 : 120} />
                                             <Recharts.Tooltip formatter={function (v) { return [v + ' kWh/m²/an']; }} />
                                             <Recharts.Bar dataKey="value" radius={[0, 6, 6, 0]}>
-                                                {c.benchmark_data.map(function (d, i) { return <Recharts.Cell key={i} fill={d.fill} />; })}
+                                                {benchmarkData.map(function (d, i) { return <Recharts.Cell key={i} fill={d.fill} />; })}
                                                 {!isMobile2 && <Recharts.LabelList dataKey="value" position="right" formatter={function (v) { return v + ' kWh/m²/an'; }} style={{ fontSize: 11, fill: '#64748B', fontWeight: 600 }} />}
                                             </Recharts.Bar>
                                         </Recharts.BarChart>
@@ -3405,7 +3535,7 @@
                                                 <Recharts.CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
                                                 <Recharts.XAxis dataKey="annee" tick={{ fontSize: 11 }} />
                                                 <Recharts.YAxis tickFormatter={function (v) { return v >= 1000 ? Math.round(v / 1000) + 'k€' : v + '€'; }} tick={{ fontSize: 11 }} domain={['auto', 'auto']} />
-                                                <Recharts.Tooltip formatter={function (v, name) { return [(v || 0).toLocaleString('fr-FR') + ' €', name === 'sans_travaux' ? 'Sans travaux (cumulé)' : 'Avec travaux (cumulé)']; }} />
+                                                <Recharts.Tooltip content={function (props) { return <ProjectionTooltipCompact {...props} />; }} />
                                                 <Recharts.Area type="monotone" dataKey="sans_travaux" stroke="none" fill={'url(#zoneEco_' + c.id + ')'} />
                                                 <Recharts.Line type="monotone" dataKey="sans_travaux" stroke="#EF4444" strokeWidth={2.5} strokeDasharray="7 3" dot={false} name="sans_travaux" />
                                                 <Recharts.Line type="monotone" dataKey="avec_travaux" stroke="#10B981" strokeWidth={3} dot={false} name="avec_travaux" />
@@ -3432,6 +3562,56 @@
                                     </div>
                                 )}
 
+                            </div>
+                        );
+                    })()}
+
+                    {/* CO2 equivalences parlantes (après graphiques/projection) */}
+                    {r && (() => {
+                        const eq = getCO2Equivalences(r.co2Evite || (r.co2Total - r.co2Apres));
+                        if (!eq || eq.arbres <= 0) return null;
+                        return (
+                            <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-5 mb-8">
+                                <div className="flex items-center gap-2 mb-3">
+                                    <span className="text-emerald-700 font-bold text-sm uppercase tracking-wider">
+                                        Impact environnemental des travaux
+                                    </span>
+                                    <span className="text-xs text-emerald-500 bg-emerald-100 px-2 py-0.5 rounded-full">
+                                        CO2 evite / an
+                                    </span>
+                                </div>
+                                <div className="grid grid-cols-3 gap-4 text-center">
+                                    <div className="bg-white rounded-xl p-4 border border-emerald-100">
+                                        <div className="text-3xl mb-1">🌳</div>
+                                        <div className="text-2xl font-extrabold text-emerald-700">
+                                            {eq.arbres.toLocaleString('fr-FR')}
+                                        </div>
+                                        <div className="text-xs text-slate-500 mt-1 leading-snug">
+                                            arbres absorbant<br />le meme CO2 en 1 an
+                                        </div>
+                                    </div>
+                                    <div className="bg-white rounded-xl p-4 border border-emerald-100">
+                                        <div className="text-3xl mb-1">🚗</div>
+                                        <div className="text-2xl font-extrabold text-emerald-700">
+                                            {eq.voitures.toLocaleString('fr-FR')}
+                                        </div>
+                                        <div className="text-xs text-slate-500 mt-1 leading-snug">
+                                            voitures retirees de la<br />circulation pendant 1 an
+                                        </div>
+                                    </div>
+                                    <div className="bg-white rounded-xl p-4 border border-emerald-100">
+                                        <div className="text-3xl mb-1">🛣️</div>
+                                        <div className="text-2xl font-extrabold text-emerald-700">
+                                            {formatIntWithSpaces(eq.km)} km
+                                        </div>
+                                        <div className="text-xs text-slate-500 mt-1 leading-snug">
+                                            de route évités
+                                        </div>
+                                    </div>
+                                </div>
+                                <p className="text-xs text-emerald-400 mt-3 text-center">
+                                    Source : Base Carbone ADEME 2023 - Estimation indicative
+                                </p>
                             </div>
                         );
                     })()}

@@ -3185,6 +3185,46 @@
                                     <p className="text-xs text-slate-400 mt-3">⚠️ Indice DiagTertiaire - estimation indicative. Ne constitue pas une classe OPERAT réglementaire.</p>
                                 </div>
 
+                                {/* Actions recommandées */}
+                                {r.topActions?.length > 0 && (
+                                    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                                        <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                                            <Icon icon="solar:magic-stick-3-bold" className="text-blue-600" /> Actions recommandées ({r.topActions.length})
+                                        </h3>
+                                        <div className="space-y-3">
+                                            {r.topActions.map((a, i) => (
+                                                <div key={i} className="flex flex-col md:flex-row md:items-center gap-3 p-4 rounded-xl bg-slate-50 border border-slate-100">
+                                                    <div className="flex-1">
+                                                        <div className="font-bold text-slate-800 text-sm">{a.title}</div>
+                                                        {a.sourceWarning && <div className="text-xs text-amber-600 mt-0.5">⚠️ {a.sourceWarning}</div>}
+                                                        {a.fiches?.length > 0 && <div className="text-xs text-slate-400 mt-0.5">Fiche CEE : {a.fiches.join(', ')}</div>}
+                                                    </div>
+                                                    <div className="flex flex-wrap sm:flex-nowrap gap-4 text-sm shrink-0">
+                                                        <div className="text-center min-w-[64px]">
+                                                            <div className="text-xs text-slate-500">Investissement</div>
+                                                            <div className="font-bold text-slate-800">{a.capex?.toLocaleString('fr-FR')} €</div>
+                                                        </div>
+                                                        <div className="text-center min-w-[64px]">
+                                                            <div className="text-xs text-slate-500">Économies/an</div>
+                                                            <div className="font-bold text-green-600">{a.gainEur?.toLocaleString('fr-FR')} €</div>
+                                                        </div>
+                                                        <div className="text-center min-w-[64px]">
+                                                            <div className="text-xs text-slate-500">ROI</div>
+                                                            <div className={`font-bold ${a.roi <= 3 ? 'text-emerald-600' : a.roi <= 7 ? 'text-amber-600' : 'text-red-600'}`}>{a.roi} ans</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-100 text-xs text-blue-700">
+                                            <strong>Invest. brut total :</strong> {getCapexBrutValue(r).toLocaleString('fr-FR')} € ·
+                                            <strong> Aides estimées :</strong> {(Math.round(Number(r.aidesTotal || 0))).toLocaleString('fr-FR')} € ·
+                                            <strong> Invest. net :</strong> {r.totalCapexNet?.toLocaleString('fr-FR')} €
+                                            <div className="mt-1 text-blue-500">Aides : TVA 5,5% + CEE plancher 1,5%. Montants réels pouvant être supérieurs - faire chiffrer par un installateur RGE.</div>
+                                        </div>
+                                    </div>
+                                )}
+
                                 {/* G3 - ROI par action */}
                                 {roiData.length > 0 && (
                                     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
@@ -3273,79 +3313,9 @@
                                         <strong>Projection financière non affichée</strong> - ROI global estimé ({r.roiGlobal} ans) hors plage fiable (0,5–20 ans).
                                     </div>
                                 )}
-
-                                {/* Qualification prospect - pro uniquement */}
-                                {isProAuth && !sharedCase && (
-                                    <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-6 no-print">
-                                        <h3 className="text-sm font-bold text-indigo-800 uppercase tracking-wider mb-4 flex items-center gap-2">
-                                            <Icon icon="solar:star-bold" className="text-indigo-500" /> Qualification prospect (vue pro uniquement)
-                                        </h3>
-                                        <div className="grid md:grid-cols-2 gap-4 text-sm">
-                                            <div><span className="text-indigo-600 font-semibold">Contact :</span> {c.formData?.contactName || c.contact?.name || c.clientName} - {c.formData?.phone || c.contact?.phone || 'Tél. non renseigné'}</div>
-                                            <div><span className="text-indigo-600 font-semibold">Email :</span> {c.email || '-'}</div>
-                                            <div><span className="text-indigo-600 font-semibold">Objectif :</span> {OBJECTIF_LABELS[c.objectif] || c.objectif || '-'}</div>
-                                            <div><span className="text-indigo-600 font-semibold">Horizon :</span> {HORIZON_LABELS[c.horizon] || c.horizon || '-'}</div>
-                                            <div><span className="text-indigo-600 font-semibold">Budget :</span> {BUDGET_LABELS[c.budget] || c.budget || '-'}</div>
-                                            <div className="flex items-center gap-2"><span className="text-indigo-600 font-semibold">Maturité :</span> <StarQualif score={c.scoreMaturite || 0} /></div>
-                                            {c.urgenceVerbatim && (
-                                                <div className="md:col-span-2 bg-white rounded-lg p-3 border border-indigo-100 italic text-slate-600">"{c.urgenceVerbatim}"</div>
-                                            )}
-                                            {c.noteInterne && (
-                                                <div className="md:col-span-2 mt-2">
-                                                    <div className="text-indigo-600 font-semibold text-xs uppercase mb-1 flex items-center gap-1">
-                                                        <Icon icon="solar:lock-bold" style={{ fontSize: '11px' }} /> Note interne
-                                                    </div>
-                                                    <div className="bg-white rounded-lg p-3 border border-indigo-100 text-slate-600 text-sm italic">
-                                                        {c.noteInterne}
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
                             </div>
                         );
                     })()}
-
-                    {/* Actions recommandées */}
-                    {r && r.topActions?.length > 0 && (
-                        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 mb-8">
-                            <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                                <Icon icon="solar:magic-stick-3-bold" className="text-blue-600" /> Actions recommandées ({r.topActions.length})
-                            </h3>
-                            <div className="space-y-3">
-                                {r.topActions.map((a, i) => (
-                                    <div key={i} className="flex flex-col md:flex-row md:items-center gap-3 p-4 rounded-xl bg-slate-50 border border-slate-100">
-                                        <div className="flex-1">
-                                            <div className="font-bold text-slate-800 text-sm">{a.title}</div>
-                                            {a.sourceWarning && <div className="text-xs text-amber-600 mt-0.5">⚠️ {a.sourceWarning}</div>}
-                                            {a.fiches?.length > 0 && <div className="text-xs text-slate-400 mt-0.5">Fiche CEE : {a.fiches.join(', ')}</div>}
-                                        </div>
-                                        <div className="flex flex-wrap sm:flex-nowrap gap-4 text-sm shrink-0">
-                                            <div className="text-center min-w-[64px]">
-                                                <div className="text-xs text-slate-500">Investissement</div>
-                                                <div className="font-bold text-slate-800">{a.capex?.toLocaleString('fr-FR')} €</div>
-                                            </div>
-                                            <div className="text-center min-w-[64px]">
-                                                <div className="text-xs text-slate-500">Économies/an</div>
-                                                <div className="font-bold text-green-600">{a.gainEur?.toLocaleString('fr-FR')} €</div>
-                                            </div>
-                                            <div className="text-center min-w-[64px]">
-                                                <div className="text-xs text-slate-500">ROI</div>
-                                                <div className={`font-bold ${a.roi <= 3 ? 'text-emerald-600' : a.roi <= 7 ? 'text-amber-600' : 'text-red-600'}`}>{a.roi} ans</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                            <div className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-100 text-xs text-blue-700">
-                                <strong>Invest. brut total :</strong> {getCapexBrutValue(r).toLocaleString('fr-FR')} € ·
-                                <strong> Aides estimées :</strong> {(Math.round(Number(r.aidesTotal || 0))).toLocaleString('fr-FR')} € ·
-                                <strong> Invest. net :</strong> {r.totalCapexNet?.toLocaleString('fr-FR')} €
-                                <div className="mt-1 text-blue-500">Aides : TVA 5,5% + CEE plancher 1,5%. Montants réels pouvant être supérieurs - faire chiffrer par un installateur RGE.</div>
-                            </div>
-                        </div>
-                    )}
 
                     {/* Graphiques + actions - dossiers new-style (postes / benchmark_data directs) */}
                     {c.postes && c.benchmark_data && (() => {
@@ -3386,50 +3356,6 @@
 
                         return (
                             <div className="space-y-6 mb-8">
-
-                                {/* Actions recommandées (new-style) */}
-                                {c.actions && c.actions.length > 0 && (
-                                    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-                                        <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                                            <Icon icon="solar:magic-stick-3-bold" className="text-blue-600" /> Actions recommandées ({c.actions.length})
-                                        </h3>
-                                        <div className="space-y-3">
-                                            {c.actions.map(function (a, i) {
-                                                return (
-                                                    <div key={i} className="flex flex-col md:flex-row md:items-start gap-3 p-4 rounded-xl bg-slate-50 border border-slate-100">
-                                                        <div className="flex-1">
-                                                            <div className="font-bold text-slate-800 text-sm">{a.name}</div>
-                                                            {a.description && <div className="text-xs text-slate-500 mt-1">{a.description}</div>}
-                                                            {a.eligCEE && a.fichesCEE?.length > 0 && (
-                                                                <div className="text-xs text-blue-600 mt-1 font-medium">Fiche CEE : {a.fichesCEE.join(', ')}</div>
-                                                            )}
-                                                        </div>
-                                                        <div className="flex gap-4 text-sm shrink-0">
-                                                            <div className="text-center">
-                                                                <div className="text-xs text-slate-500">Investissement</div>
-                                                                <div className="font-bold text-slate-800">{a.capex?.toLocaleString('fr-FR')} €</div>
-                                                            </div>
-                                                            <div className="text-center">
-                                                                <div className="text-xs text-slate-500">Économies/an</div>
-                                                                <div className="font-bold text-green-600">{a.savingsEuro?.toLocaleString('fr-FR')} €</div>
-                                                            </div>
-                                                            <div className="text-center">
-                                                                <div className="text-xs text-slate-500">ROI</div>
-                                                                <div className={'font-bold ' + (a.roi <= 3 ? 'text-emerald-600' : a.roi <= 7 ? 'text-amber-600' : 'text-red-600')}>{a.roi} ans</div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                        <div className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-100 text-xs text-blue-700">
-                                            <strong>Invest. brut total :</strong> {getCapexBrutValue(c).toLocaleString('fr-FR')} € ·
-                                            <strong> Aides estimées :</strong> {(c.aidesEstimees || 0).toLocaleString('fr-FR')} € ·
-                                            <strong> Invest. net :</strong> {(c.totalCapexNet || 0).toLocaleString('fr-FR')} €
-                                            <div className="mt-1 text-blue-500">Aides : TVA 5,5% + CEE plancher. Montants réels pouvant être supérieurs - faire chiffrer par un installateur RGE.</div>
-                                        </div>
-                                    </div>
-                                )}
 
                                 {/* G1 - Décomposition par poste */}
                                 <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
@@ -3481,6 +3407,50 @@
                                     </Recharts.ResponsiveContainer>
                                     <p className="text-xs text-slate-400 mt-2">⚠️ Indice DiagTertiaire - estimation indicative. Ne constitue pas une classe OPERAT réglementaire.</p>
                                 </div>
+
+                                {/* Actions recommandées (new-style) */}
+                                {c.actions && c.actions.length > 0 && (
+                                    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                                        <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                                            <Icon icon="solar:magic-stick-3-bold" className="text-blue-600" /> Actions recommandées ({c.actions.length})
+                                        </h3>
+                                        <div className="space-y-3">
+                                            {c.actions.map(function (a, i) {
+                                                return (
+                                                    <div key={i} className="flex flex-col md:flex-row md:items-start gap-3 p-4 rounded-xl bg-slate-50 border border-slate-100">
+                                                        <div className="flex-1">
+                                                            <div className="font-bold text-slate-800 text-sm">{a.name}</div>
+                                                            {a.description && <div className="text-xs text-slate-500 mt-1">{a.description}</div>}
+                                                            {a.eligCEE && a.fichesCEE?.length > 0 && (
+                                                                <div className="text-xs text-blue-600 mt-1 font-medium">Fiche CEE : {a.fichesCEE.join(', ')}</div>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex gap-4 text-sm shrink-0">
+                                                            <div className="text-center">
+                                                                <div className="text-xs text-slate-500">Investissement</div>
+                                                                <div className="font-bold text-slate-800">{a.capex?.toLocaleString('fr-FR')} €</div>
+                                                            </div>
+                                                            <div className="text-center">
+                                                                <div className="text-xs text-slate-500">Économies/an</div>
+                                                                <div className="font-bold text-green-600">{a.savingsEuro?.toLocaleString('fr-FR')} €</div>
+                                                            </div>
+                                                            <div className="text-center">
+                                                                <div className="text-xs text-slate-500">ROI</div>
+                                                                <div className={'font-bold ' + (a.roi <= 3 ? 'text-emerald-600' : a.roi <= 7 ? 'text-amber-600' : 'text-red-600')}>{a.roi} ans</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                        <div className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-100 text-xs text-blue-700">
+                                            <strong>Invest. brut total :</strong> {getCapexBrutValue(c).toLocaleString('fr-FR')} € ·
+                                            <strong> Aides estimées :</strong> {(c.aidesEstimees || 0).toLocaleString('fr-FR')} € ·
+                                            <strong> Invest. net :</strong> {(c.totalCapexNet || 0).toLocaleString('fr-FR')} €
+                                            <div className="mt-1 text-blue-500">Aides : TVA 5,5% + CEE plancher. Montants réels pouvant être supérieurs - faire chiffrer par un installateur RGE.</div>
+                                        </div>
+                                    </div>
+                                )}
 
                                 {/* G3 - ROI par action */}
                                 {roiData.length > 0 && (
@@ -3615,6 +3585,36 @@
                             </div>
                         );
                     })()}
+
+                    {/* Qualification prospect - pro uniquement */}
+                    {isProAuth && !sharedCase && (
+                        <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-6 no-print mb-8">
+                            <h3 className="text-sm font-bold text-indigo-800 uppercase tracking-wider mb-4 flex items-center gap-2">
+                                <Icon icon="solar:star-bold" className="text-indigo-500" /> Qualification prospect (vue pro uniquement)
+                            </h3>
+                            <div className="grid md:grid-cols-2 gap-4 text-sm">
+                                <div><span className="text-indigo-600 font-semibold">Contact :</span> {c.formData?.contactName || c.contact?.name || c.clientName} - {c.formData?.phone || c.contact?.phone || 'Tél. non renseigné'}</div>
+                                <div><span className="text-indigo-600 font-semibold">Email :</span> {c.email || '-'}</div>
+                                <div><span className="text-indigo-600 font-semibold">Objectif :</span> {OBJECTIF_LABELS[c.objectif] || c.objectif || '-'}</div>
+                                <div><span className="text-indigo-600 font-semibold">Horizon :</span> {HORIZON_LABELS[c.horizon] || c.horizon || '-'}</div>
+                                <div><span className="text-indigo-600 font-semibold">Budget :</span> {BUDGET_LABELS[c.budget] || c.budget || '-'}</div>
+                                <div className="flex items-center gap-2"><span className="text-indigo-600 font-semibold">Maturité :</span> <StarQualif score={c.scoreMaturite || 0} /></div>
+                                {c.urgenceVerbatim && (
+                                    <div className="md:col-span-2 bg-white rounded-lg p-3 border border-indigo-100 italic text-slate-600">"{c.urgenceVerbatim}"</div>
+                                )}
+                                {c.noteInterne && (
+                                    <div className="md:col-span-2 mt-2">
+                                        <div className="text-indigo-600 font-semibold text-xs uppercase mb-1 flex items-center gap-1">
+                                            <Icon icon="solar:lock-bold" style={{ fontSize: '11px' }} /> Note interne
+                                        </div>
+                                        <div className="bg-white rounded-lg p-3 border border-indigo-100 text-slate-600 text-sm italic">
+                                            {c.noteInterne}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
 
                     {/* Résumé */}
                     {c.summary && (

@@ -2689,6 +2689,9 @@
             email: '',
             phone: '',
             worksDone: [],
+            primaryGoal: '',    // 'reduce_cost' | 'comply_regulation' | 'improve_comfort' | 'csr'
+            projectHorizon: '', // 'lt_1y' | '1_3y' | '3_5y' | 'exploratory'
+            decisionRole: '',   // 'owner' | 'tenant' | 'property_manager' | 'project_owner'
 
             // Méta
             contactOptIn: false
@@ -3638,6 +3641,55 @@
                             type="tel"
                             placeholder="06 12 34 56 78"
                         />
+                    </div>
+
+                    {/* Objectif, horizon, role */}
+                    <div className="mb-6 p-6 bg-white border border-[#E2E8F0] rounded-xl shadow-sm">
+                        <p className="text-sm font-semibold text-neutral-900 mb-4">Votre projet (facultatif)</p>
+                        <div className="grid md:grid-cols-3 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-neutral-700 mb-1">Votre objectif principal</label>
+                                <select
+                                    value={formData.primaryGoal}
+                                    onChange={(e) => setFormData({ ...formData, primaryGoal: e.target.value })}
+                                    className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                >
+                                    <option value="">-- Choisir --</option>
+                                    <option value="reduce_cost">Reduire mes couts</option>
+                                    <option value="comply_regulation">Respecter la reglementation</option>
+                                    <option value="improve_comfort">Ameliorer le confort</option>
+                                    <option value="csr">Demarche RSE / decarbonation</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-neutral-700 mb-1">Votre horizon de projet</label>
+                                <select
+                                    value={formData.projectHorizon}
+                                    onChange={(e) => setFormData({ ...formData, projectHorizon: e.target.value })}
+                                    className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                >
+                                    <option value="">-- Choisir --</option>
+                                    <option value="lt_1y">Moins d'1 an</option>
+                                    <option value="1_3y">1 a 3 ans</option>
+                                    <option value="3_5y">3 a 5 ans</option>
+                                    <option value="exploratory">Exploration seulement</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-neutral-700 mb-1">Votre role</label>
+                                <select
+                                    value={formData.decisionRole}
+                                    onChange={(e) => setFormData({ ...formData, decisionRole: e.target.value })}
+                                    className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                >
+                                    <option value="">-- Choisir --</option>
+                                    <option value="owner">Proprietaire</option>
+                                    <option value="tenant">Locataire</option>
+                                    <option value="property_manager">Gestionnaire immobilier</option>
+                                    <option value="project_owner">Maitre d'ouvrage</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
 
                     {/* Works */}
@@ -4741,7 +4793,11 @@
                     works_done: formData.worksDone || [],
                     phone: formData.phone || null,
                     ecsSameSystem: formData.ecsSameSystem,
-                    ecsSystem: formData.ecsSystem || null
+                    ecsSystem: formData.ecsSystem || null,
+                    primary_goal: formData.primaryGoal || null,
+                    project_horizon: formData.projectHorizon || null,
+                    decision_role: formData.decisionRole || null,
+                    contactOptIn: formData.contactOptIn || false
                 },
 
                 // Calculation results
@@ -5012,8 +5068,39 @@
             );
         };
 
+        // Calcule un indice DiagTertiaire 0-100 base sur la position vs benchmark
+        // 100 = performance exemplaire, 0 = tres energivore
+        function newDiagnosticCalculateDiagTertiaireIndex(intensity, benchmarkLow, benchmarkMedian, benchmarkHigh) {
+            let score, zone, label, color, phrase;
+            if (intensity <= benchmarkLow) {
+                score = Math.round(85 + 15 * Math.max(0, 1 - intensity / benchmarkLow));
+                zone = 'A'; label = 'Performant'; color = '#059669';
+                phrase = 'Votre batiment consomme moins que les 25% meilleurs de sa categorie.';
+            } else if (intensity <= benchmarkMedian) {
+                const ratio = (intensity - benchmarkLow) / (benchmarkMedian - benchmarkLow);
+                score = Math.round(84 - 24 * ratio);
+                zone = 'B'; label = 'Dans la norme'; color = '#2563EB';
+                phrase = 'Consommation dans la fourchette basse du marche. Des gains restent accessibles.';
+            } else if (intensity <= benchmarkHigh) {
+                const ratio = (intensity - benchmarkMedian) / (benchmarkHigh - benchmarkMedian);
+                score = Math.round(59 - 24 * ratio);
+                zone = 'C'; label = 'Amelioration recommandee'; color = '#D97706';
+                phrase = 'Consommation au-dessus de la mediane sectorielle. Des actions prioritaires existent.';
+            } else {
+                const ratio = Math.min(1, (intensity - benchmarkHigh) / benchmarkHigh);
+                score = Math.round(34 - 34 * ratio);
+                zone = 'D'; label = 'Action urgente'; color = '#DC2626';
+                phrase = "Consommation significativement au-dessus du marche. Potentiel d'economies majeur.";
+            }
+            return { score: Math.max(0, Math.min(100, score)), zone, label, color, phrase };
+        }
+
         const NewDiagnosticReportScreen = ({ reportPayload, userEmail }) => {
             const [isPDFGenerating, setIsPDFGenerating] = useState(false);
+            const [showCTAModal, setShowCTAModal] = useState(false);
+            const [ctaName, setCtaName] = useState('');
+            const [ctaMessage, setCtaMessage] = useState('');
+            const [ctaSent, setCtaSent] = useState(false);
 
             const handleExportPDF = async () => {
                 setIsPDFGenerating(true);
@@ -5024,7 +5111,7 @@
                     newDiagnosticTrack('pdf_downloaded');
                 } catch (error) {
                     console.error('Erreur export PDF:', error);
-                    alert('Erreur lors de la génération du PDF');
+                    alert('Erreur lors de la generation du PDF');
                 } finally {
                     setIsPDFGenerating(false);
                 }
@@ -5037,7 +5124,20 @@
             const composite = reportPayload.composite_savings;
             const confidence = reportPayload.confidence;
 
-            // Helper : formater les nombres avec unités (guard NaN/Infinity)
+            const diagIndex = newDiagnosticCalculateDiagTertiaireIndex(
+                benchmark.site_intensity.value,
+                benchmark.benchmark_low.value,
+                benchmark.benchmark_median.value,
+                benchmark.benchmark_high.value
+            );
+
+            const role = reportPayload.inputs_summary.role;
+            const primaryHorizon = (role === 'tenant') ? 3 : 10;
+            const secondaryHorizon = (role === 'tenant') ? 10 : 3;
+            const primarySavings = composite.annual_euro.value * primaryHorizon;
+            const secondarySavings = composite.annual_euro.value * secondaryHorizon;
+
+            // Helper : formater les nombres avec unites (guard NaN/Infinity)
             const formatValue = (obj) => {
                 if (!obj || typeof obj !== 'object') return obj ?? 'N/A';
                 const v = obj.value;
@@ -5047,17 +5147,7 @@
                 return `${safe} ${obj.unit || ''}`.trim();
             };
 
-            // Position benchmark → label + couleur
-            const benchmarkLabels = {
-                below_range: { label: 'Sous la référence', color: 'text-green-600', bg: 'bg-green-50' },
-                in_range: { label: 'Dans la référence', color: 'text-blue-600', bg: 'bg-blue-50' },
-                above_range: { label: 'Au-dessus de la référence', color: 'text-orange-600', bg: 'bg-orange-50' },
-                far_above_range: { label: 'Très au-dessus de la référence', color: 'text-red-600', bg: 'bg-red-50' }
-            };
-
-            const benchmarkInfo = benchmarkLabels[benchmark.position] || benchmarkLabels.in_range;
-
-            // Confiance → badge
+            // Confiance -> badge
             const confidenceColors = {
                 strong: 'bg-green-100 text-green-800',
                 medium: 'bg-yellow-100 text-yellow-800',
@@ -5068,31 +5158,31 @@
                 <div className="new-diagnostic-report fade-in py-12 px-4">
                     <div className="max-w-5xl mx-auto">
 
-                        {/* Bandeau avertissement pré-diagnostic */}
+                        {/* Bandeau avertissement */}
                         <div className="report-card p-0 overflow-hidden mb-8 border-[#F59E0B]/20">
                             <div className="px-6 py-4 bg-gradient-to-r from-[#FFF8EE] to-white flex items-center gap-4">
                                 <div className="w-10 h-10 bg-[#F59E0B]/10 rounded-full flex items-center justify-center shrink-0">
                                     <Icon icon="solar:danger-triangle-bold" className="text-[#F59E0B] text-xl" />
                                 </div>
                                 <div>
-                                    <h3 className="text-sm font-bold text-[#92400E] mb-0.5">Note d'interprétation</h3>
+                                    <h3 className="text-sm font-bold text-[#92400E] mb-0.5">Note d'interpretation</h3>
                                     <p className="text-xs text-[#B45309] font-medium leading-relaxed">
-                                        Ce pré-diagnostic est un outil d'aide à la décision basé sur des benchmarks statistiques. Il ne se substitue pas à une étude thermique réglementaire ou un audit sur site.
+                                        Ce pre-diagnostic est un outil d'aide a la decision base sur des benchmarks statistiques. Il ne se substitue pas a une etude thermique reglementaire ou un audit sur site.
                                     </p>
                                 </div>
                             </div>
                         </div>
 
-                        {/* En-tête rapport */}
+                        {/* Section 0 - Header + DiagTertiaire Index */}
                         <div className="report-card p-8 mb-8">
-                            <div className="flex items-start justify-between mb-6">
-                                <div>
+                            <div className="flex flex-col md:flex-row items-start justify-between gap-6 mb-6">
+                                <div className="flex-1">
                                     <h1 className="text-3xl font-bold text-[#102A43] mb-1">
-                                        Pré-diagnostic énergétique indicatif
+                                        Pre-diagnostic energetique indicatif
                                     </h1>
-                                    <p className="text-sm text-[#F59E0B] font-semibold uppercase tracking-wide mb-2">Estimations à confirmer par audit</p>
+                                    <p className="text-sm text-[#F59E0B] font-semibold uppercase tracking-wide mb-2">Estimations a confirmer par audit</p>
                                     <p className="text-[#475569]">
-                                        {(reportPayload.inputs_summary.site_name && reportPayload.inputs_summary.site_name !== 'uyktdtu') ? reportPayload.inputs_summary.site_name : 'Bâtiment diagnostiqué'} — {formatValue(reportPayload.inputs_summary.surface)}
+                                        {(reportPayload.inputs_summary.site_name && reportPayload.inputs_summary.site_name !== 'uyktdtu') ? reportPayload.inputs_summary.site_name : 'Batiment diagnostique'} - {formatValue(reportPayload.inputs_summary.surface)}
                                     </p>
                                     {(() => {
                                         const addr = reportPayload.inputs_summary.address;
@@ -5102,23 +5192,34 @@
                                         if (!validAddr && !validCp) return null;
                                         return (
                                             <p className="text-sm text-[#475569] mt-2">
-                                                {validAddr ? addr : '—'}
-                                                {validCp ? ` • ${cp}` : ''}
+                                                {validAddr ? addr : '-'}
+                                                {validCp ? ` - ${cp}` : ''}
                                             </p>
                                         );
                                     })()}
                                 </div>
-                                <div className="text-right">
+                                <div className="flex flex-col items-end gap-3">
+                                    <div className="p-4 rounded-2xl border-2 text-right" style={{ borderColor: diagIndex.color, backgroundColor: diagIndex.color + '12' }}>
+                                        <p className="text-xs font-bold uppercase tracking-wide mb-1" style={{ color: diagIndex.color }}>DiagTertiaire Index</p>
+                                        <div className="text-5xl font-black" style={{ color: diagIndex.color }}>{diagIndex.score}</div>
+                                        <div className="text-sm font-semibold text-neutral-500">/100</div>
+                                        <div className="mt-1 px-3 py-1 rounded-full text-xs font-bold text-white inline-block" style={{ backgroundColor: diagIndex.color }}>
+                                            Zone {diagIndex.zone} - {diagIndex.label}
+                                        </div>
+                                    </div>
                                     <div className={`inline-block px-4 py-2 rounded-lg font-semibold text-sm ${confidenceColors[confidence.level]}`}>
                                         Confiance : {confidence.label}
                                     </div>
-                                    <p className="text-xs text-neutral-500 mt-2">
+                                    <p className="text-xs text-neutral-500">
                                         {new Date(reportPayload.generated_at).toLocaleDateString('fr-FR')}
                                     </p>
                                 </div>
                             </div>
 
-                            {/* Bouton export PDF */}
+                            <div className="mb-6 p-4 rounded-xl border-l-4" style={{ borderColor: diagIndex.color, backgroundColor: diagIndex.color + '0D' }}>
+                                <p className="text-sm font-medium" style={{ color: diagIndex.color }}>{diagIndex.phrase}</p>
+                            </div>
+
                             <button
                                 onClick={handleExportPDF}
                                 disabled={isPDFGenerating}
@@ -5127,16 +5228,15 @@
                                 {isPDFGenerating ? (
                                     <>
                                         <Icon icon="solar:spinner-linear" className="text-xl animate-spin" />
-                                        Génération du PDF...
+                                        Generation du PDF...
                                     </>
                                 ) : (
                                     <>
                                         <Icon icon="solar:download-linear" className="text-xl" />
-                                        Télécharger le rapport PDF
+                                        Telecharger le rapport PDF
                                     </>
                                 )}
                             </button>
-
                             <button
                                 onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                                 className="w-full mt-3 bg-[#F8FAFC] text-[#1D4ED8] px-6 py-3 rounded-lg font-semibold border border-[#DBEAFE] hover:bg-[#EFF6FF] transition-colors flex items-center justify-center gap-2"
@@ -5146,50 +5246,85 @@
                             </button>
                         </div>
 
-                        {/* Section 1 : KPIs clés */}
+                        {/* Section 1 - Synthese executive */}
                         <div className="report-card p-8 mb-8">
-                            <h2 className="text-2xl font-bold text-neutral-900 mb-6">Vue d'ensemble</h2>
+                            <h2 className="text-2xl font-bold text-neutral-900 mb-6">Synthese executive</h2>
 
-                            <div className="grid md:grid-cols-3 gap-6">
+                            <div className="grid md:grid-cols-3 gap-6 mb-6">
                                 <div className="text-center p-6 bg-blue-50 rounded-xl">
                                     <div className="text-4xl font-bold text-blue-600 mb-2">
                                         {formatValue(calc.total_kwh_an)}
                                     </div>
                                     <p className="text-sm text-neutral-600">Consommation annuelle</p>
                                 </div>
-
                                 <div className="text-center p-6 bg-purple-50 rounded-xl">
                                     <div className="text-4xl font-bold text-purple-600 mb-2">
                                         {formatValue(calc.intensity_kwh_m2_an)}
                                     </div>
-                                    <p className="text-sm text-neutral-600">Intensité énergétique</p>
+                                    <p className="text-sm text-neutral-600">Intensite energetique</p>
                                 </div>
-
                                 <div className="text-center p-6 bg-green-50 rounded-xl">
                                     <div className="text-4xl font-bold text-green-600 mb-2">
                                         {formatValue(calc.total_cost_euro_an)}
                                     </div>
-                                    <p className="text-sm text-neutral-600">Coût annuel estimé</p>
+                                    <p className="text-sm text-neutral-600">Cout annuel estime</p>
                                 </div>
                             </div>
+
+                            <div className="p-6 bg-green-50 border-2 border-green-200 rounded-2xl mb-6">
+                                <p className="text-sm font-semibold text-green-800 mb-3 flex items-center gap-2">
+                                    <Icon icon="solar:leaf-bold" className="text-green-600" />
+                                    Economies potentielles
+                                </p>
+                                <div className="text-4xl font-black text-green-700 mb-1">
+                                    {primarySavings.toLocaleString('fr-FR')} €
+                                </div>
+                                <p className="text-sm text-green-700 font-medium mb-2">
+                                    {role === 'tenant' ? 'Economies sur 3 ans (horizon locataire)' : 'Economies sur 10 ans (horizon proprietaire)'}
+                                </p>
+                                <p className="text-sm text-green-600">
+                                    Sur {secondaryHorizon} ans : {secondarySavings.toLocaleString('fr-FR')} €
+                                </p>
+                                <p className="text-xs text-green-600 mt-2 italic">
+                                    Soit {formatValue(composite.annual_euro)}/an - {formatValue(composite.total_pct)} d'economies estimees
+                                </p>
+                            </div>
+
+                            <div className="flex items-center justify-between mb-2">
+                                <h3 className="text-lg font-bold text-neutral-900">Cout de l'inaction sur 10 ans</h3>
+                                <div className="hidden md:flex items-center gap-2">
+                                    <span className="inline-block w-3 h-3 rounded-full bg-[#EF4444]"></span>
+                                    <span className="text-[10px] font-bold text-neutral-500 uppercase">Statu Quo</span>
+                                    <span className="inline-block w-3 h-3 rounded-full bg-[#10B981] ml-2"></span>
+                                    <span className="text-[10px] font-bold text-neutral-500 uppercase">Avec Travaux</span>
+                                </div>
+                            </div>
+                            <p className="text-sm text-neutral-600 mb-4">Projection cumulative du cout de l'energie (inflation ponderee par source) vs trajectoire de performance.</p>
+                            <NewDiagnosticInactionGraph
+                                annualSavingsEuro={reportPayload.composite_savings.annual_euro.value}
+                                totalCostEuroAn={reportPayload.calculation_results.total_cost_euro_an.value}
+                                elecKwh={reportPayload.calculation_results.elec_kwh_an.value}
+                                gasKwh={reportPayload.calculation_results.gas_kwh_an.value}
+                                actions={reportPayload.top_actions}
+                            />
                         </div>
 
-                        {/* Section 2 : Benchmark */}
+                        {/* Section 2 - Positionnement sectoriel */}
                         <div className="report-card p-8 mb-8">
                             <div className="flex items-center justify-between mb-6">
                                 <h2 className="text-2xl font-bold text-neutral-900">Positionnement sectoriel</h2>
-                                <div className={`px-3 py-1 rounded-full text-xs font-bold ${benchmarkInfo.bg} ${benchmarkInfo.color}`}>
-                                    {benchmarkInfo.label}
+                                <div className="px-3 py-1.5 rounded-xl text-xs font-bold text-white" style={{ backgroundColor: diagIndex.color }}>
+                                    Index {diagIndex.score}/100 - Zone {diagIndex.zone}
                                 </div>
                             </div>
 
                             <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6 mb-6 shadow-sm">
                                 <div className="flex items-center gap-3 mb-6">
                                     <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
-                                        <Icon icon="solar:chart-2-bold" className={`text-2xl ${benchmarkInfo.color}`} />
+                                        <Icon icon="solar:chart-2-bold" className="text-2xl text-blue-600" />
                                     </div>
                                     <div>
-                                        <p className="text-sm text-neutral-500 font-medium">Par rapport aux bâtiments de type <span className="text-neutral-900 font-bold capitalize">{reportPayload.inputs_summary.activity}</span></p>
+                                        <p className="text-sm text-neutral-500 font-medium">Par rapport aux batiments de type <span className="text-neutral-900 font-bold capitalize">{reportPayload.inputs_summary.activity}</span></p>
                                         <p className="text-xs text-neutral-400 italic">Source : {benchmark.source_ref}</p>
                                     </div>
                                 </div>
@@ -5204,7 +5339,7 @@
 
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
                                     <div className="p-3 bg-neutral-50 rounded-xl">
-                                        <p className="text-[10px] text-neutral-500 uppercase font-bold mb-1">Votre Intensité</p>
+                                        <p className="text-[10px] text-neutral-500 uppercase font-bold mb-1">Votre Intensite</p>
                                         <p className="text-lg font-bold text-neutral-900">{formatValue(benchmark.site_intensity)}</p>
                                     </div>
                                     <div className="p-3 bg-neutral-50 rounded-xl border-l-4 border-green-500">
@@ -5212,7 +5347,7 @@
                                         <p className="text-lg font-bold text-neutral-900">{formatValue(benchmark.benchmark_low)}</p>
                                     </div>
                                     <div className="p-3 bg-neutral-50 rounded-xl border-l-4 border-blue-500">
-                                        <p className="text-[10px] text-blue-600 uppercase font-bold mb-1">Médiane Marché</p>
+                                        <p className="text-[10px] text-blue-600 uppercase font-bold mb-1">Mediane Marche</p>
                                         <p className="text-lg font-bold text-neutral-900">{formatValue(benchmark.benchmark_median)}</p>
                                     </div>
                                     <div className="p-3 bg-neutral-50 rounded-xl border-l-4 border-red-500">
@@ -5226,58 +5361,172 @@
                                 <div className="flex gap-3">
                                     <Icon icon="solar:magic-stick-3-bold" className="text-blue-600 text-xl flex-shrink-0" />
                                     <p className="text-sm text-blue-800">
-                                        <strong>Objectif suggéré</strong> : Atteindre <span className="font-bold underline">{Math.round(benchmark.site_intensity.value * (1 - (reportPayload.composite_savings.total_pct.value / 100)))} kWh/m²/an</span> après mise en place des actions recommandées.
+                                        <strong>Objectif suggere</strong> : Atteindre <span className="font-bold underline">{Math.round(benchmark.site_intensity.value * (1 - (reportPayload.composite_savings.total_pct.value / 100)))} kWh/m2/an</span> apres mise en place des actions recommandees.
                                     </p>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Section GRAPH : Coût de l'inaction */}
-                        <div className="report-card p-8 mb-8 overflow-hidden">
-                            <div className="flex items-center justify-between mb-2">
-                                <h2 className="text-2xl font-bold text-neutral-900">Coût de l'inaction sur 10 ans</h2>
-                                <div className="hidden md:flex items-center gap-2">
-                                    <span className="inline-block w-3 h-3 rounded-full bg-[#EF4444]"></span>
-                                    <span className="text-[10px] font-bold text-neutral-500 uppercase">Statu Quo</span>
-                                    <span className="inline-block w-3 h-3 rounded-full bg-[#10B981] ml-2"></span>
-                                    <span className="text-[10px] font-bold text-neutral-500 uppercase">Avec Travaux</span>
-                                </div>
+                        {/* Section 3 - Actions prioritaires (top 3 compactes) */}
+                        <div className="report-card p-8 mb-8">
+                            <h2 className="text-2xl font-bold text-neutral-900 mb-6">Actions prioritaires</h2>
+                            <div className="space-y-4">
+                                {actions.slice(0, 3).map((action, i) => (
+                                    <div key={action.id} className="p-5 border border-neutral-200 rounded-xl hover:border-blue-300 hover:shadow-sm transition-all">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-10 h-10 bg-blue-600 text-white rounded-lg flex items-center justify-center text-lg font-bold flex-shrink-0">
+                                                {i + 1}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <h3 className="font-bold text-neutral-900 mb-2">{action.name}</h3>
+                                                <div className="flex flex-wrap gap-3 text-sm">
+                                                    <span className="text-green-700 font-semibold">
+                                                        <Icon icon="solar:graph-up-bold" className="inline mr-1" />
+                                                        {formatValue(action.gain_euro_an)}/an
+                                                    </span>
+                                                    <span className="text-blue-700 font-semibold">
+                                                        <Icon icon="solar:calendar-bold" className="inline mr-1" />
+                                                        ROI : {formatValue(action.roi_years)}
+                                                    </span>
+                                                    {action.aid_tags && action.aid_tags.includes('CEE') && (
+                                                        <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full text-xs font-semibold border border-blue-200">
+                                                            Aide CEE potentielle
+                                                        </span>
+                                                    )}
+                                                    {action.aid_tags && action.aid_tags.includes('MaPrimeRenov') && (
+                                                        <span className="px-2 py-0.5 bg-orange-50 text-orange-700 rounded-full text-xs font-semibold border border-orange-200">
+                                                            MaPrimeRenov
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
-                            <p className="text-sm text-neutral-600 mb-6">Projection cumulative du coût de l'énergie (inflation pondérée par source) vs trajectoire de performance.</p>
+                            <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                <p className="text-xs text-yellow-800">
+                                    <Icon icon="solar:info-circle-linear" className="inline mr-1" />
+                                    Gains et ROI indicatifs - a confirmer par devis professionnel. Aides a verifier selon eligibilite reelle.
+                                </p>
+                            </div>
+                        </div>
 
-                            <NewDiagnosticInactionGraph
-                                annualSavingsEuro={reportPayload.composite_savings.annual_euro.value}
-                                totalCostEuroAn={reportPayload.calculation_results.total_cost_euro_an.value}
-                                elecKwh={reportPayload.calculation_results.elec_kwh_an.value}
-                                gasKwh={reportPayload.calculation_results.gas_kwh_an.value}
-                                actions={reportPayload.top_actions}
-                            />
-
-                            <div className="mt-8 p-5 bg-green-50 rounded-2xl border border-green-100 flex items-center justify-between gap-4">
-                                <div>
-                                    <p className="text-sm text-green-800 font-semibold mb-1">Économies cumulées potentielles à 10 ans</p>
-                                    <p className="text-3xl font-black text-green-600">
-                                        ~ {Math.round(reportPayload.composite_savings.annual_euro.value * 10).toLocaleString('fr-FR')} €
-                                    </p>
+                        {/* Section 4 - Phasage + acteurs + CTA */}
+                        <div className="report-card p-8 mb-8">
+                            <h2 className="text-2xl font-bold text-neutral-900 mb-6">Feuille de route suggeree</h2>
+                            <div className="space-y-4 mb-6">
+                                <div className="flex gap-4 p-4 bg-green-50 border border-green-200 rounded-xl">
+                                    <div className="w-12 h-12 bg-green-600 text-white rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0">P1</div>
+                                    <div>
+                                        <p className="font-semibold text-neutral-900 mb-1">Phase 1 (0-3 mois)</p>
+                                        <p className="text-sm text-neutral-600">Audit energetique reglementaire + actions sans investissement (regulations, pilotage, sensibilisation usagers)</p>
+                                        <p className="text-xs text-green-700 mt-1 font-medium">
+                                            {role === 'tenant' ? 'Locataire : signaler au proprietaire, consulter le bail vert' : 'Proprietaire : mandater un auditeur agree, completer le DPE reglementaire'}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div className="hidden sm:block">
-                                    <div className="w-16 h-16 bg-green-600 text-white rounded-full flex items-center justify-center">
-                                        <Icon icon="solar:round-alt-arrow-up-bold" className="text-3xl rotate-45" />
+                                <div className="flex gap-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                                    <div className="w-12 h-12 bg-blue-600 text-white rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0">P2</div>
+                                    <div>
+                                        <p className="font-semibold text-neutral-900 mb-1">Phase 2 (3-12 mois)</p>
+                                        <p className="text-sm text-neutral-600">Actions prioritaires a ROI inferieur a 5 ans : eclairage LED, regulation CVC, GTB/GTC</p>
+                                        <p className="text-xs text-blue-700 mt-1 font-medium">
+                                            {role === 'tenant' ? 'Negocier avec le proprietaire, prevoir clauses bail vert' : 'Financer via CEE, deduire fiscalement'}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="flex gap-4 p-4 bg-purple-50 border border-purple-200 rounded-xl">
+                                    <div className="w-12 h-12 bg-purple-600 text-white rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0">P3</div>
+                                    <div>
+                                        <p className="font-semibold text-neutral-900 mb-1">Phase 3 (12 mois et plus)</p>
+                                        <p className="text-sm text-neutral-600">Actions structurelles a ROI 5-15 ans : isolation thermique, renovation systeme chauffage, production ENR</p>
+                                        <p className="text-xs text-purple-700 mt-1 font-medium">
+                                            {role === 'tenant' ? 'Anticiper le renouvellement de bail, valoriser les investissements' : 'Valorisation patrimoniale, obligations loi Climat et Resilience 2025-2034'}
+                                        </p>
                                     </div>
                                 </div>
                             </div>
+
+                            {reportPayload.inputs_summary.contactOptIn ? (
+                                <div className="mt-6 p-5 bg-green-50 border border-green-200 rounded-xl flex items-center gap-3">
+                                    <Icon icon="solar:check-circle-bold" className="text-green-600 text-2xl" />
+                                    <p className="text-sm text-green-800 font-medium">Votre demande de mise en relation a ete enregistree. Un expert vous contactera prochainement.</p>
+                                </div>
+                            ) : (
+                                <div className="mt-6 p-5 bg-blue-50 border border-blue-200 rounded-xl">
+                                    <p className="font-semibold text-blue-900 mb-1">Vous souhaitez aller plus loin ?</p>
+                                    <p className="text-sm text-blue-700 mb-3">Un expert DiagTertiaire peut affiner ce diagnostic et chiffrer vos travaux.</p>
+                                    <button onClick={() => setShowCTAModal(true)} className="px-5 py-2 bg-[#1D4ED8] text-white rounded-lg text-sm font-semibold hover:bg-[#1E40AF] transition-colors">
+                                        Etre mis en relation
+                                    </button>
+                                </div>
+                            )}
                         </div>
 
-                        {/* Section 3 : Répartition par postes */}
+                        {/* Section 5 - Lecture adaptee au role */}
+                        {(role === 'tenant' || role === 'owner') && (
+                            <div className="report-card p-8 mb-8">
+                                <h2 className="text-2xl font-bold text-neutral-900 mb-4">
+                                    {role === 'tenant' ? 'Informations specifiques au locataire' : 'Valorisation proprietaire'}
+                                </h2>
+                                {role === 'tenant' ? (
+                                    <div className="space-y-3">
+                                        <div className="flex gap-3 p-4 bg-blue-50 rounded-xl">
+                                            <Icon icon="solar:document-bold" className="text-blue-600 text-xl flex-shrink-0 mt-0.5" />
+                                            <div>
+                                                <p className="font-semibold text-neutral-900 text-sm mb-1">Charges recuperables</p>
+                                                <p className="text-sm text-neutral-600">En tant que locataire, certains travaux d'efficacite energetique peuvent reduire vos charges. Verifiez votre bail et les charges recuperables aupres de votre bailleur.</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-3 p-4 bg-green-50 rounded-xl">
+                                            <Icon icon="solar:leaf-bold" className="text-green-600 text-xl flex-shrink-0 mt-0.5" />
+                                            <div>
+                                                <p className="font-semibold text-neutral-900 text-sm mb-1">Bail vert (Article L125-9 du CCH)</p>
+                                                <p className="text-sm text-neutral-600">Pour les locaux de plus de 2 000 m2, le bail vert est obligatoire. Il instaure une annexe environnementale avec partage des donnees de consommation et objectifs d'amelioration.</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-3 p-4 bg-orange-50 rounded-xl">
+                                            <Icon icon="solar:shield-bold" className="text-orange-600 text-xl flex-shrink-0 mt-0.5" />
+                                            <div>
+                                                <p className="font-semibold text-neutral-900 text-sm mb-1">Droits du locataire</p>
+                                                <p className="text-sm text-neutral-600">Vous pouvez demander au proprietaire les caracteristiques energetiques du batiment (DPE). En cas de batiment tres energivore, des obligations de travaux s'imposent au proprietaire (loi Climat et Resilience).</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        <div className="flex gap-3 p-4 bg-blue-50 rounded-xl">
+                                            <Icon icon="solar:buildings-bold" className="text-blue-600 text-xl flex-shrink-0 mt-0.5" />
+                                            <div>
+                                                <p className="font-semibold text-neutral-900 text-sm mb-1">Valorisation patrimoniale</p>
+                                                <p className="text-sm text-neutral-600">Un batiment performant energetiquement se valorise mieux sur le marche. Les biens energivores subissent une decote croissante. Investir dans la renovation energetique protege et valorise votre patrimoine.</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-3 p-4 bg-yellow-50 rounded-xl">
+                                            <Icon icon="solar:document-text-bold" className="text-yellow-600 text-xl flex-shrink-0 mt-0.5" />
+                                            <div>
+                                                <p className="font-semibold text-neutral-900 text-sm mb-1">DPE reglementaire</p>
+                                                <p className="text-sm text-neutral-600">Ce pre-diagnostic ne remplace pas le DPE reglementaire obligatoire. Le DPE tertiaire doit etre realise par un diagnostiqueur certifie et est requis en cas de vente ou de location.</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-3 p-4 bg-red-50 rounded-xl">
+                                            <Icon icon="solar:danger-triangle-bold" className="text-red-600 text-xl flex-shrink-0 mt-0.5" />
+                                            <div>
+                                                <p className="font-semibold text-neutral-900 text-sm mb-1">Obligations loi Climat et Resilience</p>
+                                                <p className="text-sm text-neutral-600">Le Decret Tertiaire (Eco Energie Tertiaire) impose une reduction progressive des consommations energetiques : -40% en 2030, -50% en 2040, -60% en 2050 par rapport a une annee de reference. Les batiments de plus de 1 000 m2 sont concernes.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Section 6 - Repartition par postes */}
                         <div className="report-card p-8 mb-8">
-                            <h2 className="text-2xl font-bold text-neutral-900 mb-6">Répartition indicative par postes</h2>
+                            <h2 className="text-2xl font-bold text-neutral-900 mb-6">Repartition indicative par postes</h2>
 
                             <div className="space-y-4 mb-6">
-                                {/* Define usageIcons and labels here, assuming breakdown.breakdown_pct is an array of objects */}
-                                {/* If breakdown.breakdown_pct is an object, it needs to be converted to an array first */}
-                                {/* For example: Object.entries(breakdown.breakdown_pct).map(([key, value]) => ({ key, value, label: labels[key]?.label })) */}
-                                {/* The instruction implies breakdown.breakdown_pct is already an array of { key, label, value } */}
-                                {/* If breakdown.breakdown_pct is an object, we need to transform it */}
                                 {Array.isArray(breakdown.breakdown_pct) ? breakdown.breakdown_pct.map(({ key, label, value }) => {
                                     if (value === 0) return null;
 
@@ -5313,24 +5562,24 @@
                                                                     key === 'dhw_pct' ? 'bg-orange-500' :
                                                                         key === 'cooking_pct' ? 'bg-purple-500' :
                                                                             'bg-gray-500'
-                                                        }`}
+                                                    }`}
                                                     style={{ width: `${value}%` }}
                                                 ></div>
                                             </div>
                                         </div>
                                     );
                                 }) : Object.entries(breakdown.breakdown_pct).map(([key, pct]) => {
-                                    const labels = {
+                                    const bpLabels = {
                                         heating_pct: { label: 'Chauffage', icon: 'solar:fire-bold', color: 'bg-red-500' },
                                         cooling_pct: { label: 'Climatisation', icon: 'solar:snowflake-bold', color: 'bg-blue-500' },
                                         vent_aux_pct: { label: 'Ventilation', icon: 'solar:wind-bold', color: 'bg-cyan-500' },
-                                        lighting_pct: { label: 'Éclairage', icon: 'solar:lightbulb-bold', color: 'bg-yellow-500' },
+                                        lighting_pct: { label: 'Eclairage', icon: 'solar:lightbulb-bold', color: 'bg-yellow-500' },
                                         dhw_pct: { label: 'Eau chaude', icon: 'solar:bath-bold', color: 'bg-orange-500' },
                                         cooking_pct: { label: 'Cuisson', icon: 'solar:chef-hat-bold', color: 'bg-purple-500' },
                                         other_specific_pct: { label: 'Autres usages', icon: 'solar:plug-circle-bold', color: 'bg-gray-500' }
                                     };
 
-                                    const info = labels[key];
+                                    const info = bpLabels[key];
                                     if (!info || pct === 0) return null;
 
                                     const kwh = breakdown.breakdown_kwh[key.replace('_pct', '')];
@@ -5360,113 +5609,16 @@
                             <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                                 <p className="text-xs text-yellow-800">
                                     <Icon icon="solar:info-circle-linear" className="inline mr-1" />
-                                    Répartition statistique indicative (non mesurée sur site). Source : {breakdown.source_ref}
+                                    Repartition statistique indicative (non mesuree sur site). Source : {breakdown.source_ref}
                                 </p>
                             </div>
                         </div>
 
-                        {/* Section 4 : Top 3 actions */}
-                        <div className="report-card p-8 mb-8">
-                            <h2 className="text-2xl font-bold text-neutral-900 mb-6">Actions prioritaires</h2>
-
-                            <div className="space-y-6">
-                                {actions.map((action, i) => (
-                                    <div key={action.id} className="p-6 border-2 border-neutral-200 rounded-xl hover:border-blue-300 transition-colors">
-                                        <div className="flex items-start gap-4">
-                                            <div className="w-12 h-12 bg-blue-600 text-white rounded-xl flex items-center justify-center text-xl font-bold flex-shrink-0">
-                                                {i + 1}
-                                            </div>
-
-                                            <div className="flex-1">
-                                                <h3 className="text-lg font-bold text-neutral-900 mb-2">{action.name}</h3>
-
-                                                <div className="grid md:grid-cols-3 gap-4 mb-4">
-                                                    <div>
-                                                        <p className="text-xs text-neutral-500 mb-1">Gain annuel</p>
-                                                        <p className="font-bold text-green-600">
-                                                            {formatValue(action.gain_kwh_an)}
-                                                        </p>
-                                                        <p className="font-bold text-green-600">
-                                                            {formatValue(action.gain_euro_an)}
-                                                        </p>
-                                                    </div>
-
-                                                    <div>
-                                                        <p className="text-xs text-neutral-500 mb-1">Investissement</p>
-                                                        <p className="font-bold text-neutral-900">
-                                                            {formatValue(action.capex)}
-                                                        </p>
-                                                    </div>
-
-                                                    <div>
-                                                        <p className="text-xs text-neutral-500 mb-1">Retour sur investissement</p>
-                                                        <p className="font-bold text-blue-600">
-                                                            {formatValue(action.roi_years)}
-                                                        </p>
-                                                    </div>
-                                                </div>
-
-                                                <div className="flex flex-wrap gap-2 mt-2">
-                                                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${action.aid_tags && action.aid_tags.includes('CEE')
-                                                        ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                                                        : 'bg-neutral-100 text-neutral-500'
-                                                        }`}>
-                                                        {action.aid_tags && action.aid_tags.includes('CEE')
-                                                            ? 'Aide CEE potentielle : Oui (a confirmer avec devis)'
-                                                            : 'Pas d\'aide CEE identifiée'
-                                                        }
-                                                    </span>
-                                                </div>
-
-                                                <p className="text-xs text-neutral-400 mt-2">
-                                                    Source gains : {action.source_level_gain} • Source CAPEX : {action.source_level_capex}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Section 5 : Projections */}
-                        <div className="report-card p-8 mb-8">
-                            <h2 className="text-2xl font-bold text-neutral-900 mb-6">Estimation des économies</h2>
-
-                            <div className="grid md:grid-cols-2 gap-6 mb-6">
-                                <div className="p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-xl">
-                                    <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-2">Économies annuelles estimées</p>
-                                    <div className="text-4xl font-bold text-green-600 mb-1">
-                                        {formatValue(composite.annual_euro)}
-                                    </div>
-                                    <p className="text-sm text-neutral-600">
-                                        soit {formatValue(composite.annual_kwh)} ({formatValue(composite.total_pct)})
-                                    </p>
-                                </div>
-
-                                <div className="p-6 bg-blue-50 rounded-xl">
-                                    <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-2">Cumul sur 3 ans (prix constants)</p>
-                                    <div className="text-4xl font-bold text-blue-600 mb-1">
-                                        {reportPayload.projection_3y
-                                            ? reportPayload.projection_3y.savings_euro.toLocaleString('fr-FR')
-                                            : (composite.annual_euro.value * 3).toLocaleString('fr-FR')} €
-                                    </div>
-                                    <p className="text-xs text-neutral-500">Sans prise en compte de l'évolution des prix</p>
-                                </div>
-                            </div>
-
-                            <div className="p-4 bg-[#FFF8EE] border border-[#F59E0B]/30 rounded-lg">
-                                <p className="text-xs text-[#78350F]">
-                                    <Icon icon="solar:info-circle-linear" className="inline mr-1" />
-                                    <strong>Estimations indicatives.</strong> Gains cumulés plafonnés à 65% (anti-surpromesse). Projections à prix constants. CAPEX et ROI à confirmer par devis professionnel.
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* Section 6 : Hypothèses & Limites */}
+                        {/* Footer - Hypotheses & Limites */}
                         <div className="bg-white rounded-xl shadow-lg p-8 mb-8 border border-neutral-200">
-                            <h2 className="text-2xl font-bold text-neutral-900 mb-6">Hypothèses et limites</h2>
+                            <h2 className="text-2xl font-bold text-neutral-900 mb-6">Hypotheses et limites</h2>
 
-                            <NewDiagnosticAccordion title="Hypothèses du calcul" defaultOpen={false}>
+                            <NewDiagnosticAccordion title="Hypotheses du calcul" defaultOpen={false}>
                                 <ul className="space-y-2 text-sm text-neutral-600">
                                     {reportPayload.assumptions.map((assumption, i) => (
                                         <li key={i} className="flex items-start gap-2">
@@ -5502,26 +5654,26 @@
                             )}
                         </div>
 
-                        {/* Footer rapport */}
+                        {/* Footer legal */}
                         <div className="bg-neutral-50 rounded-xl p-8 border border-neutral-200">
                             <div className="grid md:grid-cols-2 gap-8 text-left mb-8">
                                 <div>
-                                    <h4 className="text-xs font-bold text-neutral-900 uppercase tracking-widest mb-3">Données & Confidentialité</h4>
+                                    <h4 className="text-xs font-bold text-neutral-900 uppercase tracking-widest mb-3">Donnees et Confidentialite</h4>
                                     <p className="text-[11px] text-neutral-500 leading-relaxed">
-                                        Les données saisies dans ce formulaire sont traitées pour la génération de ce rapport. Conformément au RGPD, vous disposez d'un droit d'accès et de rectification. Vos données de consommation sont stockées localement dans votre navigateur.
+                                        Les donnees saisies dans ce formulaire sont traitees pour la generation de ce rapport. Conformement au RGPD, vous disposez d'un droit d'acces et de rectification. Vos donnees de consommation sont stockees localement dans votre navigateur.
                                     </p>
                                 </div>
                                 <div>
-                                    <h4 className="text-xs font-bold text-neutral-900 uppercase tracking-widest mb-3">Limites de Responsabilité</h4>
+                                    <h4 className="text-xs font-bold text-neutral-900 uppercase tracking-widest mb-3">Limites de Responsabilite</h4>
                                     <p className="text-[11px] text-neutral-500 leading-relaxed">
-                                        DiagTertiaire ne pourra être tenu responsable des écarts constatés entre ces estimations et les consommations réelles. Les gains et ROI sont des ordres de grandeur théoriques.
+                                        DiagTertiaire ne pourra etre tenu responsable des ecarts constates entre ces estimations et les consommations reelles. Les gains et ROI sont des ordres de grandeur theoriques.
                                     </p>
                                 </div>
                             </div>
 
                             <div className="pt-6 border-t border-neutral-200 flex flex-col md:flex-row justify-between items-center gap-4">
                                 <p className="text-xs text-neutral-400">
-                                    DiagTertiaire v3 • Rapport ID : {reportPayload.report_id.slice(0, 12)}... • Généré le {new Date().toLocaleDateString('fr-FR')}
+                                    DiagTertiaire v3 - Rapport ID : {reportPayload.report_id.slice(0, 12)}... - Genere le {new Date().toLocaleDateString('fr-FR')}
                                 </p>
                                 <div className="flex gap-4">
                                     <span className="text-[10px] font-bold text-neutral-300 uppercase tracking-widest">Version: {reportPayload.version_tag}</span>
@@ -5529,7 +5681,74 @@
                             </div>
                         </div>
                     </div>
-                </div>
+
+                    {/* CTA Modal */}
+                    {showCTAModal && (
+                    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                        <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-lg font-bold text-neutral-900">Etre mis en relation</h3>
+                                <button onClick={() => setShowCTAModal(false)} className="text-neutral-400 hover:text-neutral-600">
+                                    <Icon icon="solar:close-circle-linear" className="text-2xl" />
+                                </button>
+                            </div>
+                            {ctaSent ? (
+                                <div className="text-center py-4">
+                                    <Icon icon="solar:check-circle-bold" className="text-green-500 text-4xl mx-auto mb-2" />
+                                    <p className="text-green-800 font-medium">Votre demande a ete envoyee. Un expert vous contactera prochainement.</p>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="mb-4">
+                                        <label className="block text-sm font-medium text-neutral-700 mb-1">Votre nom</label>
+                                        <input
+                                            type="text"
+                                            value={ctaName}
+                                            onChange={(e) => setCtaName(e.target.value)}
+                                            placeholder="Prenom Nom"
+                                            className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        />
+                                    </div>
+                                    <div className="mb-4">
+                                        <label className="block text-sm font-medium text-neutral-700 mb-1">Message (optionnel)</label>
+                                        <textarea
+                                            value={ctaMessage}
+                                            onChange={(e) => setCtaMessage(e.target.value)}
+                                            placeholder="Precisions sur votre projet..."
+                                            rows={3}
+                                            className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        />
+                                    </div>
+                                    <div className="flex gap-3">
+                                        <button
+                                            onClick={() => setShowCTAModal(false)}
+                                            className="flex-1 px-4 py-2 border border-neutral-300 text-neutral-700 rounded-lg text-sm font-medium hover:bg-neutral-50"
+                                        >
+                                            Annuler
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                newDiagnosticSubmitLead({
+                                                    email: reportPayload.inputs_summary.email,
+                                                    name: ctaName,
+                                                    message: ctaMessage,
+                                                    report_id: reportPayload.report_id,
+                                                    source: 'cta_rapport'
+                                                });
+                                                setCtaSent(true);
+                                                setTimeout(() => setShowCTAModal(false), 2000);
+                                            }}
+                                            className="flex-1 px-4 py-2 bg-[#1D4ED8] text-white rounded-lg text-sm font-semibold hover:bg-[#1E40AF]"
+                                        >
+                                            Envoyer
+                                        </button>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                )}
+            </div>
             );
         };
 
@@ -5583,13 +5802,35 @@
             };
 
             // ──────────────────────────────────────────────────────────────────────
-            // PAGE 1 : EN-TÊTE
+            // CALCULS ADAPTATIFS
+            // ──────────────────────────────────────────────────────────────────────
+            const pdfBenchmark = reportPayload.benchmark_result;
+            const pdfDiagIndex = newDiagnosticCalculateDiagTertiaireIndex(
+                pdfBenchmark.site_intensity.value,
+                pdfBenchmark.benchmark_low.value,
+                pdfBenchmark.benchmark_median.value,
+                pdfBenchmark.benchmark_high.value
+            );
+            const pdfRole = reportPayload.inputs_summary.role;
+            const pdfPrimaryHorizon = (pdfRole === 'tenant') ? 3 : 10;
+            const pdfPrimaryLabel = (pdfRole === 'tenant') ? 'horizon locataire' : 'horizon proprietaire';
+            const pdfComposite = reportPayload.composite_savings;
+            const pdfPrimarySavings = pdfComposite.annual_euro.value * pdfPrimaryHorizon;
+
+            // ──────────────────────────────────────────────────────────────────────
+            // PAGE 1 : EN-TETE
             // ──────────────────────────────────────────────────────────────────────
 
             // Titre
-            addText('PRÉ-DIAGNOSTIC ÉNERGÉTIQUE INDICATIF', margin, { fontSize: 18, bold: true, color: [37, 99, 235] });
-            addText('Références observées sectorielles. Estimations à confirmer par audit', margin, { fontSize: 9, color: [120, 53, 15] });
+            addText('PRE-DIAGNOSTIC ENERGETIQUE INDICATIF', margin, { fontSize: 18, bold: true, color: [37, 99, 235] });
+            addText('References observees sectorielles. Estimations a confirmer par audit', margin, { fontSize: 9, color: [120, 53, 15] });
             y += 3;
+
+            // DiagTertiaire Index
+            const idxColorMap = { A: [5, 150, 105], B: [37, 99, 235], C: [217, 119, 6], D: [220, 38, 38] };
+            const idxColor = idxColorMap[pdfDiagIndex.zone] || [100, 100, 100];
+            addText(`DiagTertiaire Index : ${pdfDiagIndex.score}/100 - Zone ${pdfDiagIndex.zone} - ${pdfDiagIndex.label}`, margin, { fontSize: 12, bold: true, color: idxColor });
+            addText(pdfDiagIndex.phrase, margin, { fontSize: 9, color: idxColor });
             y += 5;
 
             // Infos site
@@ -5659,20 +5900,22 @@
             });
 
             // ──────────────────────────────────────────────────────────────────────
-            // PAGE 4 : PROJECTIONS
+            // PAGE 4 : PROJECTIONS (horizons adaptatifs selon role)
             // ──────────────────────────────────────────────────────────────────────
 
             checkNewPage();
-            addText('PROJECTIONS D\'ÉCONOMIES', margin, { fontSize: 14, bold: true });
+            addText('PROJECTIONS D\'ECONOMIES', margin, { fontSize: 14, bold: true });
             y += 5;
 
-            const composite = reportPayload.composite_savings;
-            addText(`Économies annuelles estimées (3 actions) : ${composite.annual_euro.value.toLocaleString('fr-FR')} ${composite.annual_euro.unit}`, margin + 5, { bold: true });
-            addText(`Soit ${composite.annual_kwh.value.toLocaleString('fr-FR')} ${composite.annual_kwh.unit} (${composite.total_pct.value}${composite.total_pct.unit})`, margin + 5);
+            addText(`Economies annuelles estimees (3 actions) : ${pdfComposite.annual_euro.value.toLocaleString('fr-FR')} ${pdfComposite.annual_euro.unit}`, margin + 5, { bold: true });
+            addText(`Soit ${pdfComposite.annual_kwh.value.toLocaleString('fr-FR')} ${pdfComposite.annual_kwh.unit} (${pdfComposite.total_pct.value}${pdfComposite.total_pct.unit})`, margin + 5);
             y += 5;
 
-            addText(`Economies cumulées sur 3 ans (prix constants) : ${reportPayload.projection_3y ? reportPayload.projection_3y.savings_euro.toLocaleString('fr-FR') : 'N/A'} EUR`, margin + 5);
-            addText('Estimations indicatives – à confirmer par devis professionnel.', margin + 5, { fontSize: 8, color: [120, 53, 15] });
+            addText(`Economies sur ${pdfPrimaryHorizon} ans (${pdfPrimaryLabel}) : ${pdfPrimarySavings.toLocaleString('fr-FR')} EUR`, margin + 5, { bold: true, color: [5, 150, 105] });
+            if (pdfRole) {
+                addText(`Role : ${pdfRole === 'owner' ? 'Proprietaire' : pdfRole === 'tenant' ? 'Locataire' : pdfRole}`, margin + 5, { fontSize: 9 });
+            }
+            addText('Estimations indicatives - a confirmer par devis professionnel.', margin + 5, { fontSize: 8, color: [120, 53, 15] });
             y += 10;
 
             // ──────────────────────────────────────────────────────────────────────

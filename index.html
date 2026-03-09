@@ -1007,7 +1007,7 @@
 
                                 {/* Titre — signature */}
                                 <h1 style={{ fontSize: 'clamp(1.95rem, 8.2vw, 3.75rem)', lineHeight: 1.04, fontWeight: 800, letterSpacing: '-1.5px', color: '#0A1929', marginBottom: '1.875rem', maxWidth: '30rem' }}>
-                                    Votre local tertiaire consomme-t-il trop ?
+                                    Pré-diagnostic énergétique tertiaire gratuit
                                 </h1>
 
                                 {/* Sous-titre — densité réduite par largeur */}
@@ -1026,7 +1026,7 @@
                                         Lancer mon diagnostic gratuit
                                         <Icon icon="solar:arrow-right-linear" width="20" height="20" />
                                     </button>
-                                    <p style={{ marginTop: '1.25rem', fontSize: '0.8125rem', color: '#64748B', fontWeight: 500, letterSpacing: '0.01em' }}>3 minutes • Sans engagement • Rapport PDF disponible en téléchargement</p>
+                                    <p style={{ marginTop: '1.25rem', fontSize: '0.8125rem', color: '#64748B', fontWeight: 500, letterSpacing: '0.01em' }}>3 minutes • Sans engagement • Rapport PDF par mail</p>
                                 </div>
 
                                 {/* Réassurance */}
@@ -1037,67 +1037,305 @@
                                     </p>
                                 </div>
                             </div>
-
-                            {/* RIGHT COLUMN - MOCKUP PDF PREMIUM V2 */}
+                            {/* RIGHT COLUMN - MOCKUP PDF PREMIUM V3 */}
+                            {/* Performance estimée */}
+                            {/* RIGHT COLUMN - MOCKUP PDF PREMIUM V4 */}
                             <div className="hidden lg:flex justify-center items-center order-1 lg:order-2">
                                 <div className="mockup-float relative" style={{ width: '450px', maxWidth: '100%' }}>
 
-                                    {/* Depth layer — relief final */}
-                                    <div className="absolute"
-                                        style={{ inset: 0, zIndex: 0, borderRadius: '22px', transform: 'translate(10px, 14px)', background: 'linear-gradient(145deg, #B8C8E4, #C5D3ED)', opacity: 0.6 }} />
+                                    {/* Depth layer */}
+                                    <div
+                                        className="absolute"
+                                        style={{
+                                            inset: 0,
+                                            zIndex: 0,
+                                            borderRadius: '22px',
+                                            transform: 'translate(10px, 14px)',
+                                            background: 'linear-gradient(145deg, #B8C8E4, #C5D3ED)',
+                                            opacity: 0.6
+                                        }}
+                                    />
 
-                                    {/* Card principale — cadre verrouillé */}
-                                    <div style={{
-                                        position: 'relative', zIndex: 1,
-                                        borderRadius: '22px',
-                                        border: '1px solid #B8C8E0',
-                                        background: '#FFFFFF',
-                                        boxShadow: '0 24px 70px rgba(15,23,42,0.17), 0 8px 22px rgba(15,23,42,0.09)',
-                                        overflow: 'hidden'
-                                    }}>
-
-                                        {/* En-tête document — header final */}
+                                    {/* Card principale */}
+                                    <div
+                                        style={{
+                                            position: 'relative',
+                                            zIndex: 1,
+                                            borderRadius: '22px',
+                                            border: '1px solid #B8C8E0',
+                                            background: '#FFFFFF',
+                                            boxShadow: '0 24px 70px rgba(15,23,42,0.17), 0 8px 22px rgba(15,23,42,0.09)',
+                                            overflow: 'hidden'
+                                        }}
+                                    >
+                                        {/* En-tête document */}
                                         <div style={{ background: 'linear-gradient(135deg, #0A1928 0%, #1D4ED8 50%, #0F2236 100%)', padding: '1.625rem 1.75rem' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
+                                            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem' }}>
                                                 <div>
-                                                    <p style={{ fontSize: '9.5px', fontWeight: 700, opacity: 0.55, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'white', marginBottom: '5px' }}>Diagnostic</p>
-                                                    <p style={{ fontSize: '1.1875rem', fontWeight: 800, color: 'white', lineHeight: 1.2, letterSpacing: '-0.4px' }}>Pré-diagnostic Tertiaire</p>
+                                                    <p
+                                                        style={{
+                                                            fontSize: '9.5px',
+                                                            fontWeight: 700,
+                                                            opacity: 0.55,
+                                                            textTransform: 'uppercase',
+                                                            letterSpacing: '0.12em',
+                                                            color: 'white',
+                                                            marginBottom: '5px'
+                                                        }}
+                                                    >
+                                                        Diagnostic
+                                                    </p>
+                                                    <p
+                                                        style={{
+                                                            fontSize: '1.1875rem',
+                                                            fontWeight: 800,
+                                                            color: 'white',
+                                                            lineHeight: 1.2,
+                                                            letterSpacing: '-0.4px'
+                                                        }}
+                                                    >
+                                                        Pré-diagnostic Tertiaire
+                                                    </p>
                                                 </div>
-                                                <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: '#F59E0B', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 5px 16px rgba(0,0,0,0.32)', flexShrink: 0 }}>
-                                                    <span style={{ fontSize: '1.4375rem', fontWeight: 900, color: '#0A1929' }}>D</span>
+
+                                                {/* Bloc étiquette actuelle -> après travaux */}
+                                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.4rem', flexShrink: 0 }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
+                                                        <div
+                                                            style={{
+                                                                width: '48px',
+                                                                height: '48px',
+                                                                borderRadius: '12px',
+                                                                background: '#F59E0B',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center',
+                                                                boxShadow: '0 5px 16px rgba(0,0,0,0.32)'
+                                                            }}
+                                                        >
+                                                            <span style={{ fontSize: '1.4375rem', fontWeight: 900, color: '#0A1929' }}>D</span>
+                                                        </div>
+
+                                                        <span
+                                                            style={{
+                                                                fontSize: '1rem',
+                                                                fontWeight: 900,
+                                                                color: 'rgba(255,255,255,0.85)',
+                                                                lineHeight: 1
+                                                            }}
+                                                        >
+                                                            →
+                                                        </span>
+
+                                                        <div
+                                                            style={{
+                                                                width: '48px',
+                                                                height: '48px',
+                                                                borderRadius: '12px',
+                                                                background: '#22C55E',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center',
+                                                                boxShadow: '0 5px 16px rgba(0,0,0,0.22)'
+                                                            }}
+                                                        >
+                                                            <span style={{ fontSize: '1.4375rem', fontWeight: 900, color: 'white' }}>C</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <p
+                                                        style={{
+                                                            fontSize: '9px',
+                                                            fontWeight: 700,
+                                                            letterSpacing: '0.08em',
+                                                            textTransform: 'uppercase',
+                                                            color: 'rgba(255,255,255,0.7)',
+                                                            margin: 0
+                                                        }}
+                                                    >
+                                                        Après travaux
+                                                    </p>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        {/* Corps du document — spacing final */}
-                                        <div style={{ padding: '1.5rem 1.625rem', display: 'flex', flexDirection: 'column', gap: '1.125rem', fontSize: '13px' }}>
-
+                                        {/* Corps du document */}
+                                        <div
+                                            style={{
+                                                padding: '1.5rem 1.625rem',
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                gap: '1.125rem',
+                                                fontSize: '13px'
+                                            }}
+                                        >
                                             {/* Performance estimée */}
-                                            <div style={{ borderRadius: '13px', border: '1.5px solid #DAE2EF', background: '#F7F9FC', padding: '1.125rem 1.25rem' }}>
-                                                <p style={{ fontSize: '9.5px', fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.09em', marginBottom: '0.7rem' }}>Performance estimée</p>
-                                                <div style={{ display: 'flex', alignItems: 'baseline', gap: '1rem' }}>
-                                                    <span style={{ fontSize: '2.75rem', fontWeight: 900, color: '#1D4ED8', lineHeight: 1 }}>D</span>
-                                                    <div>
-                                                        <span style={{ display: 'block', fontSize: '1.5rem', fontWeight: 800, color: '#1D4ED8', lineHeight: 1 }}>245</span>
-                                                        <span style={{ fontSize: '11px', fontWeight: 500, color: '#64748B', marginTop: '3px', display: 'block' }}>kWh/m²/an</span>
+                                            <div
+                                                style={{
+                                                    borderRadius: '13px',
+                                                    border: '1.5px solid #DAE2EF',
+                                                    background: '#F7F9FC',
+                                                    padding: '1.125rem 1.25rem'
+                                                }}
+                                            >
+                                                <p
+                                                    style={{
+                                                        fontSize: '9.5px',
+                                                        fontWeight: 700,
+                                                        color: '#64748B',
+                                                        textTransform: 'uppercase',
+                                                        letterSpacing: '0.09em',
+                                                        marginBottom: '0.9rem'
+                                                    }}
+                                                >
+                                                    Performance estimée
+                                                </p>
+
+                                                <div
+                                                    style={{
+                                                        display: 'grid',
+                                                        gridTemplateColumns: '1fr 44px 1fr',
+                                                        alignItems: 'center',
+                                                        gap: '0.75rem'
+                                                    }}
+                                                >
+                                                    {/* Bloc actuel */}
+                                                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '1rem' }}>
+                                                        <span style={{ fontSize: '2.75rem', fontWeight: 900, color: '#1D4ED8', lineHeight: 1 }}>D</span>
+                                                        <div>
+                                                            <span style={{ display: 'block', fontSize: '1.5rem', fontWeight: 800, color: '#1D4ED8', lineHeight: 1 }}>245</span>
+                                                            <span style={{ fontSize: '11px', fontWeight: 500, color: '#64748B', marginTop: '3px', display: 'block' }}>
+                                                                kWh/m²/an
+                                                            </span>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Flèche centrée */}
+                                                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                                        <span style={{ fontSize: '1.35rem', fontWeight: 900, color: '#94A3B8', lineHeight: 1 }}>→</span>
+                                                    </div>
+
+                                                    {/* Bloc après travaux */}
+                                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '0.45rem' }}>
+                                                        <span
+                                                            style={{
+                                                                fontSize: '9.5px',
+                                                                fontWeight: 700,
+                                                                color: '#15803D',
+                                                                textTransform: 'uppercase',
+                                                                letterSpacing: '0.08em'
+                                                            }}
+                                                        >
+
+                                                        </span>
+
+                                                        <div
+                                                            style={{
+                                                                display: 'flex',
+                                                                alignItems: 'baseline',
+                                                                gap: '0.7rem',
+                                                                padding: '0.75rem 0.9rem',
+                                                                borderRadius: '10px',
+                                                                background: '#ECFDF5',
+                                                                border: '1px solid #BBF7D0'
+                                                            }}
+                                                        >
+                                                            <span style={{ fontSize: '2rem', fontWeight: 900, color: '#16A34A', lineHeight: 1 }}>C</span>
+                                                            <div>
+                                                                <span style={{ display: 'block', fontSize: '1.125rem', fontWeight: 800, color: '#16A34A', lineHeight: 1 }}>
+                                                                    185
+                                                                </span>
+                                                                <span style={{ fontSize: '10px', fontWeight: 600, color: '#15803D', marginTop: '3px', display: 'block' }}>
+                                                                    kWh/m²/an
+                                                                </span>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            {/* Économies — gradient vert final */}
-                                            <div style={{ borderRadius: '13px', background: 'linear-gradient(135deg, #065F46 0%, #059669 50%, #16A34A 100%)', padding: '1.125rem 1.25rem', boxShadow: '0 4px 14px rgba(5,150,105,0.22)' }}>
-                                                <p style={{ fontSize: '9.5px', fontWeight: 700, opacity: 0.72, textTransform: 'uppercase', letterSpacing: '0.09em', color: 'white', marginBottom: '0.375rem' }}>Économies annuelles potentielles</p>
-                                                <p style={{ fontSize: '2.125rem', fontWeight: 900, color: 'white', lineHeight: 1.1, letterSpacing: '-0.5px' }}>3 600 €</p>
+                                            {/* Économies */}
+                                            <div
+                                                style={{
+                                                    borderRadius: '13px',
+                                                    background: 'linear-gradient(135deg, #065F46 0%, #059669 50%, #16A34A 100%)',
+                                                    padding: '1.125rem 1.25rem',
+                                                    boxShadow: '0 4px 14px rgba(5,150,105,0.22)'
+                                                }}
+                                            >
+                                                <p
+                                                    style={{
+                                                        fontSize: '9.5px',
+                                                        fontWeight: 700,
+                                                        opacity: 0.72,
+                                                        textTransform: 'uppercase',
+                                                        letterSpacing: '0.09em',
+                                                        color: 'white',
+                                                        marginBottom: '0.375rem'
+                                                    }}
+                                                >
+                                                    Économies annuelles potentielles
+                                                </p>
+                                                <p
+                                                    style={{
+                                                        fontSize: '2.125rem',
+                                                        fontWeight: 900,
+                                                        color: 'white',
+                                                        lineHeight: 1.1,
+                                                        letterSpacing: '-0.5px'
+                                                    }}
+                                                >
+                                                    3 600 €
+                                                </p>
                                             </div>
 
-                                            {/* Priorités — finition finale */}
+                                            {/* Priorités */}
                                             <div style={{ borderTop: '1.5px solid #E8EDF5', paddingTop: '1rem' }}>
-                                                <p style={{ fontSize: '9.5px', fontWeight: 700, color: '#0A1929', textTransform: 'uppercase', letterSpacing: '0.09em', marginBottom: '0.8rem' }}>3 priorités de travaux</p>
+                                                <p
+                                                    style={{
+                                                        fontSize: '9.5px',
+                                                        fontWeight: 700,
+                                                        color: '#0A1929',
+                                                        textTransform: 'uppercase',
+                                                        letterSpacing: '0.09em',
+                                                        marginBottom: '0.8rem'
+                                                    }}
+                                                >
+                                                    3 priorités de travaux
+                                                </p>
+
                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                                    {[['Régulation thermique', '2-4 ans', '#16A34A', '#ECFDF5'], ['Isolation toiture', 'Priorité #1', '#D97706', '#FFFBEB'], ['LED / Éclairage', 'ROI rapide', '#1D4ED8', '#EFF6FF']].map(([label, badge, color, bg], i) => (
-                                                        <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.625rem 1rem', borderRadius: '10px', background: '#F7F9FC', border: '1px solid #DAE2EF' }}>
+                                                    {[
+                                                        ['Régulation thermique', 'ROI 2-4 ans', '#0F766E', '#ECFEFF'],
+                                                        ['Isolation toiture', 'ROI moyen', '#B45309', '#FFF7ED'],
+                                                        ['LED / Éclairage', 'ROI rapide', '#16A34A', '#ECFDF5']
+                                                    ].map(([label, badge, color, bg], i) => (
+                                                        <div
+                                                            key={i}
+                                                            style={{
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'space-between',
+                                                                padding: '0.625rem 1rem',
+                                                                borderRadius: '10px',
+                                                                background: '#F7F9FC',
+                                                                border: '1px solid #DAE2EF'
+                                                            }}
+                                                        >
                                                             <span style={{ fontSize: '12.5px', fontWeight: 600, color: '#0A1929' }}>{label}</span>
-                                                            <span style={{ fontSize: '10px', fontWeight: 700, color, background: bg, padding: '3px 10px', borderRadius: '6px', letterSpacing: '0.01em' }}>{badge}</span>
+                                                            <span
+                                                                style={{
+                                                                    fontSize: '10px',
+                                                                    fontWeight: 700,
+                                                                    color,
+                                                                    background: bg,
+                                                                    padding: '3px 10px',
+                                                                    borderRadius: '6px',
+                                                                    letterSpacing: '0.01em'
+                                                                }}
+                                                            >
+                                                                {badge}
+                                                            </span>
                                                         </div>
                                                     ))}
                                                 </div>
@@ -1105,7 +1343,9 @@
 
                                             {/* Footer note */}
                                             <div style={{ borderTop: '1px solid #E8EDF5', paddingTop: '0.875rem', textAlign: 'center' }}>
-                                                <p style={{ fontSize: '11.5px', color: '#64748B', fontWeight: 500 }}>Rapport PDF + plan d'action disponible en téléchargement</p>
+                                                <p style={{ fontSize: '11.5px', color: '#64748B', fontWeight: 500 }}>
+                                                    Rapport PDF + plan d'action disponible en téléchargement
+                                                </p>
                                             </div>
                                         </div>
                                     </div>
@@ -1125,15 +1365,13 @@
                                     <Icon icon="solar:warning-bold" style={{ fontSize: '1.25rem' }} />
                                 </div>
                                 <div>
-                                    <h2 style={{ fontSize: 'clamp(1.375rem, 3.5vw, 1.875rem)', fontWeight: 700, color: '#0B1D30', marginBottom: '0.875rem', lineHeight: 1.2, letterSpacing: '-0.5px' }}>Le tertiaire ne se compare pas au résidentiel</h2>
-                                    <p style={{ fontSize: '1rem', color: '#475569', lineHeight: 1.75, marginBottom: '1.375rem' }}>
-                                        Un local professionnel ne se lit pas comme un logement. Utiliser des repères résidentiels sur un bâtiment tertiaire peut fausser l'analyse, conduire à de mauvaises décisions et faire engager un audit au mauvais moment.
-                                    </p>
+                                    <h2 style={{ fontSize: 'clamp(1.375rem, 3.5vw, 1.875rem)', fontWeight: 700, color: '#0B1D30', marginBottom: '0.875rem', lineHeight: 1.2, letterSpacing: '-0.5px' }}>Le tertiaire a ses propres repères.</h2>
                                     <ul style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                                         {[
-                                            "Des données enfin adaptées : Ne risquez plus de surestimer ou sous-estimer vos performances avec des comparaisons hors contexte.",
-                                            "Le bon timing pour agir : Évitez d'engager des travaux ou un audit au mauvais moment.",
-                                            "Sécurisez votre budget : Un audit énergétique classique coûte souvent entre 1 000 € et 3 000 €. Vérifiez d'abord gratuitement s'il est réellement justifié pour votre local."
+                                            "Erreurs fréquentes : comparer au résidentiel.",
+                                            "Risque : audit ou travaux au mauvais moment.",
+                                            "Commencez par un cadrage en 3 minutes.",
+                                            "Avant de financer un audit à +1 000 €.",
                                         ].map((item, i) => (
                                             <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', fontSize: '0.9375rem', color: '#475569', lineHeight: 1.65 }}>
                                                 <Icon icon="solar:checklist-linear" style={{ color: '#1D4ED8', flexShrink: 0, marginTop: '3px', fontSize: '1rem' }} />

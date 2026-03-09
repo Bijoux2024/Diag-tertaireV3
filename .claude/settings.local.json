@@ -9,7 +9,9 @@
       "Bash(vercel deploy:*)",
       "Bash(npx vercel:*)",
       "mcp__vercel__list_deployments",
-      "Bash(git:*)"
+      "Bash(git:*)",
+      "Bash(sleep 3:*)",
+      "Bash(curl:*)"
     ]
   }
 }

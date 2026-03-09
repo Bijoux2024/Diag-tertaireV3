@@ -14,7 +14,7 @@
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
     <script>
-        // Shim PropTypes pour Recharts UMD — doit être chargé avant Recharts
+        // Shim PropTypes pour Recharts UMD - doit être chargé avant Recharts
         if (typeof PropTypes === 'undefined') window.PropTypes = { func: () => { }, bool: () => { }, node: () => { }, string: () => { }, number: () => { }, object: () => { }, array: () => { }, any: () => { }, arrayOf: () => () => { }, objectOf: () => () => { }, oneOf: () => () => { }, oneOfType: () => () => { }, shape: () => () => { }, exact: () => () => { }, instanceOf: () => () => { }, element: () => { }, elementType: () => { }, checkPropTypes: () => { } };
         if (typeof React !== 'undefined' && !React.PropTypes) React.PropTypes = window.PropTypes;
     </script>
@@ -81,7 +81,7 @@
             }
 
             .pro-sidebar.open {
-                transform: translateX(0);
+                transform: tran slateX(0);
             }
 
             .pro-content {
@@ -593,27 +593,27 @@
         };
 
         const PRIX_ENERGIE = {
-            electricite: 0.196, // SOURCE_STRONG — CRE T3 2024 tarif pro ≤36kVA
-            gaz: 0.105, // SOURCE_STRONG — CRE T3 2024 tarif T1/T2
-            reseau_chaleur: 0.092, // SOURCE_PARTIAL — SNCU 2023 moyenne nationale
-            fioul: 0.118, // SOURCE_PARTIAL — estimation 2025
-            bois_granules: 0.065, // SOURCE_PARTIAL — ADEME Bois énergie 2023
+            electricite: 0.196, // SOURCE_STRONG - CRE T3 2024 tarif pro ≤36kVA
+            gaz: 0.105, // SOURCE_STRONG - CRE T3 2024 tarif T1/T2
+            reseau_chaleur: 0.092, // SOURCE_PARTIAL - SNCU 2023 moyenne nationale
+            fioul: 0.118, // SOURCE_PARTIAL - estimation 2025
+            bois_granules: 0.065, // SOURCE_PARTIAL - ADEME Bois énergie 2023
         };
 
         const INFLATION_ENERGIE = {
-            electricite: 0.030, // SOURCE_PARTIAL — à revalider annuellement
-            gaz: 0.055, // SOURCE_PARTIAL — volatilité post-2021, trajectoire sortie fossile. 5.5% = moyenne prudente 10 ans
+            electricite: 0.030, // SOURCE_PARTIAL - à revalider annuellement
+            gaz: 0.055, // SOURCE_PARTIAL - volatilité post-2021, trajectoire sortie fossile. 5.5% = moyenne prudente 10 ans
             reseau_chaleur: 0.035, // SOURCE_PARTIAL
-            fioul: 0.060, // SOURCE_PARTIAL — sortie progressive, raréfaction
-            bois_granules: 0.025, // SOURCE_PARTIAL — marché plus stable
+            fioul: 0.060, // SOURCE_PARTIAL - sortie progressive, raréfaction
+            bois_granules: 0.025, // SOURCE_PARTIAL - marché plus stable
         };
 
         const CO2_FACTEURS = {
-            electricite: 0.079, // SOURCE_STRONG — RTE moyenne lissée 5 ans
-            gaz: 0.227, // SOURCE_STRONG — Base Carbone ADEME v23
-            reseau_chaleur: 0.096, // SOURCE_STRONG — SNCU 2023
-            fioul: 0.324, // SOURCE_STRONG — Base Carbone ADEME v23
-            bois_granules: 0.028, // SOURCE_STRONG — Base Carbone ADEME v23 biogénique
+            electricite: 0.079, // SOURCE_STRONG - RTE moyenne lissée 5 ans
+            gaz: 0.227, // SOURCE_STRONG - Base Carbone ADEME v23
+            reseau_chaleur: 0.096, // SOURCE_STRONG - SNCU 2023
+            fioul: 0.324, // SOURCE_STRONG - Base Carbone ADEME v23
+            bois_granules: 0.028, // SOURCE_STRONG - Base Carbone ADEME v23 biogénique
         };
 
         const POSTES = {
@@ -625,7 +625,7 @@
             enseignement: { chauffage: 55, clim: 5, ventil: 10, eclairage: 15, ecs: 8, process: 0, autres: 7 },
             entrepot_chauffe: { chauffage: 35, clim: 3, ventil: 8, eclairage: 40, ecs: 4, process: 0, autres: 10 },
             entrepot_froid: { chauffage: 5, clim: 2, ventil: 5, eclairage: 40, ecs: 3, process: 40, autres: 5 },
-            // CORRIGÉ EXPERT — Arrêté 25 avril 2017
+            // CORRIGÉ EXPERT - Arrêté 25 avril 2017
             sante_cabinet: { chauffage: 36, clim: 10, ventil: 20, eclairage: 12, ecs: 8, process: 0, autres: 14 },
         };
 
@@ -711,7 +711,7 @@
                 cee: true, fiche_cee: 'BAT-TH-116', source: 'SOURCE_PARTIAL',
                 prerequis: ['vmc_presente'], exclu_si: ['detecteurs_co2_recents'],
                 description: 'Débit ventilation adapté à la présence réelle et au taux de CO2',
-                intervenant: 'Entreprise ventilation RGE — qualification QualiAir', rge_requis: true,
+                intervenant: 'Entreprise ventilation RGE - qualification QualiAir', rge_requis: true,
             },
             {
                 id: 'ACT07', nom: 'Calorifugeage canalisations ECS',
@@ -749,7 +749,7 @@
                 cee: true, fiche_cee: 'BAT-EN-102', source: 'SOURCE_STRONG',
                 prerequis: ['toiture_non_isolee'], exclu_si: ['isolation_toiture_recente'],
                 description: 'Isolation des combles perdus ou toiture terrasse',
-                intervenant: 'Entreprise RGE — qualification Qualibat 71x ou 73x', rge_requis: true,
+                intervenant: 'Entreprise RGE - qualification Qualibat 71x ou 73x', rge_requis: true,
             },
             {
                 id: 'ACT11', nom: 'Remplacement chaudière par PAC ou condensation',
@@ -759,7 +759,7 @@
                 prerequis: ['chaudiere_presente', 'age_sup_10_ans'],
                 exclu_si: ['chaudiere_pac_recente'],
                 description: 'Remplacement d\'une chaudière vétuste par PAC ou chaudière à condensation',
-                intervenant: 'Installateur RGE — qualification PACPro / QualiPAC', rge_requis: true,
+                intervenant: 'Installateur RGE - qualification PACPro / QualiPAC', rge_requis: true,
             },
             {
                 id: 'ACT12', nom: 'VMC double flux avec récupération de chaleur',
@@ -768,14 +768,14 @@
                 cee: true, fiche_cee: 'BAT-TH-125', source: 'SOURCE_PARTIAL',
                 prerequis: ['vmc_sans_recuperation'], exclu_si: ['vmc_df_recente'],
                 description: 'Remplacement VMC simple flux par double flux avec récupérateur',
-                intervenant: 'Entreprise RGE — qualification QualiAir', rge_requis: true,
+                intervenant: 'Entreprise RGE - qualification QualiAir', rge_requis: true,
             },
         ];
         // --- FIN DONNEES VALIDEES EXPERT ---
 
         function scoreMaturite(formData) {
             let score = 1;
-            // FIX audit-2026-03-07 — champs alignés sur sortie alpha form (budget/horizon/objectif)
+            // FIX audit-2026-03-07 - champs alignés sur sortie alpha form (budget/horizon/objectif)
             const budget = formData.budget || formData.budget_travaux;
             const horizon = formData.horizon || formData.horizon_decision;
             const objectif = formData.objectif || formData.objectif_principal;
@@ -820,7 +820,7 @@
                         formData.isolation_toiture === 'oui') return false;
                     if (req === 'chaudiere_presente' &&
                         ['convecteurs', 'plancher_elec', 'aucun'].includes(formData.chauffage_type)) return false;
-                    // FIX #D audit-2026-03-07 — prerequis chauffage_regulation_horloge manquant
+                    // FIX #D audit-2026-03-07 - prerequis chauffage_regulation_horloge manquant
                     if (req === 'chauffage_regulation_horloge' &&
                         !formData.chauffage_regulation?.includes?.('horloge') &&
                         !formData.chauffage_regulation?.includes?.('gtb')) return false;
@@ -1309,21 +1309,32 @@
         // Application du template
         const allCases = proCasesRaw.map(c => ({ ...c, ...getTemplateForCase(c) }));
 
-        /* ===== CAS FICTIFS V2 (4 dossiers riches démonstrables — clé localStorage : proCasesRaw) ===== */
+        /* ===== CAS FICTIFS V2 (5 dossiers riches démonstrables - clé localStorage : proCasesRaw) ===== */
         const MOCK_PRO_CASES_V2 = [
 
+            /* ── CAS 1 : BRASSERIE ── Restauration 210 m² Bordeaux - Score E → C ── */
             {
                 id: 'case_001',
                 projectName: 'Brasserie du Marché',
                 clientName: 'SAS Brasserie du Marché',
                 activity: 'Restauration',
                 address: '14 Place du Parlement, 33000 Bordeaux',
+                postalCode: '33000',
+                zone: 'H2',
+                energiePrincipale: 'gaz',
                 status: 'completed',
                 completionPercent: 100,
                 createdAt: '18/02/2026',
                 lastUpdated: '05/03/2026',
                 reportGeneratedAt: '05/03/2026',
                 contact: { name: 'Thierry Blanc', phone: '06 78 23 45 67', role: 'Gérant' },
+                email: 'tblanc@brasserie-marche.fr',
+                scoreMaturite: 4,
+                noteInterne: 'Bail commercial à renouveler en sept. 2026 - très motivé. Contacté via CCI Bordeaux. Préférence pour financement CEE en priorité. Rappeler mi-avril.',
+                objectif: 'reduction_charges',
+                horizon: 'court_terme',
+                budget: '10k-30k',
+                urgenceVerbatim: 'Bail à renouveler en septembre, le propriétaire conditionne la reconduction à des travaux d\'amélioration.',
                 buildingArea: 210,
                 annualConsumption: 126000,
                 annualCost: 18400,
@@ -1339,58 +1350,46 @@
                 aidesEstimees: 2700,
                 roiGlobal: 1.6,
                 actions: [
-                    { name: 'Optimisation horaires chauffage + cuisson', savingsEuro: 2800, capex: 800, roi: 0.3, eligCEE: false, fichesCEE: [], description: 'Réglage des plages de chauffe et décalage des préchauffages four selon les services. Action sans travaux, retour quasi-immédiat.' },
-                    { name: 'Relamping LED complet (salle + cuisine)', savingsEuro: 1950, capex: 5500, roi: 2.8, eligCEE: true, fichesCEE: ['BAT-EQ-127'], description: '210 m² en fluorescent T8 remplacés par LED. Gain éclairage estimé à 55%. Interventions sur 1 journée de fermeture.' },
-                    { name: 'Horloge VMC + modulation hors service', savingsEuro: 1400, capex: 2200, roi: 1.6, eligCEE: true, fichesCEE: ['BAT-TH-125'], description: 'La VMC cuisine tourne 24h/24. Programmation hors occupation (coupure 22h–6h) et réduction en inter-service.' },
-                    { name: 'Calorifugeage réseaux ECS et boucle cuisine', savingsEuro: 1050, capex: 6000, roi: 5.7, eligCEE: true, fichesCEE: ['BAT-TH-160'], description: 'Réseau ECS non isolé sur 35 ml. Pertes thermiques estimées à ~12% de la consommation ECS. Isolation laine de verre + protection alu.' }
+                    { name: 'Optimisation horaires chauffage + cuisson', savingsEuro: 2800, capex: 800, roi: 0.3, eligCEE: false, fichesCEE: [], scope: 'chauffage', description: 'Réglage des plages de chauffe et décalage des préchauffages four selon les services. Action sans travaux, retour quasi-immédiat.' },
+                    { name: 'Horloge VMC + modulation hors service', savingsEuro: 1400, capex: 2200, roi: 1.6, eligCEE: true, fichesCEE: ['BAT-TH-125'], scope: 'ventil', description: 'La VMC cuisine tourne 24h/24. Programmation hors occupation (coupure 22h–6h) et réduction en inter-service.' },
+                    { name: 'Relamping LED complet (salle + cuisine)', savingsEuro: 1950, capex: 5500, roi: 2.8, eligCEE: true, fichesCEE: ['BAT-EQ-127'], scope: 'eclairage', description: '210 m² en fluorescent T8 remplacés par LED. Gain éclairage estimé à 55%. Interventions sur 1 journée de fermeture.' },
+                    { name: 'Calorifugeage réseaux ECS et boucle cuisine', savingsEuro: 1050, capex: 6000, roi: 5.7, eligCEE: true, fichesCEE: ['BAT-TH-160'], scope: 'ecs', description: 'Réseau ECS non isolé sur 35 ml. Pertes thermiques estimées à ~12% de la consommation ECS. Isolation laine de verre + protection alu.' }
                 ],
-                postes: {
-                    chauffage: { pct: 20, kwh: 25200, eur: 2646 },
-                    clim: { pct: 8, kwh: 10080, eur: 1058 },
-                    ventil: { pct: 12, kwh: 15120, eur: 1588 },
-                    eclairage: { pct: 10, kwh: 12600, eur: 1323 },
-                    ecs: { pct: 15, kwh: 18900, eur: 1985 },
-                    autres: { pct: 35, kwh: 44100, eur: 4631 }
-                },
-                benchmark_data: [
-                    { name: 'Votre brasserie', value: 600, fill: '#EF4444' },
-                    { name: 'Q1 (bon)', value: 350, fill: '#10B981' },
-                    { name: 'Médiane', value: 500, fill: '#F59E0B' },
-                    { name: 'Q3 (élevé)', value: 800, fill: '#EF4444' }
-                ],
-                projectionData: (() => {
-                    const data = [{ annee: 'Auj.', sans_travaux: 0, avec_travaux: 11800 }];
-                    let cs = 0, ca = 11800;
-                    for (let i = 1; i <= 10; i++) {
-                        cs += 18400 * Math.pow(1.048, i);
-                        ca += (18400 - 7200) * Math.pow(1.048, i);
-                        data.push({ annee: 'A+' + i, sans_travaux: Math.round(cs), avec_travaux: Math.round(ca), economies_nettes: Math.round(cs - ca) });
-                    }
-                    return data;
-                })(),
+                postes: { chauffage: { pct: 20, kwh: 25200, eur: 2646 }, clim: { pct: 8, kwh: 10080, eur: 1058 }, ventil: { pct: 12, kwh: 15120, eur: 1588 }, eclairage: { pct: 10, kwh: 12600, eur: 1323 }, ecs: { pct: 15, kwh: 18900, eur: 1985 }, autres: { pct: 35, kwh: 44100, eur: 4631 } },
+                projectionData: (() => { const d = [{ annee: 'Auj.', sans_travaux: 0, avec_travaux: 11800 }]; let cs = 0, ca = 11800; for (let i = 1; i <= 10; i++) { cs += 18400 * Math.pow(1.048, i); ca += (18400 - 7200) * Math.pow(1.048, i); d.push({ annee: 'A+' + i, sans_travaux: Math.round(cs), avec_travaux: Math.round(ca) }); } return d; })(),
                 tauxInflation: 4.8,
                 roiAnnee: 2,
                 graphiquePubliable: true,
                 horizonAns: 10,
-                summary: 'Consommation nettement au-dessus de la médiane restauration (600 vs 500 kWh/m²/an). La facture gaz représente 70% du total et bénéficie d\'un fort levier rapide. 4 actions permettent de ramener l\'indice en zone C avec un retour global sous 2 ans.',
-                resultBasis: ['Factures réelles sur 12 mois (gaz + électricité)', 'Chaudière gaz standard > 15 ans identifiée', 'VMC cuisine fonctionnant 24h/24 — fort potentiel horaires'],
+                summary: 'Consommation nettement au-dessus de la médiane restauration (600 vs 500 kWh/m²/an). La facture gaz représente 70% du total. 4 actions permettent de ramener l\'indice en zone C avec un retour global sous 2 ans.',
+                resultBasis: ['Factures réelles sur 12 mois (gaz + électricité)', 'Chaudière gaz standard > 15 ans identifiée', 'VMC cuisine fonctionnant 24h/24'],
                 reliability: 'élevé',
-                attention: 'à surveiller',
-                providerQuestions: ['Le four et les équipements de cuisson sont-ils inclus dans les relevés de consommation gaz ?', 'Quel est l\'âge exact de la chaudière et date de la dernière maintenance ?', 'La VMC cuisine est-elle en simple ou double flux ?', 'Y a-t-il un contrat de maintenance en cours sur les équipements ?']
+                providerQuestions: ['Le four et les équipements de cuisson sont-ils inclus dans les relevés gaz ?', 'Quel est l\'âge exact de la chaudière et date de la dernière maintenance ?', 'La VMC cuisine est-elle simple ou double flux ?']
             },
 
+            /* ── CAS 2 : BUREAUX ── 1 100 m² Nantes - Score D → B ── */
             {
                 id: 'case_002',
-                projectName: 'Le Clos Saint-Félix — Bureaux',
+                projectName: 'Le Clos Saint-Félix - Bureaux',
                 clientName: 'SCI Patrimoine Saint-Félix',
                 activity: 'Bureau',
                 address: '8 rue des Hauts-Pavés, 44000 Nantes',
+                postalCode: '44000',
+                zone: 'H2',
+                energiePrincipale: 'gaz',
                 status: 'completed',
                 completionPercent: 100,
                 createdAt: '24/02/2026',
                 lastUpdated: '06/03/2026',
                 reportGeneratedAt: '06/03/2026',
                 contact: { name: 'Isabelle Morin', phone: '06 31 44 89 12', role: 'Responsable patrimoine' },
+                email: 'i.morin@sci-saintfelix.fr',
+                scoreMaturite: 3,
+                noteInterne: 'Gestionnaire de patrimoine, 3 immeubles en portefeuille. Celui-ci est le plus consommateur. Budget serré - prioriser ROI < 3 ans. Intéressée par la marque blanche pour ses locataires.',
+                objectif: 'valorisation_patrimoine',
+                horizon: '1an',
+                budget: '30k-100k',
+                urgenceVerbatim: 'Revue de charges locatives prévue en juin, veut pouvoir montrer des actions concrètes.',
                 buildingArea: 1100,
                 annualConsumption: 231000,
                 annualCost: 31800,
@@ -1406,58 +1405,46 @@
                 aidesEstimees: 8300,
                 roiGlobal: 2.7,
                 actions: [
-                    { name: 'Régulation centrale chauffage (GTB légère)', savingsEuro: 4800, capex: 7500, roi: 1.6, eligCEE: true, fichesCEE: ['BAT-TH-116'], description: 'Installation d\'un régulateur central avec programmation hebdomadaire et zonage 3 niveaux. Chaudière 18 ans en réseau eau chaude — fort gain sur les dérives de consigne.' },
-                    { name: 'Relamping LED open space + circulations', savingsEuro: 2900, capex: 13500, roi: 4.7, eligCEE: true, fichesCEE: ['BAT-EQ-127'], description: '1 100 m² en T8 fluorescent. Remplacement par dalles LED 40W avec gradation. Réduction estimée de 58% sur le poste éclairage.' },
-                    { name: 'Robinets thermostatiques sur radiateurs', savingsEuro: 2100, capex: 5500, roi: 2.6, eligCEE: true, fichesCEE: ['BAT-TH-024'], description: 'Réseau eau chaude sans robinets thermostatiques dans les bureaux. Pose sur 55 émetteurs. Permet une régulation locale et réduit les surchauffes de 10% estimées.' },
-                    { name: 'Horloge VMC simple flux (3 caissons)', savingsEuro: 1400, capex: 4500, roi: 3.2, eligCEE: true, fichesCEE: ['BAT-TH-125'], description: 'VMC fonctionnant 24h/24. Programmation horaire (7h–20h semaine) sur 3 caissons. Économie ventilation estimée à 28%.' }
+                    { name: 'Régulation centrale chauffage (GTB légère)', savingsEuro: 4800, capex: 7500, roi: 1.6, eligCEE: true, fichesCEE: ['BAT-TH-116'], scope: 'chauffage', description: 'Régulateur central avec programmation hebdomadaire et zonage 3 niveaux. Chaudière 18 ans en réseau eau chaude.' },
+                    { name: 'Robinets thermostatiques sur radiateurs', savingsEuro: 2100, capex: 5500, roi: 2.6, eligCEE: true, fichesCEE: ['BAT-TH-024'], scope: 'chauffage', description: 'Réseau eau chaude sans robinets thermostatiques. Pose sur 55 émetteurs. Réduit les surchauffes de 10% estimées.' },
+                    { name: 'Horloge VMC simple flux (3 caissons)', savingsEuro: 1400, capex: 4500, roi: 3.2, eligCEE: true, fichesCEE: ['BAT-TH-125'], scope: 'ventil', description: 'VMC fonctionnant 24h/24. Programmation horaire (7h–20h semaine) sur 3 caissons. Économie estimée à 28%.' },
+                    { name: 'Relamping LED open space + circulations', savingsEuro: 2900, capex: 13500, roi: 4.7, eligCEE: true, fichesCEE: ['BAT-EQ-127'], scope: 'eclairage', description: '1 100 m² en T8 fluorescent. Remplacement par dalles LED 40W avec gradation. Réduction estimée de 58% sur l\'éclairage.' }
                 ],
-                postes: {
-                    chauffage: { pct: 45, kwh: 103950, eur: 14758 },
-                    clim: { pct: 8, kwh: 18480, eur: 2626 },
-                    ventil: { pct: 9, kwh: 20790, eur: 2954 },
-                    eclairage: { pct: 18, kwh: 41580, eur: 5908 },
-                    ecs: { pct: 5, kwh: 11550, eur: 1641 },
-                    autres: { pct: 15, kwh: 34650, eur: 4923 }
-                },
-                benchmark_data: [
-                    { name: 'Vos bureaux', value: 210, fill: '#F97316' },
-                    { name: 'Q1 (bon)', value: 120, fill: '#10B981' },
-                    { name: 'Médiane', value: 180, fill: '#F59E0B' },
-                    { name: 'Q3 (élevé)', value: 280, fill: '#EF4444' }
-                ],
-                projectionData: (() => {
-                    const data = [{ annee: 'Auj.', sans_travaux: 0, avec_travaux: 30200 }];
-                    let cs = 0, ca = 30200;
-                    for (let i = 1; i <= 10; i++) {
-                        cs += 31800 * Math.pow(1.040, i);
-                        ca += (31800 - 11200) * Math.pow(1.040, i);
-                        data.push({ annee: 'A+' + i, sans_travaux: Math.round(cs), avec_travaux: Math.round(ca), economies_nettes: Math.round(cs - ca) });
-                    }
-                    return data;
-                })(),
+                postes: { chauffage: { pct: 45, kwh: 103950, eur: 14758 }, clim: { pct: 8, kwh: 18480, eur: 2626 }, ventil: { pct: 9, kwh: 20790, eur: 2954 }, eclairage: { pct: 18, kwh: 41580, eur: 5908 }, ecs: { pct: 5, kwh: 11550, eur: 1641 }, autres: { pct: 15, kwh: 34650, eur: 4923 } },
+                projectionData: (() => { const d = [{ annee: 'Auj.', sans_travaux: 0, avec_travaux: 30200 }]; let cs = 0, ca = 30200; for (let i = 1; i <= 10; i++) { cs += 31800 * Math.pow(1.040, i); ca += (31800 - 11200) * Math.pow(1.040, i); d.push({ annee: 'A+' + i, sans_travaux: Math.round(cs), avec_travaux: Math.round(ca) }); } return d; })(),
                 tauxInflation: 4.0,
                 roiAnnee: 3,
                 graphiquePubliable: true,
                 horizonAns: 10,
-                summary: 'Immeuble de bureaux 1960 avec chaudière gaz de 18 ans et éclairage fluorescent intégral. L\'intensité de 210 kWh/m²/an dépasse de 17% la médiane du secteur. 4 actions complémentaires permettent de ramener l\'indice en zone B avec un ROI global inférieur à 3 ans.',
-                resultBasis: ['Factures annuelles gaz + électricité vérifiées sur 12 mois', 'Visite terrain : chaudière Viessmann 2008, 3 caissons VMC sans horloge', 'Éclairage T8 intégral identifié lors du relevé'],
+                summary: 'Immeuble de bureaux 1960, chaudière gaz 18 ans, éclairage fluorescent intégral. 210 kWh/m²/an dépasse de 17% la médiane. 4 actions complémentaires ramènent l\'indice en zone B avec un ROI global inférieur à 3 ans.',
+                resultBasis: ['Factures annuelles gaz + électricité vérifiées sur 12 mois', 'Chaudière Viessmann 2008, 3 caissons VMC sans horloge', 'Éclairage T8 intégral'],
                 reliability: 'élevé',
-                attention: 'modéré',
-                providerQuestions: ['La chaudière a-t-elle bénéficié d\'un contrat de maintenance annuel ?', 'Les locataires disposent-ils de thermostats individuels ?', 'Existe-t-il un comptage séparé éclairage / prises / CVC ?', 'Le bail prévoit-il une clause verte ou des charges refacturées ?']
+                providerQuestions: ['La chaudière a-t-elle un contrat de maintenance annuel ?', 'Les locataires disposent-ils de thermostats individuels ?', 'Le bail prévoit-il une clause verte ?']
             },
 
+            /* ── CAS 3 : CLINIQUE ── Santé 320 m² Montpellier - Score D → C ── */
             {
                 id: 'case_003',
                 projectName: 'Clinique Vétérinaire du Soleil',
                 clientName: 'SELARL Vétérinaire du Soleil',
                 activity: 'Santé',
                 address: '23 avenue de la Pompignane, 34000 Montpellier',
+                postalCode: '34000',
+                zone: 'H3',
+                energiePrincipale: 'electricite',
                 status: 'completed',
                 completionPercent: 100,
                 createdAt: '01/03/2026',
                 lastUpdated: '07/03/2026',
                 reportGeneratedAt: '07/03/2026',
                 contact: { name: 'Dr. Laurence Favre', phone: '06 52 89 34 11', role: 'Associée gérante' },
+                email: 'l.favre@vetsoleil.fr',
+                scoreMaturite: 3,
+                noteInterne: 'Locataire - accord propriétaire nécessaire pour travaux gros œuvre. VMC réglementaire santé : bien vérifier conformité arrêté 25/04/2017. Budget validé sous réserve accord copropriété.',
+                objectif: 'reduction_charges',
+                horizon: '1an',
+                budget: '10k-30k',
+                urgenceVerbatim: 'Facture électrique en hausse de 23% depuis 2022, associés décidés à agir.',
                 buildingArea: 320,
                 annualConsumption: 86400,
                 annualCost: 16900,
@@ -1473,58 +1460,46 @@
                 aidesEstimees: 4500,
                 roiGlobal: 3.6,
                 actions: [
-                    { name: 'VMC régulée CO2 (salles de soins)', savingsEuro: 2100, capex: 8500, roi: 4.0, eligCEE: true, fichesCEE: ['BAT-TH-116'], description: 'Renouvellement d\'air fixe 24h/24 en zone de soins. Remplacement par VMC modulée sur sonde CO2 et présence. Économie ventilation estimée à 30%. Conforme arrêté du 25/04/2017.' },
-                    { name: 'Détecteurs de présence éclairage', savingsEuro: 1350, capex: 4500, roi: 3.3, eligCEE: true, fichesCEE: ['BAT-EQ-212'], description: '6 zones identifiées avec éclairage permanent non justifié. Pose de détecteurs HF dans les couloirs, la salle d\'attente et les sanitaires. Gain estimé 20% sur le poste éclairage.' },
-                    { name: 'Calorifugeage réseau ECS (stérilisation)', savingsEuro: 850, capex: 3500, roi: 4.1, eligCEE: true, fichesCEE: ['BAT-TH-160'], description: 'Réseau ECS dédié à la stérilisation non isolé sur 22 ml. Pertes thermiques estimées à 15% de la consommation ECS. Isolation élastomère DN25–DN40.' },
-                    { name: 'Optimisation plages climatisation (zone H3)', savingsEuro: 500, capex: 5500, roi: 11.0, eligCEE: false, fichesCEE: [], description: 'Climatiseurs split tournant de 7h à 22h même hors présence. Programmation horaire sur 8 unités. Gain estimé 12% sur la clim. Zone H3 : fort enjeu rafraîchissement en été.' }
+                    { name: 'VMC régulée CO₂ (salles de soins)', savingsEuro: 2100, capex: 8500, roi: 4.0, eligCEE: true, fichesCEE: ['BAT-TH-116'], scope: 'ventil', description: 'Renouvellement d\'air fixe 24h/24 en zone de soins. VMC modulée sur sonde CO2 et présence. Économie estimée 30%. Conforme arrêté du 25/04/2017.' },
+                    { name: 'Détecteurs de présence (couloirs + attente)', savingsEuro: 1350, capex: 4500, roi: 3.3, eligCEE: true, fichesCEE: ['BAT-EQ-212'], scope: 'eclairage', description: '6 zones avec éclairage permanent non justifié. Détecteurs HF dans couloirs, salle d\'attente et sanitaires. Gain estimé 20%.' },
+                    { name: 'Calorifugeage réseau ECS (stérilisation)', savingsEuro: 850, capex: 3500, roi: 4.1, eligCEE: true, fichesCEE: ['BAT-TH-160'], scope: 'ecs', description: 'Réseau ECS stérilisation non isolé sur 22 ml. Pertes estimées à 15% de la consommation ECS. Isolation élastomère DN25–DN40.' },
+                    { name: 'Programmation climatiseurs (zone H3)', savingsEuro: 500, capex: 5500, roi: 11.0, eligCEE: false, fichesCEE: [], scope: 'clim', description: 'Climatiseurs split tournant 7h–22h hors présence. Programmation horaire sur 8 unités. Gain estimé 12% clim.' }
                 ],
-                postes: {
-                    chauffage: { pct: 36, kwh: 31104, eur: 6096 },
-                    clim: { pct: 10, kwh: 8640, eur: 1693 },
-                    ventil: { pct: 20, kwh: 17280, eur: 3387 },
-                    eclairage: { pct: 12, kwh: 10368, eur: 2032 },
-                    ecs: { pct: 8, kwh: 6912, eur: 1354 },
-                    autres: { pct: 14, kwh: 12096, eur: 2371 }
-                },
-                benchmark_data: [
-                    { name: 'Votre clinique', value: 270, fill: '#F97316' },
-                    { name: 'Q1 (bon)', value: 160, fill: '#10B981' },
-                    { name: 'Médiane', value: 220, fill: '#F59E0B' },
-                    { name: 'Q3 (élevé)', value: 350, fill: '#EF4444' }
-                ],
-                projectionData: (() => {
-                    const data = [{ annee: 'Auj.', sans_travaux: 0, avec_travaux: 17500 }];
-                    let cs = 0, ca = 17500;
-                    for (let i = 1; i <= 10; i++) {
-                        cs += 16900 * Math.pow(1.030, i);
-                        ca += (16900 - 4800) * Math.pow(1.030, i);
-                        data.push({ annee: 'A+' + i, sans_travaux: Math.round(cs), avec_travaux: Math.round(ca), economies_nettes: Math.round(cs - ca) });
-                    }
-                    return data;
-                })(),
+                postes: { chauffage: { pct: 36, kwh: 31104, eur: 6096 }, clim: { pct: 10, kwh: 8640, eur: 1693 }, ventil: { pct: 20, kwh: 17280, eur: 3387 }, eclairage: { pct: 12, kwh: 10368, eur: 2032 }, ecs: { pct: 8, kwh: 6912, eur: 1354 }, autres: { pct: 14, kwh: 12096, eur: 2371 } },
+                projectionData: (() => { const d = [{ annee: 'Auj.', sans_travaux: 0, avec_travaux: 17500 }]; let cs = 0, ca = 17500; for (let i = 1; i <= 10; i++) { cs += 16900 * Math.pow(1.030, i); ca += (16900 - 4800) * Math.pow(1.030, i); d.push({ annee: 'A+' + i, sans_travaux: Math.round(cs), avec_travaux: Math.round(ca) }); } return d; })(),
                 tauxInflation: 3.0,
                 roiAnnee: 4,
                 graphiquePubliable: true,
                 horizonAns: 10,
-                summary: 'Cabinet vétérinaire zone H3 avec consommation électrique de 270 kWh/m²/an (médiane santé : 220). Le poste ventilation représente 20% des dépenses et constitue le levier prioritaire, avec une exigence réglementaire spécifique en établissement de santé. ROI global estimé sous 4 ans.',
-                resultBasis: ['Factures électricité 12 mois vérifiées (compteur unique)', 'Zone climatique H3 (Montpellier) — correctif clim +40% appliqué', 'Ventilation réglementaire identifiée comme fonctionnant hors plages d\'occupation'],
+                summary: 'Cabinet vétérinaire zone H3. 270 kWh/m²/an - médiane santé : 220. Ventilation 24h/24 = levier prioritaire. ROI global estimé sous 4 ans.',
+                resultBasis: ['Factures électricité 12 mois (compteur unique)', 'Zone H3 Montpellier - correctif clim +40%', 'VMC hors plages d\'occupation identifiée'],
                 reliability: 'élevé',
-                attention: 'modéré',
-                providerQuestions: ['La ventilation est-elle conforme à l\'arrêté du 25 avril 2017 sur les établissements de santé ?', 'Les climatiseurs ont-ils fait l\'objet d\'une vérification d\'étanchéité récente (F-gaz) ?', 'Existe-t-il un réseau eau chaude ou tout est-il électrique ?', 'Le bail permet-il des travaux sur les équipements techniques ?']
+                providerQuestions: ['Conformité arrêté santé 25/04/2017 vérifiée ?', 'Climatiseurs : vérification étanchéité F-gaz récente ?', 'Le bail autorise les travaux sur équipements techniques ?']
             },
 
+            /* ── CAS 4 : ENTREPÔT ── 2 800 m² Roissy - Score C → A ── */
             {
                 id: 'case_004',
                 projectName: 'Entrepôt Logipole Roissy A',
                 clientName: 'Logipole Distribution SAS',
                 activity: 'Entrepôt',
-                address: 'Zone Logistique Roissy-en-France, 95700 Roissy-CDG',
+                address: 'Zone Logistique, 95700 Roissy-CDG',
+                postalCode: '95700',
+                zone: 'H1',
+                energiePrincipale: 'electricite',
                 status: 'completed',
                 completionPercent: 100,
                 createdAt: '03/03/2026',
                 lastUpdated: '07/03/2026',
                 reportGeneratedAt: '07/03/2026',
                 contact: { name: 'Frédéric Aumont', phone: '06 14 67 23 09', role: 'Responsable technique' },
+                email: 'f.aumont@logipole.fr',
+                scoreMaturite: 5,
+                noteInterne: 'Décideur direct, budget validé en COPIL. Foncier en propriété - aucune contrainte bail. Dossier CEE à monter impérativement. Offre à envoyer sous 15 jours, concurrence en place.',
+                objectif: 'reduction_charges',
+                horizon: 'immediat',
+                budget: 'plus_100k',
+                urgenceVerbatim: 'Concurrent a déjà fait une offre - il faut répondre avant fin mars.',
                 buildingArea: 2800,
                 annualConsumption: 252000,
                 annualCost: 38200,
@@ -1540,50 +1515,196 @@
                 aidesEstimees: 13000,
                 roiGlobal: 2.3,
                 actions: [
-                    { name: 'Relamping LED haute baie (sodium 400W → LED 150W)', savingsEuro: 11200, capex: 42000, roi: 3.75, eligCEE: true, fichesCEE: ['BAT-EQ-127'], description: '280 projecteurs sodium 400W remplacés par LED haute baie 150W avec driver dimmable. Économie 62% sur l\'éclairage. Entrepôt 7h–22h, 6j/7. Durée de vie LED : 50 000h.' },
-                    { name: 'Optimisation aérothermes gaz (réglage + zonage)', savingsEuro: 4800, capex: 6500, roi: 1.35, eligCEE: false, fichesCEE: [], description: 'Aérothermes gaz fonctionnant à consigne uniforme 18°C sur tout le volume. Mise en place d\'un zonage (quais 12°C, zone picking 16°C, bureaux 19°C). Détecteurs de porte ouverte sur quais.' },
-                    { name: 'Détecteurs de présence éclairage (allées secondaires)', savingsEuro: 1800, capex: 4500, roi: 2.5, eligCEE: true, fichesCEE: ['BAT-EQ-212'], description: 'Allées secondaires et zones de stockage peu fréquentées éclairées en permanence. Pose de 18 détecteurs HF sur les allées B, C, D. Gain estimé 20% sur ces zones (30% du bâtiment).' },
-                    { name: 'Isolation toiture (panneaux sandwich 120 mm)', savingsEuro: 700, capex: 3000, roi: 4.3, eligCEE: true, fichesCEE: ['BAT-EN-102'], description: 'Toiture bac acier non isolée sur 400 m² (zone bureaux intégrés). Pose de panneaux sandwich R=6. Gain chauffage estimé 14% sur la zone concernée.' }
+                    { name: 'Optimisation aérothermes gaz (zonage)', savingsEuro: 4800, capex: 6500, roi: 1.35, eligCEE: false, fichesCEE: [], scope: 'chauffage', description: 'Aérothermes à consigne uniforme 18°C. Zonage (quais 12°C / picking 16°C / bureaux 19°C). Détecteurs porte ouverte sur quais.' },
+                    { name: 'Détecteurs de présence éclairage (allées secondaires)', savingsEuro: 1800, capex: 4500, roi: 2.5, eligCEE: true, fichesCEE: ['BAT-EQ-212'], scope: 'eclairage', description: '18 détecteurs HF sur allées B, C, D. Gain estimé 20% sur 30% du bâtiment.' },
+                    { name: 'Relamping LED haute baie (sodium 400W → LED 150W)', savingsEuro: 11200, capex: 42000, roi: 3.75, eligCEE: true, fichesCEE: ['BAT-EQ-127'], scope: 'eclairage', description: '280 projecteurs sodium 400W remplacés par LED haute baie 150W. Économie 62% éclairage. Durée de vie LED : 50 000h.' },
+                    { name: 'Isolation toiture (panneaux sandwich 120mm)', savingsEuro: 700, capex: 3000, roi: 4.3, eligCEE: true, fichesCEE: ['BAT-EN-102'], scope: 'chauffage', description: 'Toiture bac acier non isolée sur 400 m² (zone bureaux intégrés). Panneaux sandwich R=6.' }
                 ],
-                postes: {
-                    chauffage: { pct: 60, kwh: 151200, eur: 22932 },
-                    clim: { pct: 2, kwh: 5040, eur: 764 },
-                    ventil: { pct: 8, kwh: 20160, eur: 3056 },
-                    eclairage: { pct: 25, kwh: 63000, eur: 9554 },
-                    ecs: { pct: 2, kwh: 5040, eur: 764 },
-                    autres: { pct: 3, kwh: 7560, eur: 1146 }
-                },
-                benchmark_data: [
-                    { name: 'Votre entrepôt', value: 90, fill: '#F59E0B' },
-                    { name: 'Q1 (bon)', value: 50, fill: '#10B981' },
-                    { name: 'Médiane', value: 80, fill: '#F59E0B' },
-                    { name: 'Q3 (élevé)', value: 130, fill: '#EF4444' }
-                ],
-                projectionData: (() => {
-                    const data = [{ annee: 'Auj.', sans_travaux: 0, avec_travaux: 43000 }];
-                    let cs = 0, ca = 43000;
-                    for (let i = 1; i <= 10; i++) {
-                        cs += 38200 * Math.pow(1.042, i);
-                        ca += (38200 - 18500) * Math.pow(1.042, i);
-                        data.push({ annee: 'A+' + i, sans_travaux: Math.round(cs), avec_travaux: Math.round(ca), economies_nettes: Math.round(cs - ca) });
-                    }
-                    return data;
-                })(),
+                postes: { chauffage: { pct: 60, kwh: 151200, eur: 22932 }, clim: { pct: 2, kwh: 5040, eur: 764 }, ventil: { pct: 8, kwh: 20160, eur: 3056 }, eclairage: { pct: 25, kwh: 63000, eur: 9554 }, ecs: { pct: 2, kwh: 5040, eur: 764 }, autres: { pct: 3, kwh: 7560, eur: 1146 } },
+                projectionData: (() => { const d = [{ annee: 'Auj.', sans_travaux: 0, avec_travaux: 43000 }]; let cs = 0, ca = 43000; for (let i = 1; i <= 10; i++) { cs += 38200 * Math.pow(1.042, i); ca += (38200 - 18500) * Math.pow(1.042, i); d.push({ annee: 'A+' + i, sans_travaux: Math.round(cs), avec_travaux: Math.round(ca) }); } return d; })(),
                 tauxInflation: 4.2,
                 roiAnnee: 2,
                 graphiquePubliable: true,
                 horizonAns: 10,
-                summary: 'Entrepôt logistique chauffé de 2 800 m² avec éclairage sodium haute pression et aérothermes gaz sans zonage. Intensité de 90 kWh/m²/an légèrement au-dessus de la médiane. Le relamping LED seul représente 60% des économies avec une aide CEE significative. ROI global estimé sous 2,5 ans.',
-                resultBasis: ['Relevés de consommation gaz + électricité sur 12 mois (compteurs séparés)', 'Éclairage sodium haute pression 400W confirmé — 280 projecteurs comptabilisés', 'Aérothermes gaz sans zonage ni détecteur de portes ouvertes'],
+                summary: 'Entrepôt 2 800 m² avec éclairage sodium haute pression et aérothermes gaz sans zonage. 90 kWh/m²/an. Relamping LED seul = 60% des économies. ROI global estimé sous 2,5 ans.',
+                resultBasis: ['Compteurs séparés gaz + électricité sur 12 mois', '280 projecteurs sodium 400W confirmés', 'Aérothermes sans zonage ni détecteur de portes'],
                 reliability: 'élevé',
-                attention: 'faible',
-                providerQuestions: ['Quel est le nombre exact de projecteurs et leur puissance unitaire ?', 'Les aérothermes ont-ils une régulation centrale ou chaque zone est-elle indépendante ?', 'Le bail commercial autorise-t-il les travaux sur l\'éclairage ?', 'Existe-t-il un contrat de maintenance sur les équipements de chauffage ?']
+                providerQuestions: ['Nombre exact de projecteurs et puissance unitaire ?', 'Le bail autorise les travaux éclairage ?', 'Contrat de maintenance chauffage en cours ?']
+            },
+
+            /* ── CAS 5 : COMMERCE ALIMENTAIRE ── Supérette 680 m² Toulouse - Score E → C ── */
+            {
+                id: 'case_005',
+                projectName: 'Supérette Bio & Saveurs',
+                clientName: 'SARL Bio & Saveurs Toulouse',
+                activity: 'Commerce',
+                address: '34 boulevard des Minimes, 31200 Toulouse',
+                postalCode: '31200',
+                zone: 'H2',
+                energiePrincipale: 'electricite',
+                status: 'completed',
+                completionPercent: 100,
+                createdAt: '05/03/2026',
+                lastUpdated: '08/03/2026',
+                reportGeneratedAt: '08/03/2026',
+                contact: { name: 'Sophie Aubert', phone: '06 43 71 28 95', role: 'Gérante' },
+                email: 's.aubert@bio-saveurs.fr',
+                scoreMaturite: 4,
+                noteInterne: 'Gérante très motivée, facture EDF explosive depuis l\'ajout du rayon surgelés (2023). Budget limité - prioriser actions sans gros travaux. Rappeler après clôture bilan mi-avril. Potentiel réseau : 2 autres supérettes même enseigne.',
+                objectif: 'reduction_charges',
+                horizon: 'court_terme',
+                budget: '10k-30k',
+                urgenceVerbatim: 'Facture électrique a doublé depuis l\'ajout du linéaire surgelés. Marges très compressées, situation urgente.',
+                buildingArea: 680,
+                annualConsumption: 442000,
+                annualCost: 86600,
+                intensityPerSqm: 650,
+                score: 'E',
+                scoreApresTravauxLabel: 'C',
+                scoreConfidence: 'Élevé',
+                benchmark: { q1: 450, median: 650, q3: 900 },
+                estimatedSavingsPerYear: 19800,
+                estimatedSavingsPercent: 23,
+                totalCapex: 52000,
+                totalCapexNet: 40500,
+                aidesEstimees: 11500,
+                roiGlobal: 2.0,
+                actions: [
+                    { name: 'Portes sur meubles frigorifiques ouverts', savingsEuro: 9200, capex: 18000, roi: 2.0, eligCEE: true, fichesCEE: ['BAT-EQ-133'], scope: 'clim', description: 'Linéaires positif (+4°C) ouverts sur 18 ml. Pose de portes battantes vitrées. Réduction estimée 35% consommation froid. ROI rapide car poste froid = 35% de la facture totale.' },
+                    { name: 'Relamping LED haute efficacité (vente + réserve)', savingsEuro: 6100, capex: 22000, roi: 3.6, eligCEE: true, fichesCEE: ['BAT-EQ-127'], scope: 'eclairage', description: '680 m² en fluorescent T8. Remplacement par LED 4000K CRI90 (adaptation merchandising). Réduction 58% éclairage. Tubes LED compatibles armatures existantes.' },
+                    { name: 'Optimisation condenseurs (nettoyage + réglage)', savingsEuro: 2800, capex: 1500, roi: 0.5, eligCEE: false, fichesCEE: [], scope: 'clim', description: 'Condenseurs groupe froid encrassés - température de condensation +8°C vs optimal. Nettoyage + recalibrage régulation. Action quasi-immédiate, forte rentabilité.' },
+                    { name: 'Horloge éclairage non-stop → plages ouverture', savingsEuro: 1700, capex: 800, roi: 0.5, eligCEE: false, fichesCEE: [], scope: 'eclairage', description: 'Éclairage allumé 24h/24 y compris nuit et réserve. Programmation horaire sur tableau général : ouverture 7h30–21h00 + zone réserve déclenchée par interrupteur.' }
+                ],
+                postes: { chauffage: { pct: 20, kwh: 88400, eur: 17320 }, clim: { pct: 35, kwh: 154700, eur: 30320 }, ventil: { pct: 6, kwh: 26520, eur: 5196 }, eclairage: { pct: 22, kwh: 97240, eur: 19052 }, ecs: { pct: 3, kwh: 13260, eur: 2598 }, autres: { pct: 14, kwh: 61880, eur: 12128 } },
+                projectionData: (() => { const d = [{ annee: 'Auj.', sans_travaux: 0, avec_travaux: 40500 }]; let cs = 0, ca = 40500; for (let i = 1; i <= 10; i++) { cs += 86600 * Math.pow(1.030, i); ca += (86600 - 19800) * Math.pow(1.030, i); d.push({ annee: 'A+' + i, sans_travaux: Math.round(cs), avec_travaux: Math.round(ca) }); } return d; })(),
+                tauxInflation: 3.0,
+                roiAnnee: 2,
+                graphiquePubliable: true,
+                horizonAns: 10,
+                summary: 'Supérette bio 680 m² avec froid ouvert et éclairage fluorescent continu. Intensité 650 kWh/m²/an dans la médiane du commerce alimentaire, mais potentiel de 23% d\'économies accessibles sur froid et éclairage avec un ROI global de 2 ans.',
+                resultBasis: ['Factures électricité 12 mois vérifiées (compteur unique)', '18 ml de linéaires positifs ouverts identifiés', 'Condenseurs groupe froid non entretenus depuis 3 ans'],
+                reliability: 'élevé',
+                providerQuestions: ['Les groupes froids sont-ils en propriété ou en location ?', 'Le bail autorise des modifications sur les linéaires ?', 'Un contrat de maintenance froid est-il en cours ?']
             }
 
         ];
 
+        function buildEngineResultFromMock(c) {
+            // Convertit la structure des dossiers mock en un objet compatible avec la shape engineResult
+            if (!c || !c.postes) return null;
+            const facteursCO2 = { electricite: 0.079, gaz: 0.227, reseau_chaleur: 0.096, fioul: 0.324, bois: 0.028 };
+            const energiePrincipale = c.energiePrincipale || 'electricite';
+            const co2Factor = facteursCO2[energiePrincipale] || 0.079;
+            const co2Total = Math.round((c.annualConsumption || 0) * co2Factor);
+            const savingsKwh = c.annualConsumption > 0
+                ? Math.round(c.annualConsumption * (c.estimatedSavingsPercent || 0) / 100)
+                : 0;
+            const co2Apres = Math.round(co2Total * (1 - (c.estimatedSavingsPercent || 0) / 100));
+            const topActions = (c.actions || []).map(a => ({
+                title: a.name,
+                gainEur: a.savingsEuro,
+                capex: a.capex,
+                roi: a.roi,
+                eligCEE: a.eligCEE,
+                fichesCEE: a.fichesCEE || [],
+                description: a.description || '',
+                gainKwh: Math.round((a.savingsEuro / (c.annualCost || 1)) * (c.annualConsumption || 0)),
+                scope: a.scope || 'autres',
+            }));
+            const positioningMap = {
+                A: 'Très en dessous de la médiane - Très performant',
+                B: 'En dessous de la médiane - Performant',
+                C: 'Dans la médiane sectorielle',
+                D: 'Au-dessus de la médiane - Surconsommation',
+                E: 'Très au-dessus de la médiane - Énergivore'
+            };
+            return {
+                score: c.score,
+                intensity: c.intensityPerSqm,
+                kwhTotal: c.annualConsumption,
+                totalBill: c.annualCost,
+                totalSavingsEur: c.estimatedSavingsPerYear,
+                totalSavingsKwh: savingsKwh,
+                co2Total,
+                co2Apres,
+                isFallback: false,
+                badgeConfiance: c.scoreConfidence || 'Élevé',
+                positioning: positioningMap[c.score] || 'Dans la médiane sectorielle',
+                ref: {
+                    q1: c.benchmark?.q1 || 0,
+                    med: c.benchmark?.median || 0,
+                    q3: c.benchmark?.q3 || 0,
+                    unit: 'kWh EF/m²/an (énergie finale)',
+                    scope: c.activity || '-'
+                },
+                postes: c.postes,
+                topActions,
+                projectionData: c.projectionData || [],
+                horizonAns: c.horizonAns || 10,
+                roiGlobal: c.roiGlobal,
+                totalCapexNet: c.totalCapexNet,
+                aidesTotal: c.aidesEstimees || 0,
+                tauxInflation: (c.tauxInflation || 4.0) / 100,
+                graphiquePubliable: c.graphiquePubliable !== false,
+                anneeCorr: 1.00,
+                zone: c.zone || 'H2',
+            };
+        }
+
+        // CO2 equivalences - ADEME 2023
+        const CO2_ARBRE_KG_AN = 22;
+        const CO2_VOITURE_KG_AN = 2100;
+        const CO2_VOITURE_KM = 0.193;
+        function getCO2Equivalences(co2KgEvite) {
+            const arbres = Math.round(co2KgEvite / CO2_ARBRE_KG_AN);
+            const voitures = (co2KgEvite / CO2_VOITURE_KG_AN).toFixed(1);
+            const km = Math.round(co2KgEvite / CO2_VOITURE_KM);
+            return { arbres, voitures, km };
+        }
+
+        function getSectorialThresholds(ref) {
+            const med = (ref && ref.med) ? ref.med : 200;
+            return {
+                A: { max: Math.round(med * 0.6) },
+                B: { min: Math.round(med * 0.6), max: Math.round(med * 0.9) },
+                C: { min: Math.round(med * 0.9), max: Math.round(med * 1.2) },
+                D: { min: Math.round(med * 1.2), max: Math.round(med * 1.7) },
+                E: { min: Math.round(med * 1.7) },
+            };
+        }
+
+        function getQualificationStars(score) {
+            score = score || 0;
+            const levels = [
+                { min: 0, max: 0, starColor: '#CBD5E1', bg: 'bg-slate-50', text: 'text-slate-400', label: 'Non qualifié' },
+                { min: 1, max: 1, starColor: '#93C5FD', bg: 'bg-blue-50', text: 'text-blue-500', label: 'Froid' },
+                { min: 2, max: 2, starColor: '#67E8F9', bg: 'bg-cyan-50', text: 'text-cyan-600', label: 'Tiède' },
+                { min: 3, max: 3, starColor: '#FCD34D', bg: 'bg-amber-50', text: 'text-amber-600', label: 'Chaud' },
+                { min: 4, max: 4, starColor: '#FB923C', bg: 'bg-orange-50', text: 'text-orange-600', label: 'Très chaud' },
+                { min: 5, max: 5, starColor: '#F87171', bg: 'bg-red-50', text: 'text-red-600', label: 'Urgent' },
+            ];
+            const level = levels.find(l => score >= l.min && score <= l.max) || levels[0];
+            return { score, level };
+        }
+
+        const StarQualif = ({ score }) => {
+            const { level } = getQualificationStars(score);
+            return (
+                <div className={`inline-flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg ${level.bg}`}>
+                    <div className="flex gap-0.5">
+                        {[1, 2, 3, 4, 5].map(i => (
+                            <svg key={i} width="12" height="12" viewBox="0 0 24 24" fill={i <= score ? level.starColor : '#E2E8F0'}>
+                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                            </svg>
+                        ))}
+                    </div>
+                    <span className={`text-xs font-semibold ${level.text}`}>{level.label}</span>
+                </div>
+            );
+        };
+
         function initializeMockProCases() {
-            // Toujours s'assurer que les 4 cas de démo sont présents
+            // Toujours s'assurer que les 5 cas de démo sont présents
             // (même si l'utilisateur a un ancien cache avec les anciens dossiers)
             try {
                 const existing = JSON.parse(localStorage.getItem('proCasesRaw') || '[]');
@@ -1650,33 +1771,33 @@
         /* ═══════════════════════════════════════════════════════════════════════════
            WIZARD PRO SAISIE (Nouveau Diagnostique)
            ═══════════════════════════════════════════════════════════════════════════ */
-        /* ═══ WIZARD PRO 7 ÉTAPES — audit-2026-03-07 ═══ */
+        /* ═══ WIZARD PRO 7 ÉTAPES - audit-2026-03-07 ═══ */
         const ProWizard = ({ onComplete, onCancel }) => {
             const [step, setStep] = React.useState(1);
             const TOTAL = 7;
             const [data, setData] = React.useState({
-                // Étape 1 — Identification
+                // Étape 1 - Identification
                 contact: '', societe: '', email: '', telephone: '', adresse: '', cp: '',
                 statut_occupant: 'proprietaire', zone_climatique: 'H1',
-                // Étape 2 — Bâtiment
+                // Étape 2 - Bâtiment
                 activite: 'bureaux', surface: '', annee_construction: 'inconnu',
                 energie_principale: 'electricite', nb_niveaux: '1',
-                // Étape 3 — Enveloppe
+                // Étape 3 - Enveloppe
                 isolation_toiture: 'inconnue', isolation_murs: 'inconnue',
                 vitrage_type: 'simple', ponts_thermiques: [],
-                // Étape 4 — Chauffage & VMC
+                // Étape 4 - Chauffage & VMC
                 chauffage_type: 'radiateurs_elec', chauffage_age: 'inconnu',
                 chauffage_reseau: false, chauffage_regulation: [],
                 vmc_type: 'simple_flux', vmc_horloge: false,
-                // Étape 5 — ECS & Éclairage & Clim
+                // Étape 5 - ECS & Éclairage & Clim
                 ecs_presente: false, ecs_calorifugeage: false,
                 eclairage_type: 'fluorescent', eclairage_detecteurs: false,
                 clim_presente: false, clim_age: 'inconnu',
-                // Étape 6 — Consommations
+                // Étape 6 - Consommations
                 elec_kwh: '', elec_euro: '', elec_inclut_abo: false, elec_abo_euro: '',
                 gaz_kwh: '', gaz_euro: '', gaz_inclut_abo: false, gaz_abo_euro: '',
                 periode_couverte: '12',
-                // Étape 7 — Contexte
+                // Étape 7 - Contexte
                 objectif_principal: 'reduction_charges', horizon_decision: '1an',
                 budget_travaux: '20k_50k', travaux_realises: [],
                 contexte_urgence: false, multi_sites: false,
@@ -1954,7 +2075,7 @@
                 <div className="bg-white rounded-xl shadow border border-slate-200 max-w-2xl mx-auto overflow-hidden">
                     <div className="bg-slate-50 border-b border-slate-200 p-4">
                         <div className="flex items-center justify-between mb-2">
-                            <h2 className="text-base font-bold text-slate-800">Étape {step}/{TOTAL} — {STEP_LABELS[step - 1]}</h2>
+                            <h2 className="text-base font-bold text-slate-800">Étape {step}/{TOTAL} - {STEP_LABELS[step - 1]}</h2>
                             <span className="text-xs text-slate-400">{Math.round((step / TOTAL) * 100)}%</span>
                         </div>
                         <div className="w-full bg-slate-200 rounded-full h-1.5">
@@ -2333,8 +2454,9 @@
             }), [cases]);
 
             const totalSavings = casesComputed.reduce((acc, c) => acc + (c._computed?.totalSavingsEur || c.estimatedSavingsPerYear || 0), 0);
-            const completedCount = casesComputed.length; // all cases have a report
-            const completionRate = 100;
+            const avgSavingsPerCase = casesComputed.length > 0 ? Math.round(totalSavings / casesComputed.length) : 0;
+            const completedCount = casesComputed.filter(c => c._computed || c.engineResult || c.score).length;
+            const completionRate = casesComputed.length > 0 ? Math.round((completedCount / casesComputed.length) * 100) : 0;
             const scoreDistrib = { A: 0, B: 0, C: 0, D: 0, E: 0 };
             casesComputed.forEach(c => {
                 const s = c._computed?.score || c.score;
@@ -2382,10 +2504,10 @@
                         </div>
                         <div className="kpi-card">
                             <div className="flex items-center gap-2 text-slate-500 font-semibold text-sm mb-4">
-                                <Icon icon="solar:wallet-bold" className="text-green-600 text-xl" /> Économies potentielles
+                                <Icon icon="solar:wallet-bold" className="text-green-600 text-xl" /> Économies moyennes
                             </div>
-                            <div className="text-3xl font-extrabold text-slate-900">{totalSavings.toLocaleString('fr-FR')} €</div>
-                            <div className="text-xs text-slate-400 mt-2 font-medium">estimées / an (tous dossiers)</div>
+                            <div className="text-3xl font-extrabold text-slate-900">{avgSavingsPerCase.toLocaleString('fr-FR')} €</div>
+                            <div className="text-xs text-slate-400 mt-2 font-medium">estimées / an · par dossier</div>
                         </div>
                         <div className="kpi-card">
                             <div className="flex items-center gap-2 text-slate-500 font-semibold text-sm mb-4">
@@ -2425,6 +2547,8 @@
             const [cases, setCases] = useState(() => loadAllProCases());
             const [searchQuery, setSearchQuery] = useState('');
             const [filterActivity, setFilterActivity] = useState('');
+            const [editingNoteId, setEditingNoteId] = useState(null);
+            const [editingNoteValue, setEditingNoteValue] = useState('');
 
             // Compute display data from formData for each case
             const casesWithData = useMemo(() => cases.map(c => {
@@ -2436,7 +2560,7 @@
                 }
                 const actLabel = fd.activity || fd.activite || c.activity || c._actLabel || 'Tertiaire';
                 const area = parseFloat(fd.surface || fd.area || c.surfaceLabel || 0);
-                const displayName = c.clientName || c.projectName || fd.clientName || '—';
+                const displayName = c.clientName || c.projectName || fd.clientName || '-';
                 return { ...c, _computed: computed, _actLabel: actLabel, _area: area, _displayName: displayName };
             }), [cases]);
 
@@ -2458,7 +2582,7 @@
                 setCases(loadAllProCases());
             };
 
-            return (
+            const mainContent = (
                 <div className="p-8 max-w-7xl mx-auto fade-in">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
                         <div>
@@ -2483,7 +2607,7 @@
                         </div>
 
                         <div className="overflow-x-auto">
-                            <table className="w-full pro-table min-w-[900px]">
+                            <table className="w-full pro-table min-w-[1100px]">
                                 <thead>
                                     <tr>
                                         <th>Projet / Client</th>
@@ -2491,9 +2615,10 @@
                                         <th>Surface</th>
                                         <th>Score</th>
                                         <th>Après travaux</th>
-                                        <th>Consommation est.</th>
+                                        <th>Qualification</th>
+                                        <th className="hidden lg:table-cell">Consommation est.</th>
                                         <th>Économies est.</th>
-                                        <th>Date</th>
+                                        <th className="hidden lg:table-cell">Date</th>
                                         <th style={{ textAlign: 'right' }}>Actions</th>
                                     </tr>
                                 </thead>
@@ -2508,9 +2633,9 @@
                                                 </td>
                                                 <td><span className="text-sm text-slate-600 font-medium">{c._actLabel}</span></td>
                                                 <td>
-                                                    {c._area > 0 ? <><span className="font-semibold text-slate-700">{c._area.toLocaleString('fr-FR')}</span><span className="text-xs text-slate-400 ml-1">m²</span></> : <span className="text-slate-400 text-xs">—</span>}
+                                                    {c._area > 0 ? <><span className="font-semibold text-slate-700">{c._area.toLocaleString('fr-FR')}</span><span className="text-xs text-slate-400 ml-1">m²</span></> : <span className="text-slate-400 text-xs">-</span>}
                                                 </td>
-                                                <td>{comp ? <ScoreBadge score={comp.score} /> : (c.score ? <ScoreBadge score={c.score} /> : <span className="text-slate-400 text-xs">—</span>)}</td>
+                                                <td>{comp ? <ScoreBadge score={comp.score} /> : (c.score ? <ScoreBadge score={c.score} /> : <span className="text-slate-400 text-xs">-</span>)}</td>
                                                 <td>
                                                     {c.scoreApresTravauxLabel ? (
                                                         <div className="flex items-center gap-1.5">
@@ -2518,10 +2643,13 @@
                                                             <ScoreBadge score={c.scoreApresTravauxLabel} />
                                                         </div>
                                                     ) : (
-                                                        <span className="text-xs text-slate-300">—</span>
+                                                        <span className="text-xs text-slate-300">-</span>
                                                     )}
                                                 </td>
                                                 <td>
+                                                    <StarQualif score={c.scoreMaturite || c._computed?.scoreMaturite || 0} />
+                                                </td>
+                                                <td className="hidden lg:table-cell">
                                                     {comp ? (
                                                         <div>
                                                             <div className="font-semibold text-slate-700">{comp.kwhTotal.toLocaleString('fr-FR')} kWh</div>
@@ -2530,20 +2658,28 @@
                                                     ) : (c.annualConsumption || c.intensityPerSqm) ? (
                                                         <div>
                                                             <div className="font-semibold text-slate-700">{(c.annualConsumption || 0).toLocaleString('fr-FR')} kWh</div>
-                                                            <div className="text-xs text-slate-400">{c.intensityPerSqm || '—'} kWh/m²</div>
+                                                            <div className="text-xs text-slate-400">{c.intensityPerSqm || '-'} kWh/m²</div>
                                                         </div>
-                                                    ) : <span className="text-slate-400 text-xs">—</span>}
+                                                    ) : <span className="text-slate-400 text-xs">-</span>}
                                                 </td>
                                                 <td>
                                                     {comp ? <div className="font-bold text-green-600">{comp.totalSavingsEur.toLocaleString('fr-FR')} €/an</div>
                                                         : c.estimatedSavingsPerYear ? <div className="font-bold text-green-600">{c.estimatedSavingsPerYear.toLocaleString('fr-FR')} €/an</div>
-                                                            : (c.annualSavingsLabel ? <span className="text-slate-500 text-xs">{c.annualSavingsLabel}</span> : <span className="text-slate-400 text-xs">—</span>)}
+                                                            : (c.annualSavingsLabel ? <span className="text-slate-500 text-xs">{c.annualSavingsLabel}</span> : <span className="text-slate-400 text-xs">-</span>)}
                                                 </td>
-                                                <td><span className="text-xs text-slate-400">{c.createdAt || c.lastUpdated || '—'}</span></td>
+                                                <td className="hidden lg:table-cell"><span className="text-xs text-slate-400">{c.createdAt || c.lastUpdated || '-'}</span></td>
                                                 <td className="text-right">
                                                     <div className="flex items-center justify-end gap-2">
                                                         <button type="button" onClick={() => setPage('report-' + c.id)} className="pro-btn pro-btn-secondary px-3 py-1.5 text-xs hover:border-blue-300 hover:text-blue-700">
                                                             <Icon icon="solar:document-text-bold" style={{ fontSize: '13px' }} /> Voir rapport
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            title={c.noteInterne ? 'Modifier la note interne' : 'Ajouter une note interne'}
+                                                            onClick={() => { setEditingNoteId(c.id); setEditingNoteValue(c.noteInterne || ''); }}
+                                                            className={`w-7 h-7 flex items-center justify-center rounded-lg transition-colors ${c.noteInterne ? 'text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50' : 'text-slate-200 hover:text-indigo-400 hover:bg-indigo-50'}`}
+                                                        >
+                                                            <Icon icon="solar:pen-bold" style={{ fontSize: '13px' }} />
                                                         </button>
                                                         <button type="button" onClick={() => deleteCase(c.id)} className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors">
                                                             <Icon icon="solar:trash-bin-minimalistic-bold" style={{ fontSize: '14px' }} />
@@ -2554,7 +2690,7 @@
                                         );
                                     })}
                                     {filtered.length === 0 && (
-                                        <tr><td colSpan="9" className="text-center py-12 text-slate-400">Aucun dossier trouvé. Créez votre premier diagnostic.</td></tr>
+                                        <tr><td colSpan="10" className="text-center py-12 text-slate-400">Aucun dossier trouvé. Créez votre premier diagnostic.</td></tr>
                                     )}
                                 </tbody>
                             </table>
@@ -2562,12 +2698,58 @@
                     </div>
                 </div>
             );
+            const noteModal = editingNoteId ? (() => {
+                const saveNote = () => {
+                    const all = loadAllProCases();
+                    const rawCases = JSON.parse(localStorage.getItem('proCasesRaw') || '[]');
+                    const updatedRaw = rawCases.map(x => x.id === editingNoteId ? { ...x, noteInterne: editingNoteValue } : x);
+                    localStorage.setItem('proCasesRaw', JSON.stringify(updatedRaw));
+                    const userCases = JSON.parse(localStorage.getItem('proCases') || '[]').map(x => x.id === editingNoteId ? { ...x, noteInterne: editingNoteValue } : x);
+                    localStorage.setItem('proCases', JSON.stringify(userCases));
+                    setCases(loadAllProCases());
+                    setEditingNoteId(null);
+                };
+                return (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setEditingNoteId(null)}>
+                        <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md mx-4" onClick={e => e.stopPropagation()}>
+                            <div className="flex items-center gap-2 mb-1">
+                                <Icon icon="solar:lock-bold" className="text-indigo-500" />
+                                <h3 className="font-bold text-slate-800">Note interne</h3>
+                            </div>
+                            <p className="text-xs text-indigo-400 mb-4 flex items-center gap-1">
+                                <Icon icon="solar:eye-closed-linear" style={{ fontSize: '11px' }} />
+                                Jamais partagée avec le client
+                            </p>
+                            <textarea
+                                className="pro-input w-full resize-none"
+                                rows={5}
+                                placeholder="Ex: Très motivé, budget validé. Rappeler avant fin avril…"
+                                value={editingNoteValue}
+                                onChange={e => setEditingNoteValue(e.target.value)}
+                                autoFocus
+                            />
+                            <div className="flex gap-2 mt-4 justify-end">
+                                <button onClick={() => setEditingNoteId(null)} className="pro-btn pro-btn-ghost">Annuler</button>
+                                <button onClick={saveNote} className="pro-btn pro-btn-primary">Enregistrer</button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            })() : null;
+            return <React.Fragment>{mainContent}{noteModal}</React.Fragment>;
         };
 
-        /* ===== RAPPORT DOSSIER — redirige vers ProReport ===== */
-        /* ===== ProCaseReport — Rapport pour dossiers générés via le wizard 7 modules ===== */
+        /* ===== RAPPORT DOSSIER - redirige vers ProReport ===== */
+        /* ===== ProCaseReport - Rapport pour dossiers générés via le wizard 7 modules ===== */
         const ProCaseReport = ({ caseId, setPage, sharedCase }) => {
             const [cases] = useState(() => loadAllProCases());
+            // Hooks avant tout return conditionnel (règle des hooks React)
+            const [, forceUpdate] = React.useReducer(x => x + 1, 0);
+            React.useEffect(() => {
+                window.addEventListener('storage', forceUpdate);
+                return () => window.removeEventListener('storage', forceUpdate);
+            }, []);
+
             const c = sharedCase || cases.find(x => x.id === caseId) || (!sharedCase ? findRawCaseById(caseId) : null);
             const isProAuth = localStorage.getItem('proAuth') === 'true';
 
@@ -2579,7 +2761,14 @@
                 </div>
             );
 
-            const r = c.engineResult || (c.formData ? ENGINE_PRO.compute(c.formData) : null);
+            const r = c.engineResult
+                || (c.formData ? ENGINE_PRO.compute(c.formData) : null)
+                || buildEngineResultFromMock(c);
+
+            // Lecture logo - fraiche au render + reactive sur event storage
+            const proLogoImg = (() => { try { return localStorage.getItem('proLogoImg') || ''; } catch (e) { return ''; } })();
+            const proLogoName = (() => { try { return localStorage.getItem('proLogoName') || 'DiagTertiaire Pro'; } catch (e) { return 'DiagTertiaire Pro'; } })();
+            const hasCustomBranding = !!(proLogoImg || proLogoName !== 'DiagTertiaire Pro');
 
             const handlePrintPdf = () => {
                 const orig = document.title;
@@ -2592,6 +2781,10 @@
                 const shareData = { ...c, id: c.id, clientName: c.clientName, engineResult: r, formData: publicData };
                 delete shareData.phone;
                 delete shareData.email;
+                // Données pro - JAMAIS dans le lien partagé
+                delete shareData.noteInterne;
+                delete shareData.scoreMaturite;
+                delete shareData.urgenceVerbatim;
                 if (shareData.contact) {
                     const { phone: contactPhone, email: contactEmail, ...safeContact } = shareData.contact;
                     shareData.contact = safeContact;
@@ -2605,6 +2798,9 @@
 
             const COLORS = { chauffage: '#F97316', clim: '#06B6D4', ventil: '#3B82F6', eclairage: '#F59E0B', ecs: '#8B5CF6', autres: '#94A3B8' };
             const LABELS = { chauffage: 'Chauffage', clim: 'Climatisation', ventil: 'Ventilation', eclairage: 'Éclairage', ecs: 'ECS', autres: 'Autres' };
+            const OBJECTIF_LABELS = { facture: 'Réduction des charges', reduction_charges: 'Réduction des charges', conformite: 'Conformité réglementaire', valo: 'Valorisation du bien', valorisation_patrimoine: 'Valorisation du patrimoine' };
+            const HORIZON_LABELS = { immediat: 'Immédiat (< 3 mois)', moyen: 'Moyen terme (3-12 mois)', long: 'Long terme (> 1 an)', court_terme: 'Court terme', '1an': 'Court terme (3-12 mois)', '3ans': 'Moyen terme (1-3 ans)', '5ans': 'Long terme (3-5 ans)' };
+            const BUDGET_LABELS = { moins_5k: '< 5 000 €', '5k_20k': '5 000 - 20 000 €', '20k_50k': '20 000 - 50 000 €', plus_50k: '> 50 000 €', non_defini: 'Non défini', '10k-30k': '10 000 - 30 000 €', '30k-100k': '30 000 - 100 000 €', plus_100k: '> 100 000 €' };
 
             return (
                 <div className="p-4 md:p-8 max-w-5xl mx-auto">
@@ -2612,16 +2808,19 @@
                     <div className="no-print flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 bg-white p-4 rounded-xl border border-slate-200 shadow-sm sticky top-4 z-40">
                         {isProAuth ? (
                             <button onClick={() => setPage('cases')} className="inline-flex items-center gap-2 text-slate-500 hover:text-blue-600 font-bold px-4 py-2 hover:bg-slate-50 rounded-lg transition-colors">
-                                <Icon icon="solar:round-alt-arrow-left-bold" className="text-xl" /> Retour Dossiers
+                                <Icon icon="solar:round-alt-arrow-left-bold" className="text-xl" />
+                                <span className="hidden sm:inline">Retour </span>Dossiers
                             </button>
                         ) : (
                             <button onClick={() => setPage('cases')} className="inline-flex items-center gap-2 text-slate-500 hover:text-blue-600 font-bold px-4 py-2 hover:bg-slate-50 rounded-lg transition-colors">
-                                <Icon icon="solar:round-alt-arrow-left-bold" className="text-xl" /> Fermer le rapport
+                                <Icon icon="solar:round-alt-arrow-left-bold" className="text-xl" />
+                                <span className="hidden sm:inline">Fermer le </span>rapport
                             </button>
                         )}
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2">
                             <button onClick={handlePrintPdf} className="pro-btn bg-slate-800 text-white hover:bg-slate-700">
-                                <Icon icon="solar:printer-bold" /> Télécharger PDF
+                                <Icon icon="solar:printer-bold" />
+                                <span className="hidden sm:inline">Télécharger </span>PDF
                             </button>
                             {isProAuth && !sharedCase && (
                                 <button onClick={handleShare} className="pro-btn pro-btn-primary">
@@ -2633,17 +2832,30 @@
 
                     {/* En-tête */}
                     <div className="bg-gradient-to-br from-slate-900 to-blue-900 text-white rounded-2xl p-8 mb-8 print-page">
-                        <div className="flex flex-col md:flex-row justify-between gap-6">
-                            <div>
-                                <div className="text-blue-300 text-xs font-bold uppercase tracking-widest mb-2">Pré-diagnostic énergétique</div>
-                                <h1 className="text-3xl font-extrabold mb-1">{c.clientName || c.company || '—'}</h1>
-                                <div className="text-slate-300 text-sm">{c.activity} · {c.surfaceLabel || (c.buildingArea ? c.buildingArea.toLocaleString('fr-FR') + ' m²' : '')} · {c.postalCode || c.address || ''}</div>
+                        {hasCustomBranding && (
+                            <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
+                                <div className="flex items-center gap-3">
+                                    {proLogoImg
+                                        ? <img src={proLogoImg} alt="Logo" className="h-10 max-w-[180px] object-contain" />
+                                        : <div className="text-white font-bold text-lg">{proLogoName}</div>
+                                    }
+                                </div>
+                                <div className="text-blue-300 text-xs font-semibold uppercase tracking-wider">
+                                    Pre-diagnostic energetique
+                                </div>
+                            </div>
+                        )}
+                        <div className="flex flex-col gap-4 md:flex-row justify-between">
+                            <div className="min-w-0">
+                                <div className="text-blue-300 text-xs font-bold uppercase tracking-widest mb-2">Pre-diagnostic energetique</div>
+                                <h1 className="text-2xl md:text-3xl font-extrabold mb-1 break-words">{c.clientName || c.company || '-'}</h1>
+                                <div className="text-slate-300 text-sm flex flex-wrap gap-x-1">{c.activity} · {c.surfaceLabel || (c.buildingArea ? c.buildingArea.toLocaleString('fr-FR') + ' m²' : '')} · {c.postalCode || c.address || ''}</div>
                                 <div className="text-slate-400 text-xs mt-1">Généré le {c.createdAt} · Dossier {c.id}</div>
                             </div>
                             <div className="flex flex-col items-center justify-center bg-white/10 rounded-xl px-8 py-5 shrink-0">
                                 <div className="text-xs text-slate-300 font-bold uppercase mb-1">Score énergétique</div>
                                 <div className={`text-6xl font-extrabold ${r ? (r.score === 'A' || r.score === 'B' ? 'text-emerald-400' : r.score === 'C' ? 'text-amber-400' : 'text-red-400') : 'text-slate-300'}`}>
-                                    {r ? r.score : (c.score || '—')}
+                                    {r ? r.score : (c.score || '-')}
                                 </div>
                                 <div className="text-xs text-slate-300 mt-1">{r ? r.positioning : c.positioning || ''}</div>
                                 {r && <div className="text-xs text-slate-400 mt-1">{r.badgeConfiance === 'Élevé' ? '🟢' : r.badgeConfiance === 'Estimé' ? '🔴' : '🟡'} Précision {r.badgeConfiance}</div>}
@@ -2660,16 +2872,54 @@
                                 { label: 'Économies potentielles', val: r.totalSavingsEur.toLocaleString('fr-FR') + ' €/an', sub: r.totalSavingsKwh.toLocaleString('fr-FR') + ' kWh écon.', icon: 'solar:leaf-bold', col: 'text-orange-500' },
                                 { label: 'CO₂ actuel', val: r.co2Total.toLocaleString('fr-FR') + ' kg/an', sub: 'Après travaux : ' + r.co2Apres.toLocaleString('fr-FR') + ' kg', icon: 'solar:cloud-bold', col: 'text-purple-600' },
                             ].map((k, i) => (
-                                <div key={i} className="bg-white rounded-xl border border-slate-200 p-5">
+                                <div key={i} className="bg-white rounded-xl border border-slate-200 p-4 md:p-5">
                                     <div className={`text-xs font-bold uppercase tracking-wider mb-2 ${k.col}`}>{k.label}</div>
-                                    <div className="text-xl font-extrabold text-slate-900">{k.val}</div>
+                                    <div className="text-lg md:text-xl font-extrabold text-slate-900 break-words">{k.val}</div>
                                     <div className="text-xs text-slate-400 mt-1">{k.sub}</div>
                                 </div>
                             ))}
                         </div>
                     )}
 
-                    {/* Étiquettes DiagTertiaire — avant/après travaux */}
+                    {/* CO2 equivalences parlantes */}
+                    {r && (() => {
+                        const co2Evite = Math.max(0, r.co2Total - r.co2Apres);
+                        if (co2Evite <= 0) return null;
+                        const eq = getCO2Equivalences(co2Evite);
+                        return (
+                            <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-6 mb-8">
+                                <h3 className="text-base font-bold text-emerald-800 mb-4 flex items-center gap-2">
+                                    <Icon icon="solar:leaf-bold" className="text-emerald-600 text-xl" />
+                                    Impact CO<span className="align-sub text-xs">2</span> des travaux préconisés
+                                </h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+                                    <div className="bg-white rounded-xl border border-emerald-100 p-4">
+                                        <div className="text-3xl mb-1">🌳</div>
+                                        <div className="text-2xl font-extrabold text-emerald-700">{eq.arbres.toLocaleString('fr-FR')}</div>
+                                        <div className="text-xs text-slate-500 mt-1">arbres absorbant autant en 1 an</div>
+                                        <div className="text-xs text-slate-400 italic">(22 kg CO2/arbre/an - ADEME)</div>
+                                    </div>
+                                    <div className="bg-white rounded-xl border border-emerald-100 p-4">
+                                        <div className="text-3xl mb-1">🚗</div>
+                                        <div className="text-2xl font-extrabold text-emerald-700">{eq.voitures}</div>
+                                        <div className="text-xs text-slate-500 mt-1">voitures retirées de la circulation</div>
+                                        <div className="text-xs text-slate-400 italic">(2 100 kg CO2/véhicule/an)</div>
+                                    </div>
+                                    <div className="bg-white rounded-xl border border-emerald-100 p-4">
+                                        <div className="text-3xl mb-1">📍</div>
+                                        <div className="text-2xl font-extrabold text-emerald-700">{eq.km.toLocaleString('fr-FR')}</div>
+                                        <div className="text-xs text-slate-500 mt-1">km évités en voiture thermique</div>
+                                        <div className="text-xs text-slate-400 italic">(0,193 kg CO2/km)</div>
+                                    </div>
+                                </div>
+                                <div className="mt-3 text-center text-xs text-emerald-700 font-semibold">
+                                    Economie de {co2Evite.toLocaleString('fr-FR')} kg CO2/an estimée apres travaux
+                                </div>
+                            </div>
+                        );
+                    })()}
+
+                    {/* Étiquettes DiagTertiaire - avant/après travaux */}
                     {r && (() => {
                         const SCORE_CONFIG = {
                             A: { color: '#00A651', bg: '#D4F5E3', label: 'A', text: 'Très performant' },
@@ -2690,30 +2940,35 @@
                         const cfgAvant = SCORE_CONFIG[r.score] || SCORE_CONFIG['C'];
                         const cfgApres = SCORE_CONFIG[scoreApres] || SCORE_CONFIG['C'];
 
-                        const EtiquetteBande = ({ score, intensite, label }) => {
+                        const EtiquetteBande = ({ score, intensite, label, sectorRef }) => {
                             const ORDER = ['A', 'B', 'C', 'D', 'E'];
+                            const thresholds = getSectorialThresholds(sectorRef);
                             return (
                                 <div className="rounded-xl overflow-hidden border border-slate-200 shadow-sm w-full max-w-xs">
                                     <div className="bg-slate-800 text-white text-xs font-bold px-3 py-1.5 tracking-wider uppercase">{label}</div>
                                     {ORDER.map(s => {
                                         const cfg = SCORE_CONFIG[s];
                                         const isActive = s === score;
+                                        const t = thresholds[s];
+                                        const rangeStr = t.max && t.min ? `${t.min}-${t.max}` : t.max ? `< ${t.max}` : `> ${t.min}`;
                                         return (
                                             <div key={s} className="flex items-center gap-2 px-3 py-1"
                                                 style={{ background: isActive ? cfg.color : 'transparent', transition: 'all 0.2s' }}>
                                                 <div className="w-7 h-7 rounded flex items-center justify-center font-extrabold text-base shrink-0"
                                                     style={{ background: cfg.color, color: 'white', opacity: isActive ? 1 : 0.25 }}>{s}</div>
-                                                {isActive && (
+                                                {isActive ? (
                                                     <div className="text-white">
                                                         <div className="text-sm font-bold">{intensite} kWh/m²/an</div>
                                                         <div className="text-xs opacity-80">{cfg.text}</div>
                                                     </div>
+                                                ) : (
+                                                    <div className="text-xs text-slate-400">{rangeStr} kWh/m²/an</div>
                                                 )}
                                             </div>
                                         );
                                     })}
                                     <div className="bg-slate-50 px-3 py-1 text-xs text-slate-400 italic border-t border-slate-100">
-                                        Indice DiagTertiaire — indicatif
+                                        Indice DiagTertiaire - indicatif
                                     </div>
                                 </div>
                             );
@@ -2723,16 +2978,16 @@
                         return (
                             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 mb-8">
                                 <h3 className="text-lg font-bold text-slate-800 mb-1 flex items-center gap-2">
-                                    <Icon icon="solar:tag-price-bold" className="text-blue-600" /> Indice DiagTertiaire — avant / après travaux
+                                    <Icon icon="solar:tag-price-bold" className="text-blue-600" /> Indice DiagTertiaire - avant / après travaux
                                 </h3>
-                                <p className="text-xs text-slate-400 mb-6">Indicateur indicatif — non opposable, hors cadre OPERAT réglementaire.</p>
+                                <p className="text-xs text-slate-400 mb-6">Indicateur indicatif - non opposable, hors cadre OPERAT réglementaire.</p>
                                 <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-                                    <EtiquetteBande score={r.score} intensite={r.intensity} label="Étiquette actuelle" />
+                                    <EtiquetteBande score={r.score} intensite={r.intensity} label="Étiquette actuelle" sectorRef={r.ref} />
                                     <div className="flex flex-col items-center gap-1 text-slate-400">
                                         <Icon icon="solar:arrow-right-bold" className="text-3xl text-emerald-500" />
                                         <span className="text-xs font-bold text-emerald-600">-{Math.round(savingsPct * 100)}%</span>
                                     </div>
-                                    <EtiquetteBande score={scoreApres} intensite={intensiteApres} label="Après travaux estimés" />
+                                    <EtiquetteBande score={scoreApres} intensite={intensiteApres} label="Après travaux estimés" sectorRef={r.ref} />
                                 </div>
                             </div>
                         );
@@ -2744,14 +2999,6 @@
                             .filter(([, v]) => v.pct > 0)
                             .map(([k, v]) => ({ name: LABELS[k] || k, value: v.kwh, eur: v.eur, pct: v.pct, fill: COLORS[k] || '#94A3B8', scope: k }));
 
-                        const decompoData = [{ scenario: 'Actuel' }, { scenario: 'Après travaux' }];
-                        Object.entries(r.postes || {}).forEach(([k, v]) => {
-                            const ga = (r.topActions || []).find(a => a.scope === k);
-                            const gPct = ga ? (ga.gainKwh / Math.max(r.kwhTotal, 1)) : 0;
-                            decompoData[0][k] = v.eur;
-                            decompoData[1][k] = Math.round(v.eur * (1 - gPct));
-                        });
-
                         const benchmarkData = [
                             { name: 'Votre bâtiment', value: r.intensity, fill: r.score === 'D' || r.score === 'E' ? '#EF4444' : r.score === 'C' ? '#F59E0B' : '#10B981' },
                             { name: 'Q1 (bon)', value: r.ref?.q1, fill: '#10B981' },
@@ -2759,6 +3006,7 @@
                             { name: 'Q3 (élevé)', value: r.ref?.q3, fill: '#EF4444' },
                         ];
 
+                        const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
                         const roiData = (r.topActions || [])
                             .filter(a => a.roi > 0 && a.roi <= 20)
                             .sort((a, b) => a.roi - b.roi)
@@ -2772,7 +3020,7 @@
 
                         return (
                             <div className="space-y-8 mb-10">
-                                {/* G1 — Décomposition postes */}
+                                {/* G1 - Décomposition postes */}
                                 <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
                                     <h3 className="text-lg font-bold text-slate-800 mb-1 flex items-center gap-2">
                                         <Icon icon="solar:pie-chart-2-bold" className="text-blue-600" /> Répartition des consommations par poste
@@ -2798,46 +3046,30 @@
                                             ))}
                                         </div>
                                     </div>
-                                    {r.topActions?.length > 0 && (
-                                        <div className="mt-6">
-                                            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Comparaison actuel / après travaux</p>
-                                            <Recharts.ResponsiveContainer width="100%" height={200}>
-                                                <Recharts.BarChart data={decompoData} margin={{ top: 5, right: 10, bottom: 5, left: 10 }}>
-                                                    <Recharts.CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
-                                                    <Recharts.XAxis dataKey="scenario" tick={{ fontSize: 13, fontWeight: 600 }} />
-                                                    <Recharts.YAxis tickFormatter={v => v >= 1000 ? `${(v / 1000).toFixed(0)}k€` : `${v}€`} tick={{ fontSize: 11 }} />
-                                                    <Recharts.Tooltip formatter={(v, n) => [`${v?.toLocaleString('fr-FR')} €`, LABELS[n] || n]} />
-                                                    {Object.keys(COLORS).map(k => (
-                                                        <Recharts.Bar key={k} dataKey={k} stackId="a" fill={COLORS[k]} name={k} />
-                                                    ))}
-                                                </Recharts.BarChart>
-                                            </Recharts.ResponsiveContainer>
-                                        </div>
-                                    )}
                                 </div>
 
-                                {/* G2 — Benchmark */}
+                                {/* G2 - Benchmark */}
                                 <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
                                     <h3 className="text-lg font-bold text-slate-800 mb-1 flex items-center gap-2">
                                         <Icon icon="solar:chart-square-bold" className="text-blue-600" /> Benchmark sectoriel
                                     </h3>
-                                    <p className="text-xs text-slate-400 mb-5">{r.ref?.unit} — {r.ref?.scope} — Source : ADEME / Enquête ECNA 2022</p>
+                                    <p className="text-xs text-slate-400 mb-5">{r.ref?.unit} - {r.ref?.scope} - Source : ADEME / Enquête ECNA 2022</p>
                                     <Recharts.ResponsiveContainer width="100%" height={220}>
-                                        <Recharts.BarChart data={benchmarkData} layout="vertical" margin={{ top: 5, right: 80, bottom: 5, left: 10 }}>
+                                        <Recharts.BarChart data={benchmarkData} layout="vertical" margin={{ top: 5, right: isMobile ? 10 : 80, bottom: 5, left: 10 }}>
                                             <Recharts.CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" horizontal={false} />
                                             <Recharts.XAxis type="number" tickFormatter={v => `${v} kWh`} tick={{ fontSize: 11 }} />
-                                            <Recharts.YAxis type="category" dataKey="name" tick={{ fontSize: 12, fontWeight: 600 }} width={120} />
+                                            <Recharts.YAxis type="category" dataKey="name" tick={{ fontSize: 12, fontWeight: 600 }} width={isMobile ? 80 : 120} />
                                             <Recharts.Tooltip formatter={v => [`${v} kWh/m²/an`]} />
                                             <Recharts.Bar dataKey="value" radius={[0, 6, 6, 0]}>
                                                 {benchmarkData.map((d, i) => <Recharts.Cell key={i} fill={d.fill} />)}
-                                                <Recharts.LabelList dataKey="value" position="right" formatter={v => `${v} kWh/m²/an`} style={{ fontSize: 11, fill: '#64748B', fontWeight: 600 }} />
+                                                {!isMobile && <Recharts.LabelList dataKey="value" position="right" formatter={v => `${v} kWh/m²/an`} style={{ fontSize: 11, fill: '#64748B', fontWeight: 600 }} />}
                                             </Recharts.Bar>
                                         </Recharts.BarChart>
                                     </Recharts.ResponsiveContainer>
-                                    <p className="text-xs text-slate-400 mt-3">⚠️ Indice DiagTertiaire — estimation indicative. Ne constitue pas une classe OPERAT réglementaire.</p>
+                                    <p className="text-xs text-slate-400 mt-3">⚠️ Indice DiagTertiaire - estimation indicative. Ne constitue pas une classe OPERAT réglementaire.</p>
                                 </div>
 
-                                {/* G3 — ROI par action */}
+                                {/* G3 - ROI par action */}
                                 {roiData.length > 0 && (
                                     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
                                         <h3 className="text-lg font-bold text-slate-800 mb-1 flex items-center gap-2">
@@ -2845,10 +3077,10 @@
                                         </h3>
                                         <p className="text-xs text-slate-400 mb-5">Trié du meilleur ROI au plus long. Actions filtrées selon les systèmes en place.</p>
                                         <Recharts.ResponsiveContainer width="100%" height={roiData.length * 52 + 40}>
-                                            <Recharts.BarChart data={roiData} layout="vertical" margin={{ top: 5, right: 130, bottom: 5, left: 20 }}>
+                                            <Recharts.BarChart data={roiData} layout="vertical" margin={{ top: 5, right: isMobile ? 10 : 130, bottom: 5, left: 20 }}>
                                                 <Recharts.CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" horizontal={false} />
                                                 <Recharts.XAxis type="number" domain={[0, Math.max(15, ...roiData.map(d => d.roi)) + 1]} tickFormatter={v => `${v} ans`} tick={{ fontSize: 11 }} />
-                                                <Recharts.YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={175} />
+                                                <Recharts.YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={isMobile ? 100 : 175} />
                                                 <Recharts.Tooltip content={({ payload }) => {
                                                     if (!payload?.length) return null;
                                                     const d = payload[0].payload;
@@ -2861,20 +3093,20 @@
                                                 }} />
                                                 <Recharts.Bar dataKey="roi" radius={[0, 4, 4, 0]}>
                                                     {roiData.map((d, i) => <Recharts.Cell key={i} fill={d.fill} />)}
-                                                    <Recharts.LabelList dataKey="investissement" position="right" formatter={v => `${v?.toLocaleString('fr-FR')} €`} style={{ fontSize: 11, fill: '#64748B' }} />
+                                                    {!isMobile && <Recharts.LabelList dataKey="investissement" position="right" formatter={v => `${v?.toLocaleString('fr-FR')} €`} style={{ fontSize: 11, fill: '#64748B' }} />}
                                                 </Recharts.Bar>
                                                 <Recharts.ReferenceLine x={7} stroke="#94A3B8" strokeDasharray="4 2" />
                                             </Recharts.BarChart>
                                         </Recharts.ResponsiveContainer>
                                         <div className="flex flex-wrap gap-4 mt-3 text-xs font-semibold">
-                                            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-emerald-600 inline-block" /> ROI &lt; 3 ans — Prioritaire</span>
-                                            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-amber-500 inline-block" /> 3–7 ans — Recommandé</span>
-                                            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-red-500 inline-block" /> &gt; 7 ans — Long terme</span>
+                                            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-emerald-600 inline-block" /> ROI &lt; 3 ans - Prioritaire</span>
+                                            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-amber-500 inline-block" /> 3–7 ans - Recommandé</span>
+                                            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-red-500 inline-block" /> &gt; 7 ans - Long terme</span>
                                         </div>
                                     </div>
                                 )}
 
-                                {/* G4 — Projection financière */}
+                                {/* G4 - Projection financière */}
                                 {r.graphiquePubliable && r.projectionData?.length > 2 && (
                                     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
                                         <h3 className="text-lg font-bold text-slate-800 mb-1 flex items-center gap-2">
@@ -2883,7 +3115,7 @@
                                         <p className="text-xs text-slate-400 mb-1">Inflation pondérée : {(r.tauxInflation * 100).toFixed(1)}%/an</p>
                                         <p className="text-xs text-slate-400 mb-5">Aides estimées déduites : TVA 5,5% + CEE plancher ({r.aidesTotal?.toLocaleString('fr-FR')} € estimés).</p>
                                         <Recharts.ResponsiveContainer width="100%" height={300}>
-                                            <Recharts.ComposedChart data={r.projectionData} margin={{ top: 20, right: 30, bottom: 10, left: 10 }}>
+                                            <Recharts.ComposedChart data={r.projectionData} margin={{ top: 20, right: isMobile ? 10 : 30, bottom: 10, left: 10 }}>
                                                 <defs>
                                                     <linearGradient id="zoneEco" x1="0" y1="0" x2="0" y2="1">
                                                         <stop offset="5%" stopColor="#10B981" stopOpacity={0.2} />
@@ -2899,7 +3131,7 @@
                                                 <Recharts.Line type="monotone" dataKey="avec_travaux" stroke="#10B981" strokeWidth={3} dot={false} name="avec_travaux" />
                                                 {r.roiGlobal && r.roiGlobal <= r.horizonAns && (
                                                     <Recharts.ReferenceLine x={`A+${Math.ceil(r.roiGlobal)}`} stroke="#1B4FD8" strokeDasharray="4 2"
-                                                        label={{ value: `✓ Rentable — A+${Math.ceil(r.roiGlobal)}`, position: 'insideTopLeft', fill: '#1B4FD8', fontSize: 11, fontWeight: 700 }} />
+                                                        label={{ value: `✓ Rentable - A+${Math.ceil(r.roiGlobal)}`, position: 'insideTopLeft', fill: '#1B4FD8', fontSize: 11, fontWeight: 700 }} />
                                                 )}
                                             </Recharts.ComposedChart>
                                         </Recharts.ResponsiveContainer>
@@ -2922,25 +3154,35 @@
                                 )}
                                 {!r.graphiquePubliable && r.topActions?.length > 0 && (
                                     <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 text-amber-800 text-sm font-medium">
-                                        <strong>Projection financière non affichée</strong> — ROI global estimé ({r.roiGlobal} ans) hors plage fiable (0,5–20 ans).
+                                        <strong>Projection financière non affichée</strong> - ROI global estimé ({r.roiGlobal} ans) hors plage fiable (0,5–20 ans).
                                     </div>
                                 )}
 
-                                {/* Qualification prospect — pro uniquement */}
+                                {/* Qualification prospect - pro uniquement */}
                                 {isProAuth && !sharedCase && (
                                     <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-6 no-print">
                                         <h3 className="text-sm font-bold text-indigo-800 uppercase tracking-wider mb-4 flex items-center gap-2">
                                             <Icon icon="solar:star-bold" className="text-indigo-500" /> Qualification prospect (vue pro uniquement)
                                         </h3>
                                         <div className="grid md:grid-cols-2 gap-4 text-sm">
-                                            <div><span className="text-indigo-600 font-semibold">Contact :</span> {c.formData?.contactName || c.clientName} — {c.formData?.phone || 'Tél. non renseigné'}</div>
-                                            <div><span className="text-indigo-600 font-semibold">Email :</span> {c.email || '—'}</div>
-                                            <div><span className="text-indigo-600 font-semibold">Objectif :</span> {c.objectif || '—'}</div>
-                                            <div><span className="text-indigo-600 font-semibold">Horizon :</span> {c.horizon || '—'}</div>
-                                            <div><span className="text-indigo-600 font-semibold">Budget :</span> {c.budget || '—'}</div>
-                                            <div><span className="text-indigo-600 font-semibold">Maturité : </span>{'★'.repeat(c.scoreMaturite || 0)}{'☆'.repeat(5 - (c.scoreMaturite || 0))}</div>
+                                            <div><span className="text-indigo-600 font-semibold">Contact :</span> {c.formData?.contactName || c.contact?.name || c.clientName} - {c.formData?.phone || c.contact?.phone || 'Tél. non renseigné'}</div>
+                                            <div><span className="text-indigo-600 font-semibold">Email :</span> {c.email || '-'}</div>
+                                            <div><span className="text-indigo-600 font-semibold">Objectif :</span> {OBJECTIF_LABELS[c.objectif] || c.objectif || '-'}</div>
+                                            <div><span className="text-indigo-600 font-semibold">Horizon :</span> {HORIZON_LABELS[c.horizon] || c.horizon || '-'}</div>
+                                            <div><span className="text-indigo-600 font-semibold">Budget :</span> {BUDGET_LABELS[c.budget] || c.budget || '-'}</div>
+                                            <div className="flex items-center gap-2"><span className="text-indigo-600 font-semibold">Maturité :</span> <StarQualif score={c.scoreMaturite || 0} /></div>
                                             {c.urgenceVerbatim && (
                                                 <div className="md:col-span-2 bg-white rounded-lg p-3 border border-indigo-100 italic text-slate-600">"{c.urgenceVerbatim}"</div>
+                                            )}
+                                            {c.noteInterne && (
+                                                <div className="md:col-span-2 mt-2">
+                                                    <div className="text-indigo-600 font-semibold text-xs uppercase mb-1 flex items-center gap-1">
+                                                        <Icon icon="solar:lock-bold" style={{ fontSize: '11px' }} /> Note interne
+                                                    </div>
+                                                    <div className="bg-white rounded-lg p-3 border border-indigo-100 text-slate-600 text-sm italic">
+                                                        {c.noteInterne}
+                                                    </div>
+                                                </div>
                                             )}
                                         </div>
                                     </div>
@@ -2963,16 +3205,16 @@
                                             {a.sourceWarning && <div className="text-xs text-amber-600 mt-0.5">⚠️ {a.sourceWarning}</div>}
                                             {a.fiches?.length > 0 && <div className="text-xs text-slate-400 mt-0.5">Fiche CEE : {a.fiches.join(', ')}</div>}
                                         </div>
-                                        <div className="flex gap-4 text-sm shrink-0">
-                                            <div className="text-center">
+                                        <div className="flex flex-wrap sm:flex-nowrap gap-4 text-sm shrink-0">
+                                            <div className="text-center min-w-[64px]">
                                                 <div className="text-xs text-slate-500">Investissement</div>
                                                 <div className="font-bold text-slate-800">{a.capex?.toLocaleString('fr-FR')} €</div>
                                             </div>
-                                            <div className="text-center">
+                                            <div className="text-center min-w-[64px]">
                                                 <div className="text-xs text-slate-500">Économies/an</div>
                                                 <div className="font-bold text-green-600">{a.gainEur?.toLocaleString('fr-FR')} €</div>
                                             </div>
-                                            <div className="text-center">
+                                            <div className="text-center min-w-[64px]">
                                                 <div className="text-xs text-slate-500">ROI</div>
                                                 <div className={`font-bold ${a.roi <= 3 ? 'text-emerald-600' : a.roi <= 7 ? 'text-amber-600' : 'text-red-600'}`}>{a.roi} ans</div>
                                             </div>
@@ -2984,13 +3226,14 @@
                                 <strong>Invest. brut total :</strong> {r.totalCapexBrut?.toLocaleString('fr-FR')} € ·
                                 <strong> Aides estimées :</strong> {r.aidesTotal?.toLocaleString('fr-FR')} € ·
                                 <strong> Invest. net :</strong> {r.totalCapexNet?.toLocaleString('fr-FR')} €
-                                <div className="mt-1 text-blue-500">Aides : TVA 5,5% + CEE plancher 1,5%. Montants réels pouvant être supérieurs — faire chiffrer par un installateur RGE.</div>
+                                <div className="mt-1 text-blue-500">Aides : TVA 5,5% + CEE plancher 1,5%. Montants réels pouvant être supérieurs - faire chiffrer par un installateur RGE.</div>
                             </div>
                         </div>
                     )}
 
-                    {/* Graphiques + actions — dossiers new-style (postes / benchmark_data directs) */}
+                    {/* Graphiques + actions - dossiers new-style (postes / benchmark_data directs) */}
                     {c.postes && c.benchmark_data && (() => {
+                        const isMobile2 = typeof window !== 'undefined' && window.innerWidth < 640;
                         const COLORS_MAP = { chauffage: '#F97316', clim: '#06B6D4', ventil: '#3B82F6', eclairage: '#F59E0B', ecs: '#8B5CF6', autres: '#94A3B8' };
                         const LABELS_MAP = { chauffage: 'Chauffage', clim: 'Climatisation', ventil: 'Ventilation', eclairage: 'Éclairage', ecs: 'ECS', autres: 'Autres' };
 
@@ -3050,20 +3293,20 @@
                                             })}
                                         </div>
                                         <div className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-100 text-xs text-blue-700">
-                                            <strong>Invest. brut total :</strong> {c.totalCapex?.toLocaleString('fr-FR')} € ·
-                                            <strong> Aides estimées :</strong> {c.aidesEstimees?.toLocaleString('fr-FR')} € ·
-                                            <strong> Invest. net :</strong> {c.totalCapexNet?.toLocaleString('fr-FR')} €
-                                            <div className="mt-1 text-blue-500">Aides : TVA 5,5% + CEE plancher. Montants réels pouvant être supérieurs — faire chiffrer par un installateur RGE.</div>
+                                            <strong>Invest. brut total :</strong> {(c.totalCapex || 0).toLocaleString('fr-FR')} € ·
+                                            <strong> Aides estimées :</strong> {(c.aidesEstimees || 0).toLocaleString('fr-FR')} € ·
+                                            <strong> Invest. net :</strong> {(c.totalCapexNet || 0).toLocaleString('fr-FR')} €
+                                            <div className="mt-1 text-blue-500">Aides : TVA 5,5% + CEE plancher. Montants réels pouvant être supérieurs - faire chiffrer par un installateur RGE.</div>
                                         </div>
                                     </div>
                                 )}
 
-                                {/* G1 — Décomposition par poste */}
+                                {/* G1 - Décomposition par poste */}
                                 <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
                                     <h3 className="text-lg font-bold text-slate-800 mb-1 flex items-center gap-2">
                                         <Icon icon="solar:pie-chart-2-bold" className="text-blue-600" /> Répartition des consommations par poste
                                     </h3>
-                                    <p className="text-xs text-slate-400 mb-5">Estimation statistique — énergie finale tous usages</p>
+                                    <p className="text-xs text-slate-400 mb-5">Estimation statistique - énergie finale tous usages</p>
                                     <div className="grid md:grid-cols-2 gap-6 items-center">
                                         <Recharts.ResponsiveContainer width="100%" height={220}>
                                             <Recharts.PieChart>
@@ -3088,28 +3331,28 @@
                                     </div>
                                 </div>
 
-                                {/* G2 — Benchmark sectoriel */}
+                                {/* G2 - Benchmark sectoriel */}
                                 <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
                                     <h3 className="text-lg font-bold text-slate-800 mb-1 flex items-center gap-2">
                                         <Icon icon="solar:chart-square-bold" className="text-blue-600" /> Benchmark sectoriel
                                     </h3>
-                                    <p className="text-xs text-slate-400 mb-5">kWh EF/m²/an — Source : ADEME / ECNA 2022</p>
+                                    <p className="text-xs text-slate-400 mb-5">kWh EF/m²/an - Source : ADEME / ECNA 2022</p>
                                     <Recharts.ResponsiveContainer width="100%" height={200}>
-                                        <Recharts.BarChart data={c.benchmark_data} layout="vertical" margin={{ top: 5, right: 80, bottom: 5, left: 10 }}>
+                                        <Recharts.BarChart data={c.benchmark_data} layout="vertical" margin={{ top: 5, right: isMobile2 ? 10 : 80, bottom: 5, left: 10 }}>
                                             <Recharts.CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" horizontal={false} />
                                             <Recharts.XAxis type="number" tickFormatter={function (v) { return '' + v; }} tick={{ fontSize: 11 }} />
-                                            <Recharts.YAxis type="category" dataKey="name" tick={{ fontSize: 12, fontWeight: 600 }} width={120} />
+                                            <Recharts.YAxis type="category" dataKey="name" tick={{ fontSize: 12, fontWeight: 600 }} width={isMobile2 ? 80 : 120} />
                                             <Recharts.Tooltip formatter={function (v) { return [v + ' kWh/m²/an']; }} />
                                             <Recharts.Bar dataKey="value" radius={[0, 6, 6, 0]}>
                                                 {c.benchmark_data.map(function (d, i) { return <Recharts.Cell key={i} fill={d.fill} />; })}
-                                                <Recharts.LabelList dataKey="value" position="right" formatter={function (v) { return v + ' kWh/m²/an'; }} style={{ fontSize: 11, fill: '#64748B', fontWeight: 600 }} />
+                                                {!isMobile2 && <Recharts.LabelList dataKey="value" position="right" formatter={function (v) { return v + ' kWh/m²/an'; }} style={{ fontSize: 11, fill: '#64748B', fontWeight: 600 }} />}
                                             </Recharts.Bar>
                                         </Recharts.BarChart>
                                     </Recharts.ResponsiveContainer>
-                                    <p className="text-xs text-slate-400 mt-2">⚠️ Indice DiagTertiaire — estimation indicative. Ne constitue pas une classe OPERAT réglementaire.</p>
+                                    <p className="text-xs text-slate-400 mt-2">⚠️ Indice DiagTertiaire - estimation indicative. Ne constitue pas une classe OPERAT réglementaire.</p>
                                 </div>
 
-                                {/* G3 — ROI par action */}
+                                {/* G3 - ROI par action */}
                                 {roiData.length > 0 && (
                                     <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
                                         <h3 className="text-lg font-bold text-slate-800 mb-1 flex items-center gap-2">
@@ -3117,17 +3360,17 @@
                                         </h3>
                                         <p className="text-xs text-slate-400 mb-5">Trié du meilleur ROI au plus long</p>
                                         <Recharts.ResponsiveContainer width="100%" height={roiData.length * 52 + 40}>
-                                            <Recharts.BarChart data={roiData} layout="vertical" margin={{ top: 5, right: 120, bottom: 5, left: 20 }}>
+                                            <Recharts.BarChart data={roiData} layout="vertical" margin={{ top: 5, right: isMobile2 ? 10 : 120, bottom: 5, left: 20 }}>
                                                 <Recharts.CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" horizontal={false} />
                                                 <Recharts.XAxis type="number" tickFormatter={function (v) { return v + ' ans'; }} tick={{ fontSize: 11 }} />
-                                                <Recharts.YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={210} />
+                                                <Recharts.YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={isMobile2 ? 100 : 210} />
                                                 <Recharts.Tooltip formatter={function (v, n, p) {
                                                     var d = p.payload;
                                                     return ['ROI: ' + d.roi + ' ans | Invt: ' + (d.investissement || 0).toLocaleString('fr-FR') + ' € | Éco: ' + (d.economie || 0).toLocaleString('fr-FR') + ' €/an', ''];
                                                 }} />
                                                 <Recharts.Bar dataKey="roi" radius={[0, 4, 4, 0]}>
                                                     {roiData.map(function (d, i) { return <Recharts.Cell key={i} fill={d.fill} />; })}
-                                                    <Recharts.LabelList dataKey="investissement" position="right" formatter={function (v) { return (v || 0).toLocaleString('fr-FR') + ' €'; }} style={{ fontSize: 11, fill: '#64748B' }} />
+                                                    {!isMobile2 && <Recharts.LabelList dataKey="investissement" position="right" formatter={function (v) { return (v || 0).toLocaleString('fr-FR') + ' €'; }} style={{ fontSize: 11, fill: '#64748B' }} />}
                                                 </Recharts.Bar>
                                             </Recharts.BarChart>
                                         </Recharts.ResponsiveContainer>
@@ -3139,7 +3382,7 @@
                                     </div>
                                 )}
 
-                                {/* G4 — Projection financière */}
+                                {/* G4 - Projection financière */}
                                 {c.graphiquePubliable && c.projectionData && c.projectionData.length > 2 && (
                                     <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
                                         <h3 className="text-lg font-bold text-slate-800 mb-1 flex items-center gap-2">
@@ -3147,12 +3390,12 @@
                                             Projection financière sur {c.horizonAns || 10} ans
                                         </h3>
                                         <p className="text-xs text-slate-400 mb-5">
-                                            Inflation pondérée : {c.tauxInflation}%/an —
+                                            Inflation pondérée : {c.tauxInflation}%/an -
                                             Invest. net après aides estimées : {(c.totalCapexNet || 0).toLocaleString('fr-FR')} €
-                                            (aides : {(c.aidesEstimees || 0).toLocaleString('fr-FR')} € — TVA 5,5% + CEE plancher)
+                                            (aides : {(c.aidesEstimees || 0).toLocaleString('fr-FR')} € - TVA 5,5% + CEE plancher)
                                         </p>
                                         <Recharts.ResponsiveContainer width="100%" height={280}>
-                                            <Recharts.ComposedChart data={c.projectionData} margin={{ top: 20, right: 30, bottom: 10, left: 10 }}>
+                                            <Recharts.ComposedChart data={c.projectionData} margin={{ top: 20, right: isMobile2 ? 10 : 30, bottom: 10, left: 10 }}>
                                                 <defs>
                                                     <linearGradient id={'zoneEco_' + c.id} x1="0" y1="0" x2="0" y2="1">
                                                         <stop offset="5%" stopColor="#10B981" stopOpacity={0.2} />
@@ -3204,13 +3447,13 @@
                     )}
 
                     <div className="text-center text-xs text-slate-400 mt-8 mb-4">
-                        DiagTertiaire Pro · Rapport généré le {c.createdAt} · Estimation directionnelle — ne se substitue pas à un audit réglementaire.
+                        DiagTertiaire Pro · Rapport généré le {c.createdAt} · Estimation directionnelle - ne se substitue pas à un audit réglementaire.
                     </div>
                 </div>
             );
         };
 
-        /* ===== NOUVEAU DIAGNOSTIC — Wizard 7 modules ===== */
+        /* ===== NOUVEAU DIAGNOSTIC - Wizard 7 modules ===== */
         const ProNewDiag = ({ setPage }) => {
             const INITIAL = {
                 step: 1,
@@ -3231,6 +3474,7 @@
                 heures_semaine: 40, semaines_annee: '', occupation_weekend: false,
                 nb_occupants: '', intensite_usage: 'standard',
                 travaux_realises: [], budget: '', contraintes: [],
+                noteInterne: '',
             };
 
             const [form, setForm] = React.useState(() => {
@@ -3305,7 +3549,7 @@
                         email: form.email,
                         phone: form.phone,
                         activity: form.activity,
-                        surfaceLabel: (form.surface || '—') + ' m²',
+                        surfaceLabel: (form.surface || '-') + ' m²',
                         postalCode: form.postalCode,
                         city: '',
                         status: 'nouveau',
@@ -3318,6 +3562,7 @@
                         engineResult: result,
                         formData: { ...form },
                         scoreMaturite: result.scoreMaturite,
+                        noteInterne: form.noteInterne || '',
                         urgenceVerbatim: form.urgence,
                         objectif: form.objectif,
                         horizon: form.horizon,
@@ -3339,7 +3584,7 @@
                         })),
                         resultBasis: result.isKwhPrioritaire
                             ? ['Consommations réelles saisies (kWh)', 'Activité et surface connues', 'Correctifs zone et année appliqués']
-                            : ['Surface et activité connues', 'Estimation sectorielle (ratio ADEME/ECNA)', 'Consommations non saisies — précision limitée'],
+                            : ['Surface et activité connues', 'Estimation sectorielle (ratio ADEME/ECNA)', 'Consommations non saisies - précision limitée'],
                         actionPlan: result.actionPlan || [],
                         providerQuestions: result.providerQuestions || [],
                         technicalCompleteness: result.technicalCompleteness,
@@ -3467,16 +3712,34 @@
                                     <div><label className="pro-label">Horizon de décision</label>
                                         <select className="pro-input" value={form.horizon} onChange={e => set('horizon', e.target.value)}>
                                             <option value="">Sélectionner</option>
-                                            <option value="immediat">Immédiat (— 3 mois)</option>
+                                            <option value="immediat">Immédiat (- 3 mois)</option>
                                             <option value="moyen">Moyen terme (3–12 mois)</option>
                                             <option value="long">Long terme (+ 1 an)</option>
                                         </select>
                                     </div>
                                     <div><label className="pro-label">Urgence / contexte (libre)</label><input className="pro-input" placeholder="Ex: Bail à renouveler en septembre" value={form.urgence} onChange={e => set('urgence', e.target.value)} /></div>
                                 </div>
+                                {/* NOTE INTERNE - jamais affichée dans le rapport client */}
+                                <div className="border border-dashed border-indigo-200 bg-indigo-50/30 rounded-xl p-4 mt-2">
+                                    <label className="pro-label text-indigo-700 flex items-center gap-2 mb-1">
+                                        <Icon icon="solar:lock-bold" style={{ fontSize: '14px' }} />
+                                        Note interne (jamais transmise au client)
+                                    </label>
+                                    <textarea
+                                        className="pro-input mt-1 resize-none bg-white"
+                                        rows={3}
+                                        placeholder="Ex: Décideur direct, budget validé. Rappeler avant fin avril. Concurrence en cours…"
+                                        value={form.noteInterne || ''}
+                                        onChange={e => set('noteInterne', e.target.value)}
+                                    />
+                                    <p className="text-xs text-indigo-400 mt-1.5 flex items-center gap-1">
+                                        <Icon icon="solar:eye-closed-linear" style={{ fontSize: '11px' }} />
+                                        Visible uniquement dans votre espace pro - jamais incluse dans le lien de partage
+                                    </p>
+                                </div>
                                 <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex items-start gap-3">
                                     <input type="checkbox" id="multi" className="mt-1 w-4 h-4" checked={form.isMulti} onChange={e => set('isMulti', e.target.checked)} />
-                                    <label htmlFor="multi" className="cursor-pointer text-sm text-slate-700 font-medium">Portefeuille multi-sites — le rapport aura une approche consolidée</label>
+                                    <label htmlFor="multi" className="cursor-pointer text-sm text-slate-700 font-medium">Portefeuille multi-sites - le rapport aura une approche consolidée</label>
                                 </div>
                             </div>
                         )}
@@ -3516,7 +3779,7 @@
                                     </div>
                                     <div><label className="pro-label">Niveaux</label>
                                         <select className="pro-input" value={form.niveaux} onChange={e => set('niveaux', e.target.value)}>
-                                            <option value="">—</option>
+                                            <option value="">-</option>
                                             <option value="1">1 niveau (RDC)</option>
                                             <option value="2">2 niveaux</option>
                                             <option value="3_5">3 à 5 niveaux</option>
@@ -3526,7 +3789,7 @@
                                 </div>
                                 {form.postalCode && (
                                     <div className="bg-blue-50 border border-blue-100 rounded-lg px-4 py-2 text-sm text-blue-700 font-medium">
-                                        Zone climatique détectée : <strong>{ENGINE_PRO.getZoneFromCP(form.postalCode)}</strong> — correctif chauffage appliqué automatiquement
+                                        Zone climatique détectée : <strong>{ENGINE_PRO.getZoneFromCP(form.postalCode)}</strong> - correctif chauffage appliqué automatiquement
                                     </div>
                                 )}
                             </div>
@@ -3593,7 +3856,7 @@
                                     <div className="grid grid-cols-2 gap-4">
                                         <div><label className="pro-label">Âge de l'installation</label>
                                             <select className="pro-input" value={form.chauffage_age} onChange={e => set('chauffage_age', e.target.value)}>
-                                                <option value="">—</option>
+                                                <option value="">-</option>
                                                 <option value="moins_10_ans">Moins de 10 ans</option>
                                                 <option value="entre_10_20_ans">10 à 20 ans</option>
                                                 <option value="plus_20_ans">Plus de 20 ans</option>
@@ -3601,7 +3864,7 @@
                                         </div>
                                         <div><label className="pro-label">Distribution</label>
                                             <select className="pro-input" value={form.chauffage_reseau} onChange={e => set('chauffage_reseau', e.target.value)}>
-                                                <option value="">—</option>
+                                                <option value="">-</option>
                                                 <option value="eau_chaude">Réseau eau chaude</option>
                                                 <option value="air_souffle">Air soufflé</option>
                                                 <option value="electrique_local">Convecteurs locaux</option>
@@ -3688,7 +3951,7 @@
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                     <div><label className="pro-label">Période couverte</label>
                                         <select className="pro-input" value={form.periode_couverte} onChange={e => set('periode_couverte', e.target.value)}>
-                                            <option value="">—</option>
+                                            <option value="">-</option>
                                             <option value="12_mois_complets">12 mois complets</option>
                                             <option value="moins_12_mois">Moins de 12 mois</option>
                                             <option value="estimee">Estimation / Moyenne</option>
@@ -3704,7 +3967,7 @@
                                 {(!form.elecKwh && !form.gasKwh && !form.elecEuro && !form.gasEuro) && (
                                     <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-800 font-medium flex items-start gap-2">
                                         <Icon icon="solar:danger-triangle-bold" className="text-amber-500 shrink-0 mt-0.5" />
-                                        Aucune consommation saisie — le rapport utilisera un ratio sectoriel estimé. Badge « Précision limitée » affiché.
+                                        Aucune consommation saisie - le rapport utilisera un ratio sectoriel estimé. Badge « Précision limitée » affiché.
                                     </div>
                                 )}
                             </div>
@@ -3724,7 +3987,7 @@
                                     </div>
                                     <div><label className="pro-label">Semaines d'activité / an</label>
                                         <select className="pro-input" value={form.semaines_annee} onChange={e => set('semaines_annee', e.target.value)}>
-                                            <option value="">—</option>
+                                            <option value="">-</option>
                                             <option value="moins_40">Moins de 40 semaines</option>
                                             <option value="40_46">40 à 46 semaines</option>
                                             <option value="47_50">47 à 50 semaines</option>
@@ -3733,7 +3996,7 @@
                                     </div>
                                     <div><label className="pro-label">Nombre d'occupants habituels</label>
                                         <select className="pro-input" value={form.nb_occupants} onChange={e => set('nb_occupants', e.target.value)}>
-                                            <option value="">—</option>
+                                            <option value="">-</option>
                                             <option value="moins_5">Moins de 5</option>
                                             <option value="6_20">6 à 20</option>
                                             <option value="21_50">21 à 50</option>
@@ -3762,7 +4025,7 @@
                                     <Icon icon="solar:hammer-bold" className="text-blue-600" /> Travaux déjà réalisés & budget
                                 </h3>
                                 <div>
-                                    <label className="pro-label mb-3 block">Travaux réalisés récemment (— 5 ans) — actions correspondantes exclues des recommandations</label>
+                                    <label className="pro-label mb-3 block">Travaux réalisés récemment (- 5 ans) - actions correspondantes exclues des recommandations</label>
                                     <div className="flex flex-wrap gap-2">
                                         {[
                                             ['led_recent', 'Relamping LED'], ['vmc_df_recente', 'VMC double flux'],
@@ -3793,10 +4056,10 @@
                                 </div>
                                 <div className="bg-slate-50 rounded-xl p-5 border border-slate-200 space-y-2 text-sm text-slate-700 font-medium">
                                     <div className="font-bold text-slate-800 mb-3 flex items-center gap-2"><Icon icon="solar:info-square-bold" className="text-blue-500" /> Récapitulatif</div>
-                                    <div>Client : <strong>{form.company || form.contactName || '—'}</strong></div>
-                                    <div>Activité : <strong>{form.activity || '—'}</strong> | Surface : <strong>{form.surface || '—'} m²</strong></div>
-                                    <div>Zone : <strong>{ENGINE_PRO.getZoneFromCP(form.postalCode)}</strong> | Construction : <strong>{form.constructionYear || '—'}</strong></div>
-                                    <div>Consommations : <strong>{form.elecKwh ? form.elecKwh + ' kWh élec' : form.elecEuro ? form.elecEuro + ' € élec' : 'Non saisies — ratio sectoriel'}</strong></div>
+                                    <div>Client : <strong>{form.company || form.contactName || '-'}</strong></div>
+                                    <div>Activité : <strong>{form.activity || '-'}</strong> | Surface : <strong>{form.surface || '-'} m²</strong></div>
+                                    <div>Zone : <strong>{ENGINE_PRO.getZoneFromCP(form.postalCode)}</strong> | Construction : <strong>{form.constructionYear || '-'}</strong></div>
+                                    <div>Consommations : <strong>{form.elecKwh ? form.elecKwh + ' kWh élec' : form.elecEuro ? form.elecEuro + ' € élec' : 'Non saisies - ratio sectoriel'}</strong></div>
                                 </div>
                                 <button type="button" onClick={handleGenerate} disabled={isGenerating || !form.activity || !form.surface}
                                     className="pro-btn pro-btn-primary w-full justify-center py-4 text-base mt-2">
@@ -3857,6 +4120,7 @@
                 } else {
                     localStorage.setItem('proLogoImg', proLogoImg);
                 }
+                window.dispatchEvent(new Event('storage'));
             }, [proAccent, proLogoName, proLogoImg]);
 
             const handleLogoUpload = (e) => {
@@ -4246,7 +4510,7 @@
 
         /* ===== MAIN APP (Logique de routing et d'assemblage) ===== */
         const ProApp = () => {
-            // ALL hooks at the top — no conditional hooks (React rules)
+            // ALL hooks at the top - no conditional hooks (React rules)
             const [sharedReport, setSharedReport] = useState(null);
             const [auth, setAuth] = useState(false);
             const [page, setPage] = useState('cases');
@@ -4283,7 +4547,7 @@
             const openDemoModal = () => setIsDemoModalOpen(true);
             const closeDemoModal = () => setIsDemoModalOpen(false);
 
-            // Shared report view — no auth required, no sidebar
+            // Shared report view - no auth required, no sidebar
             if (sharedReport) {
                 return <ProReport cId={sharedReport.id || 'shared'} sharedCase={sharedReport} setPage={() => { window.location.hash = ''; setSharedReport(null); }} />;
             }
@@ -4355,5 +4619,3 @@
 </body>
 
 </html>
-
-

@@ -1679,7 +1679,7 @@
                 actions: [
                     { name: 'Optimisation aérothermes gaz (zonage)', savingsEuro: 4800, capex: 6500, roi: 1.35, eligCEE: false, fichesCEE: [], scope: 'chauffage', description: 'Aérothermes à consigne uniforme 18°C. Zonage (quais 12°C / picking 16°C / bureaux 19°C). Détecteurs porte ouverte sur quais.' },
                     { name: 'Détecteurs de présence éclairage (allées secondaires)', savingsEuro: 1800, capex: 4500, roi: 2.5, eligCEE: true, fichesCEE: ['BAT-EQ-212'], scope: 'eclairage', description: '18 détecteurs HF sur allées B, C, D. Gain estimé 20% sur 30% du bâtiment.' },
-                    { name: 'Relamping LED haute baie (sodium 400W -> LED 150W)', savingsEuro: 11200, capex: 42000, roi: 3.75, eligCEE: true, fichesCEE: ['BAT-EQ-127'], scope: 'eclairage', description: '280 projecteurs sodium 400W remplacés par LED haute baie 150W. Économie 62% éclairage. Durée de vie LED : 50 000h.' },
+                    { name: 'Relamping LED haute baie (sodium 400W ? LED 150W)', savingsEuro: 11200, capex: 42000, roi: 3.75, eligCEE: true, fichesCEE: ['BAT-EQ-127'], scope: 'eclairage', description: '280 projecteurs sodium 400W remplacés par LED haute baie 150W. Économie 62% éclairage. Durée de vie LED : 50 000h.' },
                     { name: 'Isolation toiture (panneaux sandwich 120mm)', savingsEuro: 700, capex: 3000, roi: 4.3, eligCEE: true, fichesCEE: ['BAT-EN-102'], scope: 'chauffage', description: 'Toiture bac acier non isolée sur 400 m² (zone bureaux intégrés). Panneaux sandwich R=6.' }
                 ],
                 postes: { chauffage: { pct: 60, kwh: 151200, eur: 22932 }, clim: { pct: 2, kwh: 5040, eur: 764 }, ventil: { pct: 8, kwh: 20160, eur: 3056 }, eclairage: { pct: 25, kwh: 63000, eur: 9554 }, ecs: { pct: 2, kwh: 5040, eur: 764 }, autres: { pct: 3, kwh: 7560, eur: 1146 } },
@@ -1735,7 +1735,7 @@
                     { name: 'Portes sur meubles frigorifiques ouverts', savingsEuro: 9200, capex: 18000, roi: 2.0, eligCEE: true, fichesCEE: ['BAT-EQ-133'], scope: 'clim', description: 'Linéaires positif (+4°C) ouverts sur 18 ml. Pose de portes battantes vitrées. Réduction estimée 35% consommation froid. ROI rapide car poste froid = 35% de la facture totale.' },
                     { name: 'Relamping LED haute efficacité (vente + réserve)', savingsEuro: 6100, capex: 22000, roi: 3.6, eligCEE: true, fichesCEE: ['BAT-EQ-127'], scope: 'eclairage', description: '680 m² en fluorescent T8. Remplacement par LED 4000K CRI90 (adaptation merchandising). Réduction 58% éclairage. Tubes LED compatibles armatures existantes.' },
                     { name: 'Optimisation condenseurs (nettoyage + réglage)', savingsEuro: 2800, capex: 1500, roi: 0.5, eligCEE: false, fichesCEE: [], scope: 'clim', description: 'Condenseurs groupe froid encrassés - température de condensation +8°C vs optimal. Nettoyage + recalibrage régulation. Action quasi-immédiate, forte rentabilité.' },
-                    { name: 'Horloge éclairage non-stop -> plages ouverture', savingsEuro: 1700, capex: 800, roi: 0.5, eligCEE: false, fichesCEE: [], scope: 'eclairage', description: 'Éclairage allumé 24h/24 y compris nuit et réserve. Programmation horaire sur tableau général : ouverture 7h30–21h00 + zone réserve déclenchée par interrupteur.' }
+                    { name: 'Horloge éclairage non-stop ? plages ouverture', savingsEuro: 1700, capex: 800, roi: 0.5, eligCEE: false, fichesCEE: [], scope: 'eclairage', description: 'Éclairage allumé 24h/24 y compris nuit et réserve. Programmation horaire sur tableau général : ouverture 7h30–21h00 + zone réserve déclenchée par interrupteur.' }
                 ],
                 postes: { chauffage: { pct: 20, kwh: 88400, eur: 17320 }, clim: { pct: 35, kwh: 154700, eur: 30320 }, ventil: { pct: 6, kwh: 26520, eur: 5196 }, eclairage: { pct: 22, kwh: 97240, eur: 19052 }, ecs: { pct: 3, kwh: 13260, eur: 2598 }, autres: { pct: 14, kwh: 61880, eur: 12128 } },
                 projectionData: (() => { const d = [{ annee: 'Auj.', sans_travaux: 0, avec_travaux: 40500 }]; let cs = 0, ca = 40500; for (let i = 1; i <= 10; i++) { cs += 86600 * Math.pow(1.030, i); ca += (86600 - 19800) * Math.pow(1.030, i); d.push({ annee: 'A+' + i, sans_travaux: Math.round(cs), avec_travaux: Math.round(ca) }); } return d; })(),
@@ -1994,33 +1994,6 @@
             );
         };
 
-        const TreeGlyph = ({ className }) => (
-            <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M12 21v-4" />
-                <path d="M9 21h6" />
-                <path d="M12 3 6 10h12L12 3Z" fill="currentColor" stroke="none" />
-                <path d="M12 8 7 14h10L12 8Z" fill="currentColor" stroke="none" />
-            </svg>
-        );
-
-        const CarGlyph = ({ className }) => (
-            <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M6.5 8.5h11l2 4.5V17h-1.5a2 2 0 0 1-4 0h-4a2 2 0 0 1-4 0H4.5v-4l2-4.5Z" fill="currentColor" stroke="none" />
-                <circle cx="8" cy="17" r="1.75" fill="#FFFFFF" stroke="none" />
-                <circle cx="16" cy="17" r="1.75" fill="#FFFFFF" stroke="none" />
-                <path d="M7.5 11h9" stroke="#FFFFFF" />
-            </svg>
-        );
-
-        const RoadGlyph = ({ className }) => (
-            <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M8 21 11 3h2l3 18" />
-                <path d="M12 6v2" />
-                <path d="M12 10v2" />
-                <path d="M12 14v2" />
-            </svg>
-        );
-
         function initializeMockProCases() {
             // Toujours s'assurer que les 5 cas de démo sont présents
             // (même si l'utilisateur a un ancien cache avec les anciens dossiers)
@@ -2073,7 +2046,7 @@
 
         const chatbotFaq = [
             { q: "Comment lire le niveau de performance ?", a: "La note (de A à E) compare de façon macro la consommation déclarée à notre base de références sectorielles (données ADEME et observatoires). Elle sert à identifier rapidement une surconsommation anormale." },
-            { q: "Comment interpréter le niveau de fiabilité ?", a: "Le badge de fiabilité dépend principalement de la qualité de la donnée source. Sur de simples ordres de grandeur financiers, la fiabilité est moyenne." },
+            { q: "Comment interpréter le niveau de fiabilità?", a: "Le badge de fiabilité dépend principalement de la qualité de la donnée source. Sur de simples ordres de grandeurs financiers, la fiabilité est moyenne." },
             { q: "Quand utiliser ce rapport ?", a: "En phase de prospection ou d'avant-vente avec un prospect. Il sert de \"brise-glace\" pour valoriser votre démarche conseil et l'inciter à missionner un bureau d'études pour un audit poussé." },
             { q: "Comment cadrer la suite avec un prestataire ?", a: "Utilisez la section \"Questions à poser\" du rapport. Elle centralise les points de vigilance pour challenger le devis d'un installateur ou le scope d'un auditeur." },
             { q: "Comment préparer une démo plus complète ?", a: "Contactez notre équipe via les boutons de démonstration (formulaire). Nous vous créerons un accès manager pour inviter vos collaborateurs." },
@@ -2413,12 +2386,12 @@
                     </div>
                     <div className="border-t border-slate-200 p-4 flex justify-between items-center bg-slate-50">
                         <button onClick={step === 1 ? onCancel : () => setStep(s => s - 1)} className="pro-btn pro-btn-secondary">
-                            {step === 1 ? 'Annuler' : 'Précédent'}
+                            {step === 1 ? 'Annuler' : '? Précédent'}
                         </button>
                         {step < TOTAL ? (
                             <button onClick={() => setStep(s => s + 1)} disabled={!canNext()}
                                 className={`pro-btn pro-btn-primary ${!canNext() ? 'opacity-50 cursor-not-allowed' : ''}`}>
-                                Suivant
+                                Suivant ?
                             </button>
                         ) : (
                             <button onClick={handleFinish} className="pro-btn pro-btn-primary">
@@ -3096,12 +3069,7 @@
                 <div className="p-8 text-center">
                     <div className="text-red-500 font-bold text-lg mb-4">Rapport introuvable.</div>
                     <p className="text-slate-500 mb-6">Ce dossier n'existe pas ou a été supprimé.</p>
-                    <button onClick={() => setPage('cases')} className="pro-btn pro-btn-secondary">
-                        <span className="flex items-center gap-2">
-                            <Icon icon="solar:alt-arrow-left-linear" />
-                            Retour aux dossiers
-                        </span>
-                    </button>
+                    <button onClick={() => setPage('cases')} className="pro-btn pro-btn-secondary">? Retour aux dossiers</button>
                 </div>
             );
 
@@ -3208,12 +3176,7 @@
                                     {r ? r.score : (c.score || '-')}
                                 </div>
                                 <div className="text-xs text-slate-300 mt-1">{r ? r.positioning : c.positioning || ''}</div>
-                                {r && (
-                                    <div className="text-xs text-slate-400 mt-1 flex items-center gap-1.5">
-                                        <span className={`w-2 h-2 rounded-full ${r.badgeConfiance === 'Élevé' ? 'bg-emerald-400' : r.badgeConfiance === 'Estimé' ? 'bg-red-400' : 'bg-amber-400'}`}></span>
-                                        <span>Précision {r.badgeConfiance}</span>
-                                    </div>
-                                )}
+                                {r && <div className="text-xs text-slate-400 mt-1">{r.badgeConfiance === 'Élevé' ? '??' : r.badgeConfiance === 'Estimé' ? '??' : '??'} Précision {r.badgeConfiance}</div>}
                             </div>
                         </div>
                     </div>
@@ -3386,7 +3349,7 @@
                                             </Recharts.Bar>
                                         </Recharts.BarChart>
                                     </Recharts.ResponsiveContainer>
-                                    <p className="text-xs text-slate-400 mt-3">Note : indice DiagTertiaire estimatif. Ne constitue pas une classe OPERAT réglementaire.</p>
+                                    <p className="text-xs text-slate-400 mt-3">?? Indice DiagTertiaire - estimation indicative. Ne constitue pas une classe OPERAT réglementaire.</p>
                                 </div>
 
                                 {/* Actions recommandées */}
@@ -3400,7 +3363,7 @@
                                                 <div key={i} className="flex flex-col md:flex-row md:items-center gap-3 p-4 rounded-xl bg-slate-50 border border-slate-100">
                                                     <div className="flex-1">
                                                         <div className="font-bold text-slate-800 text-sm">{a.title}</div>
-                                                        {a.sourceWarning && <div className="text-xs text-amber-600 mt-0.5">Attention : {a.sourceWarning}</div>}
+                                                        {a.sourceWarning && <div className="text-xs text-amber-600 mt-0.5">?? {a.sourceWarning}</div>}
                                                         {a.fiches?.length > 0 && <div className="text-xs text-slate-400 mt-0.5">Fiche CEE : {a.fiches.join(', ')}</div>}
                                                     </div>
                                                     <div className="flex flex-wrap sm:flex-nowrap gap-4 text-sm shrink-0">
@@ -3491,7 +3454,7 @@
                                                 <Recharts.Line type="monotone" dataKey="avec_travaux" stroke="#10B981" strokeWidth={3} dot={false} name="avec_travaux" />
                                                 {r.roiGlobal && r.roiGlobal <= r.horizonAns && (
                                                     <Recharts.ReferenceLine x={`A+${Math.ceil(r.roiGlobal)}`} stroke="#1B4FD8" strokeDasharray="4 2"
-                                                        label={{ value: `Rentable - A+${Math.ceil(r.roiGlobal)}`, position: 'insideTopLeft', fill: '#1B4FD8', fontSize: 11, fontWeight: 700 }} />
+                                                        label={{ value: `? Rentable - A+${Math.ceil(r.roiGlobal)}`, position: 'insideTopLeft', fill: '#1B4FD8', fontSize: 11, fontWeight: 700 }} />
                                                 )}
                                             </Recharts.ComposedChart>
                                         </Recharts.ResponsiveContainer>
@@ -3609,7 +3572,7 @@
                                             </Recharts.Bar>
                                         </Recharts.BarChart>
                                     </Recharts.ResponsiveContainer>
-                                    <p className="text-xs text-slate-400 mt-2">Note : indice DiagTertiaire estimatif. Ne constitue pas une classe OPERAT réglementaire.</p>
+                                    <p className="text-xs text-slate-400 mt-2">?? Indice DiagTertiaire - estimation indicative. Ne constitue pas une classe OPERAT réglementaire.</p>
                                 </div>
 
                                 {/* Actions recommandées (new-style) */}
@@ -3715,7 +3678,7 @@
                                                 <Recharts.Line type="monotone" dataKey="avec_travaux" stroke="#10B981" strokeWidth={3} dot={false} name="avec_travaux" />
                                                 {c.roiAnnee && (
                                                     <Recharts.ReferenceLine x={'A+' + c.roiAnnee} stroke="#1B4FD8" strokeDasharray="4 2"
-                                                        label={{ value: 'Rentable A+' + c.roiAnnee, position: 'insideTopLeft', fill: '#1B4FD8', fontSize: 11, fontWeight: 700 }} />
+                                                        label={{ value: '? Rentable A+' + c.roiAnnee, position: 'insideTopLeft', fill: '#1B4FD8', fontSize: 11, fontWeight: 700 }} />
                                                 )}
                                             </Recharts.ComposedChart>
                                         </Recharts.ResponsiveContainer>
@@ -3751,30 +3714,30 @@
                                         Impact environnemental des travaux
                                     </span>
                                     <span className="text-xs text-emerald-500 bg-emerald-100 px-2 py-0.5 rounded-full">
-                                        CO2 évité / an
+                                        CO2 evite / an
                                     </span>
                                 </div>
                                 <div className="grid grid-cols-3 gap-4 text-center">
                                     <div className="bg-white rounded-xl p-4 border border-emerald-100">
-                                        <TreeGlyph className="w-8 h-8 mx-auto text-emerald-600" />
+                                        <div className="text-3xl mb-1">??</div>
                                         <div className="text-2xl font-extrabold text-emerald-700">
                                             {eq.arbres.toLocaleString('fr-FR')}
                                         </div>
                                         <div className="text-xs text-slate-500 mt-1 leading-snug">
-                                            arbres absorbant<br />le même CO2 en 1 an
+                                            arbres absorbant<br />le meme CO2 en 1 an
                                         </div>
                                     </div>
                                     <div className="bg-white rounded-xl p-4 border border-emerald-100">
-                                        <CarGlyph className="w-8 h-8 mx-auto text-emerald-600" />
+                                        <div className="text-3xl mb-1">??</div>
                                         <div className="text-2xl font-extrabold text-emerald-700">
                                             {eq.voitures.toLocaleString('fr-FR')}
                                         </div>
                                         <div className="text-xs text-slate-500 mt-1 leading-snug">
-                                            voitures retirées de la<br />circulation pendant 1 an
+                                            voitures retirees de la<br />circulation pendant 1 an
                                         </div>
                                     </div>
                                     <div className="bg-white rounded-xl p-4 border border-emerald-100">
-                                        <RoadGlyph className="w-8 h-8 mx-auto text-emerald-600" />
+                                        <div className="text-3xl mb-1">???</div>
                                         <div className="text-2xl font-extrabold text-emerald-700">
                                             {formatIntWithSpaces(eq.km)} km
                                         </div>
@@ -4458,7 +4421,7 @@
                         {/* Navigation wizard */}
                         {validationError && (
                             <div className="mt-4 px-4 py-2 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 font-medium">
-                                Attention : {validationError}
+                                ?? {validationError}
                             </div>
                         )}
                         {form.step < 7 && (

@@ -452,6 +452,52 @@
             box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
         }
 
+        .new-diagnostic-report .report-subcard {
+            background: #FFFFFF;
+            border: 1px solid #E2E8F0;
+            border-radius: 16px;
+            box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+        }
+
+        .new-diagnostic-report .report-kpi-card {
+            background: #FFFFFF;
+            border: 1px solid #E2E8F0;
+            border-radius: 16px;
+            box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05);
+        }
+
+        .new-diagnostic-report .report-hero-gradient {
+            background: linear-gradient(135deg, #0F172A 0%, #102A43 48%, #1D4ED8 100%);
+        }
+
+        .new-diagnostic-report .report-glass-card {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(10px);
+        }
+
+        .new-diagnostic-report .report-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            border-radius: 999px;
+            padding: 0.375rem 0.75rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .new-diagnostic-report .report-section-title {
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #0F172A;
+            letter-spacing: -0.02em;
+        }
+
         .new-diagnostic-report .report-muted {
             color: #475569;
         }
@@ -1356,29 +1402,66 @@
                     </div>
                 </section>
 
-                {/* ISSUE — moment fort, fond contrasté */}
-                <section style={{ padding: '4rem 0', background: '#F8FAFC', borderTop: '1px solid #F1F5F9', borderBottom: '1px solid #F1F5F9' }}>
-                    <div className="max-w-4xl mx-auto px-4">
-                        <div style={{ background: 'linear-gradient(140deg, #FFFBEB 0%, #FEFCE8 100%)', border: '1.5px solid rgba(245,158,11,0.28)', borderRadius: '18px', padding: '2.75rem 2.5rem', boxShadow: '0 4px 20px rgba(245,158,11,0.08), 0 1px 6px rgba(15,23,42,0.04)' }}>
-                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1.375rem' }}>
-                                <div style={{ width: '50px', height: '50px', borderRadius: '13px', background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 4px 12px rgba(245,158,11,0.35)' }}>
-                                    <Icon icon="solar:warning-bold" style={{ fontSize: '1.25rem' }} />
-                                </div>
+                {/* TRANSITION CTA — avant audit */}
+                <section style={{ padding: '0 0 3rem', background: '#FFFFFF' }}>
+                    <div className="max-w-6xl mx-auto px-4">
+                        <div
+                            className="rounded-[20px] border border-[#E2E8F0] px-4 py-5 md:px-6 md:py-6"
+                            style={{
+                                background: 'linear-gradient(180deg, rgba(248,250,252,0.92) 0%, #FFFFFF 100%)',
+                                boxShadow: '0 10px 28px rgba(15,23,42,0.05)'
+                            }}
+                        >
+                            <div className="flex flex-col gap-4 md:gap-5">
+                                <h2 style={{ fontSize: 'clamp(1.35rem, 3vw, 2rem)', fontWeight: 750, color: '#0C1D30', lineHeight: 1.15, letterSpacing: '-0.04em', margin: 0, maxWidth: '42rem' }}>
+                                    Avant d’engager un audit complet, vérifiez d’abord s’il est vraiment nécessaire.
+                                </h2>
+
+                                <ul className="grid gap-3 md:grid-cols-3" style={{ margin: 0, padding: 0, listStyle: 'none' }}>
+                                    {[
+                                        "Le tertiaire a ses propres repères.",
+                                        "Comparer au résidentiel peut conduire à une mauvaise décision.",
+                                        "Commencez par un premier cadrage en 3 minutes."
+                                    ].map((item, i) => (
+                                        <li
+                                            key={i}
+                                            className="rounded-[14px] border border-[#E2E8F0] px-4 py-3"
+                                            style={{
+                                                display: 'flex',
+                                                alignItems: 'flex-start',
+                                                gap: '0.75rem',
+                                                background: 'rgba(255,255,255,0.84)',
+                                                color: '#334155',
+                                                fontSize: '0.9375rem',
+                                                lineHeight: 1.6
+                                            }}
+                                        >
+                                            <span
+                                                aria-hidden="true"
+                                                style={{
+                                                    width: '8px',
+                                                    height: '8px',
+                                                    borderRadius: '999px',
+                                                    background: '#1D4ED8',
+                                                    flexShrink: 0,
+                                                    marginTop: '0.45rem'
+                                                }}
+                                            />
+                                            <span>{item}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+
                                 <div>
-                                    <h2 style={{ fontSize: 'clamp(1.375rem, 3.5vw, 1.875rem)', fontWeight: 700, color: '#0B1D30', marginBottom: '0.875rem', lineHeight: 1.2, letterSpacing: '-0.5px' }}>Le tertiaire a ses propres repères.</h2>
-                                    <ul style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                                        {[
-                                            "Erreurs fréquentes : comparer au résidentiel.",
-                                            "Risque : audit ou travaux au mauvais moment.",
-                                            "Commencez par un cadrage en 3 minutes.",
-                                            "Avant de financer un audit à +1 000 €.",
-                                        ].map((item, i) => (
-                                            <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', fontSize: '0.9375rem', color: '#475569', lineHeight: 1.65 }}>
-                                                <Icon icon="solar:checklist-linear" style={{ color: '#1D4ED8', flexShrink: 0, marginTop: '3px', fontSize: '1rem' }} />
-                                                {item}
-                                            </li>
-                                        ))}
-                                    </ul>
+                                    <button
+                                        type="button"
+                                        onClick={() => navigate('diagnostic')}
+                                        className="btn-primary inline-flex w-full items-center justify-center gap-2 sm:w-auto"
+                                        style={{ padding: '0.95rem 1.5rem', fontSize: '0.95rem', minHeight: '48px' }}
+                                    >
+                                        Lancer mon diagnostic gratuit
+                                        <Icon icon="solar:arrow-right-linear" width="18" height="18" />
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -1594,102 +1677,28 @@
                     </div>
                 </section>
 
-                {/* SECTION PRO ORIENTEE USAGES METIER */}
-                <section style={{ padding: '4.5rem 0 5.5rem', background: '#F8FAFC', borderTop: '1px solid #E2E8F0' }}>
+                {/* SECTION PRO DISCRETE */}
+                <section style={{ padding: '2.5rem 0 3.25rem', background: '#F8FAFC', borderTop: '1px solid #E2E8F0' }}>
                     <div className="max-w-6xl mx-auto px-4">
-                        <div className="text-center mb-10 md:mb-12">
-                            <div style={{ display: 'inline-flex', padding: '0.375rem 1rem', background: 'white', border: '1px solid #E2E8F0', borderRadius: '999px', marginBottom: '1.1rem', alignItems: 'center', gap: '8px', boxShadow: '0 2px 4px rgba(15,23,42,0.02)' }}>
-                                <Icon icon="solar:buildings-2-bold" style={{ color: '#1D4ED8', fontSize: '1rem' }} />
-                                <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Espace Professionnel</span>
-                            </div>
-                            <h2 style={{ fontSize: 'clamp(1.6rem, 4vw, 2.35rem)', fontWeight: 800, color: '#0C1D30', marginBottom: '1rem', letterSpacing: '-0.45px', lineHeight: 1.2 }}>
-                                Un poste de pilotage pour vos dossiers énergétiques tertiaires
-                            </h2>
-                            <p style={{ fontSize: '1rem', color: '#4B5B71', maxWidth: '44rem', margin: '0 auto', lineHeight: 1.7 }}>
-                                Vous gardez une lecture claire des enjeux opérationnels, économiques et commerciaux, de la qualification initiale jusqu'au partage du rapport.
-                            </p>
-                        </div>
-
-                        <div className="grid lg:grid-cols-2 gap-6 mb-8">
-                            <div style={{ background: 'white', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 4px 12px rgba(15,23,42,0.06)', padding: '1.5rem' }}>
-                                <h3 style={{ fontSize: '1.0625rem', fontWeight: 700, color: '#0C1D30', marginBottom: '0.9rem' }}>Cas d'usage cabinet</h3>
-                                <ul style={{ display: 'grid', gap: '0.7rem' }}>
-                                    {[
-                                        "Qualifier rapidement un prospect avant proposition d'audit.",
-                                        "Prioriser les dossiers à fort potentiel d'économies.",
-                                        "Structurer les relances avec un statut clair par dossier.",
-                                        "Préparer un échange client avec une synthèse exploitable."
-                                    ].map((text, i) => (
-                                        <li key={i} style={{ display: 'flex', gap: '0.55rem', alignItems: 'flex-start', color: '#334155', fontSize: '0.9rem', lineHeight: 1.65 }}>
-                                            <Icon icon="solar:check-circle-bold" style={{ color: '#1D4ED8', fontSize: '1rem', marginTop: '2px', flexShrink: 0 }} />
-                                            <span>{text}</span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-
-                            <div style={{ background: 'white', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 4px 12px rgba(15,23,42,0.06)', padding: '1.5rem' }}>
-                                <h3 style={{ fontSize: '1.0625rem', fontWeight: 700, color: '#0C1D30', marginBottom: '0.9rem' }}>Ce que vous pilotez au quotidien</h3>
-                                <div className="grid grid-cols-2 gap-3">
-                                    {[
-                                        { title: 'Portefeuille', value: 'Dossiers actifs' },
-                                        { title: 'Statuts', value: 'Nouveau • Projet • Clos' },
-                                        { title: 'Performance', value: 'Scores A à E' },
-                                        { title: 'Économie', value: 'Ordres de grandeur €/an' }
-                                    ].map((item, i) => (
-                                        <div key={i} style={{ border: '1px solid #E2E8F0', background: '#F8FAFC', borderRadius: '12px', padding: '0.8rem' }}>
-                                            <p style={{ fontSize: '0.69rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700, marginBottom: '0.2rem' }}>{item.title}</p>
-                                            <p style={{ fontSize: '0.88rem', color: '#0F172A', fontWeight: 600, lineHeight: 1.5 }}>{item.value}</p>
-                                        </div>
-                                    ))}
+                        <div className="max-w-5xl mx-auto rounded-[16px] border border-[#E2E8F0] bg-white px-4 py-4 md:px-6 md:py-[1.125rem]">
+                            <div className="flex flex-col gap-3.5 md:flex-row md:items-center md:justify-between md:gap-6">
+                                <div className="max-w-[41rem]">
+                                    <h2 className="text-[1.125rem] md:text-[1.25rem] font-bold tracking-[-0.02em] text-[#0C1D30] leading-tight">
+                                        Vous êtes un professionnel ?
+                                    </h2>
+                                    <p className="mt-1.5 text-sm md:text-[0.9375rem] leading-relaxed text-[#475569]">
+                                        Découvrez l’espace dédié aux professionnels qui veulent qualifier plus vite leurs dossiers tertiaires.
+                                    </p>
                                 </div>
+
+                                <a
+                                    href="index.saaspro.html"
+                                    className="inline-flex min-h-[42px] w-full shrink-0 items-center justify-center gap-1.5 self-start rounded-lg border border-[#E2E8F0] bg-transparent px-3.5 py-2 text-sm font-medium text-[#334155] no-underline transition-all hover:border-[#CBD5E1] hover:bg-[#F8FAFC] hover:text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-slate-200 focus:ring-offset-2 sm:w-auto md:self-center"
+                                >
+                                    Découvrir l’Espace Pro
+                                    <Icon icon="solar:arrow-right-linear" style={{ fontSize: '0.95rem', opacity: 0.75 }} />
+                                </a>
                             </div>
-                        </div>
-
-                        <div className="grid md:grid-cols-3 gap-4 md:gap-5 mb-10">
-                            {[
-                                {
-                                    icon: 'solar:folder-with-files-bold-duotone',
-                                    title: 'Qualification structurée',
-                                    text: "Chaque dossier conserve ses identifiants, son contexte, ses hypothèses et son niveau d'avancement."
-                                },
-                                {
-                                    icon: 'solar:document-text-bold-duotone',
-                                    title: 'Restitution crédible',
-                                    text: "Les rapports servent de support décisionnel pour cadrer les prochaines étapes avec vos clients."
-                                },
-                                {
-                                    icon: 'solar:users-group-two-rounded-bold-duotone',
-                                    title: 'Usage équipe',
-                                    text: "Vous préparez un fonctionnement multi-utilisateurs, avec branding cabinet et logique de portefeuille."
-                                }
-                            ].map((item, i) => (
-                                <div key={i} style={{ background: 'white', padding: '1.4rem', borderRadius: '14px', border: '1px solid #E2E8F0', boxShadow: '0 3px 10px rgba(15,23,42,0.05)' }}>
-                                    <div style={{ width: '44px', height: '44px', borderRadius: '11px', background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem' }}>
-                                        <Icon icon={item.icon} style={{ fontSize: '1.35rem', color: '#1D4ED8' }} />
-                                    </div>
-                                    <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#0C1D30', marginBottom: '0.55rem' }}>{item.title}</h3>
-                                    <p style={{ fontSize: '0.88rem', color: '#475569', lineHeight: 1.65 }}>{item.text}</p>
-                                </div>
-                            ))}
-                        </div>
-
-                        <div className="text-center">
-                            <a
-                                href="index.saaspro.html"
-                                style={{
-                                    display: 'inline-flex', alignItems: 'center', gap: '8px',
-                                    background: '#1D4ED8', color: 'white', border: 'none',
-                                    padding: '0.95rem 2.2rem', borderRadius: '12px',
-                                    fontWeight: 600, fontSize: '1rem', textDecoration: 'none',
-                                    transition: 'all 0.2s ease', boxShadow: '0 4px 14px rgba(29,78,216,0.25)'
-                                }}
-                                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(29,78,216,0.3)'; }}
-                                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 14px rgba(29,78,216,0.25)'; }}
-                            >
-                                Accéder à l'espace pro
-                                <Icon icon="solar:arrow-right-linear" style={{ fontSize: '1.2rem' }} />
-                            </a>
                         </div>
                     </div>
                 </section>
@@ -4939,20 +4948,44 @@
         }
 
         const NewDiagnosticProjectionTooltipCompact = ({ active, payload, label }) => {
-            if (!active || !payload || !payload.length) return null;
-            const sans = payload.find(p => p.dataKey === 'sans_travaux')?.value || 0;
-            const avec = payload.find(p => p.dataKey === 'avec_travaux')?.value || 0;
+            if (!active || !Array.isArray(payload) || payload.length === 0) return null;
+
+            const byKey = {};
+            payload.forEach(item => {
+                const key = item?.dataKey || item?.name;
+                if ((key === 'sans_travaux' || key === 'avec_travaux') && !byKey[key]) {
+                    byKey[key] = item;
+                }
+            });
+
+            const rows = ['sans_travaux', 'avec_travaux']
+                .filter(key => byKey[key])
+                .map(key => ({ key, value: Number(byKey[key].value || 0) }));
+
+            if (!rows.length) return null;
+
+            const meta = {
+                sans_travaux: { label: 'Sans travaux (cumule)', color: '#EF4444' },
+                avec_travaux: { label: 'Avec travaux (cumule)', color: '#10B981' }
+            };
+
             return (
-                <div className="bg-white border border-neutral-200 rounded-lg shadow-md px-3 py-2 text-sm">
-                    <p className="font-semibold text-neutral-900 mb-1">{label}</p>
-                    <p className="text-red-600">Sans travaux : {Math.round(sans).toLocaleString('fr-FR')} EUR</p>
-                    <p className="text-emerald-700">Avec travaux : {Math.round(avec).toLocaleString('fr-FR')} EUR</p>
+                <div className="bg-white border border-neutral-200 rounded-xl shadow-lg px-4 py-3 text-sm min-w-[220px]">
+                    <p className="font-bold text-neutral-900 mb-2">{label}</p>
+                    <div className="space-y-1.5">
+                        {rows.map(row => (
+                            <div key={row.key} className="flex items-start justify-between gap-4">
+                                <span style={{ color: meta[row.key].color }}>{meta[row.key].label}</span>
+                                <span className="font-bold text-neutral-900">{newDiagnosticFormatInteger(row.value)} EUR</span>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             );
         };
 
         const NewDiagnosticInactionGraph = ({ annualSavingsEuro, totalCostEuroAn, elecKwh = 0, gasKwh = 0, actions = [] }) => {
-            const { ComposedChart, Line, XAxis, YAxis, CartesianGrid, Tooltip: GrTooltip, ReferenceLine, ResponsiveContainer: GrResponsive } = window.Recharts;
+            const { ComposedChart, Line, XAxis, YAxis, CartesianGrid, Tooltip: GrTooltip, ReferenceLine, ResponsiveContainer: GrResponsive, Area } = window.Recharts;
             const projection = newDiagnosticBuildProjectionData({ annualSavingsEuro, totalCostEuroAn, elecKwh, gasKwh, actions });
 
             if (!projection.graphiquePubliable) {
@@ -4965,7 +4998,7 @@
 
             return (
                 <div>
-                    <div className="flex flex-wrap items-center gap-4 text-xs text-neutral-500 mb-3">
+                    <div className="flex flex-wrap items-center gap-4 text-xs text-neutral-500 mb-4">
                         <div className="flex items-center gap-2">
                             <span className="inline-block w-3 h-3 rounded-full bg-red-500"></span>
                             <span>Sans travaux</span>
@@ -4978,24 +5011,31 @@
                     </div>
                     <div className="h-[320px] w-full">
                         <GrResponsive width="100%" height="100%">
-                            <ComposedChart data={projection.data} margin={{ top: 8, right: 20, bottom: 4, left: 4 }}>
+                            <ComposedChart data={projection.data} margin={{ top: 12, right: 18, bottom: 6, left: 2 }}>
+                                <defs>
+                                    <linearGradient id="newDiagProjectionArea" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#10B981" stopOpacity={0.16} />
+                                        <stop offset="95%" stopColor="#10B981" stopOpacity={0.02} />
+                                    </linearGradient>
+                                </defs>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                                <XAxis dataKey="annee" fontSize={12} tickLine={false} axisLine={false} />
+                                <XAxis dataKey="annee" tick={{ fontSize: 11, fill: '#64748B' }} tickLine={false} axisLine={false} />
                                 <YAxis
-                                    fontSize={12}
+                                    tick={{ fontSize: 11, fill: '#64748B' }}
                                     tickLine={false}
                                     axisLine={false}
-                                    tickFormatter={v => `${Math.round(v / 1000)}k EUR`}
+                                    tickFormatter={v => v >= 1000 ? `${Math.round(v / 1000)}kEUR` : `${Math.round(v)}EUR`}
                                 />
-                                <GrTooltip content={<NewDiagnosticProjectionTooltipCompact />} />
-                                <Line type="monotone" dataKey="sans_travaux" stroke="#EF4444" strokeWidth={2.5} dot={false} />
-                                <Line type="monotone" dataKey="avec_travaux" stroke="#10B981" strokeWidth={2.8} dot={false} />
+                                <GrTooltip content={props => <NewDiagnosticProjectionTooltipCompact {...props} />} />
+                                <Area type="monotone" dataKey="sans_travaux" stroke="none" fill="url(#newDiagProjectionArea)" />
+                                <Line type="monotone" dataKey="sans_travaux" stroke="#EF4444" strokeWidth={2.4} strokeDasharray="7 3" dot={false} />
+                                <Line type="monotone" dataKey="avec_travaux" stroke="#10B981" strokeWidth={3} dot={false} />
                                 {projection.roiAnnee && (
                                     <ReferenceLine
                                         x={projection.roiAnnee}
                                         stroke="#1D4ED8"
-                                        strokeDasharray="4 3"
-                                        label={{ value: `Rentable : ${projection.roiAnnee}`, position: 'top', fill: '#1D4ED8', fontSize: 11 }}
+                                        strokeDasharray="4 2"
+                                        label={{ value: `Rentable : ${projection.roiAnnee}`, position: 'insideTopLeft', fill: '#1D4ED8', fontSize: 11, fontWeight: 700 }}
                                     />
                                 )}
                             </ComposedChart>
@@ -5054,6 +5094,7 @@
             D: { positioning: 'Surconsommation notable', color: '#EA580C', bg: '#FFF7ED' },
             E: { positioning: 'Tres energivore', color: '#DC2626', bg: '#FEF2F2' }
         };
+        const NEW_DIAGNOSTIC_SECTOR_ORDER = ['A', 'B', 'C', 'D', 'E'];
 
         function newDiagnosticComputeSectorLabel(intensityValue, medianValue) {
             const safeIntensity = Math.max(0, Number(intensityValue) || 0);
@@ -5096,6 +5137,17 @@
             };
         }
 
+        function newDiagnosticFormatInteger(value) {
+            return Math.round(Number(value) || 0).toLocaleString('fr-FR');
+        }
+
+        function newDiagnosticGetSectorThresholdLabel(letter, thresholds) {
+            if (!thresholds || !thresholds[letter]) return '';
+            if (letter === 'A') return `< ${newDiagnosticFormatInteger(thresholds.A.max)} kWh/m2/an`;
+            if (letter === 'E') return `>= ${newDiagnosticFormatInteger(thresholds.E.min)} kWh/m2/an`;
+            return `${newDiagnosticFormatInteger(thresholds[letter].min)} - ${newDiagnosticFormatInteger(thresholds[letter].max)} kWh/m2/an`;
+        }
+
         const NEW_DIAGNOSTIC_CO2_FACTORS = {
             elec: 0.079,
             gaz: 0.227
@@ -5105,6 +5157,41 @@
         const NEW_DIAGNOSTIC_CO2_VOITURE_KG_AN = 2100;
         const NEW_DIAGNOSTIC_CO2_VOITURE_KM = 0.193;
 
+        const NEW_DIAGNOSTIC_REPORT_COPY = {
+            example: {
+                title: "À quoi ressemble votre rapport",
+                subtitle: "Exemple simulé pour une brasserie de 220 m² à Lyon, avec une performance dégradée mais crédible."
+            },
+            actions: {
+                title: 'Actions prioritaires',
+                subtitle: 'Trois actions maximum pour visualiser où agir en premier.',
+                footnote: "* ROI : temps de retour sur investissement. Les contraintes du site seront confirmées avec un expert."
+            },
+            impact: {
+                title: 'Impact écologique estimé',
+                subtitle: "À gains constants, ce plan réduit aussi les émissions liées à l'exploitation du site.",
+                annualLabel: 'CO2 évité estimé',
+                annualHint: 'Réduction annuelle indicative associée au plan recommandé.',
+                treeTitle: 'Arbres',
+                treeHint: 'équivalent annuel indicatif',
+                carTitle: 'Voitures',
+                carHint: 'équivalent émissions annuelles'
+            },
+            nextStep: {
+                title: 'Prochaine étape recommandée',
+                intro: "Ce pré-diagnostic met en évidence un potentiel d'amélioration. Pour identifier la meilleure solution, l'avis du bon expert est maintenant nécessaire.",
+                bullets: [
+                    'Nos partenaires peuvent confirmer les postes à traiter.',
+                    'Ils valident la faisabilité selon votre site.',
+                    'Ils précisent le budget réel et les solutions adaptées.',
+                    'Ils vous orientent vers la meilleure suite à donner.'
+                ],
+                proof: "Seuls des partenaires qualifiés peuvent confirmer la solution la plus adaptée à votre site, à votre usage et à votre budget.",
+                cta: 'Accepter la mise en relation',
+                success: 'Votre demande de mise en relation est enregistrée. Un partenaire qualifié reviendra vers vous avec une première orientation.'
+            }
+        };
+
         function newDiagnosticGetCO2Equivalences(co2KgEvite) {
             const safe = Math.max(0, Number(co2KgEvite) || 0);
             return {
@@ -5112,6 +5199,17 @@
                 voitures: Math.round((safe / NEW_DIAGNOSTIC_CO2_VOITURE_KG_AN) * 10) / 10,
                 km: Math.round(safe / NEW_DIAGNOSTIC_CO2_VOITURE_KM)
             };
+        }
+
+        function newDiagnosticGetActionPriorityBadge(index, action) {
+            const robustness = newDiagnosticGetActionRobustness(action);
+            if (index === 0 && robustness.level !== 'low') {
+                return { label: 'Priorité haute', className: 'bg-rose-50 text-rose-700 border-rose-200' };
+            }
+            if (robustness.level === 'low' || index >= 2) {
+                return { label: 'À confirmer', className: 'bg-slate-100 text-slate-700 border-slate-200' };
+            }
+            return { label: 'Priorité utile', className: 'bg-amber-50 text-amber-700 border-amber-200' };
         }
 
         const NEW_DIAGNOSTIC_CATEGORY_LABELS = {
@@ -5675,33 +5773,174 @@
 
             // Confiance -> badge
             const confidenceColors = {
-                strong: 'bg-green-100 text-green-800',
-                medium: 'bg-yellow-100 text-yellow-800',
-                low: 'bg-red-100 text-red-800'
+                strong: 'bg-emerald-500/15 text-emerald-100 border border-emerald-400/20',
+                medium: 'bg-amber-500/15 text-amber-100 border border-amber-300/20',
+                low: 'bg-rose-500/15 text-rose-100 border border-rose-300/20'
             };
+            const confidenceTone = confidenceColors[confidence.level] || confidenceColors.medium;
 
-            const formatMoney = (value) => `${Math.round(value || 0).toLocaleString('fr-FR')} EUR`;
-            const formatKwh = (value) => `${Math.round(value || 0).toLocaleString('fr-FR')} kWh`;
+            const formatMoney = (value) => `${newDiagnosticFormatInteger(value)} EUR`;
+            const formatKwh = (value) => `${newDiagnosticFormatInteger(value)} kWh/an`;
             const shortActions = actions.slice(0, 3);
             const shortExpertChecks = expertChecks.slice(0, 4);
             const shortQuestions = nextExchangeQuestions.slice(0, 4);
+            const horizonLabel = role === 'tenant' ? 'Lecture charges a 3 ans' : 'Lecture patrimoniale a 10 ans';
+            const actionToneMap = {
+                heating: { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-700', accent: '#F97316' },
+                cooling: { bg: 'bg-cyan-50', border: 'border-cyan-200', text: 'text-cyan-700', accent: '#06B6D4' },
+                ventilation: { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-700', accent: '#3B82F6' },
+                lighting: { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700', accent: '#F59E0B' },
+                dhw: { bg: 'bg-violet-50', border: 'border-violet-200', text: 'text-violet-700', accent: '#8B5CF6' },
+                envelope: { bg: 'bg-slate-50', border: 'border-slate-200', text: 'text-slate-700', accent: '#334155' },
+                other_specific: { bg: 'bg-neutral-50', border: 'border-neutral-200', text: 'text-neutral-700', accent: '#64748B' }
+            };
+            const currentRank = NEW_DIAGNOSTIC_SECTOR_ORDER.indexOf(diagIndex.label);
+            const targetRank = NEW_DIAGNOSTIC_SECTOR_ORDER.indexOf(targetDiagIndex.label);
+            const classGain = Math.max(0, currentRank - targetRank);
+            const savingsPct = benchmark.site_intensity.value > 0
+                ? Math.max(0, Math.round(((benchmark.site_intensity.value - targetIntensity) / benchmark.site_intensity.value) * 100))
+                : 0;
 
-            const SectorBand = ({ title, letterData, intensity }) => (
-                <div className="rounded-2xl border border-neutral-200 bg-white p-4 flex-1">
-                    <p className="text-[11px] uppercase tracking-wide font-bold text-neutral-500 mb-3">{title}</p>
-                    <div className="flex items-center gap-4 mb-2">
-                        <div
-                            className="w-14 h-14 rounded-xl text-white font-black text-3xl flex items-center justify-center"
-                            style={{ backgroundColor: letterData.color }}
-                        >
-                            {letterData.label}
-                        </div>
+            const EnergyScaleCard = ({ title, letterData, intensity }) => (
+                <div className="report-glass-card rounded-2xl overflow-hidden">
+                    <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between gap-3">
                         <div>
-                            <p className="text-xl font-black text-neutral-900">{Math.round(intensity)} kWh/m2/an</p>
-                            <p className="text-sm font-semibold" style={{ color: letterData.color }}>{letterData.positioning}</p>
+                            <p className="text-[11px] font-bold uppercase tracking-widest text-slate-300">{title}</p>
+                            <p className="text-xs text-slate-300 mt-1">{letterData.positioning}</p>
+                        </div>
+                        <div className="px-3 py-1 rounded-full bg-white/10 text-xs font-bold text-white whitespace-nowrap">
+                            {newDiagnosticFormatInteger(intensity)} kWh/m2/an
                         </div>
                     </div>
-                    <p className="text-[11px] text-neutral-500">{thresholdHint}</p>
+                    <div className="p-3 space-y-1">
+                        {NEW_DIAGNOSTIC_SECTOR_ORDER.map(letter => {
+                            const meta = NEW_DIAGNOSTIC_SECTOR_LABEL_CONFIG[letter];
+                            const isActive = letter === letterData.label;
+                            return (
+                                <div
+                                    key={letter}
+                                    className="flex items-center gap-3 rounded-xl px-3 py-2 transition-colors"
+                                    style={{
+                                        background: isActive ? meta.color : 'rgba(255,255,255,0.04)',
+                                        border: isActive ? '1px solid rgba(255,255,255,0.12)' : '1px solid rgba(255,255,255,0.06)'
+                                    }}
+                                >
+                                    <div
+                                        className="w-8 h-8 rounded-lg font-black text-sm flex items-center justify-center shrink-0"
+                                        style={{ backgroundColor: meta.color, color: '#FFFFFF', opacity: isActive ? 1 : 0.38 }}
+                                    >
+                                        {letter}
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                        {isActive ? (
+                                            <div className="text-white">
+                                                <div className="text-sm font-bold leading-tight">{newDiagnosticFormatInteger(intensity)} kWh/m2/an</div>
+                                                <div className="text-xs text-white/80">{meta.positioning}</div>
+                                            </div>
+                                        ) : (
+                                            <div className="text-xs text-slate-300">{newDiagnosticGetSectorThresholdLabel(letter, sectorThresholds)}</div>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            );
+
+            const HeroKpiCard = ({ icon, label, value, sub, tone }) => (
+                <div className="report-kpi-card p-4">
+                    <div className="flex items-center gap-3 mb-3">
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${tone.bg} ${tone.text}`}>
+                            <Icon icon={icon} className="text-xl" />
+                        </div>
+                        <p className="text-sm font-semibold text-slate-500">{label}</p>
+                    </div>
+                    <p className="text-3xl font-black text-slate-900 leading-none">{value}</p>
+                    <p className="text-xs text-slate-400 mt-2">{sub}</p>
+                </div>
+            );
+
+            const DecisionCard = ({ icon, title, text, tone }) => (
+                <div className={`rounded-2xl border p-4 ${tone.bg} ${tone.border}`}>
+                    <div className="flex items-center gap-2 mb-2">
+                        <Icon icon={icon} className={`text-lg ${tone.text}`} />
+                        <p className={`text-xs font-bold uppercase tracking-wide ${tone.text}`}>{title}</p>
+                    </div>
+                    <p className="text-sm text-slate-700 leading-relaxed">{text}</p>
+                </div>
+            );
+
+            const ActionPriorityCard = ({ action, index }) => {
+                const actionReason = newDiagnosticGetActionPriorityReason(action, breakdown);
+                const actionRobustness = newDiagnosticGetActionRobustness(action);
+                const actionEffort = newDiagnosticGetActionEffort(action);
+                const categoryLabel = NEW_DIAGNOSTIC_CATEGORY_LABELS[action.category] || 'Usage principal';
+                const tone = actionToneMap[action.category] || actionToneMap.other_specific;
+
+                return (
+                    <div className="report-subcard p-5 flex flex-col" style={{ borderTop: `4px solid ${tone.accent}` }}>
+                        <div className="flex items-start justify-between gap-3 mb-4">
+                            <div className="min-w-0">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-slate-900 text-white text-xs font-black">{index + 1}</span>
+                                    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold border ${tone.bg} ${tone.text} ${tone.border}`}>{categoryLabel}</span>
+                                </div>
+                                <h3 className="text-lg font-bold text-slate-900 leading-tight">{action.name}</h3>
+                            </div>
+                            <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold border whitespace-nowrap ${actionRobustness.className}`}>{actionRobustness.label}</span>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3 mb-4">
+                            <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3">
+                                <p className="text-[10px] font-bold uppercase text-emerald-700 mb-1">Gain annuel</p>
+                                <p className="text-lg font-black text-emerald-800">{formatMoney(action.gain_euro_an.value)}</p>
+                            </div>
+                            <div className="rounded-xl border border-blue-200 bg-blue-50 p-3">
+                                <p className="text-[10px] font-bold uppercase text-blue-700 mb-1">Gain energie</p>
+                                <p className="text-lg font-black text-blue-800">{formatKwh(action.gain_kwh_an.value)}</p>
+                            </div>
+                            <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-3">
+                                <p className="text-[10px] font-bold uppercase text-indigo-700 mb-1">Budget indicatif</p>
+                                <p className="text-lg font-black text-indigo-800">{formatMoney(action.capex.value)}</p>
+                            </div>
+                            <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
+                                <p className="text-[10px] font-bold uppercase text-amber-700 mb-1">ROI indicatif</p>
+                                <p className="text-lg font-black text-amber-800">{action.roi_years.value !== null ? `${action.roi_years.value} ans` : 'A confirmer'}</p>
+                            </div>
+                        </div>
+
+                        <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 mb-3">
+                            <p className="text-[11px] uppercase font-bold tracking-wide text-slate-500 mb-1">Pourquoi elle remonte</p>
+                            <p className="text-sm text-slate-700 mb-1.5">{actionReason.why}</p>
+                            <p className="text-xs text-slate-500">{actionReason.posteText}</p>
+                        </div>
+
+                        <div className="mt-auto flex flex-wrap items-center gap-2 text-[11px]">
+                            <span className={`inline-flex items-center rounded-full px-2.5 py-1 font-bold border ${actionEffort.className}`}>Effort {actionEffort.label}</span>
+                            <span className="inline-flex items-center rounded-full px-2.5 py-1 font-bold border border-slate-200 bg-white text-slate-600">
+                                Aides : {(action.aid_tags || []).length > 0 ? action.aid_tags.join(', ') : 'A confirmer'}
+                            </span>
+                        </div>
+                    </div>
+                );
+            };
+
+            const StakeholderCard = ({ item }) => (
+                <div className="report-subcard p-4">
+                    <p className="text-[11px] uppercase tracking-wide font-bold text-slate-500 mb-2">{item.label}</p>
+                    <p className="text-sm text-slate-700 leading-relaxed">{item.value}</p>
+                </div>
+            );
+
+            const ImpactEquivalenceCard = ({ icon, title, value, hint, iconClass }) => (
+                <div className="report-subcard p-5 text-center">
+                    <div className={`w-12 h-12 rounded-2xl mx-auto mb-3 flex items-center justify-center ${iconClass}`}>
+                        <Icon icon={icon} className="text-2xl" />
+                    </div>
+                    <p className="text-2xl font-black text-slate-900">{value}</p>
+                    <p className="text-xs font-bold uppercase tracking-wide text-slate-500 mt-2">{title}</p>
+                    <p className="text-xs text-slate-400 mt-1">{hint}</p>
                 </div>
             );
 
@@ -5717,99 +5956,122 @@
                             </div>
                         </div>
 
-                        <div className="report-card p-8 mb-8">
-                            <div className="flex flex-col md:flex-row md:items-start justify-between gap-5 mb-6">
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-xs font-bold tracking-wider text-[#F59E0B] uppercase mb-2">Rapport pre-diagnostic</p>
-                                    <h1 className="text-3xl font-bold text-[#102A43] mb-2">Rapport energie decisionnel</h1>
-                                    <p className="text-[#475569]">
-                                        {(reportPayload.inputs_summary.site_name && reportPayload.inputs_summary.site_name !== 'uyktdtu') ? reportPayload.inputs_summary.site_name : 'Batiment diagnostique'} - {reportPayload.inputs_summary.activity} - {Math.round(surfaceValue).toLocaleString('fr-FR')} m2
-                                    </p>
-                                    {(() => {
-                                        const addr = reportPayload.inputs_summary.address;
-                                        const cp = reportPayload.inputs_summary.postal_code;
-                                        const validAddr = addr && addr !== 'uyktdtu';
-                                        const validCp = cp && cp !== '00000';
-                                        if (!validAddr && !validCp) return null;
-                                        return (
-                                            <p className="text-sm text-[#475569] mt-1">
-                                                {validAddr ? addr : '-'}
-                                                {validCp ? ` - ${cp}` : ''}
-                                            </p>
-                                        );
-                                    })()}
-                                </div>
-                                <div className="w-full md:w-auto flex flex-col gap-2 md:items-end">
-                                    <div className="flex items-center gap-2 flex-wrap md:justify-end">
-                                        <span className="px-3 py-1 rounded-full text-xs font-semibold border border-neutral-200 bg-neutral-50 text-neutral-700">{roleLabel}</span>
-                                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${confidenceColors[confidence.level]}`}>Confiance : {confidence.label}</span>
+                        <div className="report-card p-0 overflow-hidden mb-8">
+                            <div className="report-hero-gradient px-6 py-7 md:px-8 md:py-8 text-white">
+                                <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+                                    <div className="min-w-0 flex-1">
+                                        <div className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/10 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-slate-200 mb-4">
+                                            <Icon icon="solar:document-text-bold" className="text-base" />
+                                            Rapport pre-diagnostic
+                                        </div>
+                                        <h1 className="text-3xl md:text-4xl font-black tracking-tight text-white mb-3">Lecture energie simple et partageable</h1>
+                                        <div className="space-y-2 text-slate-200">
+                                            <p className="text-lg font-semibold text-white break-words">{(reportPayload.inputs_summary.site_name && reportPayload.inputs_summary.site_name !== 'uyktdtu') ? reportPayload.inputs_summary.site_name : 'Batiment diagnostique'}</p>
+                                            <p className="text-sm md:text-base">{reportPayload.inputs_summary.activity} - {newDiagnosticFormatInteger(surfaceValue)} m2 - {roleLabel}</p>
+                                            {(() => {
+                                                const addr = reportPayload.inputs_summary.address;
+                                                const cp = reportPayload.inputs_summary.postal_code;
+                                                const validAddr = addr && addr !== 'uyktdtu';
+                                                const validCp = cp && cp !== '00000';
+                                                if (!validAddr && !validCp) return null;
+                                                return (
+                                                    <p className="text-sm text-slate-300">
+                                                        {validAddr ? addr : 'Adresse a confirmer'}
+                                                        {validCp ? ` - ${cp}` : ''}
+                                                    </p>
+                                                );
+                                            })()}
+                                        </div>
                                     </div>
-                                    <p className="text-xs text-neutral-500 md:text-right">{new Date(reportPayload.generated_at).toLocaleDateString('fr-FR')}</p>
-                                    <button
-                                        onClick={handleExportPDF}
-                                        disabled={isPDFGenerating}
-                                        className="mt-1 bg-[#1D4ED8] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#1E40AF] disabled:bg-neutral-300 transition-colors flex items-center justify-center gap-2"
-                                    >
-                                        {isPDFGenerating ? <Icon icon="solar:spinner-linear" className="text-base animate-spin" /> : <Icon icon="solar:download-linear" className="text-base" />}
-                                        {isPDFGenerating ? 'Generation PDF...' : 'Telecharger PDF'}
-                                    </button>
+
+                                    <div className="w-full lg:w-auto flex flex-col gap-3 lg:items-end">
+                                        <div className="flex flex-wrap gap-2 lg:justify-end">
+                                            <span className="report-chip bg-white/10 text-white border border-white/10">{roleLabel}</span>
+                                            <span className={`report-chip ${confidenceTone}`}>Confiance : {confidence.label}</span>
+                                        </div>
+                                        <p className="text-xs text-slate-300 lg:text-right">{new Date(reportPayload.generated_at).toLocaleDateString('fr-FR')} - {horizonLabel}</p>
+                                        <button
+                                            onClick={handleExportPDF}
+                                            disabled={isPDFGenerating}
+                                            className="inline-flex items-center justify-center gap-2 rounded-xl bg-white text-[#102A43] px-5 py-3 text-sm font-bold shadow-sm hover:bg-slate-100 disabled:bg-slate-300 disabled:text-slate-500 transition-colors"
+                                        >
+                                            {isPDFGenerating ? <Icon icon="solar:spinner-linear" className="text-lg animate-spin" /> : <Icon icon="solar:download-linear" className="text-lg" />}
+                                            {isPDFGenerating ? 'Generation PDF...' : 'Telecharger PDF'}
+                                        </button>
+                                    </div>
                                 </div>
+
+                                <div className="mt-8 grid gap-4 lg:grid-cols-[minmax(0,1fr)_180px_minmax(0,1fr)] items-stretch">
+                                    <EnergyScaleCard title="Etiquette actuelle" letterData={diagIndex} intensity={benchmark.site_intensity.value} />
+
+                                    <div className="report-glass-card rounded-2xl px-4 py-5 flex flex-col items-center justify-center text-center">
+                                        <div className="w-12 h-12 rounded-full bg-emerald-400/15 border border-emerald-300/20 flex items-center justify-center mb-3">
+                                            <Icon icon="solar:arrow-right-bold" className="text-2xl text-emerald-300" />
+                                        </div>
+                                        <p className="text-[11px] uppercase tracking-widest text-slate-300 font-bold">Amelioration estimee</p>
+                                        <p className="text-3xl font-black text-white mt-1">-{savingsPct}%</p>
+                                        <p className="text-xs text-slate-200 mt-2">{classGain > 0 ? `+${classGain} classe${classGain > 1 ? 's' : ''} estimee${classGain > 1 ? 's' : ''}` : 'Etiquette stable, intensite reduite'}</p>
+                                    </div>
+
+                                    <EnergyScaleCard title="Apres travaux estimes" letterData={targetDiagIndex} intensity={targetIntensity} />
+                                </div>
+
+                                <p className="text-xs text-slate-300 mt-4">Etiquette estimative relative a votre activite. Elle n a pas valeur de diagnostic reglementaire.</p>
                             </div>
 
-                            <div className="flex flex-col lg:flex-row items-stretch gap-4 mb-4">
-                                <SectorBand title="Etiquette estimative actuelle" letterData={diagIndex} intensity={benchmark.site_intensity.value} />
-                                <div className="hidden lg:flex items-center justify-center px-1">
-                                    <Icon icon="solar:arrow-right-bold" className="text-3xl text-neutral-300" />
+                            <div className="bg-[#F8FAFC] px-6 py-6 md:px-8">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-5">
+                                    <HeroKpiCard icon="solar:wallet-bold" label="Cout annuel actuel" value={formatMoney(calc.total_cost_euro_an.value)} sub="Charges energie estimees" tone={{ bg: 'bg-slate-100', text: 'text-slate-700' }} />
+                                    <HeroKpiCard icon="solar:leaf-bold" label="Economie annuelle" value={formatMoney(composite.annual_euro.value)} sub="Potentiel theorique du plan" tone={{ bg: 'bg-emerald-50', text: 'text-emerald-700' }} />
+                                    <HeroKpiCard icon="solar:wallet-bold" label="Budget net indicatif" value={formatMoney(budgetProgram.capex_net)} sub="Aides prudentes deja deduites" tone={{ bg: 'bg-indigo-50', text: 'text-indigo-700' }} />
+                                    <HeroKpiCard icon="solar:chart-square-bold" label="ROI indicatif" value={budgetProgram.roi_global_years !== null ? `${budgetProgram.roi_global_years} ans` : 'A confirmer'} sub="Ordre de grandeur a confirmer" tone={{ bg: 'bg-amber-50', text: 'text-amber-700' }} />
                                 </div>
-                                <SectorBand title="Etiquette estimative apres travaux" letterData={targetDiagIndex} intensity={targetIntensity} />
-                            </div>
-                            <p className="text-xs text-neutral-500 mb-5">Etiquette estimative relative a votre activite. Elle n a pas valeur de diagnostic reglementaire.</p>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                                <div className="rounded-xl border border-neutral-200 bg-white p-4">
-                                    <p className="text-[11px] uppercase font-bold text-neutral-500 mb-1">Cout annuel actuel</p>
-                                    <p className="text-3xl font-black text-neutral-900">{formatMoney(calc.total_cost_euro_an.value)}</p>
+                                <div className="report-subcard p-5 mb-5 border-l-4" style={{ borderLeftColor: diagIndex.color }}>
+                                    <p className="text-xs uppercase tracking-wide font-bold text-slate-500 mb-2">Synthese rapide</p>
+                                    <p className="text-lg font-bold text-[#102A43] leading-snug">{keyBusinessSentence}</p>
+                                    <p className="text-sm text-slate-500 mt-2">{benchmarkGapText} {benchmarkComment}</p>
                                 </div>
-                                <div className="rounded-xl border border-neutral-200 bg-white p-4">
-                                    <p className="text-[11px] uppercase font-bold text-neutral-500 mb-1">Economie annuelle potentielle</p>
-                                    <p className="text-3xl font-black text-emerald-700">{formatMoney(composite.annual_euro.value)}</p>
-                                </div>
-                                <div className="rounded-xl border border-neutral-200 bg-white p-4">
-                                    <p className="text-[11px] uppercase font-bold text-neutral-500 mb-1">Budget net indicatif</p>
-                                    <p className="text-3xl font-black text-indigo-700">{formatMoney(budgetProgram.capex_net)}</p>
-                                </div>
-                                <div className="rounded-xl border border-neutral-200 bg-white p-4">
-                                    <p className="text-[11px] uppercase font-bold text-neutral-500 mb-1">ROI indicatif</p>
-                                    <p className="text-3xl font-black text-blue-700">{budgetProgram.roi_global_years !== null ? `${budgetProgram.roi_global_years} ans` : 'A confirmer'}</p>
-                                </div>
-                            </div>
 
-                            <div className="mb-4 p-4 rounded-xl border-l-4" style={{ borderColor: diagIndex.color, backgroundColor: diagIndex.bg }}>
-                                <p className="text-sm font-semibold" style={{ color: diagIndex.color }}>{keyBusinessSentence}</p>
-                            </div>
-                            <div className="grid md:grid-cols-3 gap-3">
-                                <div className="p-3 bg-neutral-50 border border-neutral-200 rounded-xl">
-                                    <p className="text-xs font-semibold text-neutral-900 mb-1">Diagnostic</p>
-                                    <p className="text-sm text-neutral-700">{decisionReadout.diagnostic}</p>
+                                <div className="grid gap-4 lg:grid-cols-3 mb-5">
+                                    <DecisionCard icon="solar:chart-square-bold" title="Diagnostic" text={decisionReadout.diagnostic} tone={{ bg: 'bg-white', border: 'border-slate-200', text: 'text-slate-700' }} />
+                                    <DecisionCard icon="solar:danger-triangle-bold" title="Risque principal" text={decisionReadout.risk} tone={{ bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700' }} />
+                                    <DecisionCard icon="solar:leaf-bold" title="Opportunite" text={decisionReadout.opportunity} tone={{ bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700' }} />
                                 </div>
-                                <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl">
-                                    <p className="text-xs font-semibold text-amber-900 mb-1">Risque principal</p>
-                                    <p className="text-sm text-amber-800">{decisionReadout.risk}</p>
-                                </div>
-                                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
-                                    <p className="text-xs font-semibold text-emerald-900 mb-1">Opportunite</p>
-                                    <p className="text-sm text-emerald-800">{decisionReadout.opportunity}</p>
+
+                                <div className="report-subcard p-5">
+                                    <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 mb-4">
+                                        <div>
+                                            <p className="text-xs font-bold uppercase tracking-wide text-slate-500 mb-1">Positionnement sectoriel</p>
+                                            <p className="text-sm font-semibold text-slate-900">{benchmarkGapText}</p>
+                                        </div>
+                                        <p className="text-xs text-slate-400 md:text-right">Source : {benchmark.source_ref || 'References sectorielles'}</p>
+                                    </div>
+                                    <NewDiagnosticPositioningGauge
+                                        intensity={benchmark.site_intensity.value}
+                                        low={benchmark.benchmark_low.value}
+                                        median={benchmark.benchmark_median.value}
+                                        high={benchmark.benchmark_high.value}
+                                        targetIntensity={targetIntensity}
+                                    />
+                                    <p className="text-sm text-slate-600 mt-2">{benchmarkComment}</p>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="report-card p-8 mb-8">
-                            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-4">
+                        <div className="report-card p-6 md:p-8 mb-8">
+                            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-5">
                                 <div>
-                                    <h2 className="text-2xl font-bold text-neutral-900">Projection financiere sur 10 ans</h2>
-                                    <p className="text-sm text-neutral-600">Comparaison du cumul de charges sans action et avec le plan recommande.</p>
+                                    <h2 className="report-section-title">
+                                        <Icon icon="solar:graph-new-up-bold" className="text-[#1D4ED8]" />
+                                        Projection financiere sur 10 ans
+                                    </h2>
+                                    <p className="text-sm text-slate-500 mt-2">Comparaison du cumul de charges sans action et avec le plan recommande.</p>
                                 </div>
-                                <p className="text-xs text-neutral-500">{benchmarkGapText}</p>
+                                <div className="text-xs text-slate-500 md:text-right">
+                                    <p>Inflation ponderee : {projection.tauxPct}%/an</p>
+                                    <p>Aides deduites au niveau prudent : {formatMoney(projection.aidesTotal)}</p>
+                                </div>
                             </div>
                             <NewDiagnosticInactionGraph
                                 annualSavingsEuro={composite.annual_euro.value}
@@ -5818,94 +6080,110 @@
                                 gasKwh={calc.gas_kwh_an.value}
                                 actions={shortActions}
                             />
-                        </div>
-
-                        <div className="report-card p-8 mb-8">
-                            <h2 className="text-2xl font-bold text-neutral-900 mb-5">Actions prioritaires</h2>
-                            <div className="grid md:grid-cols-3 gap-4">
-                                {shortActions.map((action, i) => {
-                                    const actionReason = newDiagnosticGetActionPriorityReason(action, breakdown);
-                                    const actionRobustness = newDiagnosticGetActionRobustness(action);
-                                    const actionEffort = newDiagnosticGetActionEffort(action);
-                                    const categoryLabel = NEW_DIAGNOSTIC_CATEGORY_LABELS[action.category] || 'Usage principal';
-                                    return (
-                                        <div key={action.id} className="rounded-xl border border-neutral-200 bg-white p-4 flex flex-col">
-                                            <div className="flex items-start justify-between gap-3 mb-3">
-                                                <p className="font-bold text-neutral-900 leading-tight">{i + 1}. {action.name}</p>
-                                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${actionRobustness.className}`}>{actionRobustness.label}</span>
-                                            </div>
-                                            <div className="flex flex-wrap gap-2 mb-3 text-[10px]">
-                                                <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded-full border border-slate-200 font-semibold">{categoryLabel}</span>
-                                                <span className={`px-2 py-0.5 rounded-full border font-semibold ${actionEffort.className}`}>Effort {actionEffort.label}</span>
-                                            </div>
-                                            <div className="grid grid-cols-2 gap-2 mb-3">
-                                                <div className="p-2 rounded-lg bg-green-50 border border-green-100">
-                                                    <p className="text-[10px] text-green-700 font-bold uppercase">Gain/an</p>
-                                                    <p className="text-sm font-bold text-green-800">{formatMoney(action.gain_euro_an.value)}</p>
-                                                </div>
-                                                <div className="p-2 rounded-lg bg-blue-50 border border-blue-100">
-                                                    <p className="text-[10px] text-blue-700 font-bold uppercase">Gain kWh</p>
-                                                    <p className="text-sm font-bold text-blue-800">{formatKwh(action.gain_kwh_an.value)}</p>
-                                                </div>
-                                                <div className="p-2 rounded-lg bg-indigo-50 border border-indigo-100">
-                                                    <p className="text-[10px] text-indigo-700 font-bold uppercase">CAPEX</p>
-                                                    <p className="text-sm font-bold text-indigo-800">{formatMoney(action.capex.value)}</p>
-                                                </div>
-                                                <div className="p-2 rounded-lg bg-amber-50 border border-amber-100">
-                                                    <p className="text-[10px] text-amber-700 font-bold uppercase">ROI</p>
-                                                    <p className="text-sm font-bold text-amber-800">{action.roi_years.value !== null ? `${action.roi_years.value} ans` : 'A confirmer'}</p>
-                                                </div>
-                                            </div>
-                                            <p className="text-sm text-neutral-700 mb-2">{actionReason.why}</p>
-                                            <p className="text-xs text-neutral-500">Aides : {(action.aid_tags || []).length > 0 ? action.aid_tags.join(', ') : 'Aide specifique non identifiee'}</p>
-                                        </div>
-                                    );
-                                })}
+                            <div className="grid sm:grid-cols-3 gap-3 mt-5">
+                                <div className="report-subcard p-4 text-center">
+                                    <p className="text-[11px] font-bold uppercase tracking-wide text-slate-500 mb-1">Sans travaux a A+10</p>
+                                    <p className="text-xl font-black text-slate-900">{formatMoney(projection.data[projection.data.length - 1].sans_travaux)}</p>
+                                </div>
+                                <div className="report-subcard p-4 text-center">
+                                    <p className="text-[11px] font-bold uppercase tracking-wide text-slate-500 mb-1">Avec travaux a A+10</p>
+                                    <p className="text-xl font-black text-emerald-700">{formatMoney(projection.data[projection.data.length - 1].avec_travaux)}</p>
+                                </div>
+                                <div className="report-subcard p-4 text-center">
+                                    <p className="text-[11px] font-bold uppercase tracking-wide text-slate-500 mb-1">Point de rentabilite</p>
+                                    <p className="text-xl font-black text-blue-700">{projection.roiAnnee || 'A confirmer'}</p>
+                                </div>
                             </div>
                         </div>
 
-                        <div className="report-card p-8 mb-8">
-                            <h2 className="text-2xl font-bold text-neutral-900 mb-5">Budget programme</h2>
-                            <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3 mb-3">
-                                <div className="p-3 rounded-xl border border-neutral-200 bg-neutral-50"><p className="text-[10px] text-neutral-500 uppercase font-bold mb-1">CAPEX brut</p><p className="text-base font-black text-neutral-900">{formatMoney(budgetProgram.capex_brut)}</p></div>
-                                <div className="p-3 rounded-xl border border-blue-100 bg-blue-50"><p className="text-[10px] text-blue-600 uppercase font-bold mb-1">Aides</p><p className="text-base font-black text-blue-800">{formatMoney(budgetProgram.aides)}</p></div>
-                                <div className="p-3 rounded-xl border border-indigo-100 bg-indigo-50"><p className="text-[10px] text-indigo-600 uppercase font-bold mb-1">CAPEX net</p><p className="text-base font-black text-indigo-800">{formatMoney(budgetProgram.capex_net)}</p></div>
-                                <div className="p-3 rounded-xl border border-green-100 bg-green-50"><p className="text-[10px] text-green-600 uppercase font-bold mb-1">Economies/an</p><p className="text-base font-black text-green-800">{formatMoney(budgetProgram.annual_savings)}</p></div>
-                                <div className="p-3 rounded-xl border border-emerald-100 bg-emerald-50"><p className="text-[10px] text-emerald-700 uppercase font-bold mb-1">Retour</p><p className="text-base font-black text-emerald-800">{budgetProgram.roi_global_years !== null ? `${budgetProgram.roi_global_years} ans` : 'A confirmer'}</p></div>
+                        <div className="report-card p-6 md:p-8 mb-8">
+                            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-5">
+                                <div>
+                                    <h2 className="report-section-title">
+                                        <Icon icon="solar:magic-stick-3-bold" className="text-[#1D4ED8]" />
+                                        Actions prioritaires
+                                    </h2>
+                                    <p className="text-sm text-slate-500 mt-2">Trois leviers maximum, pour garder une lecture simple, economique et directement actionnable.</p>
+                                </div>
+                                <p className="text-xs text-slate-500">{shortActions.length} action{shortActions.length > 1 ? 's' : ''} retenue{shortActions.length > 1 ? 's' : ''}</p>
                             </div>
-                            <p className="text-xs text-neutral-500 italic">Aides estimees au niveau prudent (TVA 5,5% + CEE plancher). Les montants reels peuvent etre superieurs apres devis.</p>
+                            {shortActions.length > 0 ? (
+                                <div className="grid gap-4 xl:grid-cols-3">
+                                    {shortActions.map((action, index) => <ActionPriorityCard key={action.id} action={action} index={index} />)}
+                                </div>
+                            ) : (
+                                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-800">
+                                    Aucune action prioritaire suffisamment robuste n est ressortie avec le niveau de donnees actuel. Un cadrage expert est recommande avant arbitrage.
+                                </div>
+                            )}
                         </div>
 
-                        <div className="report-card p-8 mb-8">
-                            <h2 className="text-2xl font-bold text-neutral-900 mb-2">Impact ecologique estime</h2>
-                            <p className="text-sm text-neutral-600 mb-5">A gains constants, ce plan reduit aussi les emissions associees a l exploitation du site.</p>
+                        <div className="report-card p-6 md:p-8 mb-8">
+                            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-5">
+                                <div>
+                                    <h2 className="report-section-title">
+                                        <Icon icon="solar:wallet-bold" className="text-[#1D4ED8]" />
+                                        Budget indicatif du plan
+                                    </h2>
+                                    <p className="text-sm text-slate-500 mt-2">Lecture prudente du programme recommande. Les aides reelles dependent du devis, du materiel et des conditions d eligibilite.</p>
+                                </div>
+                                <p className="text-xs text-slate-500">Lecture ciblee pour un premier arbitrage budgetaire</p>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3">
+                                <div className="report-subcard p-4 bg-slate-50 border-slate-200"><p className="text-[11px] font-bold uppercase tracking-wide text-slate-500 mb-1">CAPEX brut</p><p className="text-2xl font-black text-slate-900">{formatMoney(budgetProgram.capex_brut)}</p></div>
+                                <div className="report-subcard p-4 bg-blue-50 border-blue-200"><p className="text-[11px] font-bold uppercase tracking-wide text-blue-700 mb-1">Aides prudentes</p><p className="text-2xl font-black text-blue-900">{formatMoney(budgetProgram.aides)}</p></div>
+                                <div className="report-subcard p-4 bg-indigo-50 border-indigo-200"><p className="text-[11px] font-bold uppercase tracking-wide text-indigo-700 mb-1">Budget net</p><p className="text-2xl font-black text-indigo-900">{formatMoney(budgetProgram.capex_net)}</p></div>
+                                <div className="report-subcard p-4 bg-emerald-50 border-emerald-200"><p className="text-[11px] font-bold uppercase tracking-wide text-emerald-700 mb-1">Economies/an</p><p className="text-2xl font-black text-emerald-900">{formatMoney(budgetProgram.annual_savings)}</p></div>
+                                <div className="report-subcard p-4 bg-amber-50 border-amber-200"><p className="text-[11px] font-bold uppercase tracking-wide text-amber-700 mb-1">Retour indicatif</p><p className="text-2xl font-black text-amber-900">{budgetProgram.roi_global_years !== null ? `${budgetProgram.roi_global_years} ans` : 'A confirmer'}</p></div>
+                            </div>
+                        </div>
+
+                        <div className="report-card p-6 md:p-8 mb-8">
+                            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-5">
+                                <div>
+                                    <h2 className="report-section-title">
+                                        <Icon icon="solar:leaf-bold" className="text-[#16A34A]" />
+                                        Impact ecologique estime
+                                    </h2>
+                                    <p className="text-sm text-slate-500 mt-2">A gains constants, ce plan reduit aussi les emissions associees a l exploitation du site.</p>
+                                </div>
+                                <p className="text-xs text-slate-500">Equivalent annualise, a confirmer sur site</p>
+                            </div>
                             <div className="grid md:grid-cols-2 gap-4 mb-4">
-                                <div className="p-4 rounded-xl border border-emerald-200 bg-emerald-50"><p className="text-xs uppercase font-bold text-emerald-700 mb-1">CO2 evite / an</p><p className="text-3xl font-black text-emerald-800">{co2EviteAnnuel.toLocaleString('fr-FR')} kgCO2e</p></div>
-                                <div className="p-4 rounded-xl border border-teal-200 bg-teal-50"><p className="text-xs uppercase font-bold text-teal-700 mb-1">CO2 evite sur {horizonPrincipal} ans</p><p className="text-3xl font-black text-teal-800">{co2EviteHorizon.toLocaleString('fr-FR')} kgCO2e</p></div>
+                                <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5"><p className="text-[11px] uppercase font-bold tracking-wide text-emerald-700 mb-2">CO2 evite / an</p><p className="text-4xl font-black text-emerald-900">{newDiagnosticFormatInteger(co2EviteAnnuel)} kgCO2e</p><p className="text-sm text-emerald-800 mt-2">Reduction indicative associee au plan recommande.</p></div>
+                                <div className="rounded-2xl border border-teal-200 bg-teal-50 p-5"><p className="text-[11px] uppercase font-bold tracking-wide text-teal-700 mb-2">CO2 evite sur {horizonPrincipal} ans</p><p className="text-4xl font-black text-teal-900">{newDiagnosticFormatInteger(co2EviteHorizon)} kgCO2e</p><p className="text-sm text-teal-800 mt-2">Lecture utile pour {role === 'tenant' ? 'un arbitrage charges court terme' : 'une trajectoire patrimoniale plus stable'}.</p></div>
                             </div>
-                            <div className="grid sm:grid-cols-3 gap-3">
-                                <div className="p-4 rounded-xl border border-neutral-200 bg-white text-center"><p className="text-xl font-black text-neutral-900">{co2Eq.arbres.toLocaleString('fr-FR')}</p><p className="text-xs text-neutral-500">arbres equivalents / an</p></div>
-                                <div className="p-4 rounded-xl border border-neutral-200 bg-white text-center"><p className="text-xl font-black text-neutral-900">{co2Eq.voitures.toLocaleString('fr-FR')}</p><p className="text-xs text-neutral-500">voitures retirees / an</p></div>
-                                <div className="p-4 rounded-xl border border-neutral-200 bg-white text-center"><p className="text-xl font-black text-neutral-900">{co2Eq.km.toLocaleString('fr-FR')} km</p><p className="text-xs text-neutral-500">route evitee / an</p></div>
+                            <div className="grid gap-3 sm:grid-cols-3">
+                                <ImpactEquivalenceCard icon="solar:leaf-bold" title="Arbres equival. / an" value={newDiagnosticFormatInteger(co2Eq.arbres)} hint="ordre de grandeur de captation annuelle" iconClass="bg-emerald-50 text-emerald-700" />
+                                <ImpactEquivalenceCard icon="mdi:car-outline" title="Voitures retirees / an" value={String(co2Eq.voitures).replace('.', ',')} hint="equivalent emissions annuelles" iconClass="bg-blue-50 text-blue-700" />
+                                <ImpactEquivalenceCard icon="mdi:road-variant" title="Km evites / an" value={newDiagnosticFormatInteger(co2Eq.km)} hint="equivalent parcours voiture thermique" iconClass="bg-amber-50 text-amber-700" />
                             </div>
                         </div>
 
-                        <div className="report-card p-8 mb-8">
-                            <h2 className="text-2xl font-bold text-neutral-900 mb-4">Prochaine etape</h2>
-                            <p className="text-sm text-neutral-700 mb-5">{businessConclusion[0]}</p>
-                            <div className="grid md:grid-cols-2 gap-5 mb-6">
-                                <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-4">
-                                    <h3 className="text-sm font-bold text-neutral-900 mb-2">Ce qu il faut confirmer avant d engager</h3>
-                                    <ul className="space-y-1.5 text-sm text-neutral-700">
-                                        <li className="flex items-start gap-2"><Icon icon="solar:check-circle-linear" className="text-neutral-500 mt-0.5" /><span>Historique des travaux et etat reel des equipements.</span></li>
-                                        <li className="flex items-start gap-2"><Icon icon="solar:check-circle-linear" className="text-neutral-500 mt-0.5" /><span>Horaires reels et contraintes d exploitation.</span></li>
-                                        <li className="flex items-start gap-2"><Icon icon="solar:check-circle-linear" className="text-neutral-500 mt-0.5" /><span>Detail facture et contrat de maintenance.</span></li>
-                                        <li className="flex items-start gap-2"><Icon icon="solar:check-circle-linear" className="text-neutral-500 mt-0.5" /><span>Qui valide et qui arbitre le CAPEX sur le site.</span></li>
+                        <div className="report-card p-6 md:p-8 mb-8">
+                            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-5">
+                                <div>
+                                    <h2 className="report-section-title">
+                                        <Icon icon="solar:check-circle-bold" className="text-[#1D4ED8]" />
+                                        Prochaine etape utile
+                                    </h2>
+                                    <p className="text-sm text-slate-500 mt-2">{businessConclusion[0]}</p>
+                                </div>
+                                <p className="text-xs text-slate-500">{businessConclusion[1]}</p>
+                            </div>
+                            <div className="grid gap-4 lg:grid-cols-2 mb-5">
+                                <div className="report-subcard p-5 bg-slate-50">
+                                    <p className="text-xs font-bold uppercase tracking-wide text-slate-500 mb-3">Ce qu il faut confirmer avant d engager</p>
+                                    <ul className="space-y-2 text-sm text-slate-700">
+                                        <li className="flex items-start gap-2"><Icon icon="solar:check-circle-linear" className="text-slate-500 mt-0.5" /><span>Historique des travaux et etat reel des equipements.</span></li>
+                                        <li className="flex items-start gap-2"><Icon icon="solar:check-circle-linear" className="text-slate-500 mt-0.5" /><span>Horaires reels, contraintes d exploitation et acces aux installations.</span></li>
+                                        <li className="flex items-start gap-2"><Icon icon="solar:check-circle-linear" className="text-slate-500 mt-0.5" /><span>Detail facture, maintenance et responsabilites de decision si le site est loue.</span></li>
+                                        <li className="flex items-start gap-2"><Icon icon="solar:check-circle-linear" className="text-slate-500 mt-0.5" /><span>CAPEX reel, aides mobilisables et phasage soutenable.</span></li>
                                     </ul>
                                 </div>
-                                <div className="rounded-xl border border-neutral-200 bg-white p-4">
-                                    <h3 className="text-sm font-bold text-neutral-900 mb-2">Ce qu un expert peut valider rapidement</h3>
-                                    <ul className="space-y-1.5 text-sm text-neutral-700 mb-4">
+                                <div className="report-subcard p-5">
+                                    <p className="text-xs font-bold uppercase tracking-wide text-slate-500 mb-3">Ce qu un expert peut valider rapidement</p>
+                                    <ul className="space-y-2 text-sm text-slate-700 mb-4">
                                         {shortExpertChecks.map((check, idx) => (
                                             <li key={idx} className="flex items-start gap-2">
                                                 <Icon icon="solar:list-check-linear" className="text-slate-500 mt-0.5" />
@@ -5913,8 +6191,8 @@
                                             </li>
                                         ))}
                                     </ul>
-                                    <h4 className="text-xs font-bold uppercase tracking-wide text-indigo-700 mb-2">Questions du prochain echange</h4>
-                                    <ul className="space-y-1.5 text-sm text-indigo-800">
+                                    <p className="text-xs font-bold uppercase tracking-wide text-indigo-700 mb-2">Questions du prochain echange</p>
+                                    <ul className="space-y-2 text-sm text-indigo-900">
                                         {shortQuestions.map((question, idx) => (
                                             <li key={idx} className="flex items-start gap-2">
                                                 <span className="inline-flex w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold items-center justify-center mt-0.5">{idx + 1}</span>
@@ -5924,25 +6202,41 @@
                                     </ul>
                                 </div>
                             </div>
-                            {reportPayload.inputs_summary.contactOptIn ? (
-                                <div className="p-5 bg-green-50 border border-green-200 rounded-xl flex items-center gap-3">
-                                    <Icon icon="solar:check-circle-bold" className="text-green-600 text-2xl" />
-                                    <p className="text-sm text-green-800 font-medium">Votre demande de mise en relation est enregistree. Un expert reviendra vers vous avec un cadrage concret.</p>
-                                </div>
-                            ) : (
-                                <div className="p-5 bg-blue-50 border border-blue-200 rounded-xl">
-                                    <p className="font-semibold text-blue-900 mb-1">Vous souhaitez aller plus loin ?</p>
-                                    <p className="text-sm text-blue-700 mb-4">Un expert peut confirmer les hypotheses, fiabiliser le budget et clarifier qui doit agir en priorite.</p>
-                                    <div className="flex flex-col sm:flex-row gap-3">
-                                        <button onClick={() => setShowCTAModal(true)} className="px-5 py-2 bg-[#1D4ED8] text-white rounded-lg text-sm font-semibold hover:bg-[#1E40AF] transition-colors">Etre mis en relation</button>
-                                        <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="px-5 py-2 bg-white border border-blue-200 text-blue-800 rounded-lg text-sm font-semibold hover:bg-blue-50 transition-colors">Conserver ce rapport</button>
+                            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4 mb-5">
+                                {stakeholderMatrix.map((item, index) => <StakeholderCard key={index} item={item} />)}
+                            </div>
+                            <div className="rounded-2xl border p-5 md:p-6 bg-gradient-to-r from-[#EFF6FF] via-white to-[#F8FAFC] border-[#DBEAFE]">
+                                <p className="text-sm text-slate-700 mb-2">{businessConclusion[2]}</p>
+                                {reportPayload.inputs_summary.contactOptIn ? (
+                                    <div className="mt-4 flex items-center gap-3 rounded-xl border border-green-200 bg-green-50 px-4 py-4">
+                                        <Icon icon="solar:check-circle-bold" className="text-green-600 text-2xl" />
+                                        <p className="text-sm text-green-800 font-medium">Votre demande de mise en relation est deja enregistree. Un expert reviendra vers vous avec un cadrage plus concret.</p>
                                     </div>
-                                </div>
-                            )}
+                                ) : (
+                                    <div className="mt-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                                        <div>
+                                            <p className="text-lg font-bold text-[#102A43]">Vous souhaitez transformer ce pre-diagnostic en plan d action concret ?</p>
+                                            <p className="text-sm text-slate-600 mt-1">Un expert peut confirmer les hypotheses, fiabiliser le budget et clarifier qui doit agir en priorite.</p>
+                                        </div>
+                                        <div className="flex flex-col sm:flex-row gap-3">
+                                            <button onClick={() => setShowCTAModal(true)} className="px-5 py-3 bg-[#1D4ED8] text-white rounded-xl text-sm font-semibold hover:bg-[#1E40AF] transition-colors shadow-sm">Etre mis en relation</button>
+                                            <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="px-5 py-3 bg-white border border-[#DBEAFE] text-[#1D4ED8] rounded-xl text-sm font-semibold hover:bg-[#EFF6FF] transition-colors">Conserver ce rapport</button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
-                        <div className="bg-white rounded-xl shadow-lg p-8 mb-8 border border-neutral-200">
-                            <h2 className="text-2xl font-bold text-neutral-900 mb-6">Hypotheses et limites</h2>
+                        <div className="report-card p-6 md:p-8 mb-8">
+                            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-5">
+                                <div>
+                                    <h2 className="report-section-title">
+                                        <Icon icon="solar:shield-warning-linear" className="text-[#1D4ED8]" />
+                                        Hypotheses et limites
+                                    </h2>
+                                    <p className="text-sm text-slate-500 mt-2">Le rapport reste volontairement simple et prudent. Les hypotheses et limites ci-dessous expliquent ce qui soutient le resultat et ce qui reste a confirmer.</p>
+                                </div>
+                            </div>
                             <NewDiagnosticAccordion title="Hypotheses du calcul" defaultOpen={false}>
                                 <ul className="space-y-2 text-sm text-neutral-600">
                                     {reportPayload.assumptions.map((assumption, i) => (
@@ -5975,7 +6269,7 @@
                                         <Icon icon="solar:close-circle-linear" className="text-2xl" />
                                     </button>
                                 </div>
-                                <p className="text-sm text-neutral-600 mb-4">Nous revenons vers vous pour fiabiliser les hypotheses, confirmer les priorites et cadrer le budget de mise en oeuvre.</p>
+                                <p className="text-sm text-neutral-600 mb-4">Nous revenons vers vous pour confirmer les hypotheses, prioriser les actions et cadrer le budget de mise en oeuvre.</p>
                                 {ctaSent ? (
                                     <div className="text-center py-4">
                                         <Icon icon="solar:check-circle-bold" className="text-green-500 text-4xl mx-auto mb-2" />

@@ -2,3 +2,8 @@
 .env*.local
 node_modules/
 package-lock.json
+
+.DS_Store
+
+# Workspace scratch (never deploy / never commit)
+scratch/

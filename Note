@@ -13,4 +13,9 @@ git add .
 git commit -m "Update"
 git push origin main
 
+
+./scripts/serve-local.ps1
+./scripts/vercel-preview.ps1
+./scripts/vercel-prod.ps1
+
 //

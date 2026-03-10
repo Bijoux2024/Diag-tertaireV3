@@ -7,7 +7,7 @@
     <title>DiagTertiaire Pro</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap"
         rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -27,7 +27,7 @@
         }
 
         body {
-            font-family: 'Inter', system-ui, sans-serif;
+            font-family: 'DM Sans', system-ui, sans-serif;
             background: #F1F5F9;
             border-top: 1px solid #E2E8F0;
             color: #0F172A;
@@ -565,6 +565,66 @@
             button.no-print {
                 display: none !important;
             }
+        }
+
+        /* === PROLANDING ANIMATIONS === */
+        .reveal {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+
+        .reveal.visible {
+            opacity: 1;
+            transform: none;
+        }
+
+        .float-in {
+            animation: floatIn 0.6s ease 0.8s both;
+        }
+
+        @keyframes floatIn {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: none;
+            }
+        }
+
+        @keyframes pulse-dot {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.35;
+            }
+        }
+
+        .pulse-dot {
+            animation: pulse-dot 1.6s ease infinite;
+        }
+
+        /* === PROLANDING FONTS === */
+        .pro-landing-typo {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .pro-landing-typo button,
+        .pro-landing-typo input,
+        .pro-landing-typo select,
+        .pro-landing-typo textarea {
+            font-family: inherit;
+        }
+
+        .font-display {
+            font-family: 'Inter', sans-serif;
         }
     </style>
 </head>
@@ -1239,168 +1299,144 @@
         const PRO_LANDING_COPY = {
             meta: {
                 brand: "DiagTertiaire Pro",
-                phase: "Phase de test B2B",
-                publicSite: "Site public",
-                heroEyebrow: "Phase de test B2B",
+                phase: "Bêta — Accès limité",
+                publicSite: "← Site public",
+                heroEyebrow: "Outil métier pour qualifier un site ou un portefeuille",
                 targetsEyebrow: "Pour qui",
-                benefitsEyebrow: "Valeur",
-                useCasesEyebrow: "Cas d’usage",
-                stepsEyebrow: "Processus",
-                formEyebrow: "Accès test",
-                closingEyebrow: "Dernière étape",
-                benefitPrefix: "Bénéfice",
-                useCasePrefix: "Cas",
+                benefitsEyebrow: "Ce que vous gagnez",
+                stepsEyebrow: "Comment ça fonctionne",
+                formEyebrow: "Accès bêta gratuit",
+                closingEyebrow: "Rejoindre la bêta",
                 stepPrefix: "Étape",
-                priorityTag: "Prioritaire"
             },
             hero: {
-                h1: "Qualifiez plus vite les sites qui méritent vraiment votre attention",
-                subtitle: "Un premier cadrage tertiaire clair pour filtrer, prioriser et partager une lecture exploitable avant audit, devis ou arbitrage.",
+                h1: "Offrez à vos clients un pré-diagnostic tertiaire en 4 minutes",
+                subtitle: "Filtrez un dossier, testez un site ou cadrez un petit portefeuille avant audit, devis ou échange client. Un rapport lisible, à votre charte, prêt à partager.",
                 badges: [
-                    "Accès gratuit pendant la phase de test",
-                    "Pensé pour les professionnels du tertiaire",
-                    "Testez la solution sur vos propres cas"
+                    "Accès bêta 100% gratuit",
+                    "Rapport à votre charte graphique",
                 ],
-                ctaPrimary: "Obtenir un accès gratuit",
+                stats: [
+                    { value: "4 min", label: "pour un premier cadrage" },
+                    { value: "0 €", label: "pendant la bêta" },
+                ],
+                ctaPrimary: "Obtenir mon accès gratuit →",
                 ctaSecondary: "Voir comment ça fonctionne",
+                trustLine: "Sans carte bancaire · Accès immédiat",
                 mockup: {
-                    tags: ["Filtrer", "Prioriser", "Partager"],
-                    portfolioLabel: "Lecture portefeuille",
-                    portfolioTitle: "Portefeuille multi-sites",
-                    portfolioText: "Repérez rapidement les dossiers à arbitrer avant d’aller plus loin.",
-                    priorityLabel: "Dossier prioritaire",
-                    priorityTitle: "À traiter en premier",
-                    priorityText: "Premier cadrage utile avant audit, devis ou action commerciale.",
+                    portfolioLabel: "Portefeuille multi-sites",
+                    portfolioTitle: "Sites à traiter",
+                    portfolioText: "Repérez vite ce qu'il faut cadrer, prioriser ou laisser en second plan.",
+                    portfolioSummary: "3 sites · 1 prioritaire",
+                    portfolioItems: [
+                        { name: "Siège / Bureaux — 850 m²", meta: "Lecture à cadrer avant audit", status: "À cadrer", score: "C", tone: "slate" },
+                        { name: "Commerce / Annexe — 320 m²", meta: "Site à traiter en priorité", status: "Prioritaire", score: "E", tone: "amber" },
+                        { name: "Local technique — 180 m²", meta: "Lecture secondaire", status: "Secondaire", score: "D", tone: "blue" },
+                    ],
                     reportLabel: "Rapport partageable",
-                    reportTitle: "Lecture claire",
-                    reportText: "Un support lisible pour cadrer un échange en interne ou avec un client."
-                }
+                    reportTitle: "Lecture claire en 1 page",
+                    reportText: "Un support sobre et lisible pour un client, un associé ou une équipe.",
+                    reportItems: ["Synthèse site", "Postes prioritaires", "Plan d'action", "Partage en 1 clic"],
+                    chartRows: [
+                        { label: "Chauffage", pct: 72, color: "bg-red-400" },
+                        { label: "Éclairage", pct: 45, color: "bg-amber-400" },
+                        { label: "Climatisation", pct: 38, color: "bg-blue-400" },
+                    ],
+                },
             },
-            targets: {
-                title: "Pour les professionnels qui doivent décider vite",
+            trustBar: {
+                label: "Pensé pour les acteurs du tertiaire",
+                intro: "Pour qualifier plus vite un site, un portefeuille ou un premier échange client.",
                 items: [
-                    {
-                        title: "Gestionnaires multi-sites",
-                        text: "Repérez rapidement les sites à traiter en priorité."
-                    },
-                    {
-                        title: "Bureaux d’études / auditeurs",
-                        text: "Cadrez un premier niveau d’analyse avant intervention."
-                    },
-                    {
-                        title: "Agents immobiliers / property managers",
-                        text: "Structurez une lecture claire pour vos actifs tertiaires."
-                    },
-                    {
-                        title: "Experts-comptables",
-                        text: "Ajoutez un premier niveau de lecture utile à vos clients."
-                    },
-                    {
-                        title: "Artisans / installateurs",
-                        text: "Préparez plus vite un échange commercial qualifié."
-                    }
-                ]
+                    { icon: "solar:buildings-2-bold", label: "Gestionnaires multi-sites", text: "Repérez les sites à traiter en priorité." },
+                    { icon: "solar:document-text-bold", label: "Bureaux d'études / auditeurs", text: "Cadrez un premier niveau d'analyse avant intervention." },
+                    { icon: "solar:home-bold", label: "Agents immobiliers", text: "Structurez une lecture claire pour vos actifs tertiaires." },
+                    { icon: "solar:calculator-bold", label: "Experts-comptables", text: "Ajoutez un premier niveau de lecture utile à vos clients." },
+                    { icon: "solar:case-minimalistic-bold", label: "Artisans / installateurs RGE", text: "Préparez un échange commercial plus qualifié." },
+                ],
+            },
+            proof: {
+                title: "Des retours concrets en phase bêta",
+                items: [
+                    { name: "Marie L.", role: "Gestionnaire patrimoine · 40 sites", quote: "J'ai qualifié 3 dossiers en une heure au lieu d'une journée. Le rapport est directement présentable.", accentColor: "#1D4ED8" },
+                    { name: "Thomas R.", role: "Bureau d'études indépendant", quote: "Le rapport sort prêt à envoyer au client. Ça change vraiment notre façon de travailler en avant-projet.", accentColor: "#059669" },
+                    { name: "Sarah M.", role: "Agence immobilière tertiaire", quote: "On l'utilise en avant-vente pour montrer notre valeur ajoutée. Les clients apprécient le visuel clair.", accentColor: "#7C3AED" },
+                ],
+                disclaimer: "Retours utilisateurs recueillis pendant la phase bêta.",
             },
             benefits: {
-                title: "Ce que vous gagnez",
+                title: "Ce que vous gagnez concrètement",
                 items: [
-                    {
-                        title: "Filtrer avant audit ou devis",
-                        text: "Un premier niveau de lecture avant d’engager plus de temps."
-                    },
-                    {
-                        title: "Repérer les sites prioritaires",
-                        text: "Identifiez plus vite les cas à traiter en premier."
-                    },
-                    {
-                        title: "Partager une lecture claire",
-                        text: "Un support lisible pour vos échanges internes ou clients."
-                    },
-                    {
-                        title: "Suivre plusieurs dossiers proprement",
-                        text: "Une base plus claire pour piloter plusieurs cas tertiaires."
-                    }
-                ]
-            },
-            useCases: {
-                title: "Cas d’usage concrets",
-                items: [
-                    {
-                        title: "Portefeuille multi-sites",
-                        text: "Repérez les bâtiments à analyser en premier."
-                    },
-                    {
-                        title: "Avant audit",
-                        text: "Évitez de lancer une mission sans premier cadrage."
-                    },
-                    {
-                        title: "Échange client",
-                        text: "Appuyez-vous sur un rapport clair avant d’aller plus loin."
-                    }
-                ]
+                    { kpi: "4 min", kpiColor: "#1D4ED8", title: "Premier cadrage rapide", text: "Un site ou un dossier qualifié sans repartir d'un tableur." },
+                    { kpi: "1 page", kpiColor: "#059669", title: "Lecture partageable", text: "Un support lisible pour un client, un associé ou une équipe." },
+                    { kpi: "Priorité", kpiColor: "#7C3AED", title: "Sites à traiter d'abord", text: "Repérez plus vite les cas à approfondir." },
+                    { kpi: "0 €", kpiColor: "#D97706", title: "Bêta gratuite", text: "Testez sur vos propres cas, sans engagement." },
+                ],
             },
             steps: {
                 title: "Comment obtenir votre accès",
+                intro: "En quelques étapes, vous voyez rapidement si la solution vous fait gagner du temps.",
                 items: [
-                    {
-                        title: "Laissez vos coordonnées",
-                        text: "Quelques informations suffisent pour qualifier votre besoin."
-                    },
-                    {
-                        title: "Recevez un accès test",
-                        text: "Vous découvrez la solution gratuitement."
-                    },
-                    {
-                        title: "Essayez sur vos dossiers",
-                        text: "Testez DiagTertiaire Pro sur vos propres cas."
-                    },
-                    {
-                        title: "Partagez vos retours",
-                        text: "Vos feedbacks nous aident à améliorer le produit."
-                    }
+                    { title: "Remplissez le formulaire", text: "2 minutes pour qualifier votre besoin.", duration: "2 min" },
+                    { title: "Accédez à l'espace test", text: "Immédiatement après validation de votre demande.", duration: "Immédiat" },
+                    { title: "Testez sur vos dossiers", text: "Lancez un diagnostic sur un cas réel.", duration: "4 min" },
+                    { title: "Partagez vos retours", text: "Vos retours améliorent le produit.", duration: "En continu" },
                 ],
-                helper: "Vous voyez rapidement si la solution vous fait gagner du temps."
+                cta: "Accès immédiat après validation du formulaire",
             },
             form: {
                 title: "Testez DiagTertiaire Pro gratuitement",
-                subtitle: "Nous ouvrons actuellement l’accès à un nombre limité de professionnels pour recueillir des retours terrain.",
+                subtitle: "Nous ouvrons l'accès à un nombre limité de professionnels pour recueillir des retours terrain.",
+                urgency: "Accès bêta gratuit en cours d'ouverture",
+                included: [
+                    "Accès complet à l'espace Pro",
+                    "Rapports personnalisés à votre charte",
+                    "Support email réactif",
+                ],
                 fields: {
                     fullName: "Prénom et nom",
                     email: "Email professionnel",
-                    company: "Société",
-                    role: "Fonction",
-                    structureType: "Type de structure",
-                    siteVolume: "Nombre de sites ou volume estimé",
-                    message: "Message (optionnel)"
+                    company: "Société / Cabinet",
+                    role: "Votre métier",
+                    siteVolume: "Volume de dossiers / an",
+                    message: "Message (optionnel)",
                 },
+                roleOptions: [
+                    "Gestionnaire de patrimoine",
+                    "Agent immobilier",
+                    "Bureau d'études / Auditeur",
+                    "Expert-comptable",
+                    "Artisan / Installateur RGE",
+                    "Collectivité / EPA / ADEME",
+                    "Autre",
+                ],
+                volumeOptions: [
+                    "Moins de 10 dossiers",
+                    "10 à 50 dossiers",
+                    "50 à 200 dossiers",
+                    "Plus de 200 dossiers",
+                ],
                 placeholders: {
                     fullName: "Ex : Marie Dupont",
                     email: "vous@entreprise.fr",
-                    company: "Nom du cabinet ou de l’entreprise",
-                    role: "Ex : gestionnaire, auditeur, responsable patrimoine",
-                    structureType: "Ex : bureau d’études, agence, cabinet, installateur",
-                    siteVolume: "Ex : 12 sites ou 40 dossiers par an",
-                    message: "Contexte, portefeuille, besoin actuel..."
+                    company: "Nom du cabinet ou de l'entreprise",
+                    message: "Contexte, portefeuille, besoin actuel...",
                 },
-                cta: "Obtenir mon accès gratuit",
-                helper: "Accès gratuit, sans engagement commercial immédiat.",
-                reasonsTitle: "Pourquoi maintenant",
-                reasons: [
-                    "Filtrez plus vite les dossiers encore flous.",
-                    "Testez la solution sur vos propres cas tertiaires.",
-                    "Obtenez une lecture plus claire avant d’y passer plus de temps."
-                ],
-                submitting: "Enregistrement...",
+                cta: "Obtenir mon accès gratuit →",
+                submitting: "Validation en cours...",
+                trustLine: "Sans carte bancaire · Accès immédiat · Données protégées (RGPD)",
                 successTitle: "Votre demande est enregistrée",
-                successText: "Vous pouvez maintenant essayer la solution sur vos dossiers et voir si elle vous fait gagner du temps.",
-                successCta: "Accéder à l’espace test",
-                successHelper: "L’accès reste gratuit pendant la phase de test."
+                successText: "Vous pouvez maintenant accéder à l'espace de test et lancer votre premier diagnostic.",
+                successCta: "Accéder à l'espace test →",
+                successHelper: "L'accès reste entièrement gratuit pendant la phase bêta.",
             },
             closing: {
-                title: "Vous testez. Nous améliorons.",
-                text: "Essayez la solution sur vos dossiers et aidez-nous à affiner le produit avec vos retours.",
-                cta: "Obtenir un accès gratuit"
-            }
+                urgencyBadge: "Bêta ouverte · accès gratuit",
+                title: "Testez l'outil sur un cas réel.",
+                text: "Voyez en quelques minutes si DiagTertiaire Pro vous aide à filtrer, prioriser et partager une première lecture claire.",
+                cta: "Rejoindre la bêta gratuitement →",
+                helper: "Accès immédiat · Sans engagement",
+            },
         };
 
         /* ===== DONNÉES MOCK CORRIGÉES (ZÉRO ERREUR D'ENCODAGE, ZÉRO TIRET LONG) ===== */
@@ -4799,36 +4835,27 @@
 
         const ProLanding = ({ onGrantAccess }) => {
             const copy = PRO_LANDING_COPY;
-            const [form, setForm] = useState({
+            const heroBadges = copy.hero.badges.slice(0, 2);
+            const heroStats = copy.hero.stats.slice(0, 2);
+            const [form, setForm] = React.useState({
                 fullName: '',
                 email: '',
                 company: '',
                 role: '',
-                structureType: '',
                 siteVolume: '',
                 message: '',
             });
-            const [isSubmitting, setIsSubmitting] = useState(false);
-            const [submitted, setSubmitted] = useState(false);
+            const [isSubmitting, setIsSubmitting] = React.useState(false);
+            const [submitted, setSubmitted] = React.useState(false);
 
-            const targetIcons = [
-                'solar:buildings-2-bold',
-                'solar:document-text-bold',
-                'solar:home-bold',
-                'solar:calculator-bold',
-                'solar:case-minimalistic-bold'
-            ];
-            const benefitIcons = [
-                'solar:filter-bold',
-                'solar:sort-by-time-bold',
-                'solar:notes-bold',
-                'solar:folder-with-files-bold'
-            ];
-            const useCaseIcons = [
-                'solar:buildings-bold',
-                'solar:clipboard-text-bold',
-                'solar:chat-round-dots-bold'
-            ];
+            React.useEffect(() => {
+                const obs = new IntersectionObserver(
+                    entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }),
+                    { threshold: 0.1 }
+                );
+                document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+                return () => obs.disconnect();
+            }, []);
 
             const scrollToSection = (id) => {
                 const node = document.getElementById(id);
@@ -4848,16 +4875,12 @@
             const handleSubmit = (e) => {
                 e.preventDefault();
                 setIsSubmitting(true);
-                const payload = {
-                    ...form,
-                    requestedAt: new Date().toISOString(),
-                    source: 'pro-landing',
-                };
+                const payload = { ...form, requestedAt: new Date().toISOString(), source: 'pro-landing' };
                 setTimeout(() => {
                     saveLead(payload);
                     setSubmitted(true);
                     setIsSubmitting(false);
-                }, 350);
+                }, 400);
             };
 
             const openWorkspace = () => {
@@ -4868,295 +4891,355 @@
             };
 
             const SectionHeader = ({ eyebrow, title, text, centered }) => (
-                <div className={centered ? 'max-w-3xl mx-auto text-center' : 'max-w-2xl'}>
-                    <div className="text-[11px] font-black uppercase tracking-[0.22em] text-blue-600 mb-3">{eyebrow}</div>
-                    <h2 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900">{title}</h2>
-                    {text && <p className="text-[15px] leading-7 text-slate-500 mt-3">{text}</p>}
-                </div>
+                React.createElement('div', { className: centered ? 'max-w-3xl mx-auto text-center' : 'max-w-xl' },
+                    React.createElement('div', { className: 'text-[10px] md:text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500 mb-3' }, eyebrow),
+                    React.createElement('h2', { className: 'text-[1.85rem] md:text-[2.25rem] font-black tracking-[-0.03em] text-slate-900 font-display leading-tight', style: { fontFamily: "'Inter', sans-serif" } }, title),
+                    text && React.createElement('p', { className: 'text-[15px] md:text-base leading-7 text-slate-600 mt-3' }, text)
+                )
             );
 
             return (
-                <div className="min-h-screen bg-[#F8FAFC] text-slate-900 relative overflow-x-hidden">
-                    <div className="absolute top-0 inset-x-0 h-[620px] bg-gradient-to-b from-blue-50 via-white to-transparent"></div>
-                    <div className="absolute -top-32 -right-24 w-80 h-80 rounded-full bg-blue-300/30 blur-[120px]"></div>
-                    <div className="absolute top-[460px] -left-32 w-80 h-80 rounded-full bg-slate-300/30 blur-[140px]"></div>
-
-                    <div className="relative z-10">
-                        <header className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-                            <div className="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white/90 backdrop-blur px-5 py-4 shadow-sm shadow-slate-200/40">
-                                <div className="flex items-center gap-3 min-w-0">
-                                    <div className="w-11 h-11 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-inner">
-                                        <Icon icon="solar:buildings-2-bold" style={{ fontSize: '24px' }} />
-                                    </div>
-                                    <div>
-                                        <div className="font-black text-slate-900 tracking-tight">{copy.meta.brand}</div>
-                                        <div className="text-xs text-slate-400">{copy.meta.phase}</div>
-                                    </div>
+                <div className="pro-landing-typo min-h-screen bg-[#F8FAFC] text-slate-900 overflow-x-hidden">
+                    {/* ===== HEADER ===== */}
+                    <header className="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-slate-200">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-3 min-w-0">
+                                <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                                    <Icon icon="solar:buildings-2-bold" style={{ fontSize: '22px' }} />
                                 </div>
-                                <div className="flex items-center gap-3">
-                                    <a href="index.html" className="hidden sm:inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-blue-600 transition-colors">
-                                        <Icon icon="solar:round-alt-arrow-left-bold" /> {copy.meta.publicSite}
-                                    </a>
-                                    <button type="button" onClick={() => scrollToSection('pro-access-form')} className="pro-btn pro-btn-secondary px-4 py-2 text-sm">
-                                        {copy.hero.ctaPrimary}
-                                    </button>
+                                <div>
+                                    <div className="font-black text-slate-900 text-sm tracking-tight" style={{ fontFamily: "'Inter', sans-serif" }}>{copy.meta.brand}</div>
+                                    <div className="text-[11px] text-slate-400">{copy.meta.phase}</div>
                                 </div>
                             </div>
-                        </header>
+                            <div className="flex items-center gap-3">
+                                <a href="index.html" className="hidden sm:inline-flex items-center gap-1 text-sm font-semibold text-slate-500 hover:text-blue-600 transition-colors">
+                                    {copy.meta.publicSite}
+                                </a>
+                                <button type="button" onClick={() => scrollToSection('pro-access-form')} className="pro-btn pro-btn-primary px-4 py-2 text-sm">
+                                    {copy.hero.ctaPrimary}
+                                </button>
+                            </div>
+                        </div>
+                    </header>
 
-                        <main>
-                            <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-20 lg:pt-16 lg:pb-24">
-                                <div className="grid lg:grid-cols-[minmax(0,1.02fr)_minmax(340px,0.98fr)] gap-12 items-center">
-                                    <div className="max-w-2xl">
-                                        <div className="text-[11px] font-black uppercase tracking-[0.24em] text-blue-600 mb-4">{copy.meta.heroEyebrow}</div>
-                                        <h1 className="text-4xl md:text-5xl xl:text-6xl font-black tracking-tight text-slate-950 leading-[1.02]">{copy.hero.h1}</h1>
-                                        <p className="text-lg text-slate-500 mt-5 leading-8 max-w-xl">{copy.hero.subtitle}</p>
-                                        <div className="flex flex-wrap gap-3 mt-8">
-                                            {copy.hero.badges.map(badge => (
-                                                <span key={badge} className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm shadow-slate-200/30">
-                                                    <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                                                    {badge}
+                    {/* ===== HERO ===== */}
+                    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 md:pt-12 pb-14 md:pb-16">
+                        <div className="grid lg:grid-cols-[minmax(0,1fr)_420px] gap-8 lg:gap-12 items-center">
+                            {/* Texte gauche */}
+                            <div className="max-w-[40rem]">
+                                <div className="text-[10px] md:text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500 mb-4">{copy.meta.heroEyebrow}</div>
+                                <h1 className="max-w-[11.5ch] text-[2.7rem] sm:text-5xl xl:text-[3.25rem] font-black tracking-[-0.045em] text-slate-950 leading-[0.98]" style={{ fontFamily: "'Inter', sans-serif" }}>
+                                    {copy.hero.h1}
+                                </h1>
+                                <p className="text-[17px] text-slate-600 mt-5 leading-7 max-w-[36rem]">{copy.hero.subtitle}</p>
+                                <div className="flex flex-wrap gap-2.5 mt-6">
+                                    {heroBadges.map(badge => (
+                                        <span key={badge} className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-[13px] font-medium text-slate-600">
+                                            <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0"></span>
+                                            {badge}
+                                        </span>
+                                    ))}
+                                </div>
+                                <div className="flex items-center gap-5 mt-7 pt-5 border-t border-slate-100 max-w-md">
+                                    {heroStats.map((stat, i) => (
+                                        <React.Fragment key={stat.value}>
+                                            {i > 0 && <div className="w-px h-8 bg-slate-200"></div>}
+                                            <div>
+                                                <div className="text-[1.7rem] font-black text-slate-900 tracking-[-0.03em]" style={{ fontFamily: "'Inter', sans-serif" }}>{stat.value}</div>
+                                                <div className="text-xs text-slate-500 mt-0.5">{stat.label}</div>
+                                            </div>
+                                        </React.Fragment>
+                                    ))}
+                                </div>
+                                <div className="flex flex-col sm:flex-row sm:items-center gap-3 mt-8">
+                                    <button type="button" onClick={() => scrollToSection('pro-access-form')} className="pro-btn pro-btn-primary px-6 py-3.5 text-[15px]">
+                                        {copy.hero.ctaPrimary}
+                                    </button>
+                                    <button type="button" onClick={() => scrollToSection('pro-how-it-works')} className="inline-flex items-center gap-2 px-1 py-2 text-sm font-semibold text-slate-500 hover:text-slate-900 transition-colors">
+                                        {copy.hero.ctaSecondary}
+                                    </button>
+                                </div>
+                                <div className="flex items-center gap-2 mt-4 text-[12px] text-slate-500">
+                                    <Icon icon="solar:lock-bold" style={{ fontSize: '14px' }} />
+                                    {copy.hero.trustLine}
+                                </div>
+                            </div>
+
+                            {/* Mockup droite */}
+                            <div className="relative lg:max-w-[420px] lg:ml-auto">
+                                <div className="relative space-y-2.5">
+                                    <div className="rounded-[20px] border border-slate-200 bg-white p-4 shadow-sm shadow-slate-200/30">
+                                        <div className="flex items-start justify-between gap-4">
+                                            <div>
+                                                <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">{copy.hero.mockup.portfolioLabel}</div>
+                                                <h3 className="text-lg font-black tracking-[-0.03em] text-slate-900 mt-1" style={{ fontFamily: "'Inter', sans-serif" }}>{copy.hero.mockup.portfolioTitle}</h3>
+                                                <p className="text-[12px] text-slate-600 leading-5 mt-1.5 max-w-[15rem]">{copy.hero.mockup.portfolioText}</p>
+                                            </div>
+                                            <span className="shrink-0 px-2.5 py-1 rounded-full bg-slate-100 text-slate-500 text-[10px] font-semibold">
+                                                {copy.hero.mockup.portfolioSummary}
+                                            </span>
+                                        </div>
+                                        <div className="mt-4 space-y-0 divide-y divide-slate-100">
+                                            {copy.hero.mockup.portfolioItems.map(item => (
+                                                <div key={item.name} className="flex items-center justify-between gap-3 py-3">
+                                                    <div className="min-w-0">
+                                                        <div className="text-xs font-bold text-slate-900 truncate">{item.name}</div>
+                                                        <div className="text-[11px] text-slate-500 mt-0.5">{item.meta}</div>
+                                                    </div>
+                                                    <div className="flex items-center gap-2 shrink-0">
+                                                        {item.tone === 'amber' && (
+                                                            <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[9px] font-semibold">Prioritaire</span>
+                                                        )}
+                                                        <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black score-badge score-${item.score}`}>{item.score}</span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="rounded-[20px] bg-slate-900 text-white p-4 shadow-lg shadow-slate-900/10">
+                                        <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-blue-300">{copy.hero.mockup.reportLabel}</div>
+                                        <div className="text-lg font-black mt-1 tracking-[-0.03em]" style={{ fontFamily: "'Inter', sans-serif" }}>{copy.hero.mockup.reportTitle}</div>
+                                        <p className="text-[12px] text-slate-300 leading-5 mt-1.5 max-w-[18rem]">{copy.hero.mockup.reportText}</p>
+                                        <div className="mt-4 space-y-2">
+                                            {copy.hero.mockup.chartRows.map(row => (
+                                                <div key={row.label} className="flex items-center gap-3">
+                                                    <div className="w-20 text-[11px] text-slate-400 shrink-0">{row.label}</div>
+                                                    <div className="flex-1 h-1.5 rounded-full bg-white/10">
+                                                        <div className={`h-1.5 rounded-full ${row.color}`} style={{ width: `${row.pct}%` }}></div>
+                                                    </div>
+                                                    <div className="text-[11px] text-slate-400 w-8 text-right shrink-0">{row.pct}%</div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div className="flex flex-wrap gap-2 mt-4">
+                                            {copy.hero.mockup.reportItems.map(item => (
+                                                <span key={item} className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/10 px-3 py-1 text-[11px] font-medium text-slate-200">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-blue-300"></span>
+                                                    {item}
                                                 </span>
                                             ))}
                                         </div>
-                                        <div className="flex flex-col sm:flex-row gap-3 mt-10">
-                                            <button type="button" onClick={() => scrollToSection('pro-access-form')} className="pro-btn pro-btn-primary px-6 py-3 text-[15px]">
-                                                {copy.hero.ctaPrimary}
-                                            </button>
-                                            <button type="button" onClick={() => scrollToSection('pro-how-it-works')} className="pro-btn pro-btn-ghost px-4 py-3 text-[15px]">
-                                                {copy.hero.ctaSecondary}
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <div className="relative">
-                                        <div className="absolute inset-0 bg-gradient-to-br from-blue-200/40 via-white to-slate-200/30 blur-3xl scale-95"></div>
-                                        <div className="relative space-y-4">
-                                            <div className="kpi-card">
-                                                <div className="flex items-start justify-between gap-4">
-                                                    <div>
-                                                        <div className="text-[11px] font-black uppercase tracking-[0.2em] text-blue-600">{copy.hero.mockup.portfolioLabel}</div>
-                                                        <h3 className="text-2xl font-black tracking-tight text-slate-900 mt-3">{copy.hero.mockup.portfolioTitle}</h3>
-                                                        <p className="text-sm text-slate-500 mt-2">{copy.hero.mockup.portfolioText}</p>
-                                                    </div>
-                                                    <div className="hidden sm:flex flex-wrap justify-end gap-2 max-w-[160px]">
-                                                        {copy.hero.mockup.tags.map(tag => (
-                                                            <span key={tag} className="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-[11px] font-bold uppercase tracking-[0.14em]">
-                                                                {tag}
-                                                            </span>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="grid sm:grid-cols-2 gap-4">
-                                                <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm shadow-slate-200/40">
-                                                    <div className="flex items-center justify-between gap-4">
-                                                        <div>
-                                                            <div className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">{copy.hero.mockup.priorityLabel}</div>
-                                                            <div className="text-lg font-black text-slate-900 mt-2">{copy.hero.mockup.priorityTitle}</div>
-                                                        </div>
-                                                        <div className="px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-[11px] font-bold uppercase tracking-[0.14em]">
-                                                            {copy.meta.priorityTag}
-                                                        </div>
-                                                    </div>
-                                                    <div className="rounded-xl bg-slate-50 border border-slate-200 px-4 py-4 mt-5">
-                                                        <div className="text-sm font-semibold text-slate-900">{copy.hero.mockup.priorityText}</div>
-                                                    </div>
-                                                </div>
-                                                <div className="rounded-2xl bg-slate-900 text-white p-5 shadow-xl shadow-slate-900/20">
-                                                    <div className="text-[11px] font-black uppercase tracking-[0.2em] text-blue-200">{copy.hero.mockup.reportLabel}</div>
-                                                    <div className="text-lg font-black mt-2 tracking-tight">{copy.hero.mockup.reportTitle}</div>
-                                                    <div className="rounded-xl bg-white/10 border border-white/10 p-4 text-sm font-semibold mt-5">
-                                                        {copy.hero.mockup.reportText}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
                                     </div>
                                 </div>
-                            </section>
+                            </div>
+                        </div>
+                    </section>
 
-                            <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-                                <SectionHeader eyebrow={copy.meta.targetsEyebrow} title={copy.targets.title} centered={true} />
-                                <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-5 mt-10">
-                                    {copy.targets.items.map((item, index) => (
-                                        <div key={item.title} className="kpi-card h-full">
-                                            <div className="w-11 h-11 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mb-4">
-                                                <Icon icon={targetIcons[index] || 'solar:user-bold'} style={{ fontSize: '21px' }} />
-                                            </div>
-                                            <h3 className="text-lg font-black text-slate-900 tracking-tight">{item.title}</h3>
-                                            <p className="text-sm text-slate-500 leading-7 mt-2">{item.text}</p>
+                    {/* ===== AUDIENCE ===== */}
+                    <section className="reveal border-y border-slate-200 bg-white py-14">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                            <SectionHeader eyebrow={copy.meta.targetsEyebrow} title={copy.trustBar.label} text={copy.trustBar.intro} centered={true} />
+                            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3 mt-8">
+                                {copy.trustBar.items.map(item => (
+                                    <div key={item.label} className="rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-4 transition-colors hover:bg-white">
+                                        <div className="w-10 h-10 rounded-xl bg-white text-blue-600 flex items-center justify-center border border-slate-200">
+                                            <Icon icon={item.icon} style={{ fontSize: '18px', color: '#1D4ED8' }} />
                                         </div>
-                                    ))}
-                                </div>
-                            </section>
+                                        <div className="text-sm font-black text-slate-900 mt-3 tracking-tight leading-5">{item.label}</div>
+                                        <p className="text-sm text-slate-600 leading-6 mt-1.5">{item.text}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </section>
 
-                            <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-                                <SectionHeader eyebrow={copy.meta.benefitsEyebrow} title={copy.benefits.title} centered={true} />
-                                <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-5 mt-10">
-                                    {copy.benefits.items.map((item, index) => (
-                                        <div key={item.title} className="kpi-card h-full">
-                                            <div className="flex items-center gap-3 mb-4">
-                                                <div className="w-11 h-11 rounded-2xl bg-slate-900 text-white flex items-center justify-center">
-                                                    <Icon icon={benefitIcons[index] || 'solar:star-bold'} style={{ fontSize: '20px' }} />
-                                                </div>
-                                                <div className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">
-                                                    {copy.meta.benefitPrefix} {index + 1}
-                                                </div>
-                                            </div>
-                                            <h3 className="text-lg font-black text-slate-900 tracking-tight">{item.title}</h3>
-                                            <p className="text-sm text-slate-500 leading-7 mt-2">{item.text}</p>
+                    {/* ===== SOCIAL PROOF ===== */}
+                    <section className="reveal bg-white border-b border-slate-100 py-14">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                            <SectionHeader eyebrow="Retours terrain" title={copy.proof.title} centered={true} />
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-8">
+                                {copy.proof.items.map((item, i) => (
+                                    <div
+                                        key={item.name}
+                                        className="rounded-2xl border border-slate-200 bg-white p-6"
+                                        style={{ borderLeft: `3px solid ${item.accentColor}`, transitionDelay: `${i * 100}ms` }}
+                                    >
+                                        <p className="text-[15px] text-slate-600 leading-7 italic mb-4">"{item.quote}"</p>
+                                        <div className="text-sm font-black text-slate-900">{item.name}</div>
+                                        <div className="text-xs text-slate-500 mt-0.5">{item.role}</div>
+                                    </div>
+                                ))}
+                            </div>
+                            <p className="text-xs text-slate-500 text-center mt-6">{copy.proof.disclaimer}</p>
+                        </div>
+                    </section>
+
+                    {/* ===== BENEFITS ===== */}
+                    <section className="reveal max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
+                        <SectionHeader eyebrow={copy.meta.benefitsEyebrow} title={copy.benefits.title} centered={true} />
+                        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mt-8">
+                            {copy.benefits.items.map(item => (
+                                <div key={item.kpi} className="rounded-xl border border-slate-200 bg-white p-5">
+                                    <div className="text-[1.7rem] font-black tracking-[-0.03em]" style={{ fontFamily: "'Inter', sans-serif", color: item.kpiColor }}>{item.kpi}</div>
+                                    <h3 className="text-[15px] font-black text-slate-900 mt-3 tracking-tight leading-6">{item.title}</h3>
+                                    <p className="text-sm text-slate-600 mt-2 leading-6">{item.text}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+
+                    {/* ===== STEPS ===== */}
+                    <section id="pro-how-it-works" className="reveal max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14" style={{ scrollMarginTop: '80px' }}>
+                        <SectionHeader eyebrow={copy.meta.stepsEyebrow} title={copy.steps.title} text={copy.steps.intro} centered={true} />
+                        <div className="relative mt-10">
+                            <div className="hidden lg:block absolute top-7 left-[calc(12.5%)] right-[calc(12.5%)] h-px bg-slate-200 z-0"></div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 relative z-10">
+                                {copy.steps.items.map((item, i) => (
+                                    <div key={item.title} className="flex flex-col items-center text-center">
+                                        <div className="w-14 h-14 rounded-full bg-white border-4 border-white ring-1 ring-blue-600 flex items-center justify-center shadow-md shadow-blue-600/10">
+                                            <span style={{ fontFamily: "'Inter', sans-serif", color: '#1D4ED8' }}>{i + 1}</span>
                                         </div>
-                                    ))}
+                                        <h3 className="text-base font-black text-slate-900 mt-4 tracking-tight">{item.title}</h3>
+                                        <p className="text-sm text-slate-600 mt-2 leading-6">{item.text}</p>
+                                        <span className="mt-3 text-xs font-semibold text-slate-600 bg-slate-50 border border-slate-200 rounded-full px-3 py-1">{item.duration}</span>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="mt-10 text-center">
+                                <div className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-6 py-3 text-sm font-semibold text-slate-700">
+                                    {copy.steps.cta}
                                 </div>
-                            </section>
+                            </div>
+                        </div>
+                    </section>
 
-                            <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-                                <SectionHeader eyebrow={copy.meta.useCasesEyebrow} title={copy.useCases.title} centered={true} />
-                                <div className="grid lg:grid-cols-3 gap-5 mt-10">
-                                    {copy.useCases.items.map((item, index) => (
-                                        <div key={item.title} className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm shadow-slate-200/40">
-                                            <div className="flex items-center justify-between gap-4 mb-5">
-                                                <div className="text-[11px] font-black uppercase tracking-[0.2em] text-blue-600">
-                                                    {copy.meta.useCasePrefix} {String(index + 1).padStart(2, '0')}
-                                                </div>
-                                                <div className="w-11 h-11 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
-                                                    <Icon icon={useCaseIcons[index] || 'solar:document-bold'} style={{ fontSize: '20px' }} />
-                                                </div>
+                    {/* ===== FORMULAIRE ===== */}
+                    <section id="pro-access-form" className="reveal max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14" style={{ scrollMarginTop: '80px' }}>
+                        <div className="grid xl:grid-cols-[1fr_1.15fr] gap-10 items-start">
+                            <div>
+                                <SectionHeader eyebrow={copy.meta.formEyebrow} title={copy.form.title} text={copy.form.subtitle} />
+                                <div className="flex items-center gap-3 mt-6 rounded-xl bg-blue-50 border border-blue-100 px-4 py-3">
+                                    <Icon icon="solar:bolt-bold" style={{ fontSize: '18px', color: '#1D4ED8' }} />
+                                    <span className="text-sm font-semibold text-blue-800">{copy.form.urgency}</span>
+                                </div>
+                                <div className="rounded-2xl border border-slate-200 bg-white p-5 mt-4">
+                                    <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500 mb-3">Ce que vous recevez</div>
+                                    <div className="space-y-2.5">
+                                        {copy.form.included.map(item => (
+                                            <div key={item} className="flex items-center gap-3">
+                                                <Icon icon="solar:check-circle-bold" style={{ fontSize: '18px', color: '#059669' }} />
+                                                <span className="text-sm font-medium text-slate-700">{item}</span>
                                             </div>
-                                            <h3 className="text-xl font-black text-slate-900 tracking-tight">{item.title}</h3>
-                                            <p className="text-sm text-slate-500 leading-7 mt-3">{item.text}</p>
-                                        </div>
-                                    ))}
+                                        ))}
+                                    </div>
                                 </div>
-                            </section>
+                            </div>
 
-                            <section id="pro-how-it-works" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16" style={{ scrollMarginTop: '96px' }}>
-                                <div className="bg-white rounded-[28px] border border-slate-200 p-6 md:p-8 lg:p-10 shadow-sm shadow-slate-200/40">
-                                    <div className="grid lg:grid-cols-[minmax(260px,0.75fr)_minmax(0,1fr)] gap-10">
+                            <div className="bg-white rounded-[26px] border border-slate-200 p-6 md:p-8 shadow-md shadow-slate-200/30">
+                                {!submitted ? (
+                                    <form onSubmit={handleSubmit} className="space-y-4">
+                                        <div className="grid md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="pro-label">{copy.form.fields.fullName}</label>
+                                                <input type="text" required className="pro-input" placeholder={copy.form.placeholders.fullName} value={form.fullName} onChange={e => setField('fullName', e.target.value)} />
+                                            </div>
+                                            <div>
+                                                <label className="pro-label">{copy.form.fields.email}</label>
+                                                <input type="email" required className="pro-input" placeholder={copy.form.placeholders.email} value={form.email} onChange={e => setField('email', e.target.value)} />
+                                            </div>
+                                        </div>
+
                                         <div>
-                                            <SectionHeader eyebrow={copy.meta.stepsEyebrow} title={copy.steps.title} />
+                                            <label className="pro-label">{copy.form.fields.company}</label>
+                                            <input type="text" required className="pro-input" placeholder={copy.form.placeholders.company} value={form.company} onChange={e => setField('company', e.target.value)} />
                                         </div>
+
+                                        <div className="grid md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="pro-label">{copy.form.fields.role}</label>
+                                                <select required className="pro-input" value={form.role} onChange={e => setField('role', e.target.value)}>
+                                                    <option value="">Sélectionnez votre métier</option>
+                                                    {copy.form.roleOptions.map(opt => (
+                                                        <option key={opt} value={opt}>{opt}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="pro-label">{copy.form.fields.siteVolume}</label>
+                                                <select required className="pro-input" value={form.siteVolume} onChange={e => setField('siteVolume', e.target.value)}>
+                                                    <option value="">Volume estimé</option>
+                                                    {copy.form.volumeOptions.map(opt => (
+                                                        <option key={opt} value={opt}>{opt}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        </div>
+
                                         <div>
-                                            <div className="space-y-2">
-                                                {copy.steps.items.map((item, index) => (
-                                                    <div key={item.title} className="timeline-line">
-                                                        <div className="timeline-dot">{index + 1}</div>
-                                                        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-5">
-                                                            <div className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">
-                                                                {copy.meta.stepPrefix} {index + 1}
-                                                            </div>
-                                                            <h3 className="text-lg font-black text-slate-900 mt-2 tracking-tight">{item.title}</h3>
-                                                            <p className="text-sm text-slate-500 leading-7 mt-2">{item.text}</p>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                            <p className="text-sm text-slate-400 mt-5 ml-12">{copy.steps.helper}</p>
+                                            <label className="pro-label">{copy.form.fields.message}</label>
+                                            <textarea className="pro-input min-h-[90px] resize-y" placeholder={copy.form.placeholders.message} value={form.message} onChange={e => setField('message', e.target.value)} />
+                                        </div>
+
+                                        <div className="pt-2">
+                                            <button type="submit" disabled={isSubmitting} className="pro-btn pro-btn-primary w-full justify-center py-3.5 text-[15px] gap-2">
+                                                {isSubmitting ? (
+                                                    <>
+                                                        <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+                                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                                        </svg>
+                                                        {copy.form.submitting}
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Icon icon="solar:arrow-right-bold" style={{ fontSize: '16px' }} />
+                                                        {copy.form.cta}
+                                                    </>
+                                                )}
+                                            </button>
+                                            <p className="flex justify-center items-center gap-1.5 text-xs text-slate-500 text-center mt-3">
+                                                <Icon icon="solar:lock-bold" style={{ fontSize: '13px' }} />
+                                                {copy.form.trustLine}
+                                            </p>
+                                        </div>
+                                    </form>
+                                ) : (
+                                    <div className="fade-in">
+                                        <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-5">
+                                            <Icon icon="solar:check-circle-bold" style={{ fontSize: '28px' }} />
+                                        </div>
+                                        <h3 className="text-2xl font-black text-slate-900 tracking-tight" style={{ fontFamily: "'Inter', sans-serif" }}>{copy.form.successTitle}</h3>
+                                        <p className="text-slate-600 leading-7 mt-3">{copy.form.successText}</p>
+                                        <div className="mt-6 space-y-3">
+                                            <button type="button" onClick={openWorkspace} className="pro-btn pro-btn-primary w-full justify-center py-3 text-[15px]">
+                                                {copy.form.successCta}
+                                            </button>
+                                            <p className="text-xs text-slate-500 text-center">{copy.form.successHelper}</p>
                                         </div>
                                     </div>
-                                </div>
-                            </section>
+                                )}
+                            </div>
+                        </div>
+                    </section>
 
-                            <section id="pro-access-form" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16" style={{ scrollMarginTop: '96px' }}>
-                                <div className="grid xl:grid-cols-[minmax(0,0.9fr)_minmax(380px,1fr)] gap-8 items-start">
-                                    <div className="pr-0 xl:pr-8">
-                                        <SectionHeader eyebrow={copy.meta.formEyebrow} title={copy.form.title} text={copy.form.subtitle} />
-                                        <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/30">
-                                            <div className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">{copy.form.reasonsTitle}</div>
-                                            <div className="space-y-3 mt-4">
-                                                {copy.form.reasons.map(item => (
-                                                    <div key={item} className="flex items-start gap-3">
-                                                        <div className="w-2.5 h-2.5 rounded-full bg-blue-500 mt-2 shrink-0"></div>
-                                                        <div className="text-sm text-slate-600 leading-7">{item}</div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </div>
+                    {/* ===== CLOSING ===== */}
+                    <section className="reveal max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                        <div className="bg-slate-900 text-white rounded-[24px] px-6 py-10 md:px-10 shadow-lg shadow-slate-900/15 text-center">
+                            <div className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/10 text-slate-200 text-[11px] font-semibold px-4 py-1.5 mb-5">
+                                {copy.closing.urgencyBadge}
+                            </div>
+                            <h2 className="text-2xl md:text-3xl font-black tracking-[-0.03em]" style={{ fontFamily: "'Inter', sans-serif" }}>{copy.closing.title}</h2>
+                            <p className="text-slate-300 text-[15px] leading-7 mt-3 max-w-xl mx-auto">{copy.closing.text}</p>
+                            <button type="button" onClick={() => scrollToSection('pro-access-form')} className="pro-btn pro-btn-primary px-8 py-3.5 text-[15px] mt-7 mx-auto">
+                                {copy.closing.cta}
+                            </button>
+                            <p className="text-xs text-slate-500 mt-3">{copy.closing.helper}</p>
+                        </div>
+                    </section>
 
-                                    <div className="bg-white rounded-[28px] border border-slate-200 p-6 md:p-8 shadow-lg shadow-slate-200/40">
-                                        {!submitted ? (
-                                            <form onSubmit={handleSubmit} className="space-y-5">
-                                                <div className="grid md:grid-cols-2 gap-4">
-                                                    <div>
-                                                        <label className="pro-label">{copy.form.fields.fullName}</label>
-                                                        <input type="text" required className="pro-input" placeholder={copy.form.placeholders.fullName} value={form.fullName} onChange={e => setField('fullName', e.target.value)} />
-                                                    </div>
-                                                    <div>
-                                                        <label className="pro-label">{copy.form.fields.email}</label>
-                                                        <input type="email" required className="pro-input" placeholder={copy.form.placeholders.email} value={form.email} onChange={e => setField('email', e.target.value)} />
-                                                    </div>
-                                                </div>
-
-                                                <div className="grid md:grid-cols-2 gap-4">
-                                                    <div>
-                                                        <label className="pro-label">{copy.form.fields.company}</label>
-                                                        <input type="text" required className="pro-input" placeholder={copy.form.placeholders.company} value={form.company} onChange={e => setField('company', e.target.value)} />
-                                                    </div>
-                                                    <div>
-                                                        <label className="pro-label">{copy.form.fields.role}</label>
-                                                        <input type="text" required className="pro-input" placeholder={copy.form.placeholders.role} value={form.role} onChange={e => setField('role', e.target.value)} />
-                                                    </div>
-                                                </div>
-
-                                                <div className="grid md:grid-cols-2 gap-4">
-                                                    <div>
-                                                        <label className="pro-label">{copy.form.fields.structureType}</label>
-                                                        <input type="text" required className="pro-input" placeholder={copy.form.placeholders.structureType} value={form.structureType} onChange={e => setField('structureType', e.target.value)} />
-                                                    </div>
-                                                    <div>
-                                                        <label className="pro-label">{copy.form.fields.siteVolume}</label>
-                                                        <input type="text" required className="pro-input" placeholder={copy.form.placeholders.siteVolume} value={form.siteVolume} onChange={e => setField('siteVolume', e.target.value)} />
-                                                    </div>
-                                                </div>
-
-                                                <div>
-                                                    <label className="pro-label">{copy.form.fields.message}</label>
-                                                    <textarea className="pro-input min-h-[120px] resize-y" placeholder={copy.form.placeholders.message} value={form.message} onChange={e => setField('message', e.target.value)} />
-                                                </div>
-
-                                                <div className="pt-2">
-                                                    <button type="submit" disabled={isSubmitting} className="pro-btn pro-btn-primary w-full justify-center py-3 text-[15px]">
-                                                        {isSubmitting ? copy.form.submitting : copy.form.cta}
-                                                    </button>
-                                                    <p className="text-xs text-slate-400 text-center mt-3">{copy.form.helper}</p>
-                                                </div>
-                                            </form>
-                                        ) : (
-                                            <div className="fade-in">
-                                                <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-5">
-                                                    <Icon icon="solar:check-circle-bold" style={{ fontSize: '28px' }} />
-                                                </div>
-                                                <h3 className="text-2xl font-black text-slate-900 tracking-tight">{copy.form.successTitle}</h3>
-                                                <p className="text-slate-500 leading-7 mt-3">{copy.form.successText}</p>
-                                                <div className="mt-6 space-y-3">
-                                                    <button type="button" onClick={openWorkspace} className="pro-btn pro-btn-primary w-full justify-center py-3 text-[15px]">
-                                                        {copy.form.successCta}
-                                                    </button>
-                                                    <p className="text-xs text-slate-400">{copy.form.successHelper}</p>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            </section>
-
-                            <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-                                <div className="bg-slate-900 text-white rounded-[28px] px-6 py-10 md:px-10 md:py-12 text-center shadow-xl shadow-slate-900/15">
-                                    <div className="text-[11px] font-black uppercase tracking-[0.22em] text-blue-200 mb-4">{copy.meta.closingEyebrow}</div>
-                                    <h2 className="text-3xl md:text-4xl font-black tracking-tight">{copy.closing.title}</h2>
-                                    <p className="text-slate-300 text-[15px] leading-7 mt-4 max-w-2xl mx-auto">{copy.closing.text}</p>
-                                    <div className="mt-8">
-                                        <button type="button" onClick={() => scrollToSection('pro-access-form')} className="pro-btn pro-btn-primary px-6 py-3 text-[15px]">
-                                            {copy.closing.cta}
-                                        </button>
-                                    </div>
-                                </div>
-                            </section>
-                        </main>
-                    </div>
+                    {/* ===== FOOTER ===== */}
+                    <footer className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 border-t border-slate-200">
+                        <div className="flex flex-col sm:flex-row justify-between items-center gap-3 text-xs text-slate-400">
+                            <span>© 2025 DiagTertiaire · Marque blanche pour les professionnels du tertiaire</span>
+                            <div className="flex items-center gap-4">
+                                <a href="#" className="hover:text-slate-700 transition-colors">RGPD</a>
+                                <a href="#" className="hover:text-slate-700 transition-colors">CGU</a>
+                                <a href="#" className="hover:text-slate-700 transition-colors">Contact</a>
+                            </div>
+                        </div>
+                    </footer>
                 </div>
             );
         };

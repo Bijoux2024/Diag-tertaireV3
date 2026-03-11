@@ -623,33 +623,175 @@
            SECTION 3: CONFIGURATION & HELPERS
            ═══════════════════════════════════════════════════════════════════════════ */
 
-        // Supabase Configuration (Phase 5)
-        // À configurer dans Vercel ou via .env
-        const SUPABASE_URL = ''; // EX: 'https://xxx.supabase.co'
-        const SUPABASE_ANON_KEY = ''; // EX: 'eyJhbGciOiJIUzI1Ni...'
+        let publicRuntimeConfig = null;
+        let publicRuntimeConfigPromise = null;
+
+        const loadPublicRuntimeConfig = async () => {
+            if (publicRuntimeConfig) return publicRuntimeConfig;
+            if (publicRuntimeConfigPromise) return publicRuntimeConfigPromise;
+
+            publicRuntimeConfigPromise = fetch('/api/public-config', {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' }
+            })
+                .then(async (response) => {
+                    if (!response.ok) {
+                        throw new Error(`Impossible de charger /api/public-config (${response.status})`);
+                    }
+                    const data = await response.json();
+                    publicRuntimeConfig = {
+                        supabaseUrl: data.supabaseUrl || '',
+                        supabasePublishableKey: data.supabasePublishableKey || ''
+                    };
+                    return publicRuntimeConfig;
+                })
+                .catch((err) => {
+                    console.error('Erreur chargement config publique :', err);
+                    publicRuntimeConfig = {
+                        supabaseUrl: '',
+                        supabasePublishableKey: ''
+                    };
+                    return publicRuntimeConfig;
+                });
+
+            return publicRuntimeConfigPromise;
+        };
+
+        const newDiagnosticBuildLeadMessage = (...parts) => {
+            const filteredParts = parts
+                .flat()
+                .map(part => typeof part === 'string' ? part.trim() : part)
+                .filter(Boolean);
+
+            return filteredParts.length ? filteredParts.join(' | ') : null;
+        };
+
+        const newDiagnosticBuildProLeadPayload = (contactForm) => ({
+            source: 'landing_pro',
+            name: contactForm.name || null,
+            email: contactForm.email || null,
+            company: contactForm.company || null,
+            phone: null,
+            message: contactForm.message || null,
+            report_id: null,
+            raw_payload: {
+                form: 'landing_pro',
+                name: contactForm.name || null,
+                email: contactForm.email || null,
+                company: contactForm.company || null,
+                message: contactForm.message || null
+            }
+        });
+
+        const newDiagnosticBuildDiagnosticLeadPayload = (formData, reportPayload) => {
+            const inputsSummary = reportPayload && reportPayload.inputs_summary ? reportPayload.inputs_summary : {};
+            const siteName = inputsSummary.site_name
+                || formData.siteName
+                || (formData.address ? formData.address.split(',')[0].trim() : '')
+                || null;
+            const surfaceValue = inputsSummary.surface && typeof inputsSummary.surface === 'object'
+                ? inputsSummary.surface.value
+                : formData.surface;
+
+            return {
+                source: 'diagnostic_report',
+                name: null,
+                email: formData.email || null,
+                company: siteName,
+                phone: formData.phone || null,
+                message: newDiagnosticBuildLeadMessage(
+                    formData.address ? `Adresse: ${formData.address}` : null,
+                    formData.primaryGoal ? `Objectif: ${formData.primaryGoal}` : null,
+                    formData.projectHorizon ? `Horizon: ${formData.projectHorizon}` : null,
+                    formData.contactOptIn ? 'Mise en relation expert: oui' : 'Mise en relation expert: non'
+                ),
+                report_id: reportPayload && reportPayload.report_id ? reportPayload.report_id : null,
+                raw_payload: {
+                    form: 'diagnostic_report',
+                    email: formData.email || null,
+                    phone: formData.phone || null,
+                    address: formData.address || null,
+                    postal_code: formData.postalCode || inputsSummary.postal_code || null,
+                    activity: formData.activity || inputsSummary.activity || null,
+                    surface: surfaceValue || null,
+                    role: formData.decisionRole || formData.role || inputsSummary.decision_role || inputsSummary.role || null,
+                    primary_goal: formData.primaryGoal || null,
+                    project_horizon: formData.projectHorizon || null,
+                    contact_opt_in: !!formData.contactOptIn,
+                    report_id: reportPayload && reportPayload.report_id ? reportPayload.report_id : null
+                }
+            };
+        };
+
+        const newDiagnosticBuildReportCtaLeadPayload = (reportPayload, ctaName, ctaMessage) => {
+            const inputsSummary = reportPayload && reportPayload.inputs_summary ? reportPayload.inputs_summary : {};
+
+            return {
+                source: 'cta_rapport',
+                name: ctaName || null,
+                email: inputsSummary.email || null,
+                company: inputsSummary.site_name || null,
+                phone: inputsSummary.phone || null,
+                message: newDiagnosticBuildLeadMessage(
+                    ctaMessage || null,
+                    inputsSummary.address ? `Adresse: ${inputsSummary.address}` : null
+                ),
+                report_id: reportPayload && reportPayload.report_id ? reportPayload.report_id : null,
+                raw_payload: {
+                    form: 'cta_rapport',
+                    cta_name: ctaName || null,
+                    cta_message: ctaMessage || null,
+                    email: inputsSummary.email || null,
+                    phone: inputsSummary.phone || null,
+                    company: inputsSummary.site_name || null,
+                    address: inputsSummary.address || null,
+                    postal_code: inputsSummary.postal_code || null,
+                    activity: inputsSummary.activity || null,
+                    surface: inputsSummary.surface && typeof inputsSummary.surface === 'object' ? inputsSummary.surface.value : null,
+                    role: inputsSummary.decision_role || inputsSummary.role || null,
+                    report_id: reportPayload && reportPayload.report_id ? reportPayload.report_id : null
+                }
+            };
+        };
 
         const newDiagnosticSubmitLead = async (leadData) => {
-            if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+            const { supabaseUrl, supabasePublishableKey } = await loadPublicRuntimeConfig();
+
+            if (!supabaseUrl || !supabasePublishableKey) {
                 console.warn('Supabase non configuré. Lead non sauvegardé :', leadData);
                 return;
             }
 
+            const payload = {
+                source: leadData.source || null,
+                name: leadData.name || null,
+                email: leadData.email || null,
+                company: leadData.company || null,
+                phone: leadData.phone || null,
+                message: leadData.message || null,
+                report_id: leadData.report_id || null,
+                raw_payload: leadData
+            };
+
             try {
-                const response = await fetch(`${SUPABASE_URL}/rest/v1/leads`, {
+                console.log('lead submit triggered', payload);
+                const response = await fetch(`${supabaseUrl}/rest/v1/lead_submissions`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'apikey': SUPABASE_ANON_KEY,
-                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                        'apikey': supabasePublishableKey,
+                        'Authorization': `Bearer ${supabasePublishableKey}`,
                         'Prefer': 'return=minimal'
                     },
-                    body: JSON.stringify({
-                        ...leadData,
-                        created_at: new Date().toISOString()
-                    })
+                    body: JSON.stringify(payload)
                 });
+                console.log('lead submit response', response.status);
 
-                if (!response.ok) throw new Error('Erreur Supabase');
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Erreur Supabase lead_submissions: ${response.status} ${errorText}`);
+                }
+
                 console.log('Lead sauvegardé avec succès');
             } catch (err) {
                 console.error('Erreur lors de la sauvegarde du lead :', err);
@@ -1896,18 +2038,12 @@
             };
 
             // Soumission formulaire contact
-            const handleContactSubmit = (e) => {
+            const handleContactSubmit = async (e) => {
                 e.preventDefault();
                 console.log('Contact Pro:', contactForm);
 
-                // Envoi lead Supabase
-                newDiagnosticSubmitLead({
-                    name: contactForm.name,
-                    email: contactForm.email,
-                    company: contactForm.company,
-                    message: contactForm.message,
-                    source: 'landing_pro'
-                });
+                const leadPayload = newDiagnosticBuildProLeadPayload(contactForm);
+                await newDiagnosticSubmitLead(leadPayload);
 
                 setFormSubmitted(true);
             };
@@ -6106,14 +6242,9 @@
                                                         <button type="button" onClick={closeCTAModal} className="flex-1 px-4 py-3 border border-neutral-300 text-neutral-700 rounded-xl text-sm font-medium hover:bg-neutral-50">Annuler</button>
                                                         <button
                                                             type="button"
-                                                            onClick={() => {
-                                                                newDiagnosticSubmitLead({
-                                                                    email: reportPayload.inputs_summary.email,
-                                                                    name: ctaName,
-                                                                    message: ctaMessage,
-                                                                    report_id: reportPayload.report_id,
-                                                                    source: 'cta_rapport'
-                                                                });
+                                                            onClick={async () => {
+                                                                const leadPayload = newDiagnosticBuildReportCtaLeadPayload(reportPayload, ctaName, ctaMessage);
+                                                                await newDiagnosticSubmitLead(leadPayload);
                                                                 setCtaSent(true);
                                                                 setTimeout(() => setShowCTAModal(false), 2000);
                                                             }}
@@ -6345,7 +6476,7 @@
                 } catch (e) { /* silent */ }
             }, []);
 
-            const handleComplete = () => {
+            const handleComplete = async () => {
                 setSubmitError(null);
 
                 try {
@@ -6358,17 +6489,8 @@
                     const payload = newDiagnosticBuildReportData(formData);
                     setReportPayload(payload);
 
-                    // Envoi lead Supabase
-                    newDiagnosticSubmitLead({
-                        email: formData.email,
-                        phone: formData.phone,
-                        postal_code: formData.postalCode,
-                        activity: formData.activity,
-                        surface: formData.surface,
-                        role: formData.role,
-                        report_id: payload.report_id,
-                        source: 'diagnostic_report'
-                    });
+                    const leadPayload = newDiagnosticBuildDiagnosticLeadPayload(formData, payload);
+                    await newDiagnosticSubmitLead(leadPayload);
 
                     if (typeof onComplete === 'function') {
                         onComplete(formData, payload);

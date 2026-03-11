@@ -777,6 +777,29 @@
             raw_payload: leadData
         });
 
+        const newDiagnosticGenerateSubmissionId = () => {
+            const cryptoObject = typeof globalThis !== 'undefined' ? globalThis.crypto : null;
+
+            if (cryptoObject && typeof cryptoObject.randomUUID === 'function') {
+                return cryptoObject.randomUUID();
+            }
+
+            if (cryptoObject && typeof cryptoObject.getRandomValues === 'function') {
+                const bytes = new Uint8Array(16);
+                cryptoObject.getRandomValues(bytes);
+                bytes[6] = (bytes[6] & 0x0f) | 0x40;
+                bytes[8] = (bytes[8] & 0x3f) | 0x80;
+                const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+                return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+            }
+
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (char) => {
+                const randomValue = Math.random() * 16 | 0;
+                const value = char === 'x' ? randomValue : (randomValue & 0x3) | 0x8;
+                return value.toString(16);
+            });
+        };
+
         const newDiagnosticInsertSupabaseRow = async (tableName, payload, preferHeader = 'return=minimal') => {
             const { supabaseUrl, supabasePublishableKey } = await loadPublicRuntimeConfig();
 
@@ -820,7 +843,9 @@
         //Logique donnée sauvegardée
 
         const newDiagnosticSubmitLead = async (leadData) => {
+            const leadSubmissionId = leadData.id || newDiagnosticGenerateSubmissionId();
             const payload = {
+                id: leadSubmissionId,
                 source: leadData.source || null,
                 name: leadData.name || null,
                 email: leadData.email || null,
@@ -831,13 +856,14 @@
                 raw_payload: leadData
             };
 
-            const insertedLead = await newDiagnosticInsertSupabaseRow('lead_submissions', payload, 'return=representation');
+            const insertedLead = await newDiagnosticInsertSupabaseRow('lead_submissions', payload);
 
             if (insertedLead) {
                 console.log('public lead inserted');
+                return { id: leadSubmissionId };
             }
 
-            return insertedLead;
+            return null;
         };
 
         const newDiagnosticSubmitPartnerLead = async (leadData, insertedLeadId) => {
@@ -6300,6 +6326,8 @@
 
                     if (leadPayload.partnerConsent) {
                         await newDiagnosticSubmitPartnerLead(leadPayload, leadSubmissionId);
+                    } else {
+                        console.log('partner consent false, no partner insert');
                     }
 
                     setReportPayload(nextReportPayload);

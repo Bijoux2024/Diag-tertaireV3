@@ -813,7 +813,14 @@
         };
 
         const newDiagnosticSubmitLead = async (leadData) => {
-            const payload = {
+            const { supabaseUrl, supabasePublishableKey } = await loadPublicRuntimeConfig();
+
+            if (!supabaseUrl || !supabasePublishableKey) {
+                console.warn('Supabase non configuré. Lead non sauvegardé :', leadData);
+                return null;
+            }
+
+            const publicPayload = {
                 source: leadData.source || null,
                 name: leadData.name || null,
                 email: leadData.email || null,
@@ -824,18 +831,83 @@
                 raw_payload: leadData
             };
 
-            const insertedLead = await newDiagnosticInsertSupabaseRow('lead_submissions', payload, 'return=representation');
+            try {
+                console.log('lead submit triggered', publicPayload);
 
-            if (insertedLead) {
-                console.log('Lead sauvegarde avec succes');
+                const publicResponse = await fetch(`${supabaseUrl}/rest/v1/lead_submissions`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': supabasePublishableKey,
+                        'Authorization': `Bearer ${supabasePublishableKey}`,
+                        'Prefer': 'return=representation'
+                    },
+                    body: JSON.stringify(publicPayload)
+                });
+
+                const publicResponseText = await publicResponse.text();
+                console.log('lead submit response', publicResponse.status, publicResponseText);
+
+                if (!publicResponse.ok) {
+                    throw new Error(`Erreur lead_submissions: ${publicResponse.status} ${publicResponseText}`);
+                }
+
+                let insertedLead = null;
+                try {
+                    const parsed = publicResponseText ? JSON.parse(publicResponseText) : null;
+                    insertedLead = Array.isArray(parsed) ? parsed[0] : parsed;
+                } catch (e) {
+                    insertedLead = null;
+                }
+
+                console.log('public lead inserted');
+
+                if (leadData.partnerConsent === true) {
+                    const partnerPayload = {
+                        lead_submission_id: insertedLead?.id || null,
+                        source: leadData.source || null,
+                        trigger_type: leadData.trigger_type || 'form_partner_checkbox',
+                        name: leadData.name || null,
+                        email: leadData.email || null,
+                        company: leadData.company || null,
+                        phone: leadData.phone || null,
+                        message: leadData.message || null,
+                        report_id: leadData.report_id || null,
+                        consent_given: true,
+                        consent_text_version: 'v1_2026-03-11',
+                        raw_payload: leadData
+                    };
+
+                    console.log('lead submit triggered', partnerPayload);
+
+                    const partnerResponse = await fetch(`${supabaseUrl}/rest/v1/partner_lead_submissions`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'apikey': supabasePublishableKey,
+                            'Authorization': `Bearer ${supabasePublishableKey}`,
+                            'Prefer': 'return=minimal'
+                        },
+                        body: JSON.stringify(partnerPayload)
+                    });
+
+                    const partnerResponseText = await partnerResponse.text();
+                    console.log('lead submit response', partnerResponse.status, partnerResponseText);
+
+                    if (!partnerResponse.ok) {
+                        throw new Error(`Erreur partner_lead_submissions: ${partnerResponse.status} ${partnerResponseText}`);
+                    }
+
+                    console.log('partner lead inserted');
+                } else {
+                    console.log('partner consent false, no partner insert');
+                }
+
+                return insertedLead;
+            } catch (err) {
+                console.error('Erreur lors de la sauvegarde du lead :', err);
+                return null;
             }
-
-            return insertedLead;
-        };
-
-        const newDiagnosticSubmitPartnerLead = async (leadData, insertedLeadId) => {
-            const payload = newDiagnosticBuildPartnerLeadPayload(leadData, insertedLeadId);
-            return newDiagnosticInsertSupabaseRow('partner_lead_submissions', payload);
         };
 
         /* ═══════════════════════════════════════════════════════════════════════════

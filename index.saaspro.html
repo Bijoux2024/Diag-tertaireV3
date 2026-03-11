@@ -719,6 +719,7 @@
                     throw new Error(`Erreur Supabase pro_interest_submissions: ${response.status} ${errorText}`);
                 }
 
+                console.log('pro lead inserted');
                 return true;
             } catch (error) {
                 console.error('Erreur lors de la sauvegarde du lead B2B :', error);

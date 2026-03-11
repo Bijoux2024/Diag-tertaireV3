@@ -637,6 +637,95 @@
 
         /* ===== CONFIG ===== */
 
+        let publicRuntimeConfig = null;
+        let publicRuntimeConfigPromise = null;
+
+        const loadPublicRuntimeConfig = async () => {
+            if (publicRuntimeConfig) {
+                return publicRuntimeConfig;
+            }
+
+            if (!publicRuntimeConfigPromise) {
+                publicRuntimeConfigPromise = fetch('/api/public-config', { cache: 'no-store' })
+                    .then(async (response) => {
+                        if (!response.ok) {
+                            throw new Error(`Erreur /api/public-config: ${response.status}`);
+                        }
+
+                        const data = await response.json().catch(() => ({}));
+                        publicRuntimeConfig = {
+                            supabaseUrl: data.supabaseUrl || '',
+                            supabasePublishableKey: data.supabasePublishableKey || ''
+                        };
+
+                        return publicRuntimeConfig;
+                    })
+                    .catch((error) => {
+                        console.warn('Impossible de charger la configuration publique :', error);
+                        publicRuntimeConfig = {
+                            supabaseUrl: '',
+                            supabasePublishableKey: ''
+                        };
+                        return publicRuntimeConfig;
+                    });
+            }
+
+            return publicRuntimeConfigPromise;
+        };
+
+        const buildProInterestMessage = (...parts) => {
+            const filteredParts = parts
+                .flat()
+                .map(part => typeof part === 'string' ? part.trim() : part)
+                .filter(Boolean);
+
+            return filteredParts.length ? filteredParts.join(' | ') : null;
+        };
+
+        const submitProInterestLead = async (leadData) => {
+            const { supabaseUrl, supabasePublishableKey } = await loadPublicRuntimeConfig();
+
+            if (!supabaseUrl || !supabasePublishableKey) {
+                console.warn('Supabase non configure. Lead non sauvegarde :', leadData);
+                return null;
+            }
+
+            const payload = {
+                source: leadData.source || 'saaspro',
+                name: leadData.name || null,
+                email: leadData.email || null,
+                company: leadData.company || null,
+                phone: leadData.phone || null,
+                message: leadData.message || null,
+                raw_payload: leadData
+            };
+
+            try {
+                console.log('lead submit triggered', payload);
+                const response = await fetch(`${supabaseUrl}/rest/v1/pro_interest_submissions`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': supabasePublishableKey,
+                        'Authorization': `Bearer ${supabasePublishableKey}`,
+                        'Prefer': 'return=minimal'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                console.log('lead submit response', response.status);
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Erreur Supabase pro_interest_submissions: ${response.status} ${errorText}`);
+                }
+
+                return true;
+            } catch (error) {
+                console.error('Erreur lors de la sauvegarde du lead B2B :', error);
+                return null;
+            }
+        };
+
         /* ---------------------------------------------------------------------------
            ENGINE_PRO : MOTEUR COMMUN DE CALCUL (Gratuit + SaaS)
            --------------------------------------------------------------------------- */
@@ -2502,19 +2591,45 @@
             return <span className={`status-badge ${cls}`}>{status}</span>;
         };
 
+        const DEMO_MODAL_INITIAL_FORM = {
+            name: '',
+            company: '',
+            email: '',
+            mainChallenge: ''
+        };
+
         /* ===== MODAL DEMO B2B (Mise à jour avec workflow complet et vidéo placeholder) ===== */
         const DemoModal = ({ isOpen, onClose }) => {
             const [step, setStep] = useState(1);
+            const [form, setForm] = useState(DEMO_MODAL_INITIAL_FORM);
+            const setField = (key, value) => setForm(prev => ({ ...prev, [key]: value }));
 
             // Reset à la fermeture
             useEffect(() => {
-                if (!isOpen) setTimeout(() => setStep(1), 300);
+                if (!isOpen) {
+                    setTimeout(() => {
+                        setStep(1);
+                        setForm(DEMO_MODAL_INITIAL_FORM);
+                    }, 300);
+                }
             }, [isOpen]);
 
             if (!isOpen) return null;
 
-            const handleSubmit = (e) => {
+            const handleSubmit = async (e) => {
                 e.preventDefault();
+                await submitProInterestLead({
+                    source: 'saaspro_demo_modal',
+                    name: form.name || null,
+                    email: form.email || null,
+                    company: form.company || null,
+                    phone: null,
+                    message: buildProInterestMessage(
+                        form.mainChallenge ? `Enjeu principal: ${form.mainChallenge}` : null
+                    ),
+                    form: 'demo_modal',
+                    main_challenge: form.mainChallenge || null
+                });
                 setStep(2); // Passage écran succès
             };
 
@@ -2539,20 +2654,20 @@
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
                                             <label className="pro-label">Prénom & Nom</label>
-                                            <input type="text" className="pro-input" placeholder="Ex: Marie Dupont" required />
+                                            <input type="text" className="pro-input" placeholder="Ex: Marie Dupont" value={form.name} onChange={e => setField('name', e.target.value)} required />
                                         </div>
                                         <div>
                                             <label className="pro-label">Société/ Cabinet</label>
-                                            <input type="text" className="pro-input" placeholder="Ex: Nexity" required />
+                                            <input type="text" className="pro-input" placeholder="Ex: Nexity" value={form.company} onChange={e => setField('company', e.target.value)} required />
                                         </div>
                                     </div>
                                     <div>
                                         <label className="pro-label">Email professionnel</label>
-                                        <input type="email" className="pro-input" placeholder="marie@entreprise.com" required />
+                                        <input type="email" className="pro-input" placeholder="marie@entreprise.com" value={form.email} onChange={e => setField('email', e.target.value)} required />
                                     </div>
                                     <div>
                                         <label className="pro-label">Enjeu principal (optionnel)</label>
-                                        <select className="pro-input text-slate-600">
+                                        <select className="pro-input text-slate-600" value={form.mainChallenge} onChange={e => setField('mainChallenge', e.target.value)}>
                                             <option value="">Sélectionnez un enjeu</option>
                                             <option value="1">Génération de rapports en marque blanche</option>
                                             <option value="2">Supervision d'un parc immobilier multi-sites</option>
@@ -4873,15 +4988,35 @@
                 } catch (e) { }
             };
 
-            const handleSubmit = (e) => {
+            const handleSubmit = async (e) => {
                 e.preventDefault();
                 setIsSubmitting(true);
-                const payload = { ...form, requestedAt: new Date().toISOString(), source: 'pro-landing' };
-                setTimeout(() => {
+                const payload = { ...form, requestedAt: new Date().toISOString(), source: 'saaspro_pro_landing' };
+
+                try {
+                    await submitProInterestLead({
+                        source: payload.source,
+                        name: form.fullName || null,
+                        email: form.email || null,
+                        company: form.company || null,
+                        phone: null,
+                        message: buildProInterestMessage(
+                            form.message || null,
+                            form.role ? `Role: ${form.role}` : null,
+                            form.siteVolume ? `Volume de sites: ${form.siteVolume}` : null
+                        ),
+                        form: 'pro_landing',
+                        role: form.role || null,
+                        siteVolume: form.siteVolume || null,
+                        requestedAt: payload.requestedAt
+                    });
+
+                    await new Promise(resolve => setTimeout(resolve, 400));
                     saveLead(payload);
                     setSubmitted(true);
+                } finally {
                     setIsSubmitting(false);
-                }, 400);
+                }
             };
 
             const openWorkspace = () => {

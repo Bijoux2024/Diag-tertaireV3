@@ -706,6 +706,8 @@
                     formData.contactOptIn ? 'Mise en relation expert: oui' : 'Mise en relation expert: non'
                 ),
                 report_id: reportPayload && reportPayload.report_id ? reportPayload.report_id : null,
+                partnerConsent: !!formData.contactOptIn,
+                trigger_type: 'form_partner_checkbox',
                 raw_payload: {
                     form: 'diagnostic_report',
                     email: formData.email || null,
@@ -737,6 +739,8 @@
                     inputsSummary.address ? `Adresse: ${inputsSummary.address}` : null
                 ),
                 report_id: reportPayload && reportPayload.report_id ? reportPayload.report_id : null,
+                partnerConsent: true,
+                trigger_type: 'report_partner_accept',
                 raw_payload: {
                     form: 'cta_rapport',
                     cta_name: ctaName || null,
@@ -754,14 +758,61 @@
             };
         };
 
-        const newDiagnosticSubmitLead = async (leadData) => {
+        const newDiagnosticBuildPartnerLeadPayload = (leadData, insertedLeadId) => ({
+            lead_submission_id: insertedLeadId || null,
+            source: leadData.source || null,
+            trigger_type: leadData.trigger_type || 'form_partner_checkbox',
+            name: leadData.name || null,
+            email: leadData.email || null,
+            company: leadData.company || null,
+            phone: leadData.phone || null,
+            message: leadData.message || null,
+            report_id: leadData.report_id || null,
+            consent_given: true,
+            consent_text_version: 'v1_2026-03-11',
+            raw_payload: leadData
+        });
+
+        const newDiagnosticInsertSupabaseRow = async (tableName, payload, preferHeader = 'return=minimal') => {
             const { supabaseUrl, supabasePublishableKey } = await loadPublicRuntimeConfig();
 
             if (!supabaseUrl || !supabasePublishableKey) {
-                console.warn('Supabase non configuré. Lead non sauvegardé :', leadData);
-                return;
+                console.warn('Supabase non configure. Lead non sauvegarde :', payload);
+                return null;
             }
 
+            try {
+                console.log('lead submit triggered', payload);
+                const response = await fetch(`${supabaseUrl}/rest/v1/${tableName}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': supabasePublishableKey,
+                        'Authorization': `Bearer ${supabasePublishableKey}`,
+                        'Prefer': preferHeader
+                    },
+                    body: JSON.stringify(payload)
+                });
+                console.log('lead submit response', response.status);
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Erreur Supabase ${tableName}: ${response.status} ${errorText}`);
+                }
+
+                if (preferHeader === 'return=representation') {
+                    const rows = await response.json().catch(() => null);
+                    return Array.isArray(rows) ? (rows[0] || null) : rows;
+                }
+
+                return true;
+            } catch (err) {
+                console.error('Erreur lors de la sauvegarde du lead :', err);
+                return null;
+            }
+        };
+
+        const newDiagnosticSubmitLead = async (leadData) => {
             const payload = {
                 source: leadData.source || null,
                 name: leadData.name || null,
@@ -773,29 +824,18 @@
                 raw_payload: leadData
             };
 
-            try {
-                console.log('lead submit triggered', payload);
-                const response = await fetch(`${supabaseUrl}/rest/v1/lead_submissions`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'apikey': supabasePublishableKey,
-                        'Authorization': `Bearer ${supabasePublishableKey}`,
-                        'Prefer': 'return=minimal'
-                    },
-                    body: JSON.stringify(payload)
-                });
-                console.log('lead submit response', response.status);
+            const insertedLead = await newDiagnosticInsertSupabaseRow('lead_submissions', payload, 'return=representation');
 
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`Erreur Supabase lead_submissions: ${response.status} ${errorText}`);
-                }
-
-                console.log('Lead sauvegardé avec succès');
-            } catch (err) {
-                console.error('Erreur lors de la sauvegarde du lead :', err);
+            if (insertedLead) {
+                console.log('Lead sauvegarde avec succes');
             }
+
+            return insertedLead;
+        };
+
+        const newDiagnosticSubmitPartnerLead = async (leadData, insertedLeadId) => {
+            const payload = newDiagnosticBuildPartnerLeadPayload(leadData, insertedLeadId);
+            return newDiagnosticInsertSupabaseRow('partner_lead_submissions', payload);
         };
 
         /* ═══════════════════════════════════════════════════════════════════════════
@@ -3856,10 +3896,10 @@
 
                     <div className="mt-6 p-4 bg-[#EFF6FF] border border-[#DBEAFE] rounded-lg">
                         <NewDiagnosticCheckbox
-                            label="Souhaitez-vous être mis en relation avec un expert pro pour affiner votre projet ?"
+                            label="J'accepte d'être mis en relation avec un partenaire au sujet de mon projet."
                             checked={formData.contactOptIn}
                             onChange={(v) => setFormData({ ...formData, contactOptIn: v })}
-                            helper="Facultatif : vous pourrez télécharger votre rapport détaillé"
+                            helper="Si vous cochez cette case, vos coordonnées et les informations utiles à votre projet pourront être transmises à nos partenaires pour vous recontacter."
                         />
                     </div>
 
@@ -5627,7 +5667,7 @@
             };
         }
 
-        const NewDiagnosticReportScreen = ({ reportPayload, userEmail }) => {
+        const NewDiagnosticReportScreen = ({ reportPayload, userEmail, onLeadSubmissionCreated }) => {
             const [isPDFGenerating, setIsPDFGenerating] = useState(false);
             const [showCTAModal, setShowCTAModal] = useState(false);
             const [ctaName, setCtaName] = useState('');
@@ -6244,7 +6284,20 @@
                                                             type="button"
                                                             onClick={async () => {
                                                                 const leadPayload = newDiagnosticBuildReportCtaLeadPayload(reportPayload, ctaName, ctaMessage);
-                                                                await newDiagnosticSubmitLead(leadPayload);
+                                                                let leadSubmissionId = reportPayload && reportPayload.lead_submission_id
+                                                                    ? reportPayload.lead_submission_id
+                                                                    : null;
+
+                                                                if (!leadSubmissionId) {
+                                                                    const insertedLead = await newDiagnosticSubmitLead(leadPayload);
+                                                                    leadSubmissionId = insertedLead && insertedLead.id ? insertedLead.id : null;
+
+                                                                    if (leadSubmissionId && typeof onLeadSubmissionCreated === 'function') {
+                                                                        onLeadSubmissionCreated(leadSubmissionId);
+                                                                    }
+                                                                }
+
+                                                                await newDiagnosticSubmitPartnerLead(leadPayload, leadSubmissionId);
                                                                 setCtaSent(true);
                                                                 setTimeout(() => setShowCTAModal(false), 2000);
                                                             }}
@@ -6487,13 +6540,21 @@
                     });
 
                     const payload = newDiagnosticBuildReportData(formData);
-                    setReportPayload(payload);
-
                     const leadPayload = newDiagnosticBuildDiagnosticLeadPayload(formData, payload);
-                    await newDiagnosticSubmitLead(leadPayload);
+                    const insertedLead = await newDiagnosticSubmitLead(leadPayload);
+                    const leadSubmissionId = insertedLead && insertedLead.id ? insertedLead.id : null;
+                    const nextReportPayload = leadSubmissionId
+                        ? { ...payload, lead_submission_id: leadSubmissionId }
+                        : payload;
+
+                    if (leadPayload.partnerConsent) {
+                        await newDiagnosticSubmitPartnerLead(leadPayload, leadSubmissionId);
+                    }
+
+                    setReportPayload(nextReportPayload);
 
                     if (typeof onComplete === 'function') {
-                        onComplete(formData, payload);
+                        onComplete(formData, nextReportPayload);
                     }
 
                     try {
@@ -6537,6 +6598,15 @@
                         <NewDiagnosticReportScreen
                             reportPayload={reportPayload}
                             userEmail={formData.email}
+                            onLeadSubmissionCreated={(leadSubmissionId) => {
+                                setReportPayload((prev) => {
+                                    if (!prev || prev.lead_submission_id === leadSubmissionId) {
+                                        return prev;
+                                    }
+
+                                    return { ...prev, lead_submission_id: leadSubmissionId };
+                                });
+                            }}
                         />
                     </div>
                 );

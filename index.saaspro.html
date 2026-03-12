@@ -4996,8 +4996,10 @@
                             <p className="text-slate-500 mt-1">Synthèse de votre activité diagnostics.</p>
                         </div>
                         <button type="button" onClick={() => setPage('new')} className="pro-btn pro-btn-primary shadow-lg shadow-blue-500/20">
-                            <Icon icon="solar:add-square-bold" style={{ fontSize: '18px' }} />
-                            Nouveau diagnostic
+                            <span className="flex items-center gap-2">
+                                <Icon icon="solar:add-square-bold" style={{ fontSize: '18px' }} />
+                                <span>Nouveau diagnostic</span>
+                            </span>
                         </button>
                     </div>
 
@@ -5026,7 +5028,7 @@
                             <div className="flex items-center gap-2 text-slate-500 font-semibold text-sm mb-4">
                                 <Icon icon="solar:wallet-bold" className="text-green-600 text-xl" /> Économies moyennes
                             </div>
-                            <div className="text-3xl font-extrabold text-slate-900">{avgSavingsPerCase.toLocaleString('fr-FR')} euros</div>
+                            <div className="text-3xl font-extrabold text-slate-900">{`${Number(avgSavingsPerCase || 0).toLocaleString('fr-FR')} euros`}</div>
                             <div className="text-xs text-slate-400 mt-2 font-medium">economie par client et par an apres travaux</div>
                             <div className="text-xs text-emerald-600 font-bold mt-1">sur {casesComputed.length} dossier{casesComputed.length > 1 ? 's' : ''} analyses</div>
                         </div>
@@ -5096,7 +5098,8 @@
             });
 
             const deleteCase = async (id) => {
-                if (!window.confirm('Supprimer ce dossier définitivement ?')) return;
+                try {
+                    if (!window.confirm('Supprimer ce dossier définitivement ?')) return;
                     await onDeleteCase?.(id);
                 } catch (error) {
                     window.alert(error?.message || "Impossible de supprimer ce dossier pour le moment.");
@@ -7718,24 +7721,24 @@
                                     </form>
                                 </div>
 
-                            <div className="bg-white rounded-[26px] border border-slate-200 p-6 md:p-8 shadow-md shadow-slate-200/30">
-                                {!submitted ? (
-                                    <form onSubmit={handleSubmit} className="space-y-4">
-                                        <div style={PRO_FORM_ANTISPAM_HONEYPOT_STYLE} aria-hidden="true">
-                                            <label htmlFor="pro-landing-website">Site web</label>
-                                            <input
-                                                id="pro-landing-website"
-                                                name="website"
-                                                type="text"
-                                                tabIndex="-1"
-                                                autoComplete="off"
-                                                value={honeypot}
-                                                onChange={e => setHoneypot(e.target.value)}
-                                            />
-                                        </div>
-                                        <div className="grid md:grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="pro-label">{copy.form.fields.fullName}</label>
+                                <div className="bg-white rounded-[26px] border border-slate-200 p-6 md:p-8 shadow-md shadow-slate-200/30">
+                                    {!submitted ? (
+                                        <form onSubmit={handleSubmit} className="space-y-4">
+                                            <div style={PRO_FORM_ANTISPAM_HONEYPOT_STYLE} aria-hidden="true">
+                                                <label htmlFor="pro-landing-website">Site web</label>
+                                                <input
+                                                    id="pro-landing-website"
+                                                    name="website"
+                                                    type="text"
+                                                    tabIndex="-1"
+                                                    autoComplete="off"
+                                                    value={honeypot}
+                                                    onChange={e => setHoneypot(e.target.value)}
+                                                />
+                                            </div>
+                                            <div className="grid md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="pro-label">{copy.form.fields.fullName}</label>
                                                     <input type="text" required className="pro-input" placeholder={copy.form.placeholders.fullName} value={form.fullName} onChange={e => setField('fullName', e.target.value)} />
                                                 </div>
                                                 <div>

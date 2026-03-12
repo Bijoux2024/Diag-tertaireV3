@@ -23,23 +23,43 @@ const createPdfRenderError = (message, statusCode = 500) => {
   return error;
 };
 
-const getRequiredRuntimeModule = (moduleName, installHint) => {
+let cachedPuppeteerCore = null;
+let cachedChromiumRuntime = null;
+
+// Keep literal requires so Vercel's runtime tracing includes these modules.
+const getPuppeteerCore = () => {
+  if (cachedPuppeteerCore) {
+    return cachedPuppeteerCore;
+  }
+
   try {
-    return require(moduleName);
+    cachedPuppeteerCore = require('puppeteer-core');
+    return cachedPuppeteerCore;
   } catch (error) {
     throw createPdfRenderError(
-      `Missing runtime dependency "${moduleName}". ${installHint}`,
+      'Missing runtime dependency "puppeteer-core". Install it in package.json dependencies for the Vercel runtime.',
+      500
+    );
+  }
+};
+
+const getChromiumRuntime = () => {
+  if (cachedChromiumRuntime) {
+    return cachedChromiumRuntime;
+  }
+
+  try {
+    cachedChromiumRuntime = require('@sparticuz/chromium');
+    return cachedChromiumRuntime;
+  } catch (error) {
+    throw createPdfRenderError(
+      'Missing runtime dependency "@sparticuz/chromium". Install it in package.json dependencies for the Vercel runtime.',
       500
     );
   }
 };
 
 const resolveChromiumExecutablePath = async (chromium) => {
-  const explicitPath = String(process.env.PUPPETEER_EXECUTABLE_PATH || '').trim();
-  if (explicitPath) {
-    return explicitPath;
-  }
-
   try {
     const runtimePath = await chromium.executablePath();
     if (runtimePath) {
@@ -56,23 +76,17 @@ const resolveChromiumExecutablePath = async (chromium) => {
 };
 
 const launchChromiumBrowser = async () => {
-  const puppeteer = getRequiredRuntimeModule(
-    'puppeteer-core',
-    'Install it in package.json dependencies for the Vercel runtime.'
-  );
-  const chromium = getRequiredRuntimeModule(
-    '@sparticuz/chromium',
-    'Install it in package.json dependencies for the Vercel runtime.'
-  );
-
-  const executablePath = await resolveChromiumExecutablePath(chromium);
-  const args = Array.isArray(chromium.args) ? chromium.args.slice() : [];
+  const puppeteer = getPuppeteerCore();
+  const explicitPath = String(process.env.PUPPETEER_EXECUTABLE_PATH || '').trim();
+  const chromium = explicitPath ? null : getChromiumRuntime();
+  const executablePath = explicitPath || await resolveChromiumExecutablePath(chromium);
+  const args = chromium && Array.isArray(chromium.args) ? chromium.args.slice() : [];
 
   return puppeteer.launch({
     args: [...args, '--hide-scrollbars', '--font-render-hinting=medium'],
     executablePath,
-    headless: chromium.headless !== false,
-    defaultViewport: chromium.defaultViewport || DEFAULT_VIEWPORT
+    headless: chromium ? chromium.headless !== false : true,
+    defaultViewport: chromium?.defaultViewport || DEFAULT_VIEWPORT
   });
 };
 

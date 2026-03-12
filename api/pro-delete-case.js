@@ -16,6 +16,8 @@ const asPlainObject = (value) => {
 
 const asArray = (value) => Array.isArray(value) ? value : [];
 
+const encodeQueryValue = (value) => encodeURIComponent(String(value ?? ''));
+
 const encodeStoragePath = (path) => String(path || '')
   .split('/')
   .map((segment) => encodeURIComponent(segment))
@@ -102,6 +104,44 @@ const normalizeDeletionResult = (value) => {
   };
 };
 
+const validateStorageCleanupTarget = ({
+  organizationId,
+  bucketName,
+  storagePath
+}) => {
+  const normalizedOrganizationId = String(organizationId || '').trim();
+  const normalizedBucketName = String(bucketName || ORGANIZATION_ASSETS_BUCKET).trim() || ORGANIZATION_ASSETS_BUCKET;
+  const normalizedStoragePath = String(storagePath || '').trim();
+
+  if (!normalizedOrganizationId) {
+    return {
+      ok: false,
+      message: 'Missing organization scope for storage cleanup'
+    };
+  }
+
+  if (normalizedBucketName !== ORGANIZATION_ASSETS_BUCKET) {
+    return {
+      ok: false,
+      message: 'Storage cleanup bucket is outside the allowed scope'
+    };
+  }
+
+  const expectedPrefix = `org/${normalizedOrganizationId}/reports/`;
+  if (!normalizedStoragePath.startsWith(expectedPrefix)) {
+    return {
+      ok: false,
+      message: 'Storage cleanup path is outside the authenticated organization report scope'
+    };
+  }
+
+  return {
+    ok: true,
+    bucketName: normalizedBucketName,
+    storagePath: normalizedStoragePath
+  };
+};
+
 const deleteStorageObject = async ({
   supabaseUrl,
   serviceKey,
@@ -143,6 +183,7 @@ const deleteStorageObject = async ({
 const updateOrganizationFilesStatus = async ({
   supabaseUrl,
   serviceKey,
+  organizationId,
   fileIds,
   status
 }) => {
@@ -151,10 +192,15 @@ const updateOrganizationFilesStatus = async ({
     return;
   }
 
+  let path = `organization_files?id=in.(${uniqueIds.join(',')})`;
+  if (organizationId) {
+    path += `&organization_id=eq.${encodeQueryValue(organizationId)}`;
+  }
+
   await supabaseRestFetch(
     supabaseUrl,
     serviceKey,
-    `organization_files?id=in.(${uniqueIds.join(',')})`,
+    path,
     {
       method: 'PATCH',
       headers: {
@@ -210,22 +256,49 @@ module.exports = async function handler(req, res) {
 
     const deletionResult = normalizeDeletionResult(rpcResult);
     const filesNeedingCleanup = deletionResult.files.filter((file) => file.storagePath);
+    const cleanupCandidates = filesNeedingCleanup.map((file) => {
+      const validation = validateStorageCleanupTarget({
+        organizationId: deletionResult.organizationId,
+        bucketName: file.bucketName || ORGANIZATION_ASSETS_BUCKET,
+        storagePath: file.storagePath
+      });
 
-    const cleanupResults = await Promise.all(
-      filesNeedingCleanup.map(async (file) => {
-        const result = await deleteStorageObject({
-          supabaseUrl,
-          serviceKey,
-          bucketName: file.bucketName || ORGANIZATION_ASSETS_BUCKET,
-          storagePath: file.storagePath
-        });
+      return {
+        file,
+        validation
+      };
+    });
 
-        return {
-          ...file,
-          ...result
-        };
-      })
-    );
+    const rejectedCleanupResults = cleanupCandidates
+      .filter((entry) => !entry.validation.ok)
+      .map((entry) => ({
+        ...entry.file,
+        ok: false,
+        message: entry.validation.message
+      }));
+
+    const cleanupResults = [
+      ...rejectedCleanupResults,
+      ...await Promise.all(
+        cleanupCandidates
+          .filter((entry) => entry.validation.ok)
+          .map(async (entry) => {
+            const result = await deleteStorageObject({
+              supabaseUrl,
+              serviceKey,
+              bucketName: entry.validation.bucketName,
+              storagePath: entry.validation.storagePath
+            });
+
+            return {
+              ...entry.file,
+              bucketName: entry.validation.bucketName,
+              storagePath: entry.validation.storagePath,
+              ...result
+            };
+          })
+      )
+    ];
 
     const fileIdsToFinalize = cleanupResults
       .filter((result) => result.ok && result.id)
@@ -237,6 +310,7 @@ module.exports = async function handler(req, res) {
         await updateOrganizationFilesStatus({
           supabaseUrl,
           serviceKey,
+          organizationId: deletionResult.organizationId,
           fileIds: fileIdsToFinalize,
           status: 'deleted'
         });

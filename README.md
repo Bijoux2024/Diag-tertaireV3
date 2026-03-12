@@ -47,6 +47,7 @@ Exemples de redirect URLs :
 
 ## PDF officiel
 
+- Runtime Vercel PDF : `puppeteer-core` et `@sparticuz/chromium` doivent rester en `dependencies` npm, pas en `devDependencies`.
 - le front pro appelle `/api/pro-report-pdf` avec le bearer token de la session Supabase
 - la route serveur valide ce token via `GET /auth/v1/user`
 - le `report_id` est resserre cote serveur sur l'organisation du profil connecte

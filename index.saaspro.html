@@ -3248,11 +3248,11 @@
                     { title: "Testez sur vos dossiers", text: "Lancez un diagnostic sur un cas réel.", duration: "4 min" },
                     { title: "Partagez vos retours", text: "Vos retours améliorent le produit.", duration: "En continu" },
                 ],
-                cta: "Formulaire CRM et connexion email restent deux flux distincts",
+                cta: "Un seul formulaire visible, puis lien de connexion par email",
             },
             form: {
-                title: "Testez DiagTertiaire Pro gratuitement",
-                subtitle: "Nous ouvrons l'accès à un nombre limité de professionnels pour recueillir des retours terrain.",
+                title: "Créez votre espace Pro",
+                subtitle: "Renseignez vos informations une seule fois. Nous enregistrons votre demande et nous vous envoyons automatiquement votre lien de connexion.",
                 urgency: "Accès bêta gratuit en cours d'ouverture",
                 included: [
                     "Accès complet à l'espace Pro",
@@ -3288,13 +3288,14 @@
                     company: "Nom du cabinet ou de l'entreprise",
                     message: "Contexte, portefeuille, besoin actuel...",
                 },
-                cta: "Obtenir mon accès gratuit",
-                submitting: "Validation en cours...",
-                trustLine: "Sans carte bancaire · Données protégées (RGPD) · Connexion séparée par email",
-                successTitle: "Votre demande est enregistrée",
-                successText: "Votre demande CRM est bien enregistrée. Vous pouvez maintenant recevoir votre lien de connexion séparé pour ouvrir l'espace Pro.",
-                successCta: "Recevoir mon lien de connexion →",
-                successHelper: "Le lien de connexion arrive par email. Vérifiez aussi vos spams.",
+                cta: "Créer mon espace Pro",
+                secondaryCta: "Vous avez déjà un compte ? Recevoir un lien de connexion",
+                resendCta: "Renvoyer le lien",
+                submitting: "Création de votre espace...",
+                trustLine: "Sans carte bancaire · Données protégées (RGPD) · Connexion sécurisée par email",
+                successTitle: "Vérifiez votre email pour ouvrir votre espace",
+                successText: "Nous vous avons envoyé un lien de connexion. Cliquez dessus pour ouvrir votre espace Pro automatiquement.",
+                successHelper: "Vérifiez aussi vos spams si vous ne voyez rien dans les prochaines minutes.",
             },
             closing: {
                 urgencyBadge: "Bêta ouverte · accès gratuit",
@@ -4078,7 +4079,6 @@
 
             if (shouldMigrateWorkspaceData && legacyWorkspace.hasLocalData) {
                 const migratedCases = mergeLegacyCaseCollections(
-                    MOCK_PRO_CASES_V2,
                     legacyWorkspace.rawCases,
                     legacyWorkspace.wizardCases
                 );
@@ -4185,17 +4185,6 @@
                 userWorkspaceState = await loadUserWorkspaceState(user.id, organization.id);
             } else {
                 userWorkspaceState = migrationResult.userWorkspaceState || userWorkspaceState;
-            }
-
-            const demoSeedResult = await ensureDemoWorkspaceData({
-                organizationId: organization.id,
-                userId: user.id,
-                existingCases: cases
-            });
-
-            if (demoSeedResult.didMutate) {
-                cases = await listProCases(organization.id);
-                reports = await listProReports(organization.id);
             }
 
             return {
@@ -7330,11 +7319,6 @@
             const [submitError, setSubmitError] = React.useState(null);
             const [honeypot, setHoneypot] = React.useState('');
             const landingFormKey = 'pro-landing-form';
-            const [authForm, setAuthForm] = React.useState({
-                email: '',
-                fullName: '',
-                companyName: '',
-            });
             const [isSendingMagicLink, setIsSendingMagicLink] = React.useState(false);
             const [magicLinkError, setMagicLinkError] = React.useState(null);
             const [magicLinkSuccess, setMagicLinkSuccess] = React.useState(null);
@@ -7355,9 +7339,12 @@
             };
 
             const setField = (key, value) => setForm(prev => ({ ...prev, [key]: value }));
-            const setAuthField = (key, value) => setAuthForm(prev => ({ ...prev, [key]: value }));
 
-            const requestMagicLink = async ({ email, fullName, companyName }) => {
+            const requestMagicLink = async ({ email, fullName, companyName }, options = {}) => {
+                const {
+                    showSuccessMessage = true,
+                    successMessage
+                } = options;
                 const normalizedEmail = typeof email === 'string' ? email.trim() : '';
                 const normalizedFullName = typeof fullName === 'string' ? fullName.trim() : '';
                 const normalizedCompanyName = typeof companyName === 'string' ? companyName.trim() : '';
@@ -7383,26 +7370,20 @@
                         return false;
                     }
 
-                    setAuthForm({
-                        email: normalizedEmail,
-                        fullName: normalizedFullName,
-                        companyName: normalizedCompanyName
-                    });
-                    setMagicLinkSuccess(`Lien de connexion envoyé à ${normalizedEmail}. Vérifiez votre boîte mail et vos spams.`);
+                    if (showSuccessMessage) {
+                        setMagicLinkSuccess(successMessage || `Lien de connexion envoyé à ${normalizedEmail}. Vérifiez votre boîte mail et vos spams.`);
+                    }
                     return true;
                 } finally {
                     setIsSendingMagicLink(false);
                 }
             };
 
-            const handleMagicLinkSubmit = async (e) => {
-                e.preventDefault();
-                await requestMagicLink(authForm);
-            };
-
             const handleSubmit = async (e) => {
                 e.preventDefault();
                 setSubmitError(null);
+                setMagicLinkError(null);
+                setMagicLinkSuccess(null);
                 const antiSpamCheck = runProFormAntiSpamChecks({
                     formKey: landingFormKey,
                     honeypotValue: honeypot,
@@ -7443,13 +7424,16 @@
                         return;
                     }
 
+                    await requestMagicLink(
+                        {
+                            email: form.email,
+                            fullName: form.fullName,
+                            companyName: form.company
+                        },
+                        { showSuccessMessage: false }
+                    );
                     await new Promise(resolve => setTimeout(resolve, 400));
                     setSubmitted(true);
-                    setAuthForm(prev => ({
-                        email: prev.email || (form.email || '').trim(),
-                        fullName: prev.fullName || (form.fullName || '').trim(),
-                        companyName: prev.companyName || (form.company || '').trim()
-                    }));
                 } finally {
                     setIsSubmitting(false);
                 }
@@ -7482,9 +7466,9 @@
                                     <Icon icon="solar:alt-arrow-left-linear" style={{ fontSize: '16px' }} />
                                     Retour au site public
                                 </a>
-                                <button type="button" onClick={() => scrollToSection('pro-login-card')} className="hidden sm:inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-900 hover:border-slate-300 transition-colors">
+                                <button type="button" onClick={() => scrollToSection('pro-access-form')} className="hidden sm:inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-900 hover:border-slate-300 transition-colors">
                                     <Icon icon="solar:login-3-bold" style={{ fontSize: '16px' }} />
-                                    Connexion
+                                    Accès / connexion
                                 </button>
                                 <button type="button" onClick={() => scrollToSection('pro-access-form')} className="pro-btn pro-btn-primary px-4 py-2 text-sm">
                                     {copy.hero.ctaPrimary}
@@ -7685,78 +7669,29 @@
                                 </div>
                             </div>
 
-                            <div className="space-y-6">
-                                <div id="pro-login-card" className="bg-slate-50 rounded-[26px] border border-slate-200 p-6 md:p-8 shadow-sm shadow-slate-200/20">
-                                    <div className="flex items-start justify-between gap-4">
-                                        <div>
-                                            <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500 mb-3">Connexion email</div>
-                                            <h3 className="text-2xl font-black text-slate-900 tracking-tight" style={{ fontFamily: "'Inter', sans-serif" }}>Recevez votre lien de connexion</h3>
-                                            <p className="text-sm text-slate-600 leading-6 mt-2">Connexion passwordless par magic link. Ajoutez votre nom et votre structure si c'est votre première connexion.</p>
+                            <div>
+                                <div className="bg-white rounded-[26px] border border-slate-200 p-6 md:p-8 shadow-md shadow-slate-200/30">
+                                    {authError && (
+                                        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 mb-5">
+                                            {authError}
                                         </div>
-                                        <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-semibold text-slate-600">
-                                            <Icon icon="solar:mailbox-bold" style={{ fontSize: '14px' }} />
-                                            Magic link
-                                        </span>
+                                    )}
+
+                                    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 mb-6">
+                                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                                            <div>
+                                                <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500 mb-2">Accès pro</div>
+                                                <p className="text-sm text-slate-600 leading-6">
+                                                    Un seul formulaire pour créer votre accès. Nous enregistrons vos informations puis nous envoyons automatiquement votre lien de connexion par email.
+                                                </p>
+                                            </div>
+                                            <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-semibold text-slate-600 shrink-0">
+                                                <Icon icon="solar:mailbox-bold" style={{ fontSize: '14px' }} />
+                                                Création + connexion email
+                                            </span>
+                                        </div>
                                     </div>
 
-                                    <form onSubmit={handleMagicLinkSubmit} className="space-y-4 mt-6">
-                                        {authError && (
-                                            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                                                {authError}
-                                            </div>
-                                        )}
-
-                                        <div>
-                                            <label className="pro-label">Email professionnel</label>
-                                            <input type="email" required className="pro-input" placeholder={copy.form.placeholders.email} value={authForm.email} onChange={e => setAuthField('email', e.target.value)} />
-                                        </div>
-
-                                        <div className="grid md:grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="pro-label">Nom complet (optionnel)</label>
-                                                <input type="text" className="pro-input" placeholder={copy.form.placeholders.fullName} value={authForm.fullName} onChange={e => setAuthField('fullName', e.target.value)} />
-                                            </div>
-                                            <div>
-                                                <label className="pro-label">Organisation (optionnel)</label>
-                                                <input type="text" className="pro-input" placeholder={copy.form.placeholders.company} value={authForm.companyName} onChange={e => setAuthField('companyName', e.target.value)} />
-                                            </div>
-                                        </div>
-
-                                        {magicLinkError && (
-                                            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                                                {magicLinkError}
-                                            </div>
-                                        )}
-
-                                        {magicLinkSuccess && (
-                                            <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-                                                {magicLinkSuccess}
-                                            </div>
-                                        )}
-
-                                        <div className="pt-1">
-                                            <button type="submit" disabled={isSendingMagicLink} className="pro-btn pro-btn-secondary w-full justify-center py-3.5 text-[15px] gap-2 bg-white">
-                                                {isSendingMagicLink ? (
-                                                    <>
-                                                        <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
-                                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                                                        </svg>
-                                                        Envoi du lien...
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <Icon icon="solar:letter-bold" style={{ fontSize: '16px' }} />
-                                                        Recevoir mon lien de connexion
-                                                    </>
-                                                )}
-                                            </button>
-                                            <p className="text-xs text-slate-500 text-center mt-3">Le formulaire ci-dessous reste un flux CRM distinct. Il ne crée pas de session.</p>
-                                        </div>
-                                    </form>
-                                </div>
-
-                                <div className="bg-white rounded-[26px] border border-slate-200 p-6 md:p-8 shadow-md shadow-slate-200/30">
                                     {!submitted ? (
                                         <form onSubmit={handleSubmit} className="space-y-4">
                                             <div style={PRO_FORM_ANTISPAM_HONEYPOT_STYLE} aria-hidden="true">
@@ -7774,23 +7709,23 @@
                                             <div className="grid md:grid-cols-2 gap-4">
                                                 <div>
                                                     <label className="pro-label">{copy.form.fields.fullName}</label>
-                                                    <input type="text" required className="pro-input" placeholder={copy.form.placeholders.fullName} value={form.fullName} onChange={e => setField('fullName', e.target.value)} />
+                                                    <input type="text" name="fullName" autoComplete="name" required className="pro-input" placeholder={copy.form.placeholders.fullName} value={form.fullName} onChange={e => setField('fullName', e.target.value)} />
                                                 </div>
                                                 <div>
                                                     <label className="pro-label">{copy.form.fields.email}</label>
-                                                    <input type="email" required className="pro-input" placeholder={copy.form.placeholders.email} value={form.email} onChange={e => setField('email', e.target.value)} />
+                                                    <input type="email" name="email" autoComplete="email" required className="pro-input" placeholder={copy.form.placeholders.email} value={form.email} onChange={e => setField('email', e.target.value)} />
                                                 </div>
                                             </div>
 
                                             <div>
                                                 <label className="pro-label">{copy.form.fields.company}</label>
-                                                <input type="text" required className="pro-input" placeholder={copy.form.placeholders.company} value={form.company} onChange={e => setField('company', e.target.value)} />
+                                                <input type="text" name="company" autoComplete="organization" required className="pro-input" placeholder={copy.form.placeholders.company} value={form.company} onChange={e => setField('company', e.target.value)} />
                                             </div>
 
                                             <div className="grid md:grid-cols-2 gap-4">
                                                 <div>
                                                     <label className="pro-label">{copy.form.fields.role}</label>
-                                                    <select required className="pro-input" value={form.role} onChange={e => setField('role', e.target.value)}>
+                                                    <select name="role" required className="pro-input" value={form.role} onChange={e => setField('role', e.target.value)}>
                                                         <option value="">Sélectionnez votre métier</option>
                                                         {copy.form.roleOptions.map(opt => (
                                                             <option key={opt} value={opt}>{opt}</option>
@@ -7799,7 +7734,7 @@
                                                 </div>
                                                 <div>
                                                     <label className="pro-label">{copy.form.fields.siteVolume}</label>
-                                                    <select required className="pro-input" value={form.siteVolume} onChange={e => setField('siteVolume', e.target.value)}>
+                                                    <select name="siteVolume" required className="pro-input" value={form.siteVolume} onChange={e => setField('siteVolume', e.target.value)}>
                                                         <option value="">Volume estimé</option>
                                                         {copy.form.volumeOptions.map(opt => (
                                                             <option key={opt} value={opt}>{opt}</option>
@@ -7810,7 +7745,7 @@
 
                                             <div>
                                                 <label className="pro-label">{copy.form.fields.message}</label>
-                                                <textarea className="pro-input min-h-[90px] resize-y" placeholder={copy.form.placeholders.message} value={form.message} onChange={e => setField('message', e.target.value)} />
+                                                <textarea name="message" className="pro-input min-h-[90px] resize-y" placeholder={copy.form.placeholders.message} value={form.message} onChange={e => setField('message', e.target.value)} />
                                             </div>
 
                                             {submitError && (
@@ -7841,29 +7776,72 @@
                                                     {copy.form.trustLine}
                                                 </p>
                                             </div>
-                                        </form>
-                                    ) : (
-                                        <div className="fade-in">
-                                            <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-5">
-                                                <Icon icon="solar:check-circle-bold" style={{ fontSize: '28px' }} />
-                                            </div>
-                                            <h3 className="text-2xl font-black text-slate-900 tracking-tight" style={{ fontFamily: "'Inter', sans-serif" }}>{copy.form.successTitle}</h3>
-                                            <p className="text-slate-600 leading-7 mt-3">{copy.form.successText}</p>
-                                            <div className="mt-6 space-y-3">
+
+                                            <div className="pt-1 text-center">
                                                 <button
                                                     type="button"
                                                     onClick={() => requestMagicLink({ email: form.email, fullName: form.fullName, companyName: form.company })}
-                                                    disabled={isSendingMagicLink}
-                                                    className="pro-btn pro-btn-primary w-full justify-center py-3 text-[15px]"
+                                                    disabled={isSendingMagicLink || isSubmitting}
+                                                    className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors disabled:opacity-50"
                                                 >
-                                                    {isSendingMagicLink ? 'Envoi du lien...' : copy.form.successCta}
+                                                    {isSendingMagicLink ? (
+                                                        <>
+                                                            <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+                                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                                            </svg>
+                                                            Envoi du lien...
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Icon icon="solar:letter-bold" style={{ fontSize: '15px' }} />
+                                                            {copy.form.secondaryCta}
+                                                        </>
+                                                    )}
                                                 </button>
+                                                {(magicLinkError || magicLinkSuccess) && (
+                                                    <div className={`rounded-xl px-4 py-3 text-sm text-center mt-3 ${magicLinkError ? 'border border-red-200 bg-red-50 text-red-700' : 'border border-emerald-200 bg-emerald-50 text-emerald-700'}`}>
+                                                        {magicLinkError || magicLinkSuccess}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </form>
+                                    ) : (
+                                        <div className="fade-in">
+                                            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-5 ${magicLinkError ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600'}`}>
+                                                <Icon icon={magicLinkError ? "solar:danger-circle-bold" : "solar:letter-bold"} style={{ fontSize: '28px' }} />
+                                            </div>
+                                            <h3 className="text-2xl font-black text-slate-900 tracking-tight" style={{ fontFamily: "'Inter', sans-serif" }}>
+                                                {magicLinkError ? "Votre demande est enregistrée" : copy.form.successTitle}
+                                            </h3>
+                                            <p className="text-slate-600 leading-7 mt-3">
+                                                {magicLinkError
+                                                    ? "Votre demande a bien été enregistrée, mais nous n'avons pas pu envoyer automatiquement le lien de connexion. Vous pouvez réessayer ci-dessous."
+                                                    : `${copy.form.successText} L'email a été envoyé à ${form.email}.`}
+                                            </p>
+                                            <div className="mt-6 space-y-4">
+                                                <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-700">
+                                                    <div className="font-semibold text-slate-900">Adresse utilisée</div>
+                                                    <div className="mt-1 break-all">{form.email}</div>
+                                                </div>
                                                 {(magicLinkError || magicLinkSuccess) && (
                                                     <div className={`rounded-xl px-4 py-3 text-sm text-center ${magicLinkError ? 'border border-red-200 bg-red-50 text-red-700' : 'border border-emerald-200 bg-emerald-50 text-emerald-700'}`}>
                                                         {magicLinkError || magicLinkSuccess}
                                                     </div>
                                                 )}
-                                                <p className="text-xs text-slate-500 text-center">{copy.form.successHelper}</p>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => requestMagicLink(
+                                                        { email: form.email, fullName: form.fullName, companyName: form.company },
+                                                        { successMessage: `Nouveau lien envoyé à ${form.email}. Vérifiez votre boîte mail et vos spams.` }
+                                                    )}
+                                                    disabled={isSendingMagicLink}
+                                                    className="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors disabled:opacity-50"
+                                                >
+                                                    <Icon icon="solar:refresh-linear" style={{ fontSize: '15px' }} />
+                                                    {isSendingMagicLink ? 'Envoi du lien...' : copy.form.resendCta}
+                                                </button>
+                                                <p className="text-xs text-slate-500">{copy.form.successHelper}</p>
                                             </div>
                                         </div>
                                     )}

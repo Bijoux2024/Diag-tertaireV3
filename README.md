@@ -39,6 +39,7 @@ Configuration minimale Supabase :
 2. `supabase/migrations/20260311_workspace_persistence.sql`
 3. `supabase/migrations/20260311_storage_assets.sql`
 4. `supabase/migrations/20260311_report_pdf_persistence.sql`
+5. `supabase/migrations/20260312_case_secure_deletion.sql`
 
 Exemples de redirect URLs :
 - `http://localhost:3000/index.saaspro.html`
@@ -57,7 +58,12 @@ Exemples de redirect URLs :
 
 Strategie produit :
 - `PDF officiel` : version serveur persistante, archivee dans Supabase Storage
-- `Export rapide local` : fallback navigateur conserve via `window.print()`
+- `Export local (secours)` : fallback navigateur conserve via `window.print()`
+
+Suppression securisee :
+- le front pro appelle `/api/pro-delete-case` pour supprimer un dossier
+- la coherence metier est portee par `public.soft_delete_case_bundle(...)`
+- les fichiers Storage passent par `organization_files.status = 'pending_cleanup'` si la purge serveur ne va pas au bout
 
 Strategie de regeneration :
 - la regeneration reutilise le meme chemin Storage pour un meme rapport
@@ -77,6 +83,9 @@ Strategie de regeneration :
 8. Forcer un echec serveur de rendu PDF et verifier `pdf_status = 'error'`, `pdf_error` renseigne et fallback local toujours disponible.
 9. Verifier qu'un autre compte ne peut ni generer ni ouvrir le PDF d'une autre organisation.
 10. Ouvrir `index.saaspro.html#report=...` sans session et verifier que le mode shared report reste intact.
+
+Checklist preview detaillee :
+- `docs/qa-preview-checklist.md`
 
 ## Notes
 

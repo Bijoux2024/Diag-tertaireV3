@@ -651,6 +651,28 @@ const downloadStorageObject = async ({
   };
 };
 
+const removeStorageObject = async ({
+  supabaseUrl,
+  serviceKey,
+  bucketName,
+  storagePath
+}) => {
+  const response = await fetch(
+    `${supabaseUrl}/storage/v1/object/${bucketName}/${encodeStoragePath(storagePath)}`,
+    {
+      method: 'DELETE',
+      headers: createRestHeaders(serviceKey)
+    }
+  );
+
+  if (response.ok || response.status === 404) {
+    return;
+  }
+
+  const details = await response.text();
+  throw new Error(details || `Storage delete failed (${response.status})`);
+};
+
 const buildStoragePathForReportPdf = (organizationId, reportId) => {
   return `org/${organizationId}/reports/${reportId}/rapport-officiel.pdf`;
 };
@@ -714,7 +736,7 @@ module.exports = async function handler(req, res) {
     const reportRows = await supabaseRestFetch(
       supabaseUrl,
       serviceKey,
-      `pro_reports?id=eq.${encodeQueryValue(reportId)}&organization_id=eq.${encodeQueryValue(profile.organization_id)}&select=id,organization_id,case_id,created_by,report_name,report_payload,report_summary,latest_pdf_file_id,latest_pdf_generated_at,pdf_status,pdf_error,created_at,updated_at`
+      `pro_reports?id=eq.${encodeQueryValue(reportId)}&organization_id=eq.${encodeQueryValue(profile.organization_id)}&status=eq.active&select=id,organization_id,case_id,created_by,status,deleted_at,report_name,report_payload,report_summary,latest_pdf_file_id,latest_pdf_generated_at,pdf_status,pdf_error,created_at,updated_at`
     );
     reportRecord = asArray(reportRows)[0] || null;
 
@@ -730,7 +752,7 @@ module.exports = async function handler(req, res) {
       const updatedRows = await supabaseRestFetch(
         supabaseUrl,
         serviceKey,
-        `pro_reports?id=eq.${encodeQueryValue(reportRecord.id)}`,
+        `pro_reports?id=eq.${encodeQueryValue(reportRecord.id)}&status=eq.active`,
         {
           method: 'PATCH',
           headers: {
@@ -741,8 +763,24 @@ module.exports = async function handler(req, res) {
         }
       );
 
+      if (!asArray(updatedRows)[0]) {
+        throw createHttpError(409, 'Report no longer active');
+      }
+
       reportRecord = asArray(updatedRows)[0] || reportRecord;
       return reportRecord;
+    };
+
+    const ensureReportStillActive = async () => {
+      const activeRows = await supabaseRestFetch(
+        supabaseUrl,
+        serviceKey,
+        `pro_reports?id=eq.${encodeQueryValue(reportRecord.id)}&organization_id=eq.${encodeQueryValue(profile.organization_id)}&status=eq.active&select=id`
+      );
+
+      if (!asArray(activeRows)[0]) {
+        throw createHttpError(409, 'Report no longer active');
+      }
     };
 
     await updateReportStatus({
@@ -765,7 +803,7 @@ module.exports = async function handler(req, res) {
         ? supabaseRestFetch(
           supabaseUrl,
           serviceKey,
-          `pro_cases?id=eq.${encodeQueryValue(reportRecord.case_id)}&organization_id=eq.${encodeQueryValue(profile.organization_id)}&select=id,organization_id,title,status,site_name,activity_type,case_data,created_at,updated_at`
+          `pro_cases?id=eq.${encodeQueryValue(reportRecord.case_id)}&organization_id=eq.${encodeQueryValue(profile.organization_id)}&lifecycle_status=eq.active&select=id,organization_id,title,status,lifecycle_status,deleted_at,site_name,activity_type,case_data,created_at,updated_at`
         )
         : Promise.resolve([])
     ]);
@@ -773,6 +811,10 @@ module.exports = async function handler(req, res) {
     const settingsRecord = asArray(settingsRows)[0] || null;
     const brandingRecord = asArray(brandingRows)[0] || null;
     const caseRecord = asArray(caseRows)[0] || null;
+
+    if (reportRecord.case_id && !caseRecord) {
+      throw createHttpError(409, 'Case no longer active');
+    }
 
     let logoDataUrl = '';
     if (brandingRecord?.logo_storage_path) {
@@ -785,7 +827,7 @@ module.exports = async function handler(req, res) {
         const logoFileRows = await supabaseRestFetch(
           supabaseUrl,
           serviceKey,
-          `organization_files?organization_id=eq.${encodeQueryValue(profile.organization_id)}&bucket_name=eq.${encodeQueryValue(ORGANIZATION_ASSETS_BUCKET)}&storage_path=eq.${encodeQueryValue(logoStoragePath)}&select=id,mime_type,file_name&limit=1`
+          `organization_files?organization_id=eq.${encodeQueryValue(profile.organization_id)}&bucket_name=eq.${encodeQueryValue(ORGANIZATION_ASSETS_BUCKET)}&storage_path=eq.${encodeQueryValue(logoStoragePath)}&status=eq.active&select=id,mime_type,file_name&limit=1`
         );
         const logoFileRecord = asArray(logoFileRows)[0] || null;
         const logoDownload = await downloadStorageObject({
@@ -822,12 +864,30 @@ module.exports = async function handler(req, res) {
     );
     const downloadFilename = sanitizeDownloadFilename(`rapport-${pdfPayload.reportName}`);
 
+    await ensureReportStillActive();
+
     await uploadPdfToStorage({
       supabaseUrl,
       serviceKey,
       storagePath,
       pdfBuffer
     });
+
+    try {
+      await ensureReportStillActive();
+    } catch (error) {
+      try {
+        await removeStorageObject({
+          supabaseUrl,
+          serviceKey,
+          bucketName: ORGANIZATION_ASSETS_BUCKET,
+          storagePath
+        });
+      } catch (cleanupError) {
+        console.warn('Unable to rollback uploaded official PDF after deletion race:', cleanupError);
+      }
+      throw error;
+    }
 
     const organizationFileRows = await supabaseRestFetch(
       supabaseUrl,
@@ -842,6 +902,8 @@ module.exports = async function handler(req, res) {
         body: JSON.stringify({
           organization_id: profile.organization_id,
           created_by: authUser.id,
+          status: 'active',
+          deleted_at: null,
           kind: REPORT_PDF_FILE_KIND,
           bucket_name: ORGANIZATION_ASSETS_BUCKET,
           storage_path: storagePath,
@@ -877,7 +939,7 @@ module.exports = async function handler(req, res) {
         await supabaseRestFetch(
           supabaseUrl,
           serviceKey,
-          `pro_reports?id=eq.${encodeQueryValue(reportRecord.id)}`,
+          `pro_reports?id=eq.${encodeQueryValue(reportRecord.id)}&status=eq.active`,
           {
             method: 'PATCH',
             headers: {

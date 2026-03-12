@@ -1,53 +1,40 @@
 # Architecture API - DiagTertiaire V3
 
-## Endpoints actifs
+## Routes actives
 
-- `api/public-config.js`
-  - expose uniquement `SUPABASE_URL` et `SUPABASE_PUBLISHABLE_KEY`
-  - ne doit jamais exposer de cle serveur
+- `api/public-config.js` : expose seulement `SUPABASE_URL` et `SUPABASE_PUBLISHABLE_KEY`
+- `api/pdf.js` : endpoint generique HTML -> PDF, rendu local uniquement
+- `api/pro-report-pdf.js` : PDF officiel pro, bearer token Supabase obligatoire
+- `api/pro-delete-case.js` : suppression securisee dossier / rapports / PDF officiel
 
-- `api/pdf.js`
-  - endpoint generique HTML -> PDF
-  - utilise le moteur local partage `api/_lib/pdf-renderer.js`
-  - ne depend d'aucun service PDF externe
+## Runtime
 
-- `api/pro-report-pdf.js`
-  - flux officiel du PDF pro
-  - recoit un `report_id`
-  - valide l'utilisateur via le bearer token Supabase
-  - verifie que le rapport appartient a l'organisation connectee
-  - lit branding, logo Storage et donnees rapport
-  - genere un PDF localement
-  - stocke le PDF dans `organization-assets`
-  - met a jour `organization_files` puis `pro_reports`
+- serveur Vercel / Node
+- rendu PDF local via `puppeteer-core` + `@sparticuz/chromium`
+- plus aucun fournisseur PDF externe
 
-## Moteur PDF serveur
+## Contrats data a retenir
 
-- helper partage : `api/_lib/pdf-renderer.js`
-- rendu local via `puppeteer-core` + `@sparticuz/chromium`
-- compatible Vercel, sans SaaS externe
-- protections attendues :
-  - HTML vide refuse
-  - payload trop lourd refuse
-  - timeout gere
-  - buffer PDF retourne cote serveur
+- `organization_files` est le catalogue du Storage prive
+- les PDF de rapport sont identifies via :
+  - `kind = report_pdf`
+  - `pro_reports.latest_pdf_file_id`
+  - `metadata.report_id` / `metadata.case_id`
+  - prefixe `org/{organization_id}/reports/{report_id}/...`
+- `public.soft_delete_case_bundle(target_case_id uuid, actor_user_id uuid)` est l'entree SQL canonique pour la suppression metier
+- la service key reste strictement cote serveur pour RPC et purge Storage
 
-## Variables d'environnement runtime
+## Modele de statuts
 
-Requises :
-- `SUPABASE_URL`
-- `SUPABASE_PUBLISHABLE_KEY`
-- `SUPABASE_SERVICE_KEY`
+- `pro_cases.status` = qualification metier existante
+- `pro_cases.lifecycle_status` = `active` / `deleted`
+- `pro_reports.status` = `active` / `deleted`
+- `organization_files.status` = `active` / `pending_cleanup` / `deleted`
+- `deleted_at` porte la date de retrait du perimetre actif
 
-Optionnelle hors Vercel :
-- `PUPPETEER_EXECUTABLE_PATH`
+## Garde-fous
 
-## Stockage et securite
-
-- bucket prive : `organization-assets`
-- conventions de chemin :
-  - `org/{organization_id}/branding/logo/{filename}`
-  - `org/{organization_id}/reports/{report_id}/{filename}`
-  - `org/{organization_id}/assets/{subpath}`
-- aucune cle serveur ne doit sortir du backend
-- aucune route PDF ne doit dependre d'un fournisseur externe
+- ne jamais exposer la service key au front
+- ne pas reintroduire PDFShift
+- ne pas retomber sur une suppression critique pilotee seulement par le front
+- ne pas casser `#report=` qui reste hors auth et hors API pro

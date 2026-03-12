@@ -2,38 +2,43 @@
 
 ## Surfaces runtime
 
-- `index.html` : site public + diagnostic gratuit
+- `index.html` : landing public + diagnostic public
 - `index.saaspro.html` : espace pro canonique
-- `diagtertiaire-pro-alpha.html` : simple redirection vers `index.saaspro.html`
+- `diagtertiaire-pro-alpha.html` : alias legacy vers `index.saaspro.html`
 
-## Regles structurantes
+## Source de verite reelle
 
-- le frontend reste buildless : HTML + CSS + JS, CDN React/Babel/Tailwind
-- les dependances npm servent uniquement au runtime serveur `/api/*`
-- ne pas toucher `index.html` sauf besoin reel sur le site public ou la doc
-- ne pas casser le mode shared report `#report=`
-
-## Espace pro
-
-- auth minimale Supabase
-- workspace persiste dans Supabase
-- source de verite : tables Supabase, pas `localStorage`
-- `localStorage` legacy uniquement pour migrations douces et etats transitoires
-- branding persiste via `organization_settings` et `organization_branding`
-- logo d'organisation stocke dans le bucket prive `organization-assets`
+- auth pro : Supabase magic link minimal
+- workspace pro : Supabase (`organizations`, `profiles`, `organization_settings`, `organization_branding`, `pro_cases`, `pro_reports`, `user_workspace_state`)
+- storage prive : bucket `organization-assets` + catalogue `organization_files`
+- `localStorage` : migration douce / fallback legacy seulement, pas modele cible
+- ne plus raisonner avec `proAuth` comme source de verite
 
 ## PDF
 
-- `PDF officiel` : genere cote serveur via `/api/pro-report-pdf`
-- rendu PDF local sur le backend, sans service externe
-- stockage final dans `organization-assets`
-- catalogue `organization_files`
-- suivi metier dans `pro_reports`
-- `Export rapide local` conserve cote navigateur via `window.print()`
+- `PDF officiel` : `/api/pro-report-pdf`
+- rendu serveur local via Chromium / Vercel + Supabase Storage
+- plus de PDFShift
+- fallback navigateur conserve sous forme `Export local (secours)` via `window.print()`
+
+## Suppression securisee
+
+- flux canonique : `/api/pro-delete-case`
+- coherence metier portee par `public.soft_delete_case_bundle(...)`
+- `pro_cases.status` reste la qualification metier existante
+- la suppression douce des dossiers passe donc par `pro_cases.lifecycle_status` + `deleted_at`
+- `pro_reports` et `organization_files` utilisent `status` + `deleted_at`
+- suppression metier immediate, purge Storage ensuite, `pending_cleanup` si la purge serveur echoue
 
 ## Shared report
 
 - acces via `#report=`
 - lecture sans auth
-- distinct du workspace pro authentifie
-- distinct du PDF officiel sauvegarde
+- hors workspace pro authentifie
+- ne pas casser ce mode lors des lots auth / storage / suppression
+
+## A ne plus rouvrir par defaut
+
+- fusion `pro.html -> index.saaspro.html`
+- retour a PDFShift
+- suppression critique pilotee uniquement par le front

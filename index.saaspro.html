@@ -1347,6 +1347,7 @@
                 id: record?.id || null,
                 organizationId: record?.organization_id || null,
                 createdBy: record?.created_by || null,
+                status: record?.status || 'active',
                 kind: record?.kind || '',
                 bucketName: record?.bucket_name || '',
                 storagePath: record?.storage_path || '',
@@ -1354,6 +1355,7 @@
                 mimeType: record?.mime_type || '',
                 sizeBytes: Number(record?.size_bytes || 0) || 0,
                 metadata: asPlainObject(record?.metadata),
+                deletedAt: record?.deleted_at || null,
                 createdAt: record?.created_at || null,
                 updatedAt: record?.updated_at || null
             };
@@ -1397,6 +1399,8 @@
                 .upsert({
                     organization_id: organizationId,
                     created_by: userId,
+                    status: 'active',
+                    deleted_at: null,
                     kind,
                     bucket_name: bucketName,
                     storage_path: storagePath,
@@ -1405,7 +1409,7 @@
                     size_bytes: Number.isFinite(sizeBytes) ? sizeBytes : null,
                     metadata: asPlainObject(metadata)
                 }, { onConflict: 'storage_path' })
-                .select('id, organization_id, created_by, kind, bucket_name, storage_path, file_name, mime_type, size_bytes, metadata, created_at, updated_at')
+                .select('id, organization_id, created_by, status, kind, bucket_name, storage_path, file_name, mime_type, size_bytes, metadata, deleted_at, created_at, updated_at')
                 .single();
 
             if (error) {
@@ -1429,8 +1433,9 @@
 
             let query = browserClient
                 .from('organization_files')
-                .select('id, organization_id, created_by, kind, bucket_name, storage_path, file_name, mime_type, size_bytes, metadata, created_at, updated_at')
+                .select('id, organization_id, created_by, status, kind, bucket_name, storage_path, file_name, mime_type, size_bytes, metadata, deleted_at, created_at, updated_at')
                 .eq('organization_id', organizationId)
+                .eq('status', 'active')
                 .order('updated_at', { ascending: false });
 
             if (kind) {
@@ -1490,8 +1495,9 @@
 
             let query = browserClient
                 .from('organization_files')
-                .select('id, organization_id, created_by, kind, bucket_name, storage_path, file_name, mime_type, size_bytes, metadata, created_at, updated_at')
-                .eq('id', fileId);
+                .select('id, organization_id, created_by, status, kind, bucket_name, storage_path, file_name, mime_type, size_bytes, metadata, deleted_at, created_at, updated_at')
+                .eq('id', fileId)
+                .eq('status', 'active');
 
             if (organizationId) {
                 query = query.eq('organization_id', organizationId);
@@ -1904,9 +1910,11 @@
                 id: record.id,
                 legacyId: legacyId || null,
                 status: payload.status || record.status || 'nouveau',
+                lifecycleStatus: record?.lifecycle_status || 'active',
                 activity: payload.activity || payload.formData?.activity || payload.formData?.activite || record.activity_type || '',
                 projectName: payload.projectName || payload.company || payload.clientName || record.site_name || record.title || 'Nouveau dossier',
                 clientName: payload.clientName || payload.projectName || payload.company || record.title || 'Nouveau dossier',
+                deletedAt: record?.deleted_at || null,
                 createdAt: payload.createdAt || formatDateForUi(record.created_at),
                 lastUpdated: payload.lastUpdated || formatDateForUi(record.updated_at),
                 _caseRecordId: record.id,
@@ -1922,6 +1930,7 @@
                 id: payload.id || record.case_id || record.id,
                 reportRecordId: record.id,
                 caseId: record.case_id || payload.caseId || payload.id || null,
+                recordStatus: record?.status || 'active',
                 reportName: record.report_name || payload.reportName || null,
                 reportSummary: Object.keys(asPlainObject(record?.report_summary)).length
                     ? asPlainObject(record?.report_summary)
@@ -1932,6 +1941,7 @@
                 latestPdfGeneratedAtLabel: record?.latest_pdf_generated_at ? formatDateTimeForUi(record.latest_pdf_generated_at) : '',
                 pdfStatus: record?.pdf_status || null,
                 pdfError: record?.pdf_error || null,
+                deletedAt: record?.deleted_at || null,
                 _reportCreatedAt: record.created_at || null,
                 _reportUpdatedAt: record.updated_at || null
             };
@@ -2013,8 +2023,9 @@
 
             const { data, error } = await browserClient
                 .from('pro_cases')
-                .select('id, organization_id, created_by, title, status, site_name, activity_type, case_data, created_at, updated_at')
+                .select('id, organization_id, created_by, title, status, lifecycle_status, deleted_at, site_name, activity_type, case_data, created_at, updated_at')
                 .eq('organization_id', organizationId)
+                .eq('lifecycle_status', 'active')
                 .order('updated_at', { ascending: false });
 
             if (error) {
@@ -2042,11 +2053,13 @@
                     created_by: userId,
                     title: summary.title,
                     status: summary.status,
+                    lifecycle_status: 'active',
+                    deleted_at: null,
                     site_name: summary.siteName,
                     activity_type: summary.activityType,
                     case_data: payload
                 }, { onConflict: 'id' })
-                .select('id, organization_id, created_by, title, status, site_name, activity_type, case_data, created_at, updated_at')
+                .select('id, organization_id, created_by, title, status, lifecycle_status, deleted_at, site_name, activity_type, case_data, created_at, updated_at')
                 .single();
 
             if (error) {
@@ -2056,6 +2069,7 @@
             return normalizeProCaseRecord(data);
         };
 
+        // Legacy helper kept until QA cleanup. Canonical deletion now goes through /api/pro-delete-case.
         const deleteProCase = async (caseId) => {
             const browserClient = await getSupabaseBrowserClient();
             if (!browserClient) {
@@ -2080,8 +2094,9 @@
 
             const { data, error } = await browserClient
                 .from('pro_reports')
-                .select('id, organization_id, case_id, created_by, report_name, report_payload, report_summary, latest_pdf_file_id, latest_pdf_generated_at, pdf_status, pdf_error, created_at, updated_at')
+                .select('id, organization_id, case_id, created_by, status, deleted_at, report_name, report_payload, report_summary, latest_pdf_file_id, latest_pdf_generated_at, pdf_status, pdf_error, created_at, updated_at')
                 .eq('organization_id', organizationId)
+                .eq('status', 'active')
                 .order('updated_at', { ascending: false });
 
             if (error) {
@@ -2099,8 +2114,9 @@
 
             let query = browserClient
                 .from('pro_reports')
-                .select('id, organization_id, case_id, created_by, report_name, report_payload, report_summary, latest_pdf_file_id, latest_pdf_generated_at, pdf_status, pdf_error, created_at, updated_at')
-                .eq('id', reportId);
+                .select('id, organization_id, case_id, created_by, status, deleted_at, report_name, report_payload, report_summary, latest_pdf_file_id, latest_pdf_generated_at, pdf_status, pdf_error, created_at, updated_at')
+                .eq('id', reportId)
+                .eq('status', 'active');
 
             if (organizationId) {
                 query = query.eq('organization_id', organizationId);
@@ -2131,11 +2147,13 @@
                     organization_id: organizationId,
                     case_id: caseId,
                     created_by: userId,
+                    status: 'active',
+                    deleted_at: null,
                     report_name: reportName || sanitizedPayload.projectName || sanitizedPayload.clientName || 'Rapport',
                     report_payload: sanitizedPayload,
                     report_summary: summary
                 }, { onConflict: 'id' })
-                .select('id, organization_id, case_id, created_by, report_name, report_payload, report_summary, latest_pdf_file_id, latest_pdf_generated_at, pdf_status, pdf_error, created_at, updated_at')
+                .select('id, organization_id, case_id, created_by, status, deleted_at, report_name, report_payload, report_summary, latest_pdf_file_id, latest_pdf_generated_at, pdf_status, pdf_error, created_at, updated_at')
                 .single();
 
             if (error) {
@@ -2177,6 +2195,36 @@
             return data;
         };
 
+        const requestSecureCaseDeletion = async (caseId) => {
+            const { session, error } = await getCurrentSession();
+            if (error) {
+                throw error;
+            }
+
+            const accessToken = session?.access_token || '';
+            if (!accessToken) {
+                throw new Error("Session utilisateur requise pour supprimer ce dossier.");
+            }
+
+            const response = await fetch('/api/pro-delete-case', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${accessToken}`
+                },
+                body: JSON.stringify({
+                    case_id: caseId
+                })
+            });
+
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(data?.details || data?.error || "Impossible de supprimer ce dossier.");
+            }
+
+            return data;
+        };
+
         const syncReportPdfMetadata = async ({
             reportId,
             organizationId,
@@ -2203,6 +2251,7 @@
             };
         };
 
+        // Legacy helper kept until QA cleanup. Canonical deletion now goes through /api/pro-delete-case.
         const deleteProReportsByCaseId = async (caseId) => {
             const browserClient = await getSupabaseBrowserClient();
             if (!browserClient) {
@@ -3918,20 +3967,6 @@
             return null;
         }
 
-        // Neutralise les anciens helpers localStorage conservés plus haut pour compatibilite de source.
-        function initializeMockProCases() {
-            return;
-        }
-
-        function loadAllProCases() {
-            return typeof MOCK_PRO_CASES_V2 !== 'undefined' ? MOCK_PRO_CASES_V2 : [];
-        }
-
-        function findRawCaseById(caseId) {
-            const cases = loadAllProCases();
-            return cases.find(c => c.id === caseId) || null;
-        }
-
         const upsertCaseInCollection = (cases = [], nextCase) => {
             return sortCasesByNewest([nextCase, ...cases.filter(item => item.id !== nextCase.id)]);
         };
@@ -5099,7 +5134,7 @@
 
             const deleteCase = async (id) => {
                 try {
-                    if (!window.confirm('Supprimer ce dossier définitivement ?')) return;
+                    if (!window.confirm('Supprimer ce dossier, ses rapports et le PDF officiel lie ?')) return;
                     await onDeleteCase?.(id);
                 } catch (error) {
                     window.alert(error?.message || "Impossible de supprimer ce dossier pour le moment.");
@@ -5476,8 +5511,8 @@
                         <div className="flex gap-2 w-full sm:w-auto flex-wrap">
                             <button onClick={handlePrintPdf} className="pro-btn bg-slate-800 text-white hover:bg-slate-700 flex-1 sm:flex-none text-sm px-3 py-2">
                                 <Icon icon="solar:printer-bold" />
-                                <span className="hidden sm:inline">Export rapide local</span>
-                                <span className="sm:hidden">Local</span>
+                                <span className="hidden sm:inline">Export local (secours)</span>
+                                <span className="sm:hidden">Secours</span>
                             </button>
                             {canGenerateOfficialPdf && (
                                 <button
@@ -5520,7 +5555,7 @@
                                 <div className="min-w-0">
                                     <div className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">PDF officiel sauvegarde</div>
                                     <div className="text-sm text-slate-700 mt-1">
-                                        {effectivePdfSuccess || "Utilisez cette action pour generer une version serveur archivee dans le Storage prive de votre organisation."}
+                                        {effectivePdfSuccess || "Utilisez cette action pour generer la version serveur archivee. L export local navigateur reste disponible en secours."}
                                     </div>
                                     {!!effectivePdfError && (
                                         <div className="text-sm text-red-600 mt-2 break-words">{effectivePdfError}</div>
@@ -8126,8 +8161,7 @@
             };
 
             const handleDeleteCase = async (caseId) => {
-                await deleteProReportsByCaseId(caseId);
-                await deleteProCase(caseId);
+                const deletionResult = await requestSecureCaseDeletion(caseId);
 
                 setWorkspace(prev => ({
                     ...prev,
@@ -8138,6 +8172,12 @@
                 if (page === `report-${caseId}` || page === `case-report-${caseId}`) {
                     setPage('cases');
                 }
+
+                if (deletionResult?.storage_cleanup_status === 'partial') {
+                    window.alert(deletionResult?.message || "Dossier supprime, nettoyage des fichiers a finaliser.");
+                }
+
+                return deletionResult;
             };
 
             const handleUpdateCaseNote = async (caseId, noteInterne) => {

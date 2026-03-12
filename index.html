@@ -800,12 +800,146 @@
             });
         };
 
+        const NEW_DIAGNOSTIC_ANTISPAM_STORAGE_PREFIX = 'diagtertiaire_antispam';
+        const NEW_DIAGNOSTIC_ANTISPAM_HONEYPOT_STYLE = {
+            position: 'absolute',
+            left: '-9999px',
+            width: '1px',
+            height: '1px',
+            overflow: 'hidden',
+            opacity: 0,
+            pointerEvents: 'none'
+        };
+        const NEW_DIAGNOSTIC_GENERIC_SUBMIT_ERROR = "Impossible d'envoyer votre demande pour le moment. Merci de réessayer dans quelques instants.";
+
+        const newDiagnosticGetStorage = (type = 'session') => {
+            if (typeof window === 'undefined') {
+                return null;
+            }
+
+            try {
+                return type === 'local' ? window.localStorage : window.sessionStorage;
+            } catch (error) {
+                return null;
+            }
+        };
+
+        const newDiagnosticGetAntiSpamStorageKey = (kind, formKey) => `${NEW_DIAGNOSTIC_ANTISPAM_STORAGE_PREFIX}:${kind}:${formKey}`;
+
+        const newDiagnosticReadStoredTimestamp = (kind, formKey, type = 'session') => {
+            const storage = newDiagnosticGetStorage(type);
+            if (!storage) {
+                return null;
+            }
+
+            const rawValue = storage.getItem(newDiagnosticGetAntiSpamStorageKey(kind, formKey));
+            const parsedValue = Number(rawValue);
+            return Number.isFinite(parsedValue) && parsedValue > 0 ? parsedValue : null;
+        };
+
+        const newDiagnosticWriteStoredTimestamp = (kind, formKey, value, type = 'session') => {
+            const storage = newDiagnosticGetStorage(type);
+            if (!storage) {
+                return;
+            }
+
+            const storageKey = newDiagnosticGetAntiSpamStorageKey(kind, formKey);
+
+            if (value === null || typeof value === 'undefined') {
+                storage.removeItem(storageKey);
+                return;
+            }
+
+            storage.setItem(storageKey, String(value));
+        };
+
+        const newDiagnosticMarkFormRendered = (formKey) => {
+            const now = Date.now();
+            newDiagnosticWriteStoredTimestamp('rendered', formKey, now, 'session');
+            return now;
+        };
+
+        const newDiagnosticEnsureFormRendered = (formKey) => (
+            newDiagnosticReadStoredTimestamp('rendered', formKey, 'session') || newDiagnosticMarkFormRendered(formKey)
+        );
+
+        const newDiagnosticHasHoneypotValue = (value) => typeof value === 'string' && value.trim().length > 0;
+
+        const newDiagnosticIsSubmissionTooFast = (formKey, minimumDelayMs) => {
+            if (!minimumDelayMs) {
+                return false;
+            }
+
+            const renderedAt = newDiagnosticEnsureFormRendered(formKey);
+            return (Date.now() - renderedAt) < minimumDelayMs;
+        };
+
+        const newDiagnosticGetCooldownRemainingMs = (formKey, cooldownMs) => {
+            if (!cooldownMs) {
+                return 0;
+            }
+
+            const cooldownStartedAt = newDiagnosticReadStoredTimestamp('cooldown', formKey, 'local');
+            if (!cooldownStartedAt) {
+                return 0;
+            }
+
+            return Math.max(0, cooldownMs - (Date.now() - cooldownStartedAt));
+        };
+
+        const newDiagnosticSetFormCooldown = (formKey) => {
+            newDiagnosticWriteStoredTimestamp('cooldown', formKey, Date.now(), 'local');
+        };
+
+        const newDiagnosticClearFormCooldown = (formKey) => {
+            newDiagnosticWriteStoredTimestamp('cooldown', formKey, null, 'local');
+        };
+
+        const newDiagnosticBuildCooldownMessage = (remainingMs) => {
+            const seconds = Math.max(1, Math.ceil(remainingMs / 1000));
+            return `Merci de patienter ${seconds} seconde${seconds > 1 ? 's' : ''} avant de renvoyer votre demande.`;
+        };
+
+        // Point d'extension futur: brancher un CAPTCHA ici si la pression spam augmente.
+        // Point d'extension futur: ajouter un rate limiting serveur et une validation API si les insertions sortent du front.
+        const newDiagnosticRunAntiSpamChecks = ({
+            formKey,
+            honeypotValue,
+            minimumDelayMs,
+            cooldownMs,
+            genericErrorMessage = NEW_DIAGNOSTIC_GENERIC_SUBMIT_ERROR,
+            cooldownMessage
+        }) => {
+            if (newDiagnosticHasHoneypotValue(honeypotValue)) {
+                return { ok: false, error: genericErrorMessage };
+            }
+
+            if (newDiagnosticIsSubmissionTooFast(formKey, minimumDelayMs)) {
+                return { ok: false, error: genericErrorMessage };
+            }
+
+            const cooldownRemainingMs = newDiagnosticGetCooldownRemainingMs(formKey, cooldownMs);
+            if (cooldownRemainingMs > 0) {
+                return {
+                    ok: false,
+                    error: cooldownMessage || newDiagnosticBuildCooldownMessage(cooldownRemainingMs)
+                };
+            }
+
+            return { ok: true, error: null };
+        };
+
         const newDiagnosticInsertSupabaseRow = async (tableName, payload, preferHeader = 'return=minimal') => {
             const { supabaseUrl, supabasePublishableKey } = await loadPublicRuntimeConfig();
 
             if (!supabaseUrl || !supabasePublishableKey) {
                 console.warn('Supabase non configure. Lead non sauvegarde :', payload);
-                return null;
+                return {
+                    ok: false,
+                    status: 0,
+                    data: null,
+                    error: 'Configuration Supabase indisponible.'
+                };
             }
 
             try {
@@ -822,20 +956,41 @@
                 });
                 console.log('lead submit response', response.status);
 
+                const responseText = await response.text().catch(() => '');
+                let responseData = null;
+
+                if (responseText) {
+                    try {
+                        const parsed = JSON.parse(responseText);
+                        responseData = Array.isArray(parsed) ? (parsed[0] || null) : parsed;
+                    } catch (parseError) {
+                        responseData = null;
+                    }
+                }
+
                 if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`Erreur Supabase ${tableName}: ${response.status} ${errorText}`);
+                    return {
+                        ok: false,
+                        status: response.status,
+                        data: responseData,
+                        error: `Erreur Supabase ${tableName}: ${response.status}${responseText ? ` ${responseText}` : ''}`
+                    };
                 }
 
-                if (preferHeader === 'return=representation') {
-                    const rows = await response.json().catch(() => null);
-                    return Array.isArray(rows) ? (rows[0] || null) : rows;
-                }
-
-                return true;
+                return {
+                    ok: true,
+                    status: response.status,
+                    data: responseData,
+                    error: null
+                };
             } catch (err) {
                 console.error('Erreur lors de la sauvegarde du lead :', err);
-                return null;
+                return {
+                    ok: false,
+                    status: 0,
+                    data: null,
+                    error: err && err.message ? err.message : `Erreur reseau lors de la sauvegarde dans ${tableName}.`
+                };
             }
         };
 
@@ -856,25 +1011,54 @@
                 raw_payload: leadData
             };
 
-            const insertedLead = await newDiagnosticInsertSupabaseRow('lead_submissions', payload);
+            const result = await newDiagnosticInsertSupabaseRow('lead_submissions', payload);
 
-            if (insertedLead) {
-                console.log('public lead inserted');
-                return { id: leadSubmissionId };
+            if (!result.ok) {
+                return {
+                    ok: false,
+                    id: null,
+                    status: result.status,
+                    error: result.error || "Impossible d'enregistrer votre demande."
+                };
             }
 
-            return null;
+            console.log('public lead inserted');
+
+            return {
+                ok: true,
+                id: result.data && result.data.id ? result.data.id : leadSubmissionId,
+                status: result.status,
+                error: null
+            };
         };
 
         const newDiagnosticSubmitPartnerLead = async (leadData, insertedLeadId) => {
-            const payload = newDiagnosticBuildPartnerLeadPayload(leadData, insertedLeadId);
-            const insertedPartnerLead = await newDiagnosticInsertSupabaseRow('partner_lead_submissions', payload);
-
-            if (insertedPartnerLead) {
-                console.log('partner lead inserted');
+            if (!insertedLeadId) {
+                return {
+                    ok: false,
+                    status: 0,
+                    error: "Lead principal introuvable. Impossible d'envoyer la demande partenaire."
+                };
             }
 
-            return insertedPartnerLead;
+            const payload = newDiagnosticBuildPartnerLeadPayload(leadData, insertedLeadId);
+            const result = await newDiagnosticInsertSupabaseRow('partner_lead_submissions', payload);
+
+            if (!result.ok) {
+                return {
+                    ok: false,
+                    status: result.status,
+                    error: result.error || "Impossible d'envoyer la demande partenaire."
+                };
+            }
+
+            console.log('partner lead inserted');
+
+            return {
+                ok: true,
+                status: result.status,
+                error: null
+            };
         };
 
         /* --- PAGES --- */
@@ -1840,6 +2024,13 @@
             const [showPreview, setShowPreview] = useState(false);
             const [contactForm, setContactForm] = useState({ name: '', email: '', company: '', message: '' });
             const [formSubmitted, setFormSubmitted] = useState(false);
+            const [contactSubmitError, setContactSubmitError] = useState(null);
+            const [contactHoneypot, setContactHoneypot] = useState('');
+            const contactFormKey = 'landing-pro-contact';
+
+            useEffect(() => {
+                newDiagnosticMarkFormRendered(contactFormKey);
+            }, []);
 
             // Upload logo
             const handleLogoUpload = (e) => {
@@ -1857,10 +2048,30 @@
             // Soumission formulaire contact
             const handleContactSubmit = async (e) => {
                 e.preventDefault();
+                setContactSubmitError(null);
+                const antiSpamCheck = newDiagnosticRunAntiSpamChecks({
+                    formKey: contactFormKey,
+                    honeypotValue: contactHoneypot,
+                    minimumDelayMs: 3000,
+                    cooldownMs: 30000
+                });
+
+                if (!antiSpamCheck.ok) {
+                    setContactSubmitError(antiSpamCheck.error);
+                    return;
+                }
+
+                newDiagnosticSetFormCooldown(contactFormKey);
                 console.log('Contact Pro:', contactForm);
 
                 const leadPayload = newDiagnosticBuildProLeadPayload(contactForm);
-                await newDiagnosticSubmitLead(leadPayload);
+                const leadResult = await newDiagnosticSubmitLead(leadPayload);
+
+                if (!leadResult.ok) {
+                    newDiagnosticClearFormCooldown(contactFormKey);
+                    setContactSubmitError("Impossible d'envoyer votre demande pour le moment. Merci de réessayer dans quelques instants.");
+                    return;
+                }
 
                 setFormSubmitted(true);
             };
@@ -2383,6 +2594,18 @@
                             {!formSubmitted ? (
                                 <div className="bg-white rounded-2xl p-10 shadow-2xl border border-[#E2E8F0]">
                                     <form onSubmit={handleContactSubmit} className="space-y-6">
+                                        <div style={NEW_DIAGNOSTIC_ANTISPAM_HONEYPOT_STYLE} aria-hidden="true">
+                                            <label htmlFor="landing-pro-contact-website">Site web</label>
+                                            <input
+                                                id="landing-pro-contact-website"
+                                                name="website"
+                                                type="text"
+                                                tabIndex="-1"
+                                                autoComplete="off"
+                                                value={contactHoneypot}
+                                                onChange={(e) => setContactHoneypot(e.target.value)}
+                                            />
+                                        </div>
                                         <div className="grid md:grid-cols-2 gap-6">
                                             <div>
                                                 <label className="block text-sm font-semibold text-[#102A43] mb-3">
@@ -2438,6 +2661,12 @@
                                                 placeholder="Ex: 50 prospects/mois, besoin marque blanche, déploiement immédiat..."
                                             />
                                         </div>
+
+                                        {contactSubmitError && (
+                                            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                                                {contactSubmitError}
+                                            </div>
+                                        )}
 
                                         <button
                                             type="submit"
@@ -3556,7 +3785,7 @@
         };
 
         // Étape 4 : Contact + Travaux déjà réalisés
-        const NewDiagnosticStep4Works = ({ formData, setFormData, onNext, onBack }) => {
+        const NewDiagnosticStep4Works = ({ formData, setFormData, onNext, onBack, honeypotValue, onHoneypotChange, isSubmitting }) => {
             const [errors, setErrors] = useState({});
 
             const validate = () => {
@@ -3604,6 +3833,18 @@
                             type="tel"
                             placeholder="06 12 34 56 78"
                         />
+                        <div style={NEW_DIAGNOSTIC_ANTISPAM_HONEYPOT_STYLE} aria-hidden="true">
+                            <label htmlFor="public-diagnostic-website">Site web</label>
+                            <input
+                                id="public-diagnostic-website"
+                                name="website"
+                                type="text"
+                                tabIndex="-1"
+                                autoComplete="off"
+                                value={honeypotValue}
+                                onChange={(e) => onHoneypotChange(e.target.value)}
+                            />
+                        </div>
                     </div>
 
                     {/* Objectif, horizon, role */}
@@ -3689,7 +3930,8 @@
                         </button>
                         <button
                             onClick={handleNext}
-                            className="px-8 py-3 bg-[#1D4ED8] text-white font-semibold rounded-lg hover:bg-[#1E40AF] transition-colors shadow-sm"
+                            disabled={isSubmitting}
+                            className="px-8 py-3 bg-[#1D4ED8] text-white font-semibold rounded-lg hover:bg-[#1E40AF] transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
                         >
                             Terminer et voir mon rapport
                         </button>
@@ -5444,13 +5686,17 @@
             };
         }
 
-        const NewDiagnosticReportScreen = ({ reportPayload, userEmail, onLeadSubmissionCreated }) => {
+        const NewDiagnosticReportScreen = ({ reportPayload, userEmail, onLeadSubmissionCreated, onPartnerSubmissionCreated }) => {
             const [isPDFGenerating, setIsPDFGenerating] = useState(false);
             const [showCTAModal, setShowCTAModal] = useState(false);
             const [ctaName, setCtaName] = useState('');
             const [ctaMessage, setCtaMessage] = useState('');
+            const [ctaHoneypot, setCtaHoneypot] = useState('');
             const [ctaSent, setCtaSent] = useState(false);
+            const [ctaSubmitting, setCtaSubmitting] = useState(false);
+            const [ctaError, setCtaError] = useState(reportPayload.partner_submission_error || null);
             const [brandLogoDataUrl, setBrandLogoDataUrl] = useState(null);
+            const ctaFormKey = 'report-partner-cta';
 
             useEffect(() => {
                 let isCancelled = false;
@@ -5466,6 +5712,9 @@
 
             useEffect(() => {
                 if (!showCTAModal) return undefined;
+
+                newDiagnosticMarkFormRendered(ctaFormKey);
+                setCtaHoneypot('');
 
                 const previousBodyOverflow = document.body.style.overflow;
                 const previousHtmlOverflow = document.documentElement.style.overflow;
@@ -5506,6 +5755,8 @@
 
             const closeCTAModal = () => {
                 setShowCTAModal(false);
+                setCtaSubmitting(false);
+                setCtaHoneypot('');
             };
 
             const calc = reportPayload.calculation_results;
@@ -5582,7 +5833,7 @@
             const actionCopy = NEW_DIAGNOSTIC_REPORT_COPY.actions;
             const impactCopy = NEW_DIAGNOSTIC_REPORT_COPY.impact;
             const nextStepCopy = NEW_DIAGNOSTIC_REPORT_COPY.nextStep;
-            const hasCtaConfirmation = reportPayload.inputs_summary.contactOptIn || ctaSent;
+            const hasCtaConfirmation = !!reportPayload.partner_lead_submitted || ctaSent;
             const currentRank = NEW_DIAGNOSTIC_SECTOR_ORDER.indexOf(diagIndex.label);
             const targetRank = NEW_DIAGNOSTIC_SECTOR_ORDER.indexOf(targetDiagIndex.label);
             const classGain = Math.max(0, currentRank - targetRank);
@@ -5981,6 +6232,11 @@
                                         <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="px-5 py-3 bg-white border border-[#DBEAFE] text-[#1D4ED8] rounded-xl text-sm font-semibold hover:bg-[#EFF6FF] transition-colors">
                                             {nextStepCopy.secondary}
                                         </button>
+                                        {ctaError && !hasCtaConfirmation && (
+                                            <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                                                {ctaError}
+                                            </div>
+                                        )}
                                         <p className="text-xs text-slate-500 leading-relaxed">{nextStepCopy.proof}</p>
                                     </div>
                                 </div>
@@ -6055,32 +6311,88 @@
                                                         <label className="block text-sm font-medium text-neutral-700 mb-1">Message (optionnel)</label>
                                                         <textarea value={ctaMessage} onChange={(e) => setCtaMessage(e.target.value)} placeholder="Précisions sur le site, le délai ou vos priorités..." rows={4} className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y" />
                                                     </div>
+                                                    <div style={NEW_DIAGNOSTIC_ANTISPAM_HONEYPOT_STYLE} aria-hidden="true">
+                                                        <label htmlFor="report-cta-company">Société</label>
+                                                        <input
+                                                            id="report-cta-company"
+                                                            name="company"
+                                                            type="text"
+                                                            tabIndex="-1"
+                                                            autoComplete="off"
+                                                            value={ctaHoneypot}
+                                                            onChange={(e) => setCtaHoneypot(e.target.value)}
+                                                        />
+                                                    </div>
+                                                    {ctaError && (
+                                                        <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                                                            {ctaError}
+                                                        </div>
+                                                    )}
                                                     <div className="flex flex-col-reverse sm:flex-row gap-3">
-                                                        <button type="button" onClick={closeCTAModal} className="flex-1 px-4 py-3 border border-neutral-300 text-neutral-700 rounded-xl text-sm font-medium hover:bg-neutral-50">Annuler</button>
+                                                        <button type="button" onClick={closeCTAModal} disabled={ctaSubmitting} className="flex-1 px-4 py-3 border border-neutral-300 text-neutral-700 rounded-xl text-sm font-medium hover:bg-neutral-50 disabled:opacity-60">Annuler</button>
                                                         <button
                                                             type="button"
                                                             onClick={async () => {
+                                                                setCtaError(null);
+                                                                const antiSpamCheck = newDiagnosticRunAntiSpamChecks({
+                                                                    formKey: ctaFormKey,
+                                                                    honeypotValue: ctaHoneypot,
+                                                                    minimumDelayMs: 1500,
+                                                                    cooldownMs: 15000
+                                                                });
+
+                                                                if (!antiSpamCheck.ok) {
+                                                                    setCtaError(antiSpamCheck.error);
+                                                                    return;
+                                                                }
+
+                                                                setCtaSubmitting(true);
+                                                                newDiagnosticSetFormCooldown(ctaFormKey);
+
                                                                 const leadPayload = newDiagnosticBuildReportCtaLeadPayload(reportPayload, ctaName, ctaMessage);
                                                                 let leadSubmissionId = reportPayload && reportPayload.lead_submission_id
                                                                     ? reportPayload.lead_submission_id
                                                                     : null;
 
                                                                 if (!leadSubmissionId) {
-                                                                    const insertedLead = await newDiagnosticSubmitLead(leadPayload);
-                                                                    leadSubmissionId = insertedLead && insertedLead.id ? insertedLead.id : null;
+                                                                    const leadResult = await newDiagnosticSubmitLead(leadPayload);
+
+                                                                    if (!leadResult.ok || !leadResult.id) {
+                                                                        setCtaError("Impossible d'enregistrer votre demande principale. Merci de réessayer dans quelques instants.");
+                                                                        newDiagnosticClearFormCooldown(ctaFormKey);
+                                                                        setCtaSubmitting(false);
+                                                                        return;
+                                                                    }
+
+                                                                    leadSubmissionId = leadResult.id;
 
                                                                     if (leadSubmissionId && typeof onLeadSubmissionCreated === 'function') {
                                                                         onLeadSubmissionCreated(leadSubmissionId);
                                                                     }
                                                                 }
 
-                                                                await newDiagnosticSubmitPartnerLead(leadPayload, leadSubmissionId);
+                                                                const partnerResult = await newDiagnosticSubmitPartnerLead(leadPayload, leadSubmissionId);
+
+                                                                if (!partnerResult.ok) {
+                                                                    setCtaError("Impossible d'envoyer votre demande de mise en relation. Merci de réessayer dans quelques instants.");
+                                                                    newDiagnosticClearFormCooldown(ctaFormKey);
+                                                                    setCtaSubmitting(false);
+                                                                    return;
+                                                                }
+
+                                                                if (typeof onPartnerSubmissionCreated === 'function') {
+                                                                    onPartnerSubmissionCreated();
+                                                                }
+
                                                                 setCtaSent(true);
+                                                                setCtaError(null);
+                                                                setCtaSubmitting(false);
                                                                 setTimeout(() => setShowCTAModal(false), 2000);
                                                             }}
-                                                            className="flex-1 px-4 py-3 bg-[#1D4ED8] text-white rounded-xl text-sm font-semibold hover:bg-[#1E40AF]"
+                                                            disabled={ctaSubmitting}
+                                                            className="flex-1 px-4 py-3 bg-[#1D4ED8] text-white rounded-xl text-sm font-semibold hover:bg-[#1E40AF] disabled:opacity-60"
                                                         >
-                                                            Envoyer
+                                                            {ctaSubmitting ? 'Envoi...' : 'Envoyer'}
                                                         </button>
                                                     </div>
                                                 </>
@@ -6292,9 +6604,13 @@
             const [formData, setFormData] = useState(NEW_DIAGNOSTIC_DEFAULT_FORM_DATA);
             const [reportPayload, setReportPayload] = useState(null);
             const [submitError, setSubmitError] = useState(null);
+            const [diagnosticHoneypot, setDiagnosticHoneypot] = useState('');
+            const [isSubmitting, setIsSubmitting] = useState(false);
+            const diagnosticFormKey = 'public-diagnostic';
 
             useEffect(() => {
                 newDiagnosticTrack('start_diagnostic');
+                newDiagnosticMarkFormRendered(diagnosticFormKey);
                 try {
                     const saved = window.localStorage.getItem('newDiagnosticLatestReport');
                     if (saved) {
@@ -6308,6 +6624,21 @@
 
             const handleComplete = async () => {
                 setSubmitError(null);
+                const antiSpamCheck = newDiagnosticRunAntiSpamChecks({
+                    formKey: diagnosticFormKey,
+                    honeypotValue: diagnosticHoneypot,
+                    minimumDelayMs: 3000,
+                    cooldownMs: 30000
+                });
+
+                if (!antiSpamCheck.ok) {
+                    setSubmitError(antiSpamCheck.error);
+                    return;
+                }
+
+                setIsSubmitting(true);
+                newDiagnosticSetFormCooldown(diagnosticFormKey);
+                let leadSaved = false;
 
                 try {
                     newDiagnosticTrack('submit_form', {
@@ -6318,14 +6649,39 @@
 
                     const payload = newDiagnosticBuildReportData(formData);
                     const leadPayload = newDiagnosticBuildDiagnosticLeadPayload(formData, payload);
-                    const insertedLead = await newDiagnosticSubmitLead(leadPayload);
-                    const leadSubmissionId = insertedLead && insertedLead.id ? insertedLead.id : null;
-                    const nextReportPayload = leadSubmissionId
-                        ? { ...payload, lead_submission_id: leadSubmissionId }
-                        : payload;
+                    const leadResult = await newDiagnosticSubmitLead(leadPayload);
+
+                    if (!leadResult.ok || !leadResult.id) {
+                        newDiagnosticClearFormCooldown(diagnosticFormKey);
+                        setSubmitError("Impossible d'enregistrer votre demande. Merci de vérifier vos informations puis de réessayer.");
+                        return;
+                    }
+
+                    const leadSubmissionId = leadResult.id;
+                    leadSaved = true;
+                    let nextReportPayload = {
+                        ...payload,
+                        lead_submission_id: leadSubmissionId,
+                        partner_lead_submitted: false,
+                        partner_submission_error: null
+                    };
 
                     if (leadPayload.partnerConsent) {
-                        await newDiagnosticSubmitPartnerLead(leadPayload, leadSubmissionId);
+                        const partnerResult = await newDiagnosticSubmitPartnerLead(leadPayload, leadSubmissionId);
+
+                        if (partnerResult.ok) {
+                            nextReportPayload = {
+                                ...nextReportPayload,
+                                partner_lead_submitted: true,
+                                partner_submission_error: null
+                            };
+                        } else {
+                            nextReportPayload = {
+                                ...nextReportPayload,
+                                partner_lead_submitted: false,
+                                partner_submission_error: "Votre demande de mise en relation n'a pas pu être enregistrée. Vous pouvez réessayer depuis le rapport."
+                            };
+                        }
                     } else {
                         console.log('partner consent false, no partner insert');
                     }
@@ -6342,8 +6698,13 @@
                         window.scrollTo(0, 0);
                     }
                 } catch (error) {
+                    if (!leadSaved) {
+                        newDiagnosticClearFormCooldown(diagnosticFormKey);
+                    }
                     console.error('Erreur lors de la génération du rapport du nouveau formulaire :', error);
                     setSubmitError("Impossible de générer le rapport. Vérifiez les données saisies puis réessayez.");
+                } finally {
+                    setIsSubmitting(false);
                 }
             };
 
@@ -6352,6 +6713,9 @@
                 setCurrentStep(1);
                 setReportPayload(null);
                 setSubmitError(null);
+                setDiagnosticHoneypot('');
+                setIsSubmitting(false);
+                newDiagnosticMarkFormRendered(diagnosticFormKey);
 
                 try {
                     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -6384,6 +6748,19 @@
                                     }
 
                                     return { ...prev, lead_submission_id: leadSubmissionId };
+                                });
+                            }}
+                            onPartnerSubmissionCreated={() => {
+                                setReportPayload((prev) => {
+                                    if (!prev) {
+                                        return prev;
+                                    }
+
+                                    return {
+                                        ...prev,
+                                        partner_lead_submitted: true,
+                                        partner_submission_error: null
+                                    };
                                 });
                             }}
                         />
@@ -6434,6 +6811,9 @@
                                 setFormData={setFormData}
                                 onNext={handleComplete}
                                 onBack={() => setCurrentStep(3)}
+                                honeypotValue={diagnosticHoneypot}
+                                onHoneypotChange={setDiagnosticHoneypot}
+                                isSubmitting={isSubmitting}
                             />
                         )}
                     </div>
@@ -6636,4 +7016,3 @@
 </body>
 
 </html>
-

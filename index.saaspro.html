@@ -21,6 +21,7 @@
     </script>
     <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
     <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
         * {
@@ -639,6 +640,45 @@
 
         let publicRuntimeConfig = null;
         let publicRuntimeConfigPromise = null;
+        let supabaseBrowserClient = null;
+        let supabaseBrowserClientPromise = null;
+        let activeProUserId = null;
+
+        const DEFAULT_WORKSPACE_ACCENT = '#1D4ED8';
+        const DEFAULT_WORKSPACE_BRAND_NAME = 'DiagTertiaire Pro';
+        const WORKSPACE_MIGRATION_VERSION = 2;
+        const ORGANIZATION_ASSETS_BUCKET = 'organization-assets';
+        const ORGANIZATION_LOGO_FILE_KIND = 'branding_logo';
+        const REPORT_PDF_FILE_KIND = 'report_pdf';
+        const STORAGE_SIGNED_URL_TTL_SECONDS = 60 * 60 * 12;
+        const MAX_ORGANIZATION_LOGO_SIZE_BYTES = 1024 * 1024;
+        const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+        const textEncoder = typeof TextEncoder !== 'undefined' ? new TextEncoder() : null;
+
+        const DEFAULT_ORGANIZATION_SETTINGS = {
+            accent: DEFAULT_WORKSPACE_ACCENT,
+            brandName: DEFAULT_WORKSPACE_BRAND_NAME
+        };
+
+        const DEFAULT_ORGANIZATION_BRANDING = {
+            logoStoragePath: null,
+            logoFileName: null,
+            logoPreviewUrl: ''
+        };
+
+        const DEFAULT_USER_WORKSPACE_STATE = {
+            draftPayload: {},
+            uiState: {}
+        };
+
+        const DEFAULT_WORKSPACE_DATA = {
+            organization: null,
+            settings: DEFAULT_ORGANIZATION_SETTINGS,
+            branding: DEFAULT_ORGANIZATION_BRANDING,
+            cases: [],
+            reports: [],
+            userWorkspaceState: DEFAULT_USER_WORKSPACE_STATE
+        };
 
         const loadPublicRuntimeConfig = async () => {
             if (publicRuntimeConfig) {
@@ -673,6 +713,1551 @@
             return publicRuntimeConfigPromise;
         };
 
+        const setActiveProUserId = (userId) => {
+            activeProUserId = userId || null;
+        };
+
+        const getActiveProUserId = () => activeProUserId;
+
+        const getScopedStorageKey = (baseKey, userId = getActiveProUserId()) => `${baseKey}::${userId || 'anonymous'}`;
+
+        const readStorageItem = (key, fallback = '') => {
+            try {
+                const value = localStorage.getItem(key);
+                return value == null ? fallback : value;
+            } catch (error) {
+                return fallback;
+            }
+        };
+
+        const writeStorageItem = (key, value) => {
+            try {
+                localStorage.setItem(key, value);
+            } catch (error) { }
+        };
+
+        const removeStorageItem = (key) => {
+            try {
+                localStorage.removeItem(key);
+            } catch (error) { }
+        };
+
+        const getScopedStorageItem = (baseKey, fallback = '', userId = getActiveProUserId()) => {
+            return readStorageItem(getScopedStorageKey(baseKey, userId), fallback);
+        };
+
+        const setScopedStorageItem = (baseKey, value, userId = getActiveProUserId()) => {
+            writeStorageItem(getScopedStorageKey(baseKey, userId), value);
+        };
+
+        const removeScopedStorageItem = (baseKey, userId = getActiveProUserId()) => {
+            removeStorageItem(getScopedStorageKey(baseKey, userId));
+        };
+
+        const getScopedJsonStorage = (baseKey, fallback, userId = getActiveProUserId()) => {
+            const raw = getScopedStorageItem(baseKey, '', userId);
+            if (!raw) return fallback;
+            try {
+                return JSON.parse(raw);
+            } catch (error) {
+                return fallback;
+            }
+        };
+
+        const setScopedJsonStorage = (baseKey, value, userId = getActiveProUserId()) => {
+            setScopedStorageItem(baseKey, JSON.stringify(value), userId);
+        };
+
+        const isUuid = (value) => UUID_REGEX.test(String(value || ''));
+
+        const cloneJson = (value, fallback) => {
+            try {
+                return JSON.parse(JSON.stringify(value ?? fallback));
+            } catch (error) {
+                return fallback;
+            }
+        };
+
+        const asPlainObject = (value) => {
+            return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+        };
+
+        const bytesToUuid = (bytes) => {
+            const parts = [
+                Array.from(bytes.slice(0, 4)),
+                Array.from(bytes.slice(4, 6)),
+                Array.from(bytes.slice(6, 8)),
+                Array.from(bytes.slice(8, 10)),
+                Array.from(bytes.slice(10, 16))
+            ];
+
+            return parts
+                .map(part => part.map(byte => byte.toString(16).padStart(2, '0')).join(''))
+                .join('-');
+        };
+
+        const generateUuid = () => {
+            if (window.crypto?.randomUUID) {
+                return window.crypto.randomUUID();
+            }
+
+            const bytes = new Uint8Array(16);
+            if (window.crypto?.getRandomValues) {
+                window.crypto.getRandomValues(bytes);
+            } else {
+                for (let index = 0; index < bytes.length; index += 1) {
+                    bytes[index] = Math.floor(Math.random() * 256);
+                }
+            }
+
+            bytes[6] = (bytes[6] & 0x0f) | 0x40;
+            bytes[8] = (bytes[8] & 0x3f) | 0x80;
+            return bytesToUuid(bytes);
+        };
+
+        const buildDeterministicUuid = async (seed) => {
+            if (window.crypto?.subtle && textEncoder) {
+                const digest = await window.crypto.subtle.digest('SHA-256', textEncoder.encode(String(seed)));
+                const bytes = new Uint8Array(digest).slice(0, 16);
+                bytes[6] = (bytes[6] & 0x0f) | 0x40;
+                bytes[8] = (bytes[8] & 0x3f) | 0x80;
+                return bytesToUuid(bytes);
+            }
+
+            return generateUuid();
+        };
+
+        const formatDateForUi = (value) => {
+            if (!value) return '';
+            if (typeof value === 'string' && /^\d{2}\/\d{2}\/\d{4}$/.test(value)) {
+                return value;
+            }
+
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) {
+                return typeof value === 'string' ? value : '';
+            }
+
+            return date.toLocaleDateString('fr-FR');
+        };
+
+        const formatDateTimeForUi = (value) => {
+            if (!value) return '';
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) {
+                return typeof value === 'string' ? value : '';
+            }
+
+            return date.toLocaleString('fr-FR', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        };
+
+        const hasMeaningfulDraftPayload = (draftPayload) => {
+            if (!draftPayload || typeof draftPayload !== 'object') return false;
+            return !!(draftPayload.contactName || draftPayload.company || draftPayload.activity || draftPayload.surface);
+        };
+
+        const buildDraftFormState = (initialState, draftPayload) => {
+            const safeDraft = asPlainObject(draftPayload);
+            const nextStep = Number(safeDraft.step);
+            return {
+                ...initialState,
+                ...safeDraft,
+                step: Number.isFinite(nextStep) && nextStep >= 1 && nextStep <= 7 ? nextStep : 1
+            };
+        };
+
+        const resolveBrandName = (settings, organization) => {
+            const candidate = typeof settings?.brandName === 'string' ? settings.brandName.trim() : '';
+            if (candidate) return candidate;
+            const organizationName = typeof organization?.name === 'string' ? organization.name.trim() : '';
+            return organizationName || DEFAULT_WORKSPACE_BRAND_NAME;
+        };
+
+        const sanitizeStorageSegment = (value, fallback = 'file') => {
+            const normalized = String(value || '')
+                .trim()
+                .toLowerCase()
+                .replace(/[^a-z0-9._-]+/g, '-')
+                .replace(/-+/g, '-')
+                .replace(/^-|-$/g, '');
+
+            return normalized || fallback;
+        };
+
+        const getFileExtensionFromMimeType = (mimeType = '') => {
+            const lookup = {
+                'image/jpeg': 'jpg',
+                'image/jpg': 'jpg',
+                'image/png': 'png',
+                'image/webp': 'webp',
+                'image/svg+xml': 'svg',
+                'application/pdf': 'pdf'
+            };
+
+            return lookup[mimeType] || 'bin';
+        };
+
+        const buildSafeStorageFileName = (fileName, fallbackBaseName = 'file') => {
+            const rawName = String(fileName || '').trim();
+            const lastDotIndex = rawName.lastIndexOf('.');
+            const hasExtension = lastDotIndex > 0 && lastDotIndex < rawName.length - 1;
+            const baseName = hasExtension ? rawName.slice(0, lastDotIndex) : rawName;
+            const extension = hasExtension ? rawName.slice(lastDotIndex + 1) : '';
+            const safeBaseName = sanitizeStorageSegment(baseName, fallbackBaseName);
+            const safeExtension = sanitizeStorageSegment(extension, '');
+            return safeExtension ? `${safeBaseName}.${safeExtension}` : safeBaseName;
+        };
+
+        const buildOrganizationLogoStoragePath = (organizationId, fileName) => {
+            const uniqueFileName = buildSafeStorageFileName(`${Date.now()}-${fileName}`, 'logo');
+            return `org/${organizationId}/branding/logo/${uniqueFileName}`;
+        };
+
+        const buildOrganizationReportStoragePath = (organizationId, reportId, fileName) => {
+            const safeFileName = buildSafeStorageFileName(fileName, REPORT_PDF_FILE_KIND);
+            return `org/${organizationId}/reports/${reportId}/${safeFileName}`;
+        };
+
+        const buildOrganizationWorkspaceAssetPath = (organizationId, subpath = '') => {
+            const segments = String(subpath || '')
+                .split('/')
+                .map(segment => sanitizeStorageSegment(segment, 'asset'))
+                .filter(Boolean);
+
+            if (!segments.length) {
+                return `org/${organizationId}/assets/asset`;
+            }
+
+            return `org/${organizationId}/assets/${segments.join('/')}`;
+        };
+
+        const dataUrlToFile = (dataUrl, suggestedBaseName = 'logo') => {
+            if (typeof dataUrl !== 'string' || !dataUrl.startsWith('data:') || typeof window === 'undefined') {
+                return null;
+            }
+
+            const matches = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
+            if (!matches) {
+                return null;
+            }
+
+            const mimeType = matches[1];
+            const binary = window.atob(matches[2]);
+            const bytes = new Uint8Array(binary.length);
+            for (let index = 0; index < binary.length; index += 1) {
+                bytes[index] = binary.charCodeAt(index);
+            }
+
+            const fileName = buildSafeStorageFileName(
+                `${suggestedBaseName}.${getFileExtensionFromMimeType(mimeType)}`,
+                'logo'
+            );
+
+            return new File([bytes], fileName, { type: mimeType });
+        };
+
+        const resolveBrandPreviewUrl = (branding) => {
+            if (typeof branding?.logoPreviewUrl === 'string' && branding.logoPreviewUrl) {
+                return branding.logoPreviewUrl;
+            }
+
+            const storagePath = typeof branding?.logoStoragePath === 'string' ? branding.logoStoragePath : '';
+            if (/^https?:\/\//i.test(storagePath) || storagePath.startsWith('data:image/')) {
+                return storagePath;
+            }
+
+            return '';
+        };
+
+        const buildReportsByCaseId = (reports = []) => {
+            return reports.reduce((acc, report) => {
+                if (report?.caseId) {
+                    acc[report.caseId] = report;
+                }
+                return acc;
+            }, {});
+        };
+
+        const getLegacyCaseStorageKey = (caseData = {}) => {
+            return caseData.legacyId
+                || caseData.id
+                || caseData.caseId
+                || `${caseData.projectName || caseData.clientName || caseData.company || 'case'}::${caseData.createdAt || caseData.lastUpdated || ''}`;
+        };
+
+        const mergeLegacyCaseCollections = (...collections) => {
+            const merged = new Map();
+
+            collections
+                .flat()
+                .filter(item => item && typeof item === 'object')
+                .forEach((item) => {
+                    const key = getLegacyCaseStorageKey(item);
+                    const previous = merged.get(key) || {};
+                    merged.set(key, { ...previous, ...item });
+                });
+
+            return Array.from(merged.values());
+        };
+
+        const sortCasesByNewest = (cases = []) => {
+            return [...cases].sort((left, right) => {
+                const leftValue = String(left?._caseUpdatedAt || left?.lastUpdated || left?.createdAt || '');
+                const rightValue = String(right?._caseUpdatedAt || right?.lastUpdated || right?.createdAt || '');
+                return rightValue.localeCompare(leftValue);
+            });
+        };
+
+        const sortReportsByNewest = (reports = []) => {
+            return [...reports].sort((left, right) => {
+                const leftValue = String(left?._reportUpdatedAt || left?.reportGeneratedAt || left?.createdAt || '');
+                const rightValue = String(right?._reportUpdatedAt || right?.reportGeneratedAt || right?.createdAt || '');
+                return rightValue.localeCompare(leftValue);
+            });
+        };
+
+        const getAuthRedirectUrl = () => {
+            const url = new URL(window.location.href);
+            url.hash = '';
+            return url.toString();
+        };
+
+        const cleanAuthMetadata = (metadata = {}) => {
+            return Object.entries({
+                fullName: metadata.fullName || metadata.full_name || '',
+                companyName: metadata.companyName || metadata.company_name || ''
+            }).reduce((acc, [key, value]) => {
+                if (typeof value === 'string' && value.trim()) {
+                    acc[key] = value.trim();
+                }
+                return acc;
+            }, {});
+        };
+
+        const getSupabaseBrowserClient = async () => {
+            if (supabaseBrowserClient) {
+                return supabaseBrowserClient;
+            }
+
+            if (!supabaseBrowserClientPromise) {
+                supabaseBrowserClientPromise = loadPublicRuntimeConfig()
+                    .then(({ supabaseUrl, supabasePublishableKey }) => {
+                        if (!supabaseUrl || !supabasePublishableKey || !window.supabase?.createClient) {
+                            return null;
+                        }
+
+                        supabaseBrowserClient = window.supabase.createClient(supabaseUrl, supabasePublishableKey, {
+                            auth: {
+                                persistSession: true,
+                                autoRefreshToken: true,
+                                detectSessionInUrl: true
+                            }
+                        });
+
+                        return supabaseBrowserClient;
+                    })
+                    .catch((error) => {
+                        console.warn('Impossible d\'initialiser Supabase côté navigateur :', error);
+                        return null;
+                    });
+            }
+
+            return supabaseBrowserClientPromise;
+        };
+
+        const sendMagicLink = async (email, metadata = {}) => {
+            const browserClient = await getSupabaseBrowserClient();
+            if (!browserClient) {
+                return {
+                    ok: false,
+                    error: "La connexion par email n'est pas encore configurée sur cet environnement."
+                };
+            }
+
+            const normalizedEmail = typeof email === 'string' ? email.trim() : '';
+            if (!normalizedEmail) {
+                return {
+                    ok: false,
+                    error: "Renseignez votre email professionnel pour recevoir le lien de connexion."
+                };
+            }
+
+            const { error } = await browserClient.auth.signInWithOtp({
+                email: normalizedEmail,
+                options: {
+                    shouldCreateUser: true,
+                    emailRedirectTo: getAuthRedirectUrl(),
+                    data: cleanAuthMetadata(metadata)
+                }
+            });
+
+            if (error) {
+                return {
+                    ok: false,
+                    error: error.message || "Impossible d'envoyer le lien de connexion."
+                };
+            }
+
+            return { ok: true };
+        };
+
+        const getCurrentSession = async () => {
+            const browserClient = await getSupabaseBrowserClient();
+            if (!browserClient) {
+                return { session: null, error: null };
+            }
+
+            const { data, error } = await browserClient.auth.getSession();
+            return {
+                session: data?.session || null,
+                error: error || null
+            };
+        };
+
+        const signOutPro = async () => {
+            const browserClient = await getSupabaseBrowserClient();
+            setActiveProUserId(null);
+
+            if (!browserClient) {
+                return { ok: true };
+            }
+
+            const { error } = await browserClient.auth.signOut();
+            return {
+                ok: !error,
+                error: error?.message || null
+            };
+        };
+
+        const formatDomainLabel = (email = '') => {
+            const domain = email.includes('@') ? email.split('@')[1] : '';
+            const root = domain.split('.')[0] || '';
+            const cleaned = root.replace(/[-_]+/g, ' ').trim();
+            if (!cleaned) return '';
+            return cleaned.replace(/\b\w/g, letter => letter.toUpperCase());
+        };
+
+        const deriveOrganizationName = (user) => {
+            const metadata = user?.user_metadata || {};
+            const metadataCompany = [metadata.companyName, metadata.company_name]
+                .find(value => typeof value === 'string' && value.trim());
+
+            if (metadataCompany) {
+                return metadataCompany.trim();
+            }
+
+            const emailLabel = formatDomainLabel(user?.email || '');
+            return emailLabel || 'Mon organisation';
+        };
+
+        const deriveFullName = (user) => {
+            const metadata = user?.user_metadata || {};
+            const metadataName = [metadata.fullName, metadata.full_name]
+                .find(value => typeof value === 'string' && value.trim());
+
+            if (metadataName) {
+                return metadataName.trim();
+            }
+
+            return '';
+        };
+
+        const ensureUserWorkspace = async (user) => {
+            const browserClient = await getSupabaseBrowserClient();
+            if (!browserClient) {
+                return {
+                    ok: false,
+                    error: "Configuration Supabase indisponible."
+                };
+            }
+
+            try {
+                const { data: existingProfile, error: existingProfileError } = await browserClient
+                    .from('profiles')
+                    .select('id, organization_id')
+                    .eq('id', user.id)
+                    .maybeSingle();
+
+                if (existingProfileError) {
+                    throw existingProfileError;
+                }
+
+                if (existingProfile) {
+                    return { ok: true, profile: existingProfile };
+                }
+
+                const { data: existingOrganization, error: existingOrganizationError } = await browserClient
+                    .from('organizations')
+                    .select('id, name')
+                    .eq('owner_user_id', user.id)
+                    .maybeSingle();
+
+                if (existingOrganizationError) {
+                    throw existingOrganizationError;
+                }
+
+                let organization = existingOrganization;
+
+                if (!organization) {
+                    const { data: insertedOrganization, error: insertOrganizationError } = await browserClient
+                        .from('organizations')
+                        .insert({
+                            name: deriveOrganizationName(user),
+                            owner_user_id: user.id
+                        })
+                        .select('id, name')
+                        .single();
+
+                    if (insertOrganizationError) {
+                        throw insertOrganizationError;
+                    }
+
+                    organization = insertedOrganization;
+                }
+
+                const { data: insertedProfile, error: insertProfileError } = await browserClient
+                    .from('profiles')
+                    .insert({
+                        id: user.id,
+                        email: user.email || null,
+                        full_name: deriveFullName(user) || null,
+                        organization_id: organization.id
+                    })
+                    .select('id, organization_id')
+                    .single();
+
+                if (insertProfileError) {
+                    const { data: fallbackProfile, error: fallbackProfileError } = await browserClient
+                        .from('profiles')
+                        .select('id, organization_id')
+                        .eq('id', user.id)
+                        .maybeSingle();
+
+                    if (!fallbackProfileError && fallbackProfile) {
+                        return { ok: true, profile: fallbackProfile };
+                    }
+
+                    throw insertProfileError;
+                }
+
+                return { ok: true, profile: insertedProfile };
+            } catch (error) {
+                console.error('Impossible de préparer l\'espace utilisateur :', error);
+                return {
+                    ok: false,
+                    error: error?.message || "Impossible de préparer votre espace pour le moment."
+                };
+            }
+        };
+
+        const loadOrganizationRecord = async (organizationId) => {
+            const browserClient = await getSupabaseBrowserClient();
+            if (!browserClient) {
+                throw new Error("Configuration Supabase indisponible.");
+            }
+
+            const { data, error } = await browserClient
+                .from('organizations')
+                .select('id, name, owner_user_id')
+                .eq('id', organizationId)
+                .single();
+
+            if (error) {
+                throw error;
+            }
+
+            return data;
+        };
+
+        const normalizeOrganizationSettingsRecord = (record, fallbackBrandName = '') => {
+            return {
+                accent: typeof record?.accent === 'string' && record.accent.trim() ? record.accent : DEFAULT_WORKSPACE_ACCENT,
+                brandName: typeof record?.brand_name === 'string' && record.brand_name.trim()
+                    ? record.brand_name
+                    : (fallbackBrandName || DEFAULT_WORKSPACE_BRAND_NAME)
+            };
+        };
+
+        const loadOrganizationSettings = async (organizationId, fallbackBrandName = '') => {
+            const browserClient = await getSupabaseBrowserClient();
+            if (!browserClient) {
+                throw new Error("Configuration Supabase indisponible.");
+            }
+
+            const { data, error } = await browserClient
+                .from('organization_settings')
+                .select('organization_id, accent, brand_name')
+                .eq('organization_id', organizationId)
+                .maybeSingle();
+
+            if (error) {
+                throw error;
+            }
+
+            return normalizeOrganizationSettingsRecord(data, fallbackBrandName);
+        };
+
+        const saveOrganizationSettings = async ({ organizationId, accent, brandName }) => {
+            const browserClient = await getSupabaseBrowserClient();
+            if (!browserClient) {
+                throw new Error("Configuration Supabase indisponible.");
+            }
+
+            const payload = {
+                organization_id: organizationId,
+                accent: accent || DEFAULT_WORKSPACE_ACCENT,
+                brand_name: (brandName || '').trim() || DEFAULT_WORKSPACE_BRAND_NAME
+            };
+
+            const { data, error } = await browserClient
+                .from('organization_settings')
+                .upsert(payload, { onConflict: 'organization_id' })
+                .select('organization_id, accent, brand_name')
+                .single();
+
+            if (error) {
+                throw error;
+            }
+
+            return normalizeOrganizationSettingsRecord(data, payload.brand_name);
+        };
+
+        const normalizeOrganizationBrandingRecord = (record, previewUrl = '') => {
+            const normalized = {
+                logoStoragePath: record?.logo_storage_path || null,
+                logoFileName: record?.logo_file_name || null,
+                logoPreviewUrl: previewUrl || ''
+            };
+
+            if (!normalized.logoPreviewUrl) {
+                normalized.logoPreviewUrl = resolveBrandPreviewUrl(normalized);
+            }
+
+            return normalized;
+        };
+
+        const normalizeOrganizationFileRecord = (record) => {
+            return {
+                id: record?.id || null,
+                organizationId: record?.organization_id || null,
+                createdBy: record?.created_by || null,
+                kind: record?.kind || '',
+                bucketName: record?.bucket_name || '',
+                storagePath: record?.storage_path || '',
+                fileName: record?.file_name || '',
+                mimeType: record?.mime_type || '',
+                sizeBytes: Number(record?.size_bytes || 0) || 0,
+                metadata: asPlainObject(record?.metadata),
+                createdAt: record?.created_at || null,
+                updatedAt: record?.updated_at || null
+            };
+        };
+
+        const requireAuthenticatedStorageUserId = async () => {
+            const activeUserId = getActiveProUserId();
+            if (activeUserId) {
+                return activeUserId;
+            }
+
+            const { session } = await getCurrentSession();
+            const userId = session?.user?.id || null;
+            if (!userId) {
+                throw new Error("Session utilisateur requise.");
+            }
+
+            setActiveProUserId(userId);
+            return userId;
+        };
+
+        const saveOrganizationFileRecord = async ({
+            organizationId,
+            createdBy,
+            kind,
+            bucketName = ORGANIZATION_ASSETS_BUCKET,
+            storagePath,
+            fileName,
+            mimeType,
+            sizeBytes,
+            metadata = {}
+        }) => {
+            const browserClient = await getSupabaseBrowserClient();
+            if (!browserClient) {
+                throw new Error("Configuration Supabase indisponible.");
+            }
+
+            const userId = createdBy || await requireAuthenticatedStorageUserId();
+            const { data, error } = await browserClient
+                .from('organization_files')
+                .upsert({
+                    organization_id: organizationId,
+                    created_by: userId,
+                    kind,
+                    bucket_name: bucketName,
+                    storage_path: storagePath,
+                    file_name: fileName || null,
+                    mime_type: mimeType || null,
+                    size_bytes: Number.isFinite(sizeBytes) ? sizeBytes : null,
+                    metadata: asPlainObject(metadata)
+                }, { onConflict: 'storage_path' })
+                .select('id, organization_id, created_by, kind, bucket_name, storage_path, file_name, mime_type, size_bytes, metadata, created_at, updated_at')
+                .single();
+
+            if (error) {
+                throw error;
+            }
+
+            return normalizeOrganizationFileRecord(data);
+        };
+
+        const listOrganizationFiles = async ({
+            organizationId,
+            kind = '',
+            bucketName = '',
+            pathStartsWith = '',
+            limit = 100
+        }) => {
+            const browserClient = await getSupabaseBrowserClient();
+            if (!browserClient) {
+                throw new Error("Configuration Supabase indisponible.");
+            }
+
+            let query = browserClient
+                .from('organization_files')
+                .select('id, organization_id, created_by, kind, bucket_name, storage_path, file_name, mime_type, size_bytes, metadata, created_at, updated_at')
+                .eq('organization_id', organizationId)
+                .order('updated_at', { ascending: false });
+
+            if (kind) {
+                query = query.eq('kind', kind);
+            }
+
+            if (bucketName) {
+                query = query.eq('bucket_name', bucketName);
+            }
+
+            if (pathStartsWith) {
+                query = query.like('storage_path', `${pathStartsWith}%`);
+            }
+
+            if (Number.isFinite(limit) && limit > 0) {
+                query = query.limit(limit);
+            }
+
+            const { data, error } = await query;
+            if (error) {
+                throw error;
+            }
+
+            return (data || []).map(normalizeOrganizationFileRecord);
+        };
+
+        const deleteOrganizationFileRecords = async ({ organizationId, storagePaths = [] }) => {
+            const browserClient = await getSupabaseBrowserClient();
+            if (!browserClient || !Array.isArray(storagePaths) || !storagePaths.length) {
+                return;
+            }
+
+            let query = browserClient
+                .from('organization_files')
+                .delete()
+                .in('storage_path', storagePaths);
+
+            if (organizationId) {
+                query = query.eq('organization_id', organizationId);
+            }
+
+            const { error } = await query;
+            if (error) {
+                throw error;
+            }
+        };
+
+        const loadOrganizationFileRecordById = async ({ organizationId, fileId }) => {
+            const browserClient = await getSupabaseBrowserClient();
+            if (!browserClient) {
+                throw new Error("Configuration Supabase indisponible.");
+            }
+
+            if (!fileId) {
+                return null;
+            }
+
+            let query = browserClient
+                .from('organization_files')
+                .select('id, organization_id, created_by, kind, bucket_name, storage_path, file_name, mime_type, size_bytes, metadata, created_at, updated_at')
+                .eq('id', fileId);
+
+            if (organizationId) {
+                query = query.eq('organization_id', organizationId);
+            }
+
+            const { data, error } = await query.maybeSingle();
+            if (error) {
+                throw error;
+            }
+
+            return data ? normalizeOrganizationFileRecord(data) : null;
+        };
+
+        const removeOrganizationStorageObjects = async (storagePaths = []) => {
+            const browserClient = await getSupabaseBrowserClient();
+            if (!browserClient || !Array.isArray(storagePaths) || !storagePaths.length) {
+                return;
+            }
+
+            const uniquePaths = Array.from(new Set(storagePaths.filter(Boolean)));
+            if (!uniquePaths.length) {
+                return;
+            }
+
+            const { error } = await browserClient.storage
+                .from(ORGANIZATION_ASSETS_BUCKET)
+                .remove(uniquePaths);
+
+            if (error) {
+                throw error;
+            }
+        };
+
+        const cleanupOrganizationLogoFiles = async ({
+            organizationId,
+            keepStoragePath = '',
+            extraStoragePaths = []
+        }) => {
+            if (!organizationId) {
+                return;
+            }
+
+            try {
+                const existingLogoFiles = await listOrganizationFiles({
+                    organizationId,
+                    kind: ORGANIZATION_LOGO_FILE_KIND,
+                    bucketName: ORGANIZATION_ASSETS_BUCKET,
+                    limit: 20
+                });
+
+                const removablePaths = Array.from(
+                    new Set([
+                        ...existingLogoFiles.map(item => item.storagePath),
+                        ...extraStoragePaths
+                    ].filter(path => path && path !== keepStoragePath))
+                );
+
+                if (!removablePaths.length) {
+                    return;
+                }
+
+                try {
+                    await removeOrganizationStorageObjects(removablePaths);
+                } catch (error) {
+                    console.warn('Impossible de supprimer certains anciens logos du bucket privé :', error);
+                }
+
+                try {
+                    await deleteOrganizationFileRecords({ organizationId, storagePaths: removablePaths });
+                } catch (error) {
+                    console.warn('Impossible de nettoyer certaines références de logos :', error);
+                }
+            } catch (error) {
+                console.warn('Impossible de lister les anciens logos de l\'organisation :', error);
+            }
+        };
+
+        const getOrganizationFileSignedUrl = async (storagePathValue, {
+            bucketName = ORGANIZATION_ASSETS_BUCKET,
+            expiresIn = STORAGE_SIGNED_URL_TTL_SECONDS,
+            throwOnError = false
+        } = {}) => {
+            const storagePath = typeof storagePathValue === 'string' ? storagePathValue.trim() : '';
+            if (!storagePath) {
+                return '';
+            }
+
+            if (/^https?:\/\//i.test(storagePath) || storagePath.startsWith('data:image/')) {
+                return storagePath;
+            }
+
+            const browserClient = await getSupabaseBrowserClient();
+            if (!browserClient) {
+                if (throwOnError) {
+                    throw new Error("Configuration Supabase indisponible.");
+                }
+                return '';
+            }
+
+            const { data, error } = await browserClient.storage
+                .from(bucketName)
+                .createSignedUrl(storagePath, expiresIn);
+
+            if (error) {
+                if (throwOnError) {
+                    throw error;
+                }
+
+                console.warn('Impossible de signer l\'URL d\'un fichier privé :', error);
+                return '';
+            }
+
+            return data?.signedUrl || '';
+        };
+
+        const getOrganizationLogoSignedUrl = async (logoStoragePath, { expiresIn = STORAGE_SIGNED_URL_TTL_SECONDS, throwOnError = false } = {}) => {
+            return getOrganizationFileSignedUrl(logoStoragePath, {
+                bucketName: ORGANIZATION_ASSETS_BUCKET,
+                expiresIn,
+                throwOnError
+            });
+        };
+
+        const resolveStoredPdfAccess = async ({
+            report = null,
+            organizationId = '',
+            latestPdfFile = null
+        } = {}) => {
+            const fileRecord = latestPdfFile
+                || await loadOrganizationFileRecordById({
+                    organizationId,
+                    fileId: report?.latestPdfFileId || null
+                });
+
+            if (!fileRecord?.storagePath) {
+                return {
+                    url: '',
+                    fileRecord: fileRecord || null
+                };
+            }
+
+            const url = await getOrganizationFileSignedUrl(fileRecord.storagePath, {
+                bucketName: fileRecord.bucketName || ORGANIZATION_ASSETS_BUCKET,
+                throwOnError: true
+            });
+
+            return {
+                url,
+                fileRecord
+            };
+        };
+
+        const loadBrandingRecord = async (organizationId) => {
+            const browserClient = await getSupabaseBrowserClient();
+            if (!browserClient) {
+                throw new Error("Configuration Supabase indisponible.");
+            }
+
+            const { data, error } = await browserClient
+                .from('organization_branding')
+                .select('organization_id, logo_storage_path, logo_file_name')
+                .eq('organization_id', organizationId)
+                .maybeSingle();
+
+            if (error) {
+                throw error;
+            }
+
+            const normalized = normalizeOrganizationBrandingRecord(data);
+            if (normalized.logoStoragePath && !normalized.logoPreviewUrl) {
+                normalized.logoPreviewUrl = await getOrganizationLogoSignedUrl(normalized.logoStoragePath);
+            }
+
+            return normalized;
+        };
+
+        const saveBrandingRecord = async ({ organizationId, logoStoragePath, logoFileName, logoPreviewUrl = '' }) => {
+            const browserClient = await getSupabaseBrowserClient();
+            if (!browserClient) {
+                throw new Error("Configuration Supabase indisponible.");
+            }
+
+            const payload = {
+                organization_id: organizationId,
+                logo_storage_path: logoStoragePath || null,
+                logo_file_name: logoFileName || null
+            };
+
+            const { data, error } = await browserClient
+                .from('organization_branding')
+                .upsert(payload, { onConflict: 'organization_id' })
+                .select('organization_id, logo_storage_path, logo_file_name')
+                .single();
+
+            if (error) {
+                throw error;
+            }
+
+            return normalizeOrganizationBrandingRecord(data, logoPreviewUrl);
+        };
+
+        const uploadOrganizationLogo = async (file, {
+            organizationId,
+            currentBranding = DEFAULT_ORGANIZATION_BRANDING
+        } = {}) => {
+            const browserClient = await getSupabaseBrowserClient();
+            if (!browserClient) {
+                throw new Error("Configuration Supabase indisponible.");
+            }
+
+            if (!organizationId) {
+                throw new Error("Organisation introuvable.");
+            }
+
+            if (!file) {
+                throw new Error("Aucun fichier logo fourni.");
+            }
+
+            if (Number(file.size || 0) > MAX_ORGANIZATION_LOGO_SIZE_BYTES) {
+                throw new Error("Le logo doit faire 1 Mo maximum.");
+            }
+
+            const mimeType = String(file.type || '').trim();
+            if (mimeType && !mimeType.startsWith('image/')) {
+                throw new Error("Le logo doit être une image valide.");
+            }
+
+            const userId = await requireAuthenticatedStorageUserId();
+            const displayFileName = String(file.name || 'logo').trim() || 'logo';
+            const storagePath = buildOrganizationLogoStoragePath(organizationId, displayFileName);
+
+            const { error: uploadError } = await browserClient.storage
+                .from(ORGANIZATION_ASSETS_BUCKET)
+                .upload(storagePath, file, {
+                    upsert: false,
+                    cacheControl: '3600',
+                    contentType: mimeType || undefined
+                });
+
+            if (uploadError) {
+                throw uploadError;
+            }
+
+            try {
+                await saveOrganizationFileRecord({
+                    organizationId,
+                    createdBy: userId,
+                    kind: ORGANIZATION_LOGO_FILE_KIND,
+                    bucketName: ORGANIZATION_ASSETS_BUCKET,
+                    storagePath,
+                    fileName: displayFileName,
+                    mimeType: mimeType || null,
+                    sizeBytes: Number(file.size || 0) || null,
+                    metadata: {
+                        scope: 'branding',
+                        slot: 'logo',
+                        originalFileName: displayFileName
+                    }
+                });
+
+                const logoPreviewUrl = await getOrganizationLogoSignedUrl(storagePath, { throwOnError: true });
+                const savedBranding = await saveBrandingRecord({
+                    organizationId,
+                    logoStoragePath: storagePath,
+                    logoFileName: displayFileName,
+                    logoPreviewUrl
+                });
+
+                await cleanupOrganizationLogoFiles({
+                    organizationId,
+                    keepStoragePath: storagePath,
+                    extraStoragePaths: [currentBranding?.logoStoragePath || '']
+                });
+
+                return savedBranding;
+            } catch (error) {
+                try {
+                    await removeOrganizationStorageObjects([storagePath]);
+                } catch (cleanupError) {
+                    console.warn('Impossible de rollback le logo uploadé après erreur :', cleanupError);
+                }
+
+                try {
+                    await deleteOrganizationFileRecords({ organizationId, storagePaths: [storagePath] });
+                } catch (cleanupError) {
+                    console.warn('Impossible de rollback la référence cataloguée du logo :', cleanupError);
+                }
+
+                throw error;
+            }
+        };
+
+        const deleteOrganizationLogo = async ({
+            organizationId,
+            currentBranding = DEFAULT_ORGANIZATION_BRANDING
+        } = {}) => {
+            if (!organizationId) {
+                throw new Error("Organisation introuvable.");
+            }
+
+            const clearedBranding = await saveBrandingRecord({
+                organizationId,
+                logoStoragePath: null,
+                logoFileName: null,
+                logoPreviewUrl: ''
+            });
+
+            await cleanupOrganizationLogoFiles({
+                organizationId,
+                keepStoragePath: '',
+                extraStoragePaths: [currentBranding?.logoStoragePath || '']
+            });
+
+            return {
+                ...clearedBranding,
+                logoPreviewUrl: ''
+            };
+        };
+
+        const normalizeUserWorkspaceStateRecord = (record, userId = null, organizationId = null) => {
+            return {
+                userId: record?.user_id || userId || null,
+                organizationId: record?.organization_id || organizationId || null,
+                draftPayload: asPlainObject(record?.draft_payload),
+                uiState: asPlainObject(record?.ui_state)
+            };
+        };
+
+        const loadUserWorkspaceState = async (userId, organizationId) => {
+            const browserClient = await getSupabaseBrowserClient();
+            if (!browserClient) {
+                throw new Error("Configuration Supabase indisponible.");
+            }
+
+            const { data, error } = await browserClient
+                .from('user_workspace_state')
+                .select('user_id, organization_id, draft_payload, ui_state')
+                .eq('user_id', userId)
+                .eq('organization_id', organizationId)
+                .maybeSingle();
+
+            if (error) {
+                throw error;
+            }
+
+            return normalizeUserWorkspaceStateRecord(data, userId, organizationId);
+        };
+
+        const saveUserWorkspaceState = async ({ userId, organizationId, draftPayload, uiState, mergeWith }) => {
+            const browserClient = await getSupabaseBrowserClient();
+            if (!browserClient) {
+                throw new Error("Configuration Supabase indisponible.");
+            }
+
+            const currentState = normalizeUserWorkspaceStateRecord(mergeWith, userId, organizationId);
+            const nextDraftPayload = draftPayload === undefined ? currentState.draftPayload : asPlainObject(draftPayload);
+            const nextUiState = uiState === undefined
+                ? currentState.uiState
+                : { ...currentState.uiState, ...asPlainObject(uiState) };
+
+            const { data, error } = await browserClient
+                .from('user_workspace_state')
+                .upsert({
+                    user_id: userId,
+                    organization_id: organizationId,
+                    draft_payload: nextDraftPayload,
+                    ui_state: nextUiState
+                }, { onConflict: 'user_id' })
+                .select('user_id, organization_id, draft_payload, ui_state')
+                .single();
+
+            if (error) {
+                throw error;
+            }
+
+            return normalizeUserWorkspaceStateRecord(data, userId, organizationId);
+        };
+
+        const buildCaseSummaryFields = (caseData = {}) => {
+            const title = caseData.projectName
+                || caseData.clientName
+                || caseData.company
+                || caseData.formData?.company
+                || caseData.formData?.contactName
+                || 'Nouveau dossier';
+
+            return {
+                title,
+                status: caseData.status || 'nouveau',
+                siteName: caseData.projectName || caseData.company || caseData.clientName || title,
+                activityType: caseData.activity || caseData.formData?.activity || caseData.formData?.activite || null
+            };
+        };
+
+        const buildReportSummaryPayload = (reportPayload = {}) => {
+            const engineResult = asPlainObject(reportPayload.engineResult);
+            return {
+                score: engineResult.score || reportPayload.score || null,
+                estimated_savings_per_year: engineResult.totalSavingsEur || reportPayload.estimatedSavingsPerYear || null,
+                intensity_per_sqm: engineResult.intensity || reportPayload.intensityPerSqm || null
+            };
+        };
+
+        const normalizeProCaseRecord = (record) => {
+            const payload = asPlainObject(record?.case_data);
+            const legacyId = payload.legacyId || (!isUuid(payload.id) ? payload.id : null);
+
+            return {
+                ...payload,
+                id: record.id,
+                legacyId: legacyId || null,
+                status: payload.status || record.status || 'nouveau',
+                activity: payload.activity || payload.formData?.activity || payload.formData?.activite || record.activity_type || '',
+                projectName: payload.projectName || payload.company || payload.clientName || record.site_name || record.title || 'Nouveau dossier',
+                clientName: payload.clientName || payload.projectName || payload.company || record.title || 'Nouveau dossier',
+                createdAt: payload.createdAt || formatDateForUi(record.created_at),
+                lastUpdated: payload.lastUpdated || formatDateForUi(record.updated_at),
+                _caseRecordId: record.id,
+                _caseCreatedAt: record.created_at || null,
+                _caseUpdatedAt: record.updated_at || null
+            };
+        };
+
+        const normalizeProReportRecord = (record) => {
+            const payload = asPlainObject(record?.report_payload);
+            return {
+                ...payload,
+                id: payload.id || record.case_id || record.id,
+                reportRecordId: record.id,
+                caseId: record.case_id || payload.caseId || payload.id || null,
+                reportName: record.report_name || payload.reportName || null,
+                reportSummary: Object.keys(asPlainObject(record?.report_summary)).length
+                    ? asPlainObject(record?.report_summary)
+                    : buildReportSummaryPayload(payload),
+                reportGeneratedAt: payload.reportGeneratedAt || formatDateForUi(record.updated_at),
+                latestPdfFileId: record?.latest_pdf_file_id || null,
+                latestPdfGeneratedAt: record?.latest_pdf_generated_at || null,
+                latestPdfGeneratedAtLabel: record?.latest_pdf_generated_at ? formatDateTimeForUi(record.latest_pdf_generated_at) : '',
+                pdfStatus: record?.pdf_status || null,
+                pdfError: record?.pdf_error || null,
+                _reportCreatedAt: record.created_at || null,
+                _reportUpdatedAt: record.updated_at || null
+            };
+        };
+
+        const getCaseLegacyId = (caseData = {}) => {
+            if (typeof caseData.legacyId === 'string' && caseData.legacyId.trim()) {
+                return caseData.legacyId.trim();
+            }
+
+            if (caseData.id && !isUuid(caseData.id)) {
+                return String(caseData.id);
+            }
+
+            return '';
+        };
+
+        const resolveCaseRecordId = async (organizationId, caseData = {}) => {
+            if (caseData._caseRecordId && isUuid(caseData._caseRecordId)) {
+                return caseData._caseRecordId;
+            }
+
+            if (caseData.id && isUuid(caseData.id)) {
+                return caseData.id;
+            }
+
+            const legacyId = getCaseLegacyId(caseData);
+            if (legacyId) {
+                return buildDeterministicUuid(`workspace:${organizationId}:case:${legacyId}`);
+            }
+
+            return generateUuid();
+        };
+
+        const resolveReportRecordId = async (organizationId, caseId, reportPayload = {}) => {
+            if (reportPayload.reportRecordId && isUuid(reportPayload.reportRecordId)) {
+                return reportPayload.reportRecordId;
+            }
+
+            if (reportPayload.reportId && isUuid(reportPayload.reportId)) {
+                return reportPayload.reportId;
+            }
+
+            return buildDeterministicUuid(`workspace:${organizationId}:report:${caseId}`);
+        };
+
+        const sanitizeCasePayloadForStorage = (caseData = {}, recordId) => {
+            const payload = { ...cloneJson(caseData, {}) };
+            delete payload._caseRecordId;
+            delete payload._caseCreatedAt;
+            delete payload._caseUpdatedAt;
+            payload.id = recordId;
+
+            const legacyId = getCaseLegacyId(caseData);
+            if (legacyId) {
+                payload.legacyId = legacyId;
+            } else {
+                delete payload.legacyId;
+            }
+
+            return payload;
+        };
+
+        const sanitizeReportPayloadForStorage = (reportPayload = {}, caseId) => {
+            const payload = { ...cloneJson(reportPayload, {}) };
+            delete payload.reportRecordId;
+            delete payload._reportCreatedAt;
+            delete payload._reportUpdatedAt;
+            payload.id = caseId;
+            payload.caseId = caseId;
+            return payload;
+        };
+
+        const listProCases = async (organizationId) => {
+            const browserClient = await getSupabaseBrowserClient();
+            if (!browserClient) {
+                throw new Error("Configuration Supabase indisponible.");
+            }
+
+            const { data, error } = await browserClient
+                .from('pro_cases')
+                .select('id, organization_id, created_by, title, status, site_name, activity_type, case_data, created_at, updated_at')
+                .eq('organization_id', organizationId)
+                .order('updated_at', { ascending: false });
+
+            if (error) {
+                throw error;
+            }
+
+            return sortCasesByNewest((data || []).map(normalizeProCaseRecord));
+        };
+
+        const createOrUpdateProCase = async ({ organizationId, userId, caseData }) => {
+            const browserClient = await getSupabaseBrowserClient();
+            if (!browserClient) {
+                throw new Error("Configuration Supabase indisponible.");
+            }
+
+            const recordId = await resolveCaseRecordId(organizationId, caseData);
+            const payload = sanitizeCasePayloadForStorage(caseData, recordId);
+            const summary = buildCaseSummaryFields(payload);
+
+            const { data, error } = await browserClient
+                .from('pro_cases')
+                .upsert({
+                    id: recordId,
+                    organization_id: organizationId,
+                    created_by: userId,
+                    title: summary.title,
+                    status: summary.status,
+                    site_name: summary.siteName,
+                    activity_type: summary.activityType,
+                    case_data: payload
+                }, { onConflict: 'id' })
+                .select('id, organization_id, created_by, title, status, site_name, activity_type, case_data, created_at, updated_at')
+                .single();
+
+            if (error) {
+                throw error;
+            }
+
+            return normalizeProCaseRecord(data);
+        };
+
+        const deleteProCase = async (caseId) => {
+            const browserClient = await getSupabaseBrowserClient();
+            if (!browserClient) {
+                throw new Error("Configuration Supabase indisponible.");
+            }
+
+            const { error } = await browserClient
+                .from('pro_cases')
+                .delete()
+                .eq('id', caseId);
+
+            if (error) {
+                throw error;
+            }
+        };
+
+        const listProReports = async (organizationId) => {
+            const browserClient = await getSupabaseBrowserClient();
+            if (!browserClient) {
+                throw new Error("Configuration Supabase indisponible.");
+            }
+
+            const { data, error } = await browserClient
+                .from('pro_reports')
+                .select('id, organization_id, case_id, created_by, report_name, report_payload, report_summary, latest_pdf_file_id, latest_pdf_generated_at, pdf_status, pdf_error, created_at, updated_at')
+                .eq('organization_id', organizationId)
+                .order('updated_at', { ascending: false });
+
+            if (error) {
+                throw error;
+            }
+
+            return sortReportsByNewest((data || []).map(normalizeProReportRecord));
+        };
+
+        const loadProReportById = async (reportId, organizationId) => {
+            const browserClient = await getSupabaseBrowserClient();
+            if (!browserClient) {
+                throw new Error("Configuration Supabase indisponible.");
+            }
+
+            let query = browserClient
+                .from('pro_reports')
+                .select('id, organization_id, case_id, created_by, report_name, report_payload, report_summary, latest_pdf_file_id, latest_pdf_generated_at, pdf_status, pdf_error, created_at, updated_at')
+                .eq('id', reportId);
+
+            if (organizationId) {
+                query = query.eq('organization_id', organizationId);
+            }
+
+            const { data, error } = await query.maybeSingle();
+            if (error) {
+                throw error;
+            }
+
+            return data ? normalizeProReportRecord(data) : null;
+        };
+
+        const createOrUpdateProReport = async ({ organizationId, userId, caseId, reportPayload, reportName }) => {
+            const browserClient = await getSupabaseBrowserClient();
+            if (!browserClient) {
+                throw new Error("Configuration Supabase indisponible.");
+            }
+
+            const reportRecordId = await resolveReportRecordId(organizationId, caseId, reportPayload);
+            const sanitizedPayload = sanitizeReportPayloadForStorage(reportPayload, caseId);
+            const summary = buildReportSummaryPayload(sanitizedPayload);
+
+            const { data, error } = await browserClient
+                .from('pro_reports')
+                .upsert({
+                    id: reportRecordId,
+                    organization_id: organizationId,
+                    case_id: caseId,
+                    created_by: userId,
+                    report_name: reportName || sanitizedPayload.projectName || sanitizedPayload.clientName || 'Rapport',
+                    report_payload: sanitizedPayload,
+                    report_summary: summary
+                }, { onConflict: 'id' })
+                .select('id, organization_id, case_id, created_by, report_name, report_payload, report_summary, latest_pdf_file_id, latest_pdf_generated_at, pdf_status, pdf_error, created_at, updated_at')
+                .single();
+
+            if (error) {
+                throw error;
+            }
+
+            return normalizeProReportRecord(data);
+        };
+
+        const buildReportPdfPayload = (reportId) => ({
+            report_id: reportId
+        });
+
+        const requestOfficialPdfGeneration = async (reportId) => {
+            const { session, error } = await getCurrentSession();
+            if (error) {
+                throw error;
+            }
+
+            const accessToken = session?.access_token || '';
+            if (!accessToken) {
+                throw new Error("Session utilisateur requise pour générer le PDF officiel.");
+            }
+
+            const response = await fetch('/api/pro-report-pdf', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${accessToken}`
+                },
+                body: JSON.stringify(buildReportPdfPayload(reportId))
+            });
+
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(data?.details || data?.error || "Impossible de générer le PDF officiel.");
+            }
+
+            return data;
+        };
+
+        const syncReportPdfMetadata = async ({
+            reportId,
+            organizationId,
+            generationResult = null
+        }) => {
+            const report = generationResult?.report
+                ? normalizeProReportRecord(generationResult.report)
+                : await loadProReportById(reportId, organizationId);
+
+            if (!report) {
+                throw new Error("Rapport introuvable après génération PDF.");
+            }
+
+            const latestPdfFile = generationResult?.pdf_file
+                ? normalizeOrganizationFileRecord(generationResult.pdf_file)
+                : await loadOrganizationFileRecordById({
+                    organizationId,
+                    fileId: report.latestPdfFileId
+                });
+
+            return {
+                report,
+                latestPdfFile: latestPdfFile || null
+            };
+        };
+
+        const deleteProReportsByCaseId = async (caseId) => {
+            const browserClient = await getSupabaseBrowserClient();
+            if (!browserClient) {
+                throw new Error("Configuration Supabase indisponible.");
+            }
+
+            const { error } = await browserClient
+                .from('pro_reports')
+                .delete()
+                .eq('case_id', caseId);
+
+            if (error) {
+                throw error;
+            }
+        };
+
+        const removeLegacyWorkspaceStorage = (userId = getActiveProUserId(), { keepLegacyLogo = false } = {}) => {
+            const keys = [
+                'proCases',
+                'proCasesRaw',
+                'proDiagDraft',
+                'proAccent',
+                'newDiagnosticLatestSubmission'
+            ];
+
+            if (!keepLegacyLogo) {
+                keys.push('proLogoName', 'proLogoImg');
+            }
+
+            keys.forEach((key) => removeScopedStorageItem(key, userId));
+
+            removeStorageItem('newDiagnosticLatestReport');
+        };
+
+        const parseSharedReportFromHash = () => {
+            if (!window.location.hash.startsWith('#report=')) {
+                return null;
+            }
+
+            try {
+                let dataStr = window.location.hash.replace('#report=', '');
+                try {
+                    dataStr = decodeURIComponent(escape(atob(dataStr)));
+                } catch (decodeError) {
+                    dataStr = atob(dataStr);
+                }
+
+                const parsed = JSON.parse(dataStr);
+                return parsed && parsed.formData ? parsed : null;
+            } catch (error) {
+                console.error('Invalid report hash', error);
+                return null;
+            }
+        };
+
         const buildProInterestMessage = (...parts) => {
             const filteredParts = parts
                 .flat()
@@ -682,12 +2267,145 @@
             return filteredParts.length ? filteredParts.join(' | ') : null;
         };
 
+        const PRO_FORM_ANTISPAM_STORAGE_PREFIX = 'diagtertiaire_pro_antispam';
+        const PRO_FORM_ANTISPAM_HONEYPOT_STYLE = {
+            position: 'absolute',
+            left: '-9999px',
+            width: '1px',
+            height: '1px',
+            overflow: 'hidden',
+            opacity: 0,
+            pointerEvents: 'none'
+        };
+        const PRO_FORM_GENERIC_SUBMIT_ERROR = "Impossible d'envoyer votre demande pour le moment. Merci de réessayer dans quelques instants.";
+
+        const getProFormAntiSpamStorage = (type = 'session') => {
+            if (typeof window === 'undefined') {
+                return null;
+            }
+
+            try {
+                return type === 'local' ? window.localStorage : window.sessionStorage;
+            } catch (error) {
+                return null;
+            }
+        };
+
+        const getProFormAntiSpamKey = (kind, formKey) => `${PRO_FORM_ANTISPAM_STORAGE_PREFIX}:${kind}:${formKey}`;
+
+        const readProFormAntiSpamTimestamp = (kind, formKey, type = 'session') => {
+            const storage = getProFormAntiSpamStorage(type);
+            if (!storage) {
+                return null;
+            }
+
+            const rawValue = storage.getItem(getProFormAntiSpamKey(kind, formKey));
+            const parsedValue = Number(rawValue);
+            return Number.isFinite(parsedValue) && parsedValue > 0 ? parsedValue : null;
+        };
+
+        const writeProFormAntiSpamTimestamp = (kind, formKey, value, type = 'session') => {
+            const storage = getProFormAntiSpamStorage(type);
+            if (!storage) {
+                return;
+            }
+
+            const storageKey = getProFormAntiSpamKey(kind, formKey);
+
+            if (value === null || typeof value === 'undefined') {
+                storage.removeItem(storageKey);
+                return;
+            }
+
+            storage.setItem(storageKey, String(value));
+        };
+
+        const markProFormRendered = (formKey) => {
+            const now = Date.now();
+            writeProFormAntiSpamTimestamp('rendered', formKey, now, 'session');
+            return now;
+        };
+
+        const ensureProFormRendered = (formKey) => (
+            readProFormAntiSpamTimestamp('rendered', formKey, 'session') || markProFormRendered(formKey)
+        );
+
+        const hasProFormHoneypotValue = (value) => typeof value === 'string' && value.trim().length > 0;
+
+        const isProFormSubmissionTooFast = (formKey, minimumDelayMs) => {
+            if (!minimumDelayMs) {
+                return false;
+            }
+
+            const renderedAt = ensureProFormRendered(formKey);
+            return (Date.now() - renderedAt) < minimumDelayMs;
+        };
+
+        const getProFormCooldownRemainingMs = (formKey, cooldownMs) => {
+            if (!cooldownMs) {
+                return 0;
+            }
+
+            const cooldownStartedAt = readProFormAntiSpamTimestamp('cooldown', formKey, 'local');
+            if (!cooldownStartedAt) {
+                return 0;
+            }
+
+            return Math.max(0, cooldownMs - (Date.now() - cooldownStartedAt));
+        };
+
+        const setProFormCooldown = (formKey) => {
+            writeProFormAntiSpamTimestamp('cooldown', formKey, Date.now(), 'local');
+        };
+
+        const clearProFormCooldown = (formKey) => {
+            writeProFormAntiSpamTimestamp('cooldown', formKey, null, 'local');
+        };
+
+        const buildProFormCooldownMessage = (remainingMs) => {
+            const seconds = Math.max(1, Math.ceil(remainingMs / 1000));
+            return `Merci de patienter ${seconds} seconde${seconds > 1 ? 's' : ''} avant de renvoyer votre demande.`;
+        };
+
+        // Point d'extension futur: brancher un CAPTCHA ici si la pression spam augmente.
+        // Point d'extension futur: ajouter un rate limiting serveur et une validation API si les insertions sortent du front.
+        const runProFormAntiSpamChecks = ({
+            formKey,
+            honeypotValue,
+            minimumDelayMs,
+            cooldownMs,
+            genericErrorMessage = PRO_FORM_GENERIC_SUBMIT_ERROR,
+            cooldownMessage
+        }) => {
+            if (hasProFormHoneypotValue(honeypotValue)) {
+                return { ok: false, error: genericErrorMessage };
+            }
+
+            if (isProFormSubmissionTooFast(formKey, minimumDelayMs)) {
+                return { ok: false, error: genericErrorMessage };
+            }
+
+            const cooldownRemainingMs = getProFormCooldownRemainingMs(formKey, cooldownMs);
+            if (cooldownRemainingMs > 0) {
+                return {
+                    ok: false,
+                    error: cooldownMessage || buildProFormCooldownMessage(cooldownRemainingMs)
+                };
+            }
+
+            return { ok: true, error: null };
+        };
+
         const submitProInterestLead = async (leadData) => {
             const { supabaseUrl, supabasePublishableKey } = await loadPublicRuntimeConfig();
 
             if (!supabaseUrl || !supabasePublishableKey) {
                 console.warn('Supabase non configure. Lead non sauvegarde :', leadData);
-                return null;
+                return {
+                    ok: false,
+                    status: 0,
+                    error: 'Configuration Supabase indisponible.'
+                };
             }
 
             const payload = {
@@ -714,16 +2432,29 @@
                 });
                 console.log('lead submit response', response.status);
 
+                const errorText = !response.ok ? await response.text() : '';
+
                 if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`Erreur Supabase pro_interest_submissions: ${response.status} ${errorText}`);
+                    return {
+                        ok: false,
+                        status: response.status,
+                        error: `Erreur Supabase pro_interest_submissions: ${response.status}${errorText ? ` ${errorText}` : ''}`
+                    };
                 }
 
                 console.log('pro lead inserted');
-                return true;
+                return {
+                    ok: true,
+                    status: response.status,
+                    error: null
+                };
             } catch (error) {
                 console.error('Erreur lors de la sauvegarde du lead B2B :', error);
-                return null;
+                return {
+                    ok: false,
+                    status: 0,
+                    error: error && error.message ? error.message : 'Erreur reseau lors de la sauvegarde du lead B2B.'
+                };
             }
         };
 
@@ -1382,11 +3113,6 @@
             }
         };
 
-        const PRO_CONFIG = {
-            APP_NAME: "DiagTertiaire Pro",
-            ACCESS_CODE: "test.demo",
-        };
-
         const PRO_LANDING_COPY = {
             meta: {
                 brand: "DiagTertiaire Pro",
@@ -1413,7 +3139,7 @@
                 ],
                 ctaPrimary: "Obtenir mon accès gratuit →",
                 ctaSecondary: "Voir comment ça fonctionne",
-                trustLine: "Sans carte bancaire · Accès immédiat",
+                trustLine: "Sans carte bancaire · Connexion par lien email",
                 mockup: {
                     portfolioLabel: "Portefeuille multi-sites",
                     portfolioTitle: "Sites à traiter",
@@ -1468,12 +3194,12 @@
                 title: "Comment obtenir votre accès",
                 intro: "En quelques étapes, vous voyez rapidement si la solution vous fait gagner du temps.",
                 items: [
-                    { title: "Remplissez le formulaire", text: "30 sec à 1 min pour demander votre accès.", duration: "< 1 min" },
-                    { title: "Accédez à l'espace test", text: "Immédiatement après validation de votre demande.", duration: "Immédiat" },
+                    { title: "Remplissez le formulaire", text: "30 sec à 1 min pour nous partager votre contexte.", duration: "< 1 min" },
+                    { title: "Recevez votre lien de connexion", text: "Envoyé sur votre email professionnel pour ouvrir votre espace.", duration: "Quelques secondes" },
                     { title: "Testez sur vos dossiers", text: "Lancez un diagnostic sur un cas réel.", duration: "4 min" },
                     { title: "Partagez vos retours", text: "Vos retours améliorent le produit.", duration: "En continu" },
                 ],
-                cta: "Accès immédiat après validation du formulaire",
+                cta: "Formulaire CRM et connexion email restent deux flux distincts",
             },
             form: {
                 title: "Testez DiagTertiaire Pro gratuitement",
@@ -1515,18 +3241,18 @@
                 },
                 cta: "Obtenir mon accès gratuit",
                 submitting: "Validation en cours...",
-                trustLine: "Sans carte bancaire · Accès immédiat · Données protégées (RGPD)",
+                trustLine: "Sans carte bancaire · Données protégées (RGPD) · Connexion séparée par email",
                 successTitle: "Votre demande est enregistrée",
-                successText: "Vous pouvez maintenant accéder à l'espace de test et lancer votre premier diagnostic.",
-                successCta: "Accéder à l'espace test →",
-                successHelper: "L'accès reste entièrement gratuit pendant la phase bêta.",
+                successText: "Votre demande CRM est bien enregistrée. Vous pouvez maintenant recevoir votre lien de connexion séparé pour ouvrir l'espace Pro.",
+                successCta: "Recevoir mon lien de connexion →",
+                successHelper: "Le lien de connexion arrive par email. Vérifiez aussi vos spams.",
             },
             closing: {
                 urgencyBadge: "Bêta ouverte · accès gratuit",
                 title: "Testez l'outil sur un cas réel.",
                 text: "Voyez en quelques minutes si DiagTertiaire Pro vous aide à filtrer, prioriser et partager une première lecture claire.",
                 cta: "Rejoindre la bêta gratuitement →",
-                helper: "Accès immédiat · Sans engagement",
+                helper: "Lien de connexion par email · Sans engagement",
             },
         };
 
@@ -2152,24 +3878,24 @@
             // Toujours s'assurer que les 5 cas de démo sont présents
             // (même si l'utilisateur a un ancien cache avec les anciens dossiers)
             try {
-                const existing = JSON.parse(localStorage.getItem('proCasesRaw') || '[]');
+                const existing = getScopedJsonStorage('proCasesRaw', []);
                 const existingIds = existing.map(function (c) { return c.id; });
                 const mockIds = MOCK_PRO_CASES_V2.map(function (m) { return m.id; });
                 const allMocksPresent = mockIds.every(function (id) { return existingIds.includes(id); });
                 if (!allMocksPresent) {
                     // Conserver les dossiers générés par l'utilisateur (ceux avec des IDs PRO-xxxxx)
                     const userGenerated = existing.filter(function (c) { return c.id.startsWith('PRO-'); });
-                    localStorage.setItem('proCasesRaw', JSON.stringify([...MOCK_PRO_CASES_V2, ...userGenerated]));
+                    setScopedJsonStorage('proCasesRaw', [...MOCK_PRO_CASES_V2, ...userGenerated]);
                 }
             } catch (e) {
-                localStorage.setItem('proCasesRaw', JSON.stringify(MOCK_PRO_CASES_V2));
+                setScopedJsonStorage('proCasesRaw', MOCK_PRO_CASES_V2);
             }
         }
 
         function loadAllProCases() {
             try {
-                const wizardCases = JSON.parse(localStorage.getItem('proCases') || '[]');
-                const rawCases = JSON.parse(localStorage.getItem('proCasesRaw') || '[]');
+                const wizardCases = getScopedJsonStorage('proCases', []);
+                const rawCases = getScopedJsonStorage('proCasesRaw', []);
                 const allStoredIds = [...wizardCases, ...rawCases].map(c => c.id);
                 const mocksNotStored = (typeof MOCK_PRO_CASES_V2 !== 'undefined' ? MOCK_PRO_CASES_V2 : [])
                     .filter(m => !allStoredIds.includes(m.id));
@@ -2185,12 +3911,267 @@
             if (found) return found;
 
             try {
-                const latest = JSON.parse(localStorage.getItem('newDiagnosticLatestReport') || 'null');
+                const latest = JSON.parse(readStorageItem('newDiagnosticLatestReport', 'null'));
                 if (latest && latest.id === caseId) return latest;
             } catch (e) { }
 
             return null;
         }
+
+        // Neutralise les anciens helpers localStorage conservés plus haut pour compatibilite de source.
+        function initializeMockProCases() {
+            return;
+        }
+
+        function loadAllProCases() {
+            return typeof MOCK_PRO_CASES_V2 !== 'undefined' ? MOCK_PRO_CASES_V2 : [];
+        }
+
+        function findRawCaseById(caseId) {
+            const cases = loadAllProCases();
+            return cases.find(c => c.id === caseId) || null;
+        }
+
+        const upsertCaseInCollection = (cases = [], nextCase) => {
+            return sortCasesByNewest([nextCase, ...cases.filter(item => item.id !== nextCase.id)]);
+        };
+
+        const upsertReportInCollection = (reports = [], nextReport) => {
+            return sortReportsByNewest([nextReport, ...reports.filter(item => item.reportRecordId !== nextReport.reportRecordId)]);
+        };
+
+        const resolveWorkspaceCaseForReport = (caseId, cases = [], reportsByCaseId = {}) => {
+            const caseRecord = cases.find(item => item.id === caseId) || null;
+            const reportRecord = reportsByCaseId[caseId] || null;
+
+            if (!caseRecord && !reportRecord) {
+                return null;
+            }
+
+            return {
+                ...(reportRecord || {}),
+                ...(caseRecord || {}),
+                id: caseRecord?.id || reportRecord?.caseId || caseId
+            };
+        };
+
+        const readLegacyWorkspaceSnapshot = (userId) => {
+            const wizardCases = Array.isArray(getScopedJsonStorage('proCases', [], userId))
+                ? getScopedJsonStorage('proCases', [], userId)
+                : [];
+            const rawCases = Array.isArray(getScopedJsonStorage('proCasesRaw', [], userId))
+                ? getScopedJsonStorage('proCasesRaw', [], userId)
+                : [];
+            const draftPayload = asPlainObject(getScopedJsonStorage('proDiagDraft', {}, userId));
+            const accent = getScopedStorageItem('proAccent', '', userId);
+            const brandName = getScopedStorageItem('proLogoName', '', userId);
+            const legacyLogoDataUrl = getScopedStorageItem('proLogoImg', '', userId);
+
+            return {
+                wizardCases,
+                rawCases,
+                draftPayload,
+                settings: {
+                    accent: accent || '',
+                    brandName: brandName || ''
+                },
+                branding: {
+                    legacyLogoDataUrl: legacyLogoDataUrl || ''
+                },
+                hasLocalData: wizardCases.length > 0
+                    || rawCases.length > 0
+                    || hasMeaningfulDraftPayload(draftPayload)
+                    || !!accent
+                    || !!brandName
+                    || !!legacyLogoDataUrl
+            };
+        };
+
+        const ensureDemoWorkspaceData = async ({ organizationId, userId, existingCases = [] }) => {
+            const existingLegacyIds = new Set(
+                existingCases
+                    .map(item => item.legacyId)
+                    .filter(Boolean)
+            );
+
+            let didMutate = false;
+
+            for (const mockCase of MOCK_PRO_CASES_V2) {
+                if (existingLegacyIds.has(mockCase.id)) {
+                    continue;
+                }
+
+                const savedCase = await createOrUpdateProCase({
+                    organizationId,
+                    userId,
+                    caseData: mockCase
+                });
+
+                await createOrUpdateProReport({
+                    organizationId,
+                    userId,
+                    caseId: savedCase.id,
+                    reportPayload: savedCase,
+                    reportName: savedCase.projectName || savedCase.clientName || 'Rapport'
+                });
+
+                didMutate = true;
+            }
+
+            return { didMutate };
+        };
+
+        const migrateLegacyWorkspaceIfNeeded = async ({
+            userId,
+            organization,
+            settings,
+            branding,
+            userWorkspaceState
+        }) => {
+            const currentVersion = Number(userWorkspaceState?.uiState?.workspaceMigrationVersion || 0);
+            const shouldRetryLegacyLogoMigration = currentVersion >= WORKSPACE_MIGRATION_VERSION
+                && !!userWorkspaceState?.uiState?.logoMigrationPending
+                && !branding?.logoStoragePath;
+
+            if (currentVersion >= WORKSPACE_MIGRATION_VERSION && !shouldRetryLegacyLogoMigration) {
+                return { didMutate: false, userWorkspaceState };
+            }
+
+            const shouldMigrateWorkspaceData = currentVersion < WORKSPACE_MIGRATION_VERSION;
+            const legacyWorkspace = readLegacyWorkspaceSnapshot(userId);
+            let didMutate = false;
+
+            if (shouldMigrateWorkspaceData && legacyWorkspace.hasLocalData) {
+                const migratedCases = mergeLegacyCaseCollections(
+                    MOCK_PRO_CASES_V2,
+                    legacyWorkspace.rawCases,
+                    legacyWorkspace.wizardCases
+                );
+
+                for (const legacyCase of migratedCases) {
+                    const savedCase = await createOrUpdateProCase({
+                        organizationId: organization.id,
+                        userId,
+                        caseData: legacyCase
+                    });
+
+                    await createOrUpdateProReport({
+                        organizationId: organization.id,
+                        userId,
+                        caseId: savedCase.id,
+                        reportPayload: savedCase,
+                        reportName: savedCase.projectName || savedCase.clientName || 'Rapport'
+                    });
+                }
+
+                if (legacyWorkspace.settings.accent || legacyWorkspace.settings.brandName) {
+                    await saveOrganizationSettings({
+                        organizationId: organization.id,
+                        accent: legacyWorkspace.settings.accent || settings.accent || DEFAULT_WORKSPACE_ACCENT,
+                        brandName: legacyWorkspace.settings.brandName || settings.brandName || organization.name || DEFAULT_WORKSPACE_BRAND_NAME
+                    });
+                }
+
+                didMutate = true;
+            }
+
+            const nextUiState = {
+                ...asPlainObject(userWorkspaceState?.uiState),
+                workspaceMigrationVersion: WORKSPACE_MIGRATION_VERSION,
+                logoMigrationPending: false
+            };
+
+            if (legacyWorkspace.branding.legacyLogoDataUrl && !branding?.logoStoragePath) {
+                try {
+                    const legacyLogoFile = dataUrlToFile(
+                        legacyWorkspace.branding.legacyLogoDataUrl,
+                        legacyWorkspace.settings.brandName || organization.name || 'logo'
+                    );
+
+                    if (legacyLogoFile) {
+                        await uploadOrganizationLogo(legacyLogoFile, {
+                            organizationId: organization.id,
+                            currentBranding: branding
+                        });
+                        didMutate = true;
+                    } else {
+                        nextUiState.logoMigrationPending = true;
+                    }
+                } catch (error) {
+                    console.warn('Impossible de migrer le logo legacy vers Supabase Storage :', error);
+                    nextUiState.logoMigrationPending = true;
+                }
+            }
+
+            const savedWorkspaceState = await saveUserWorkspaceState({
+                userId,
+                organizationId: organization.id,
+                draftPayload: shouldMigrateWorkspaceData && legacyWorkspace.hasLocalData && hasMeaningfulDraftPayload(legacyWorkspace.draftPayload)
+                    ? legacyWorkspace.draftPayload
+                    : userWorkspaceState?.draftPayload,
+                uiState: nextUiState,
+                mergeWith: userWorkspaceState
+            });
+
+            if (legacyWorkspace.hasLocalData) {
+                removeLegacyWorkspaceStorage(userId, {
+                    keepLegacyLogo: !!nextUiState.logoMigrationPending
+                });
+            }
+
+            return {
+                didMutate: didMutate || !userWorkspaceState?.userId || shouldRetryLegacyLogoMigration,
+                userWorkspaceState: savedWorkspaceState
+            };
+        };
+
+        const hydrateWorkspaceFromSupabase = async (user, profile) => {
+            const organization = await loadOrganizationRecord(profile.organization_id);
+
+            let settings = await loadOrganizationSettings(organization.id, organization.name || DEFAULT_WORKSPACE_BRAND_NAME);
+            let branding = await loadBrandingRecord(organization.id);
+            let cases = await listProCases(organization.id);
+            let reports = await listProReports(organization.id);
+            let userWorkspaceState = await loadUserWorkspaceState(user.id, organization.id);
+
+            const migrationResult = await migrateLegacyWorkspaceIfNeeded({
+                userId: user.id,
+                organization,
+                settings,
+                branding,
+                userWorkspaceState
+            });
+
+            if (migrationResult.didMutate) {
+                settings = await loadOrganizationSettings(organization.id, organization.name || DEFAULT_WORKSPACE_BRAND_NAME);
+                branding = await loadBrandingRecord(organization.id);
+                cases = await listProCases(organization.id);
+                reports = await listProReports(organization.id);
+                userWorkspaceState = await loadUserWorkspaceState(user.id, organization.id);
+            } else {
+                userWorkspaceState = migrationResult.userWorkspaceState || userWorkspaceState;
+            }
+
+            const demoSeedResult = await ensureDemoWorkspaceData({
+                organizationId: organization.id,
+                userId: user.id,
+                existingCases: cases
+            });
+
+            if (demoSeedResult.didMutate) {
+                cases = await listProCases(organization.id);
+                reports = await listProReports(organization.id);
+            }
+
+            return {
+                organization,
+                settings,
+                branding,
+                cases,
+                reports,
+                userWorkspaceState
+            };
+        };
 
         const planCards = [
             { key: "essentiel", title: "Essentiel", subtitle: "Pour démarrer rapidement sur un périmètre simple.", features: ["Génération illimitée de rapports", "Mise en page standardisée", "Téléchargement PDF intégré", "Idéal usage mono-site"], cta: "Être recontacté pour une démo" },
@@ -2603,23 +4584,50 @@
         const DemoModal = ({ isOpen, onClose }) => {
             const [step, setStep] = useState(1);
             const [form, setForm] = useState(DEMO_MODAL_INITIAL_FORM);
+            const [isSubmitting, setIsSubmitting] = useState(false);
+            const [submitError, setSubmitError] = useState(null);
+            const [honeypot, setHoneypot] = useState('');
+            const demoModalFormKey = 'pro-demo-modal';
             const setField = (key, value) => setForm(prev => ({ ...prev, [key]: value }));
 
             // Reset à la fermeture
             useEffect(() => {
-                if (!isOpen) {
-                    setTimeout(() => {
-                        setStep(1);
-                        setForm(DEMO_MODAL_INITIAL_FORM);
-                    }, 300);
+                if (isOpen) {
+                    markProFormRendered(demoModalFormKey);
+                    setHoneypot('');
+                    return;
                 }
+
+                setTimeout(() => {
+                    setStep(1);
+                    setForm(DEMO_MODAL_INITIAL_FORM);
+                    setIsSubmitting(false);
+                    setSubmitError(null);
+                    setHoneypot('');
+                }, 300);
             }, [isOpen]);
 
             if (!isOpen) return null;
 
             const handleSubmit = async (e) => {
                 e.preventDefault();
-                await submitProInterestLead({
+                setSubmitError(null);
+                const antiSpamCheck = runProFormAntiSpamChecks({
+                    formKey: demoModalFormKey,
+                    honeypotValue: honeypot,
+                    minimumDelayMs: 3000,
+                    cooldownMs: 30000
+                });
+
+                if (!antiSpamCheck.ok) {
+                    setSubmitError(antiSpamCheck.error);
+                    return;
+                }
+
+                setIsSubmitting(true);
+                setProFormCooldown(demoModalFormKey);
+
+                const result = await submitProInterestLead({
                     source: 'saaspro_demo_modal',
                     name: form.name || null,
                     email: form.email || null,
@@ -2631,6 +4639,15 @@
                     form: 'demo_modal',
                     main_challenge: form.mainChallenge || null
                 });
+
+                setIsSubmitting(false);
+
+                if (!result.ok) {
+                    clearProFormCooldown(demoModalFormKey);
+                    setSubmitError("Impossible d'envoyer votre demande pour le moment. Merci de réessayer dans quelques instants.");
+                    return;
+                }
+
                 setStep(2); // Passage écran succès
             };
 
@@ -2652,6 +4669,18 @@
                                 </p>
 
                                 <form onSubmit={handleSubmit} className="space-y-4">
+                                    <div style={PRO_FORM_ANTISPAM_HONEYPOT_STYLE} aria-hidden="true">
+                                        <label htmlFor="pro-demo-modal-website">Site web</label>
+                                        <input
+                                            id="pro-demo-modal-website"
+                                            name="website"
+                                            type="text"
+                                            tabIndex="-1"
+                                            autoComplete="off"
+                                            value={honeypot}
+                                            onChange={e => setHoneypot(e.target.value)}
+                                        />
+                                    </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
                                             <label className="pro-label">Prénom & Nom</label>
@@ -2677,9 +4706,15 @@
                                         </select>
                                     </div>
 
+                                    {submitError && (
+                                        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                                            {submitError}
+                                        </div>
+                                    )}
+
                                     <div className="pt-4">
-                                        <button type="submit" className="pro-btn pro-btn-primary w-full justify-center py-3 text-[15px]">
-                                            Accéder à la présentation
+                                        <button type="submit" disabled={isSubmitting} className="pro-btn pro-btn-primary w-full justify-center py-3 text-[15px] disabled:opacity-60">
+                                            {isSubmitting ? 'Envoi...' : 'Accéder à la présentation'}
                                             <Icon icon="solar:arrow-right-linear" />
                                         </button>
                                         <p className="text-center mt-3 text-xs text-slate-400">
@@ -2914,9 +4949,7 @@
         };
 
         /* ===== DASHBOARD PRO V2 (KPI + Timeline) ===== */
-        const ProDashboard = ({ setPage, openDemo }) => {
-            const [cases] = useState(() => loadAllProCases());
-
+        const ProDashboard = ({ setPage, openDemo, cases = [] }) => {
             // Compute each case's data on-the-fly
             const casesComputed = useMemo(() => cases.map(c => {
                 let computed = c.engineResult || null;
@@ -3033,8 +5066,7 @@
             );
         };
         /* ===== DOSSIERS CLIENTS ===== */
-        const ProCases = ({ setPage }) => {
-            const [cases, setCases] = useState(() => loadAllProCases());
+        const ProCases = ({ setPage, cases = [], onDeleteCase, onUpdateCaseNote }) => {
             const [searchQuery, setSearchQuery] = useState('');
             const [filterActivity, setFilterActivity] = useState('');
             const [editingNoteId, setEditingNoteId] = useState(null);
@@ -3063,15 +5095,12 @@
                 return (!q || name.includes(q)) && (!filterActivity || c._actLabel === filterActivity);
             });
 
-            const deleteCase = (id) => {
+            const deleteCase = async (id) => {
                 if (!window.confirm('Supprimer ce dossier définitivement ?')) return;
-                try {
-                    const wizardCases = JSON.parse(localStorage.getItem('proCases') || '[]').filter(c => c.id !== id);
-                    const rawCases = JSON.parse(localStorage.getItem('proCasesRaw') || '[]').filter(c => c.id !== id);
-                    localStorage.setItem('proCases', JSON.stringify(wizardCases));
-                    localStorage.setItem('proCasesRaw', JSON.stringify(rawCases));
-                } catch (e) { }
-                setCases(loadAllProCases());
+                    await onDeleteCase?.(id);
+                } catch (error) {
+                    window.alert(error?.message || "Impossible de supprimer ce dossier pour le moment.");
+                }
             };
 
             const mainContent = (
@@ -3121,7 +5150,7 @@
                                             <tr key={c.id} className="group transition-colors">
                                                 <td>
                                                     <div className="font-bold text-slate-800 leading-tight">{c._displayName}</div>
-                                                    <div className="text-xs text-slate-400 mt-0.5 font-mono">{c.id}</div>
+                                                    <div className="text-xs text-slate-400 mt-0.5 font-mono">{c.legacyId || c.id}</div>
                                                 </td>
                                                 <td><span className="text-sm text-slate-600 font-medium">{c._actLabel}</span></td>
                                                 <td>
@@ -3191,15 +5220,13 @@
                 </div>
             );
             const noteModal = editingNoteId ? (() => {
-                const saveNote = () => {
-                    const all = loadAllProCases();
-                    const rawCases = JSON.parse(localStorage.getItem('proCasesRaw') || '[]');
-                    const updatedRaw = rawCases.map(x => x.id === editingNoteId ? { ...x, noteInterne: editingNoteValue } : x);
-                    localStorage.setItem('proCasesRaw', JSON.stringify(updatedRaw));
-                    const userCases = JSON.parse(localStorage.getItem('proCases') || '[]').map(x => x.id === editingNoteId ? { ...x, noteInterne: editingNoteValue } : x);
-                    localStorage.setItem('proCases', JSON.stringify(userCases));
-                    setCases(loadAllProCases());
-                    setEditingNoteId(null);
+                const saveNote = async () => {
+                    try {
+                        await onUpdateCaseNote?.(editingNoteId, editingNoteValue);
+                        setEditingNoteId(null);
+                    } catch (error) {
+                        window.alert(error?.message || "Impossible d'enregistrer la note interne.");
+                    }
                 };
                 return (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setEditingNoteId(null)}>
@@ -3233,17 +5260,66 @@
 
         /* ===== RAPPORT DOSSIER - redirige vers ProReport ===== */
         /* ===== ProCaseReport - Rapport pour dossiers générés via le wizard 7 modules ===== */
-        const ProCaseReport = ({ caseId, setPage, sharedCase }) => {
-            const [cases] = useState(() => loadAllProCases());
+        const ProCaseReport = ({
+            caseId,
+            setPage,
+            sharedCase,
+            cases = [],
+            reportsByCaseId = {},
+            settings = DEFAULT_ORGANIZATION_SETTINGS,
+            branding = DEFAULT_ORGANIZATION_BRANDING,
+            organization = null,
+            onSyncReportPdfMetadata
+        }) => {
             // Hooks avant tout return conditionnel (règle des hooks React)
-            const [, forceUpdate] = React.useReducer(x => x + 1, 0);
-            React.useEffect(() => {
-                window.addEventListener('storage', forceUpdate);
-                return () => window.removeEventListener('storage', forceUpdate);
-            }, []);
+            const c = sharedCase || resolveWorkspaceCaseForReport(caseId, cases, reportsByCaseId);
+            const isProAuth = !sharedCase && !!getActiveProUserId();
+            const [officialPdfPending, setOfficialPdfPending] = useState(false);
+            const [officialPdfError, setOfficialPdfError] = useState('');
+            const [officialPdfSuccess, setOfficialPdfSuccess] = useState('');
+            const [officialPdfUrl, setOfficialPdfUrl] = useState('');
+            const [officialPdfFile, setOfficialPdfFile] = useState(null);
 
-            const c = sharedCase || cases.find(x => x.id === caseId) || (!sharedCase ? findRawCaseById(caseId) : null);
-            const isProAuth = localStorage.getItem('proAuth') === 'true';
+            useEffect(() => {
+                let isCancelled = false;
+
+                const hydrateOfficialPdfAccess = async () => {
+                    if (!isProAuth || sharedCase || !c?.latestPdfFileId || !organization?.id) {
+                        if (!isCancelled) {
+                            setOfficialPdfUrl('');
+                            setOfficialPdfFile(null);
+                        }
+                        return;
+                    }
+
+                    try {
+                        const access = await resolveStoredPdfAccess({
+                            report: c,
+                            organizationId: organization.id,
+                            latestPdfFile: officialPdfFile && officialPdfFile.id === c.latestPdfFileId
+                                ? officialPdfFile
+                                : null
+                        });
+
+                        if (!isCancelled) {
+                            setOfficialPdfUrl(access.url || '');
+                            setOfficialPdfFile(access.fileRecord || null);
+                        }
+                    } catch (error) {
+                        if (!isCancelled) {
+                            setOfficialPdfUrl('');
+                            setOfficialPdfFile(null);
+                        }
+                        console.warn('Impossible de préparer l\'accès au PDF officiel :', error);
+                    }
+                };
+
+                hydrateOfficialPdfAccess();
+
+                return () => {
+                    isCancelled = true;
+                };
+            }, [isProAuth, sharedCase, organization?.id, c?.latestPdfFileId, c?.reportRecordId]);
 
             if (!c) return (
                 <div className="p-8 text-center">
@@ -3263,10 +5339,16 @@
                 || buildEngineResultFromMock(c);
             const r = normalizeEngineResult(rawResult, c.benchmark?.median || c.benchmark?.med || 0);
 
-            // Lecture logo - fraiche au render + reactive sur event storage
-            const proLogoImg = (() => { try { return localStorage.getItem('proLogoImg') || ''; } catch (e) { return ''; } })();
-            const proLogoName = (() => { try { return localStorage.getItem('proLogoName') || 'DiagTertiaire Pro'; } catch (e) { return 'DiagTertiaire Pro'; } })();
-            const hasCustomBranding = !!(proLogoImg || proLogoName !== 'DiagTertiaire Pro');
+            const proLogoImg = isProAuth ? resolveBrandPreviewUrl(branding) : '';
+            const proLogoName = isProAuth ? resolveBrandName(settings, organization) : DEFAULT_WORKSPACE_BRAND_NAME;
+            const hasCustomBranding = !!(proLogoImg || proLogoName !== DEFAULT_WORKSPACE_BRAND_NAME);
+            const canGenerateOfficialPdf = isProAuth && !sharedCase && !!c.reportRecordId && !!organization?.id;
+            const effectivePdfError = officialPdfError || c.pdfError || '';
+            const effectivePdfSuccess = officialPdfSuccess || (
+                c.pdfStatus === 'ready' && c.latestPdfGeneratedAtLabel
+                    ? `PDF officiel enregistré le ${c.latestPdfGeneratedAtLabel}.`
+                    : ''
+            );
 
             const handlePrintPdf = () => {
                 const orig = document.title;
@@ -3274,6 +5356,77 @@
                 window.print();
                 document.title = orig;
             };
+            const handleGenerateOfficialPdf = async () => {
+                if (!canGenerateOfficialPdf) {
+                    return;
+                }
+
+                setOfficialPdfPending(true);
+                setOfficialPdfError('');
+                setOfficialPdfSuccess('');
+
+                try {
+                    const generationResult = await requestOfficialPdfGeneration(c.reportRecordId);
+                    const syncedResult = await (onSyncReportPdfMetadata
+                        ? onSyncReportPdfMetadata(c.reportRecordId, generationResult)
+                        : syncReportPdfMetadata({
+                            reportId: c.reportRecordId,
+                            organizationId: organization.id,
+                            generationResult
+                        }));
+
+                    const access = await resolveStoredPdfAccess({
+                        report: syncedResult.report,
+                        organizationId: organization.id,
+                        latestPdfFile: syncedResult.latestPdfFile
+                    });
+
+                    setOfficialPdfFile(access.fileRecord || syncedResult.latestPdfFile || null);
+                    setOfficialPdfUrl(access.url || '');
+                    setOfficialPdfSuccess('PDF officiel généré et sauvegardé dans votre espace privé.');
+                } catch (error) {
+                    try {
+                        await (onSyncReportPdfMetadata
+                            ? onSyncReportPdfMetadata(c.reportRecordId)
+                            : syncReportPdfMetadata({
+                                reportId: c.reportRecordId,
+                                organizationId: organization.id
+                            }));
+                    } catch (syncError) {
+                        console.warn('Impossible de rafraîchir les métadonnées PDF après échec :', syncError);
+                    }
+
+                    setOfficialPdfError(error?.message || "Impossible de générer le PDF officiel.");
+                } finally {
+                    setOfficialPdfPending(false);
+                }
+            };
+
+            const handleOpenOfficialPdf = async () => {
+                if (!canGenerateOfficialPdf) {
+                    return;
+                }
+
+                setOfficialPdfError('');
+                try {
+                    const access = await resolveStoredPdfAccess({
+                        report: c,
+                        organizationId: organization.id,
+                        latestPdfFile: officialPdfFile
+                    });
+
+                    if (!access.url) {
+                        throw new Error("Aucun PDF officiel sauvegardé n'est disponible pour ce rapport.");
+                    }
+
+                    setOfficialPdfFile(access.fileRecord || null);
+                    setOfficialPdfUrl(access.url);
+                    window.open(access.url, '_blank', 'noopener,noreferrer');
+                } catch (error) {
+                    setOfficialPdfError(error?.message || "Impossible d'ouvrir le PDF officiel.");
+                }
+            };
+
             const handleShare = () => {
                 const { phone, email, contact_telephone, telephone, contact_email, ...publicData } = c.formData || {};
                 const shareData = { ...c, id: c.id, clientName: c.clientName, engineResult: r, formData: publicData };
@@ -3317,12 +5470,36 @@
                                 <span className="sm:hidden">Retour</span>
                             </button>
                         )}
-                        <div className="flex gap-2 w-full sm:w-auto">
+                        <div className="flex gap-2 w-full sm:w-auto flex-wrap">
                             <button onClick={handlePrintPdf} className="pro-btn bg-slate-800 text-white hover:bg-slate-700 flex-1 sm:flex-none text-sm px-3 py-2">
                                 <Icon icon="solar:printer-bold" />
-                                <span className="hidden sm:inline">Telecharger PDF</span>
-                                <span className="sm:hidden">PDF</span>
+                                <span className="hidden sm:inline">Export rapide local</span>
+                                <span className="sm:hidden">Local</span>
                             </button>
+                            {canGenerateOfficialPdf && (
+                                <button
+                                    onClick={handleGenerateOfficialPdf}
+                                    disabled={officialPdfPending}
+                                    className={`pro-btn flex-1 sm:flex-none text-sm px-3 py-2 ${officialPdfPending ? 'bg-slate-300 text-slate-600 cursor-wait' : 'pro-btn-secondary'}`}
+                                >
+                                    <Icon icon={officialPdfPending ? "solar:refresh-bold" : "solar:file-download-bold"} className={officialPdfPending ? 'animate-spin' : ''} />
+                                    <span className="hidden sm:inline">
+                                        {officialPdfPending
+                                            ? 'Generation en cours...'
+                                            : (c.latestPdfFileId ? 'Regenerer le PDF officiel' : 'Generer le PDF officiel')}
+                                    </span>
+                                    <span className="sm:hidden">
+                                        {officialPdfPending ? 'Gen...' : 'Officiel'}
+                                    </span>
+                                </button>
+                            )}
+                            {canGenerateOfficialPdf && (c.latestPdfFileId || officialPdfUrl) && (
+                                <button onClick={handleOpenOfficialPdf} className="pro-btn pro-btn-primary flex-1 sm:flex-none text-sm px-3 py-2">
+                                    <Icon icon="solar:download-bold" />
+                                    <span className="hidden sm:inline">Ouvrir le PDF officiel</span>
+                                    <span className="sm:hidden">Ouvrir</span>
+                                </button>
+                            )}
                             {isProAuth && !sharedCase && (
                                 <button onClick={handleShare} className="pro-btn pro-btn-primary flex-1 sm:flex-none text-sm px-3 py-2">
                                     <Icon icon="solar:link-bold" />
@@ -3334,6 +5511,31 @@
                     </div>
 
                     {/* En-tête */}
+                    {canGenerateOfficialPdf && (
+                        <div className="no-print mb-6 rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
+                            <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                                <div className="min-w-0">
+                                    <div className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">PDF officiel sauvegarde</div>
+                                    <div className="text-sm text-slate-700 mt-1">
+                                        {effectivePdfSuccess || "Utilisez cette action pour generer une version serveur archivee dans le Storage prive de votre organisation."}
+                                    </div>
+                                    {!!effectivePdfError && (
+                                        <div className="text-sm text-red-600 mt-2 break-words">{effectivePdfError}</div>
+                                    )}
+                                </div>
+                                <div className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 shrink-0">
+                                    {c.pdfStatus === 'ready'
+                                        ? 'Statut : pret'
+                                        : c.pdfStatus === 'generating'
+                                            ? 'Statut : generation en cours'
+                                            : c.pdfStatus === 'error'
+                                                ? 'Statut : erreur'
+                                                : 'Statut : non genere'}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="bg-gradient-to-br from-slate-900 to-blue-900 text-white rounded-2xl p-8 mb-8 print-page">
                         {hasCustomBranding && (
                             <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
@@ -3991,7 +6193,7 @@
         };
 
         /* ===== NOUVEAU DIAGNOSTIC - Wizard 7 modules ===== */
-        const ProNewDiag = ({ setPage }) => {
+        const ProNewDiag = ({ setPage, draftPayload, onSaveDraft, onClearDraft, onGenerateCase }) => {
             const INITIAL = {
                 step: 1,
                 contactName: '', company: '', email: '', phone: '', postalCode: '',
@@ -4014,30 +6216,49 @@
                 noteInterne: '',
             };
 
-            const [form, setForm] = React.useState(() => {
-                try { const s = localStorage.getItem('proDiagDraft'); return s ? JSON.parse(s) : INITIAL; }
-                catch { return INITIAL; }
-            });
+            const initialDraftState = buildDraftFormState(INITIAL, draftPayload);
+            const skipNextDraftSyncRef = useRef(false);
+            const didMountRef = useRef(false);
+            const [form, setForm] = React.useState(initialDraftState);
             const [isGenerating, setIsGenerating] = React.useState(false);
+            const [draftError, setDraftError] = React.useState('');
+            const [generationError, setGenerationError] = React.useState('');
 
-            const [showResume, setShowResume] = React.useState(() => {
-                try {
-                    const draft = localStorage.getItem('proDiagDraft');
-                    if (!draft) return false;
-                    const parsed = JSON.parse(draft);
-                    // Montrer le bandeau seulement s'il y a des données non triviales
-                    return !!(parsed.contactName || parsed.company || parsed.activity || parsed.surface);
-                } catch { return false; }
-            });
+            const [showResume, setShowResume] = React.useState(() => hasMeaningfulDraftPayload(initialDraftState));
             const handleResume = () => setShowResume(false); // garde le form chargé tel quel
-            const handleRestart = () => {
-                localStorage.removeItem('proDiagDraft');
-                setForm(INITIAL);
-                setShowResume(false);
+            const handleRestart = async () => {
+                try {
+                    setDraftError('');
+                    skipNextDraftSyncRef.current = true;
+                    await onClearDraft?.();
+                    setForm(INITIAL);
+                    setShowResume(false);
+                } catch (error) {
+                    setDraftError(error?.message || "Impossible de reinitialiser le brouillon pour le moment.");
+                }
             };
 
             React.useEffect(() => {
-                localStorage.setItem('proDiagDraft', JSON.stringify(form));
+                if (!didMountRef.current) {
+                    didMountRef.current = true;
+                    return;
+                }
+
+                if (skipNextDraftSyncRef.current) {
+                    skipNextDraftSyncRef.current = false;
+                    return;
+                }
+
+                const timeoutId = window.setTimeout(async () => {
+                    try {
+                        await onSaveDraft?.(form);
+                        setDraftError('');
+                    } catch (error) {
+                        setDraftError(error?.message || "Impossible d'enregistrer le brouillon automatiquement.");
+                    }
+                }, 450);
+
+                return () => window.clearTimeout(timeoutId);
             }, [form]);
 
             const set = (field, val) => setForm(p => ({ ...p, [field]: val }));
@@ -4076,11 +6297,13 @@
             };
 
             const handleGenerate = () => {
+                setGenerationError('');
                 setIsGenerating(true);
-                setTimeout(() => {
+                setTimeout(async () => {
                     const result = ENGINE_PRO.compute(form);
                     const newCase = {
-                        id: 'PRO-' + Date.now(),
+                        id: generateUuid(),
+                        legacyId: 'PRO-' + Date.now(),
                         clientName: form.contactName || form.company || 'Nouveau dossier',
                         company: form.company,
                         email: form.email,
@@ -4137,12 +6360,14 @@
                         co2Evite: result.co2Evite,
                         emissionsActuelles: result.emissionsActuelles,
                     };
-                    const existingCases = JSON.parse(localStorage.getItem('proCases') || '[]');
-                    localStorage.setItem('proCases', JSON.stringify([newCase, ...existingCases]));
-                    localStorage.setItem('newDiagnosticLatestSubmission', JSON.stringify(form));
-                    localStorage.setItem('newDiagnosticLatestReport', JSON.stringify(newCase));
-                    localStorage.removeItem('proDiagDraft');
-                    setPage('report-' + newCase.id);
+                    try {
+                        const savedCase = await onGenerateCase?.(newCase);
+                        skipNextDraftSyncRef.current = true;
+                        setPage('report-' + (savedCase?.id || newCase.id));
+                    } catch (error) {
+                        setGenerationError(error?.message || "Impossible d'enregistrer le diagnostic pour le moment.");
+                        setIsGenerating(false);
+                    }
                 }, 1800);
             };
 
@@ -4614,6 +6839,16 @@
                                 Attention : {validationError}
                             </div>
                         )}
+                        {draftError && (
+                            <div className="mt-4 px-4 py-2 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 font-medium">
+                                Brouillon : {draftError}
+                            </div>
+                        )}
+                        {generationError && (
+                            <div className="mt-4 px-4 py-2 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 font-medium">
+                                Rapport : {generationError}
+                            </div>
+                        )}
                         {form.step < 7 && (
                             <div className="mt-10 flex items-center justify-between border-t border-slate-100 pt-6">
                                 <button type="button" onClick={prev} disabled={form.step === 1}
@@ -4639,40 +6874,109 @@
         };
 
         /* ===== RAPPORT PRO ===== */
-        const ProReport = ({ cId, setPage, sharedCase }) => {
-            return <ProCaseReport caseId={cId} setPage={setPage} sharedCase={sharedCase} />;
+        const ProReport = ({ cId, setPage, sharedCase, cases, reportsByCaseId, settings, branding, organization, onSyncReportPdfMetadata }) => {
+            return (
+                <ProCaseReport
+                    caseId={cId}
+                    setPage={setPage}
+                    sharedCase={sharedCase}
+                    cases={cases}
+                    reportsByCaseId={reportsByCaseId}
+                    settings={settings}
+                    branding={branding}
+                    organization={organization}
+                    onSyncReportPdfMetadata={onSyncReportPdfMetadata}
+                />
+            );
         };
 
         /* ===== SETTINGS PRO (Paramétrages SaaS avec Aperçu Marque Blanche et sans tirets) ===== */
-        const ProSettings = () => {
-            const [proAccent, setProAccent] = useState(() => localStorage.getItem('proAccent') || '#1D4ED8');
-            const [proLogoName, setProLogoName] = useState(() => localStorage.getItem('proLogoName') || 'DiagTertiaire Pro');
-            const [proLogoImg, setProLogoImg] = useState(() => localStorage.getItem('proLogoImg') || '');
+        const ProSettings = ({
+            settings = DEFAULT_ORGANIZATION_SETTINGS,
+            branding = DEFAULT_ORGANIZATION_BRANDING,
+            organization = null,
+            userWorkspaceState = DEFAULT_USER_WORKSPACE_STATE,
+            onSaveSettings,
+            onSaveBranding
+        }) => {
+            const initialBrandName = resolveBrandName(settings, organization);
+            const [proAccent, setProAccent] = useState(() => settings?.accent || DEFAULT_WORKSPACE_ACCENT);
+            const [proLogoName, setProLogoName] = useState(() => initialBrandName);
+            const [proLogoImg, setProLogoImg] = useState(() => resolveBrandPreviewUrl(branding));
+            const [saveError, setSaveError] = useState('');
+            const [logoActionPending, setLogoActionPending] = useState(false);
+            const didMountSettingsRef = useRef(false);
 
             useEffect(() => {
-                localStorage.setItem('proAccent', proAccent);
-                localStorage.setItem('proLogoName', proLogoName);
-                if (proLogoImg === '') {
-                    localStorage.removeItem('proLogoImg');
-                } else {
-                    localStorage.setItem('proLogoImg', proLogoImg);
-                }
-                window.dispatchEvent(new Event('storage'));
-            }, [proAccent, proLogoName, proLogoImg]);
+                setProAccent(settings?.accent || DEFAULT_WORKSPACE_ACCENT);
+                setProLogoName(resolveBrandName(settings, organization));
+            }, [settings?.accent, settings?.brandName, organization?.name]);
 
-            const handleLogoUpload = (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onloadend = () => {
-                        setProLogoImg(reader.result);
-                    };
-                    reader.readAsDataURL(file);
+            useEffect(() => {
+                setProLogoImg(resolveBrandPreviewUrl(branding));
+            }, [branding?.logoStoragePath, branding?.logoFileName, branding?.logoPreviewUrl]);
+
+            useEffect(() => {
+                if (!didMountSettingsRef.current) {
+                    didMountSettingsRef.current = true;
+                    return;
+                }
+
+                const timeoutId = window.setTimeout(async () => {
+                    try {
+                        await onSaveSettings?.({
+                            accent: proAccent || DEFAULT_WORKSPACE_ACCENT,
+                            brandName: proLogoName || DEFAULT_WORKSPACE_BRAND_NAME
+                        });
+                        setSaveError('');
+                    } catch (error) {
+                        setSaveError(error?.message || "Impossible d'enregistrer les paramètres d'organisation.");
+                    }
+                }, 350);
+
+                return () => window.clearTimeout(timeoutId);
+            }, [proAccent, proLogoName]);
+
+            const handleLogoUpload = async (event) => {
+                const file = event.target.files?.[0];
+                event.target.value = '';
+
+                if (!file) {
+                    return;
+                }
+
+                setLogoActionPending(true);
+                try {
+                    const savedBranding = await uploadOrganizationLogo(file, {
+                        organizationId: organization?.id,
+                        currentBranding: branding
+                    });
+
+                    setProLogoImg(savedBranding.logoPreviewUrl || '');
+                    await onSaveBranding?.(savedBranding);
+                    setSaveError('');
+                } catch (error) {
+                    setSaveError(error?.message || "Impossible d'importer le logo dans le stockage privé.");
+                } finally {
+                    setLogoActionPending(false);
                 }
             };
 
-            const removeLogo = () => {
-                setProLogoImg('');
+            const removeLogo = async () => {
+                setLogoActionPending(true);
+                try {
+                    const savedBranding = await deleteOrganizationLogo({
+                        organizationId: organization?.id,
+                        currentBranding: branding
+                    });
+                    setProLogoImg('');
+                    await onSaveBranding?.(savedBranding);
+                    setSaveError('');
+                } catch (error) {
+                    setSaveError(error?.message || "Impossible de supprimer le logo de l'organisation.");
+                } finally {
+                    setLogoActionPending(false);
+                }
             };
 
             return (
@@ -4681,6 +6985,12 @@
                         <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">Paramètres de l'espace</h2>
                         <p className="text-slate-500 mt-2">Personnalisez votre compte, gérez votre équipe et vos préférences d'export.</p>
                     </div>
+
+                    {saveError && (
+                        <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                            {saveError}
+                        </div>
+                    )}
 
                     <div className="grid lg:grid-cols-2 gap-8">
                         <div className="space-y-8">
@@ -4697,7 +7007,7 @@
                                             {proLogoImg ? (
                                                 <div className="relative w-16 h-16 rounded-lg border border-slate-200 bg-slate-50 flex items-center justify-center p-1">
                                                     <img src={proLogoImg} alt="Logo" className="max-w-full max-h-full object-contain" />
-                                                    <button onClick={removeLogo} className="absolute -top-2 -right-2 bg-red-500 text-white w-5 h-5 rounded-full flex items-center justify-center hover:bg-red-600 shadow border border-white">
+                                                    <button onClick={removeLogo} disabled={logoActionPending} className="absolute -top-2 -right-2 bg-red-500 text-white w-5 h-5 rounded-full flex items-center justify-center hover:bg-red-600 shadow border border-white disabled:opacity-60 disabled:cursor-not-allowed">
                                                         <Icon icon="solar:close-circle-bold" className="text-xs" />
                                                     </button>
                                                 </div>
@@ -4707,11 +7017,26 @@
                                                 </div>
                                             )}
                                             <div className="flex-1">
-                                                <label className="cursor-pointer inline-flex items-center justify-center px-4 py-2 border border-slate-300 shadow-sm shadow-slate-200/40 text-xs font-semibold rounded-lg text-slate-700 bg-white hover:bg-slate-50 transition-colors">
-                                                    Parcourir
-                                                    <input type="file" className="hidden" accept="image/*" onChange={handleLogoUpload} />
+                                                <label className={`cursor-pointer inline-flex items-center justify-center px-4 py-2 border border-slate-300 shadow-sm shadow-slate-200/40 text-xs font-semibold rounded-lg text-slate-700 bg-white hover:bg-slate-50 transition-colors ${logoActionPending ? 'opacity-60 cursor-not-allowed' : ''}`}>
+                                                    {logoActionPending ? 'Envoi...' : 'Parcourir'}
+                                                    <input type="file" className="hidden" accept="image/*" onChange={handleLogoUpload} disabled={logoActionPending} />
                                                 </label>
-                                                <p className="text-[10px] text-slate-400 mt-1">PNG ou JPG (max 1Mo)</p>
+                                                <p className="text-[10px] text-slate-400 mt-1">PNG, JPG, WEBP ou SVG (max 1Mo)</p>
+                                                {branding?.logoFileName && (
+                                                    <p className="text-[11px] text-slate-500 mt-2 font-medium">
+                                                        Fichier référencé : {branding.logoFileName}
+                                                    </p>
+                                                )}
+                                                {branding?.logoStoragePath && (
+                                                    <p className="text-[11px] text-emerald-700 mt-2 leading-relaxed break-all">
+                                                        Stocke dans le bucket prive organization-assets : {branding.logoStoragePath}
+                                                    </p>
+                                                )}
+                                                {!!userWorkspaceState?.uiState?.logoMigrationPending && (
+                                                    <p className="text-[11px] text-amber-700 mt-2 leading-relaxed">
+                                                        Un ancien logo local n'a pas pu être migré automatiquement. Réimportez le fichier pour le stocker dans Supabase Storage.
+                                                    </p>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -4785,7 +7110,7 @@
                                 <div className="p-4 bg-orange-50 border border-orange-100 rounded-xl mb-6 flex items-start gap-3">
                                     <Icon icon="solar:shield-warning-bold" className="text-orange-500 text-xl shrink-0 mt-0.5" />
                                     <p className="text-xs text-orange-800 font-medium leading-relaxed">
-                                        Vos données saisies restent en local dans votre navigateur (LocalStorage). Elles ne sont pas transmises à des tiers.
+                                        Les logos sont désormais stockés dans un bucket privé Supabase. Le même catalogue de fichiers préparera ensuite les PDF de rapports et les assets du workspace.
                                     </p>
                                 </div>
 
@@ -4950,7 +7275,7 @@
             </div>
         );
 
-        const ProLanding = ({ onGrantAccess }) => {
+        const ProLanding = ({ authError }) => {
             const copy = PRO_LANDING_COPY;
             const heroBadges = copy.hero.badges.slice(0, 2);
             const heroStats = copy.hero.stats.slice(0, 2);
@@ -4964,8 +7289,20 @@
             });
             const [isSubmitting, setIsSubmitting] = React.useState(false);
             const [submitted, setSubmitted] = React.useState(false);
+            const [submitError, setSubmitError] = React.useState(null);
+            const [honeypot, setHoneypot] = React.useState('');
+            const landingFormKey = 'pro-landing-form';
+            const [authForm, setAuthForm] = React.useState({
+                email: '',
+                fullName: '',
+                companyName: '',
+            });
+            const [isSendingMagicLink, setIsSendingMagicLink] = React.useState(false);
+            const [magicLinkError, setMagicLinkError] = React.useState(null);
+            const [magicLinkSuccess, setMagicLinkSuccess] = React.useState(null);
 
             React.useEffect(() => {
+                markProFormRendered(landingFormKey);
                 const obs = new IntersectionObserver(
                     entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }),
                     { threshold: 0.1 }
@@ -4980,22 +7317,72 @@
             };
 
             const setField = (key, value) => setForm(prev => ({ ...prev, [key]: value }));
+            const setAuthField = (key, value) => setAuthForm(prev => ({ ...prev, [key]: value }));
 
-            const saveLead = (payload) => {
+            const requestMagicLink = async ({ email, fullName, companyName }) => {
+                const normalizedEmail = typeof email === 'string' ? email.trim() : '';
+                const normalizedFullName = typeof fullName === 'string' ? fullName.trim() : '';
+                const normalizedCompanyName = typeof companyName === 'string' ? companyName.trim() : '';
+
+                if (!normalizedEmail) {
+                    setMagicLinkSuccess(null);
+                    setMagicLinkError("Renseignez votre email professionnel pour recevoir le lien de connexion.");
+                    return false;
+                }
+
+                setIsSendingMagicLink(true);
+                setMagicLinkError(null);
+                setMagicLinkSuccess(null);
+
                 try {
-                    const leads = JSON.parse(localStorage.getItem('proAccessRequests') || '[]');
-                    localStorage.setItem('proAccessRequests', JSON.stringify([payload, ...leads].slice(0, 25)));
-                    localStorage.setItem('proAccessLatestRequest', JSON.stringify(payload));
-                } catch (e) { }
+                    const result = await sendMagicLink(normalizedEmail, {
+                        fullName: normalizedFullName,
+                        companyName: normalizedCompanyName
+                    });
+
+                    if (!result.ok) {
+                        setMagicLinkError(result.error || "Impossible d'envoyer le lien de connexion pour le moment.");
+                        return false;
+                    }
+
+                    setAuthForm({
+                        email: normalizedEmail,
+                        fullName: normalizedFullName,
+                        companyName: normalizedCompanyName
+                    });
+                    setMagicLinkSuccess(`Lien de connexion envoyé à ${normalizedEmail}. Vérifiez votre boîte mail et vos spams.`);
+                    return true;
+                } finally {
+                    setIsSendingMagicLink(false);
+                }
+            };
+
+            const handleMagicLinkSubmit = async (e) => {
+                e.preventDefault();
+                await requestMagicLink(authForm);
             };
 
             const handleSubmit = async (e) => {
                 e.preventDefault();
+                setSubmitError(null);
+                const antiSpamCheck = runProFormAntiSpamChecks({
+                    formKey: landingFormKey,
+                    honeypotValue: honeypot,
+                    minimumDelayMs: 3000,
+                    cooldownMs: 30000
+                });
+
+                if (!antiSpamCheck.ok) {
+                    setSubmitError(antiSpamCheck.error);
+                    return;
+                }
+
                 setIsSubmitting(true);
+                setProFormCooldown(landingFormKey);
                 const payload = { ...form, requestedAt: new Date().toISOString(), source: 'saaspro_pro_landing' };
 
                 try {
-                    await submitProInterestLead({
+                    const result = await submitProInterestLead({
                         source: payload.source,
                         name: form.fullName || null,
                         email: form.email || null,
@@ -5012,19 +7399,22 @@
                         requestedAt: payload.requestedAt
                     });
 
+                    if (!result.ok) {
+                        clearProFormCooldown(landingFormKey);
+                        setSubmitError("Impossible d'envoyer votre demande pour le moment. Merci de réessayer dans quelques instants.");
+                        return;
+                    }
+
                     await new Promise(resolve => setTimeout(resolve, 400));
-                    saveLead(payload);
                     setSubmitted(true);
+                    setAuthForm(prev => ({
+                        email: prev.email || (form.email || '').trim(),
+                        fullName: prev.fullName || (form.fullName || '').trim(),
+                        companyName: prev.companyName || (form.company || '').trim()
+                    }));
                 } finally {
                     setIsSubmitting(false);
                 }
-            };
-
-            const openWorkspace = () => {
-                localStorage.setItem('proAuth', 'true');
-                localStorage.setItem('proAccessEmail', form.email || '');
-                initializeMockProCases();
-                onGrantAccess();
             };
 
             const SectionHeader = ({ eyebrow, title, text, centered }) => (
@@ -5054,6 +7444,10 @@
                                     <Icon icon="solar:alt-arrow-left-linear" style={{ fontSize: '16px' }} />
                                     Retour au site public
                                 </a>
+                                <button type="button" onClick={() => scrollToSection('pro-login-card')} className="hidden sm:inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-900 hover:border-slate-300 transition-colors">
+                                    <Icon icon="solar:login-3-bold" style={{ fontSize: '16px' }} />
+                                    Connexion
+                                </button>
                                 <button type="button" onClick={() => scrollToSection('pro-access-form')} className="pro-btn pro-btn-primary px-4 py-2 text-sm">
                                     {copy.hero.ctaPrimary}
                                 </button>
@@ -5253,89 +7647,189 @@
                                 </div>
                             </div>
 
-                            <div className="bg-white rounded-[26px] border border-slate-200 p-6 md:p-8 shadow-md shadow-slate-200/30">
-                                {!submitted ? (
-                                    <form onSubmit={handleSubmit} className="space-y-4">
-                                        <div className="grid md:grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="pro-label">{copy.form.fields.fullName}</label>
-                                                <input type="text" required className="pro-input" placeholder={copy.form.placeholders.fullName} value={form.fullName} onChange={e => setField('fullName', e.target.value)} />
-                                            </div>
-                                            <div>
-                                                <label className="pro-label">{copy.form.fields.email}</label>
-                                                <input type="email" required className="pro-input" placeholder={copy.form.placeholders.email} value={form.email} onChange={e => setField('email', e.target.value)} />
-                                            </div>
+                            <div className="space-y-6">
+                                <div id="pro-login-card" className="bg-slate-50 rounded-[26px] border border-slate-200 p-6 md:p-8 shadow-sm shadow-slate-200/20">
+                                    <div className="flex items-start justify-between gap-4">
+                                        <div>
+                                            <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500 mb-3">Connexion email</div>
+                                            <h3 className="text-2xl font-black text-slate-900 tracking-tight" style={{ fontFamily: "'Inter', sans-serif" }}>Recevez votre lien de connexion</h3>
+                                            <p className="text-sm text-slate-600 leading-6 mt-2">Connexion passwordless par magic link. Ajoutez votre nom et votre structure si c'est votre première connexion.</p>
                                         </div>
+                                        <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-semibold text-slate-600">
+                                            <Icon icon="solar:mailbox-bold" style={{ fontSize: '14px' }} />
+                                            Magic link
+                                        </span>
+                                    </div>
+
+                                    <form onSubmit={handleMagicLinkSubmit} className="space-y-4 mt-6">
+                                        {authError && (
+                                            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                                                {authError}
+                                            </div>
+                                        )}
 
                                         <div>
-                                            <label className="pro-label">{copy.form.fields.company}</label>
-                                            <input type="text" required className="pro-input" placeholder={copy.form.placeholders.company} value={form.company} onChange={e => setField('company', e.target.value)} />
+                                            <label className="pro-label">Email professionnel</label>
+                                            <input type="email" required className="pro-input" placeholder={copy.form.placeholders.email} value={authForm.email} onChange={e => setAuthField('email', e.target.value)} />
                                         </div>
 
                                         <div className="grid md:grid-cols-2 gap-4">
                                             <div>
-                                                <label className="pro-label">{copy.form.fields.role}</label>
-                                                <select required className="pro-input" value={form.role} onChange={e => setField('role', e.target.value)}>
-                                                    <option value="">Sélectionnez votre métier</option>
-                                                    {copy.form.roleOptions.map(opt => (
-                                                        <option key={opt} value={opt}>{opt}</option>
-                                                    ))}
-                                                </select>
+                                                <label className="pro-label">Nom complet (optionnel)</label>
+                                                <input type="text" className="pro-input" placeholder={copy.form.placeholders.fullName} value={authForm.fullName} onChange={e => setAuthField('fullName', e.target.value)} />
                                             </div>
                                             <div>
-                                                <label className="pro-label">{copy.form.fields.siteVolume}</label>
-                                                <select required className="pro-input" value={form.siteVolume} onChange={e => setField('siteVolume', e.target.value)}>
-                                                    <option value="">Volume estimé</option>
-                                                    {copy.form.volumeOptions.map(opt => (
-                                                        <option key={opt} value={opt}>{opt}</option>
-                                                    ))}
-                                                </select>
+                                                <label className="pro-label">Organisation (optionnel)</label>
+                                                <input type="text" className="pro-input" placeholder={copy.form.placeholders.company} value={authForm.companyName} onChange={e => setAuthField('companyName', e.target.value)} />
                                             </div>
                                         </div>
 
-                                        <div>
-                                            <label className="pro-label">{copy.form.fields.message}</label>
-                                            <textarea className="pro-input min-h-[90px] resize-y" placeholder={copy.form.placeholders.message} value={form.message} onChange={e => setField('message', e.target.value)} />
-                                        </div>
+                                        {magicLinkError && (
+                                            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                                                {magicLinkError}
+                                            </div>
+                                        )}
 
-                                        <div className="pt-2">
-                                            <button type="submit" disabled={isSubmitting} className="pro-btn pro-btn-primary w-full justify-center py-3.5 text-[15px] gap-2">
-                                                {isSubmitting ? (
+                                        {magicLinkSuccess && (
+                                            <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                                                {magicLinkSuccess}
+                                            </div>
+                                        )}
+
+                                        <div className="pt-1">
+                                            <button type="submit" disabled={isSendingMagicLink} className="pro-btn pro-btn-secondary w-full justify-center py-3.5 text-[15px] gap-2 bg-white">
+                                                {isSendingMagicLink ? (
                                                     <>
                                                         <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
                                                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                                                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                                                         </svg>
-                                                        {copy.form.submitting}
+                                                        Envoi du lien...
                                                     </>
                                                 ) : (
                                                     <>
-                                                        <Icon icon="solar:arrow-right-bold" style={{ fontSize: '16px' }} />
-                                                        {copy.form.cta}
+                                                        <Icon icon="solar:letter-bold" style={{ fontSize: '16px' }} />
+                                                        Recevoir mon lien de connexion
                                                     </>
                                                 )}
                                             </button>
-                                            <p className="flex justify-center items-center gap-1.5 text-xs text-slate-500 text-center mt-3">
-                                                <Icon icon="solar:lock-bold" style={{ fontSize: '13px' }} />
-                                                {copy.form.trustLine}
-                                            </p>
+                                            <p className="text-xs text-slate-500 text-center mt-3">Le formulaire ci-dessous reste un flux CRM distinct. Il ne crée pas de session.</p>
                                         </div>
                                     </form>
-                                ) : (
-                                    <div className="fade-in">
-                                        <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-5">
-                                            <Icon icon="solar:check-circle-bold" style={{ fontSize: '28px' }} />
+                                </div>
+
+                            <div className="bg-white rounded-[26px] border border-slate-200 p-6 md:p-8 shadow-md shadow-slate-200/30">
+                                {!submitted ? (
+                                    <form onSubmit={handleSubmit} className="space-y-4">
+                                        <div style={PRO_FORM_ANTISPAM_HONEYPOT_STYLE} aria-hidden="true">
+                                            <label htmlFor="pro-landing-website">Site web</label>
+                                            <input
+                                                id="pro-landing-website"
+                                                name="website"
+                                                type="text"
+                                                tabIndex="-1"
+                                                autoComplete="off"
+                                                value={honeypot}
+                                                onChange={e => setHoneypot(e.target.value)}
+                                            />
                                         </div>
-                                        <h3 className="text-2xl font-black text-slate-900 tracking-tight" style={{ fontFamily: "'Inter', sans-serif" }}>{copy.form.successTitle}</h3>
-                                        <p className="text-slate-600 leading-7 mt-3">{copy.form.successText}</p>
-                                        <div className="mt-6 space-y-3">
-                                            <button type="button" onClick={openWorkspace} className="pro-btn pro-btn-primary w-full justify-center py-3 text-[15px]">
-                                                {copy.form.successCta}
-                                            </button>
-                                            <p className="text-xs text-slate-500 text-center">{copy.form.successHelper}</p>
+                                        <div className="grid md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="pro-label">{copy.form.fields.fullName}</label>
+                                                    <input type="text" required className="pro-input" placeholder={copy.form.placeholders.fullName} value={form.fullName} onChange={e => setField('fullName', e.target.value)} />
+                                                </div>
+                                                <div>
+                                                    <label className="pro-label">{copy.form.fields.email}</label>
+                                                    <input type="email" required className="pro-input" placeholder={copy.form.placeholders.email} value={form.email} onChange={e => setField('email', e.target.value)} />
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <label className="pro-label">{copy.form.fields.company}</label>
+                                                <input type="text" required className="pro-input" placeholder={copy.form.placeholders.company} value={form.company} onChange={e => setField('company', e.target.value)} />
+                                            </div>
+
+                                            <div className="grid md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="pro-label">{copy.form.fields.role}</label>
+                                                    <select required className="pro-input" value={form.role} onChange={e => setField('role', e.target.value)}>
+                                                        <option value="">Sélectionnez votre métier</option>
+                                                        {copy.form.roleOptions.map(opt => (
+                                                            <option key={opt} value={opt}>{opt}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className="pro-label">{copy.form.fields.siteVolume}</label>
+                                                    <select required className="pro-input" value={form.siteVolume} onChange={e => setField('siteVolume', e.target.value)}>
+                                                        <option value="">Volume estimé</option>
+                                                        {copy.form.volumeOptions.map(opt => (
+                                                            <option key={opt} value={opt}>{opt}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <label className="pro-label">{copy.form.fields.message}</label>
+                                                <textarea className="pro-input min-h-[90px] resize-y" placeholder={copy.form.placeholders.message} value={form.message} onChange={e => setField('message', e.target.value)} />
+                                            </div>
+
+                                            {submitError && (
+                                                <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                                                    {submitError}
+                                                </div>
+                                            )}
+
+                                            <div className="pt-2">
+                                                <button type="submit" disabled={isSubmitting} className="pro-btn pro-btn-primary w-full justify-center py-3.5 text-[15px] gap-2">
+                                                    {isSubmitting ? (
+                                                        <>
+                                                            <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+                                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                                            </svg>
+                                                            {copy.form.submitting}
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Icon icon="solar:arrow-right-bold" style={{ fontSize: '16px' }} />
+                                                            {copy.form.cta}
+                                                        </>
+                                                    )}
+                                                </button>
+                                                <p className="flex justify-center items-center gap-1.5 text-xs text-slate-500 text-center mt-3">
+                                                    <Icon icon="solar:lock-bold" style={{ fontSize: '13px' }} />
+                                                    {copy.form.trustLine}
+                                                </p>
+                                            </div>
+                                        </form>
+                                    ) : (
+                                        <div className="fade-in">
+                                            <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-5">
+                                                <Icon icon="solar:check-circle-bold" style={{ fontSize: '28px' }} />
+                                            </div>
+                                            <h3 className="text-2xl font-black text-slate-900 tracking-tight" style={{ fontFamily: "'Inter', sans-serif" }}>{copy.form.successTitle}</h3>
+                                            <p className="text-slate-600 leading-7 mt-3">{copy.form.successText}</p>
+                                            <div className="mt-6 space-y-3">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => requestMagicLink({ email: form.email, fullName: form.fullName, companyName: form.company })}
+                                                    disabled={isSendingMagicLink}
+                                                    className="pro-btn pro-btn-primary w-full justify-center py-3 text-[15px]"
+                                                >
+                                                    {isSendingMagicLink ? 'Envoi du lien...' : copy.form.successCta}
+                                                </button>
+                                                {(magicLinkError || magicLinkSuccess) && (
+                                                    <div className={`rounded-xl px-4 py-3 text-sm text-center ${magicLinkError ? 'border border-red-200 bg-red-50 text-red-700' : 'border border-emerald-200 bg-emerald-50 text-emerald-700'}`}>
+                                                        {magicLinkError || magicLinkSuccess}
+                                                    </div>
+                                                )}
+                                                <p className="text-xs text-slate-500 text-center">{copy.form.successHelper}</p>
+                                            </div>
                                         </div>
-                                    </div>
-                                )}
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </section>
@@ -5373,38 +7867,328 @@
         /* ===== MAIN APP (Logique de routing et d'assemblage) ===== */
         const ProApp = () => {
             // ALL hooks at the top - no conditional hooks (React rules)
-            const [sharedReport, setSharedReport] = useState(null);
+            const [sharedReport, setSharedReport] = useState(() => parseSharedReportFromHash());
             const [auth, setAuth] = useState(false);
+            const [authReady, setAuthReady] = useState(false);
+            const [authError, setAuthError] = useState(null);
+            const [authUserId, setAuthUserId] = useState(null);
             const [page, setPage] = useState('cases');
             const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
             const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
+            const [workspace, setWorkspace] = useState(() => ({
+                ...DEFAULT_WORKSPACE_DATA,
+                profile: null
+            }));
+
+            const reportsByCaseId = useMemo(() => buildReportsByCaseId(workspace.reports), [workspace.reports]);
 
             // Detect shared report from URL hash
             useEffect(() => {
-                if (window.location.hash.startsWith('#report=')) {
-                    try {
-                        let dataStr = window.location.hash.replace('#report=', '');
-                        // Handle URI encoding
-                        try { dataStr = decodeURIComponent(escape(atob(dataStr))); } catch (e) { dataStr = atob(dataStr); }
-                        const parsed = JSON.parse(dataStr);
-                        if (parsed && parsed.formData) {
-                            setSharedReport(parsed);
-                            localStorage.setItem('newDiagnosticLatestReport', JSON.stringify(parsed));
-                        }
-                    } catch (e) {
-                        console.error('Invalid report hash', e);
-                    }
-                }
+                const syncSharedReport = () => {
+                    setSharedReport(parseSharedReportFromHash());
+                };
+
+                syncSharedReport();
+                window.addEventListener('hashchange', syncSharedReport);
+                return () => window.removeEventListener('hashchange', syncSharedReport);
             }, []);
 
             // Check auth on mount
             useEffect(() => {
-                const isAuth = localStorage.getItem('proAuth') === 'true';
-                if (isAuth) {
-                    setAuth(true);
-                    initializeMockProCases();
-                }
+                let isMounted = true;
+                let authSubscription = null;
+                const resetWorkspace = () => {
+                    setWorkspace({
+                        ...DEFAULT_WORKSPACE_DATA,
+                        profile: null
+                    });
+                };
+
+                const applySession = async (session) => {
+                    const user = session?.user || null;
+                    setActiveProUserId(user?.id || null);
+
+                    if (!isMounted) return;
+
+                    if (!user) {
+                        resetWorkspace();
+                        setAuth(false);
+                        setAuthUserId(null);
+                        setPage('cases');
+                        return;
+                    }
+
+                    const workspaceResult = await ensureUserWorkspace(user);
+                    if (!isMounted) return;
+
+                    if (!workspaceResult.ok) {
+                        setActiveProUserId(null);
+                        resetWorkspace();
+                        setAuth(false);
+                        setAuthUserId(null);
+                        setPage('cases');
+                        setAuthError(workspaceResult.error || "Impossible de préparer votre espace pour le moment.");
+                        await signOutPro();
+                        return;
+                    }
+
+                    try {
+                        const hydratedWorkspace = await hydrateWorkspaceFromSupabase(user, workspaceResult.profile);
+                        if (!isMounted) return;
+
+                        setWorkspace({
+                            ...DEFAULT_WORKSPACE_DATA,
+                            ...hydratedWorkspace,
+                            profile: workspaceResult.profile
+                        });
+                        setAuth(true);
+                        setAuthUserId(user.id);
+                        setAuthError(null);
+                    } catch (error) {
+                        console.error("Erreur lors du chargement du workspace Pro :", error);
+                        setActiveProUserId(null);
+                        resetWorkspace();
+                        setAuth(false);
+                        setAuthUserId(null);
+                        setPage('cases');
+                        setAuthError(error?.message || "Impossible de charger votre workspace pour le moment.");
+                        await signOutPro();
+                    }
+                };
+
+                const bootstrapAuth = async () => {
+                    try {
+                        const browserClient = await getSupabaseBrowserClient();
+
+                        if (!browserClient) {
+                            setAuth(false);
+                            setAuthUserId(null);
+                            return;
+                        }
+
+                        const { session, error } = await getCurrentSession();
+                        if (error) {
+                            setAuth(false);
+                            setAuthUserId(null);
+                            setAuthError("Impossible de vérifier votre session pour le moment.");
+                        } else {
+                            await applySession(session);
+                        }
+
+                        const { data } = browserClient.auth.onAuthStateChange(async (_event, nextSession) => {
+                            await applySession(nextSession);
+                            if (isMounted) {
+                                setAuthReady(true);
+                            }
+                        });
+                        authSubscription = data?.subscription || null;
+                    } catch (error) {
+                        console.error('Erreur lors de l\'initialisation de l\'authentification :', error);
+                        setAuth(false);
+                        setAuthUserId(null);
+                        setAuthError("Impossible d'initialiser la connexion pour le moment.");
+                    } finally {
+                        if (isMounted) {
+                            setAuthReady(true);
+                        }
+                    }
+                };
+
+                bootstrapAuth();
+
+                return () => {
+                    isMounted = false;
+                    authSubscription?.unsubscribe?.();
+                };
             }, []);
+
+            const requireWorkspaceContext = () => {
+                if (!authUserId || !workspace.organization?.id) {
+                    throw new Error("Workspace Pro non initialisé.");
+                }
+
+                return {
+                    userId: authUserId,
+                    organizationId: workspace.organization.id
+                };
+            };
+
+            const handleSaveSettings = async ({ accent, brandName }) => {
+                const { organizationId } = requireWorkspaceContext();
+                const savedSettings = await saveOrganizationSettings({
+                    organizationId,
+                    accent,
+                    brandName
+                });
+
+                setWorkspace(prev => ({
+                    ...prev,
+                    settings: savedSettings
+                }));
+
+                return savedSettings;
+            };
+
+            const handleSaveBranding = async ({ logoStoragePath, logoFileName, logoPreviewUrl }) => {
+                const { userId, organizationId } = requireWorkspaceContext();
+                const savedBranding = normalizeOrganizationBrandingRecord({
+                    logo_storage_path: logoStoragePath || null,
+                    logo_file_name: logoFileName || null
+                }, logoPreviewUrl || '');
+                const shouldClearLogoPending = !!logoStoragePath || (logoFileName === null && logoPreviewUrl === '');
+                const savedWorkspaceState = shouldClearLogoPending
+                    ? await saveUserWorkspaceState({
+                        userId,
+                        organizationId,
+                        uiState: { logoMigrationPending: false },
+                        mergeWith: workspace.userWorkspaceState
+                    })
+                    : workspace.userWorkspaceState;
+
+                setWorkspace(prev => ({
+                    ...prev,
+                    branding: {
+                        ...savedBranding,
+                        logoPreviewUrl: logoPreviewUrl === undefined ? prev.branding.logoPreviewUrl : logoPreviewUrl
+                    },
+                    userWorkspaceState: savedWorkspaceState
+                }));
+
+                return savedBranding;
+            };
+
+            const handleSaveDraft = async (nextDraftPayload) => {
+                const { userId, organizationId } = requireWorkspaceContext();
+                const savedState = await saveUserWorkspaceState({
+                    userId,
+                    organizationId,
+                    draftPayload: nextDraftPayload,
+                    mergeWith: workspace.userWorkspaceState
+                });
+
+                setWorkspace(prev => ({
+                    ...prev,
+                    userWorkspaceState: savedState
+                }));
+
+                return savedState;
+            };
+
+            const handleClearDraft = async () => {
+                const { userId, organizationId } = requireWorkspaceContext();
+                const savedState = await saveUserWorkspaceState({
+                    userId,
+                    organizationId,
+                    draftPayload: {},
+                    mergeWith: workspace.userWorkspaceState
+                });
+
+                setWorkspace(prev => ({
+                    ...prev,
+                    userWorkspaceState: savedState
+                }));
+
+                return savedState;
+            };
+
+            const handleGenerateCase = async (caseData) => {
+                const { userId, organizationId } = requireWorkspaceContext();
+                const savedCase = await createOrUpdateProCase({
+                    organizationId,
+                    userId,
+                    caseData
+                });
+                const savedReport = await createOrUpdateProReport({
+                    organizationId,
+                    userId,
+                    caseId: savedCase.id,
+                    reportPayload: savedCase,
+                    reportName: savedCase.projectName || savedCase.clientName || 'Rapport'
+                });
+                const savedWorkspaceState = await saveUserWorkspaceState({
+                    userId,
+                    organizationId,
+                    draftPayload: {},
+                    mergeWith: workspace.userWorkspaceState
+                });
+
+                setWorkspace(prev => ({
+                    ...prev,
+                    cases: upsertCaseInCollection(prev.cases, savedCase),
+                    reports: upsertReportInCollection(prev.reports, savedReport),
+                    userWorkspaceState: savedWorkspaceState
+                }));
+
+                return savedCase;
+            };
+
+            const handleDeleteCase = async (caseId) => {
+                await deleteProReportsByCaseId(caseId);
+                await deleteProCase(caseId);
+
+                setWorkspace(prev => ({
+                    ...prev,
+                    cases: prev.cases.filter(item => item.id !== caseId),
+                    reports: prev.reports.filter(item => item.caseId !== caseId)
+                }));
+
+                if (page === `report-${caseId}` || page === `case-report-${caseId}`) {
+                    setPage('cases');
+                }
+            };
+
+            const handleUpdateCaseNote = async (caseId, noteInterne) => {
+                const { userId, organizationId } = requireWorkspaceContext();
+                const existingCase = workspace.cases.find(item => item.id === caseId);
+
+                if (!existingCase) {
+                    throw new Error("Dossier introuvable.");
+                }
+
+                const savedCase = await createOrUpdateProCase({
+                    organizationId,
+                    userId,
+                    caseData: {
+                        ...existingCase,
+                        noteInterne
+                    }
+                });
+                const savedReport = await createOrUpdateProReport({
+                    organizationId,
+                    userId,
+                    caseId: savedCase.id,
+                    reportPayload: {
+                        ...(reportsByCaseId[caseId] || savedCase),
+                        ...savedCase,
+                        noteInterne
+                    },
+                    reportName: savedCase.projectName || savedCase.clientName || 'Rapport'
+                });
+
+                setWorkspace(prev => ({
+                    ...prev,
+                    cases: upsertCaseInCollection(prev.cases, savedCase),
+                    reports: upsertReportInCollection(prev.reports, savedReport)
+                }));
+
+                return savedCase;
+            };
+
+            const handleSyncReportPdfMetadata = async (reportId, generationResult = null) => {
+                const { organizationId } = requireWorkspaceContext();
+                const synced = await syncReportPdfMetadata({
+                    reportId,
+                    organizationId,
+                    generationResult
+                });
+
+                setWorkspace(prev => ({
+                    ...prev,
+                    reports: upsertReportInCollection(prev.reports, synced.report)
+                }));
+
+                return synced;
+            };
 
             const openDemoModal = () => setIsDemoModalOpen(true);
             const closeDemoModal = () => setIsDemoModalOpen(false);
@@ -5414,31 +8198,52 @@
                 return <ProReport cId={sharedReport.id || 'shared'} sharedCase={sharedReport} setPage={() => { window.location.hash = ''; setSharedReport(null); }} />;
             }
 
+            if (!authReady) {
+                return (
+                    <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center px-6">
+                        <div className="bg-white border border-slate-200 rounded-3xl shadow-sm px-8 py-10 text-center max-w-md w-full">
+                            <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto mb-5">
+                                <Icon icon="solar:shield-check-bold" style={{ fontSize: '28px' }} />
+                            </div>
+                            <h1 className="text-2xl font-black text-slate-900 tracking-tight" style={{ fontFamily: "'Inter', sans-serif" }}>Vérification de la session</h1>
+                            <p className="text-sm text-slate-600 leading-6 mt-3">Chargement de votre accès professionnel sécurisé…</p>
+                        </div>
+                    </div>
+                );
+            }
+
             if (!auth) {
                 return (
                     <>
-                        <ProLanding onGrantAccess={() => setAuth(true)} />
+                        <ProLanding authError={authError} />
                     </>
                 );
             }
 
-            const handleLogout = () => {
-                localStorage.removeItem('proAuth');
+            const handleLogout = async () => {
+                setAuthError(null);
+                await signOutPro();
+                setWorkspace({
+                    ...DEFAULT_WORKSPACE_DATA,
+                    profile: null
+                });
                 setAuth(false);
+                setAuthUserId(null);
+                setPage('cases');
             };
 
             const toggleMobile = () => setIsMobileMenuOpen(!isMobileMenuOpen);
             const closeMobile = () => setIsMobileMenuOpen(false);
 
             const renderPage = () => {
-                if (page === 'dashboard') return <ProDashboard setPage={setPage} openDemo={openDemoModal} />;
-                if (page === 'cases') return <ProCases setPage={setPage} />;
-                if (page === 'new') return <ProNewDiag setPage={setPage} />;
-                if (page === 'settings') return <ProSettings />;
+                if (page === 'dashboard') return <ProDashboard setPage={setPage} openDemo={openDemoModal} cases={workspace.cases} />;
+                if (page === 'cases') return <ProCases setPage={setPage} cases={workspace.cases} onDeleteCase={handleDeleteCase} onUpdateCaseNote={handleUpdateCaseNote} />;
+                if (page === 'new') return <ProNewDiag setPage={setPage} draftPayload={workspace.userWorkspaceState.draftPayload} onSaveDraft={handleSaveDraft} onClearDraft={handleClearDraft} onGenerateCase={handleGenerateCase} />;
+                if (page === 'settings') return <ProSettings settings={workspace.settings} branding={workspace.branding} organization={workspace.organization} userWorkspaceState={workspace.userWorkspaceState} onSaveSettings={handleSaveSettings} onSaveBranding={handleSaveBranding} />;
                 if (page === 'plans') return <ProPlans onDemoClick={openDemoModal} />;
-                if (page.startsWith('case-report-')) return <ProReport cId={page.replace('case-report-', '')} setPage={setPage} />;
-                if (page.startsWith('report-')) return <ProReport cId={page.replace('report-', '')} setPage={setPage} />;
-                return <ProDashboard setPage={setPage} openDemo={openDemoModal} />;
+                if (page.startsWith('case-report-')) return <ProReport cId={page.replace('case-report-', '')} setPage={setPage} cases={workspace.cases} reportsByCaseId={reportsByCaseId} settings={workspace.settings} branding={workspace.branding} organization={workspace.organization} onSyncReportPdfMetadata={handleSyncReportPdfMetadata} />;
+                if (page.startsWith('report-')) return <ProReport cId={page.replace('report-', '')} setPage={setPage} cases={workspace.cases} reportsByCaseId={reportsByCaseId} settings={workspace.settings} branding={workspace.branding} organization={workspace.organization} onSyncReportPdfMetadata={handleSyncReportPdfMetadata} />;
+                return <ProDashboard setPage={setPage} openDemo={openDemoModal} cases={workspace.cases} />;
             };
 
             const titles = {
@@ -5451,7 +8256,7 @@
             const currentTitle = (page.startsWith('report-') || page.startsWith('case-report-')) ? "Rapport détaillé" : (titles[page] || "");
 
             return (
-                <div className="flex bg-[#F8FAFC]">
+                <div className="flex bg-[#F8FAFC]" data-auth-user={authUserId || ''}>
                     <ProSidebar
                         curPage={page}
                         setPage={setPage}

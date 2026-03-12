@@ -1,7 +1,7 @@
-const PDFSHIFT_ENDPOINT = 'https://api.pdfshift.io/v3/convert/pdf';
+const { DEFAULT_MAX_HTML_LENGTH, renderPdfFromHtml } = require('./_lib/pdf-renderer');
 const ORGANIZATION_ASSETS_BUCKET = 'organization-assets';
 const REPORT_PDF_FILE_KIND = 'report_pdf';
-const MAX_HTML_LENGTH = 1_500_000;
+const MAX_HTML_LENGTH = DEFAULT_MAX_HTML_LENGTH;
 const DEFAULT_ACCENT = '#1D4ED8';
 
 const safeJsonParse = (value) => {
@@ -651,40 +651,6 @@ const downloadStorageObject = async ({
   };
 };
 
-const createPdfBufferFromHtml = async (html, pdfShiftApiKey) => {
-  if (!html.trim()) {
-    throw new Error('Empty HTML payload');
-  }
-
-  if (html.length > MAX_HTML_LENGTH) {
-    throw new Error('HTML payload too large');
-  }
-
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 45_000);
-
-  try {
-    const response = await fetch(PDFSHIFT_ENDPOINT, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': pdfShiftApiKey
-      },
-      body: JSON.stringify({ source: html }),
-      signal: controller.signal
-    });
-
-    if (!response.ok) {
-      const details = await response.text();
-      throw new Error(details ? details.slice(0, 500) : `PDFShift HTTP ${response.status}`);
-    }
-
-    return Buffer.from(await response.arrayBuffer());
-  } finally {
-    clearTimeout(timeout);
-  }
-};
-
 const buildStoragePathForReportPdf = (organizationId, reportId) => {
   return `org/${organizationId}/reports/${reportId}/rapport-officiel.pdf`;
 };
@@ -709,7 +675,6 @@ module.exports = async function handler(req, res) {
     supabaseUrl = getRequiredEnv('SUPABASE_URL');
     const publishableKey = getRequiredEnv('SUPABASE_PUBLISHABLE_KEY');
     serviceKey = getRequiredEnv('SUPABASE_SERVICE_KEY');
-    const pdfShiftApiKey = getRequiredEnv('PDFSHIFT_API_KEY');
 
     const authorizationHeader = req.headers.authorization || req.headers.Authorization || '';
     const accessToken = authorizationHeader.startsWith('Bearer ')
@@ -845,7 +810,10 @@ module.exports = async function handler(req, res) {
       logoDataUrl
     });
     const html = buildReportPdfHtml(pdfPayload);
-    const pdfBuffer = await createPdfBufferFromHtml(html, pdfShiftApiKey);
+    const pdfBuffer = await renderPdfFromHtml(html, {
+      maxHtmlLength: MAX_HTML_LENGTH,
+      timeoutMs: 45_000
+    });
 
     const storagePath = assertStoragePathPrefix(
       buildStoragePathForReportPdf(profile.organization_id, reportRecord.id),

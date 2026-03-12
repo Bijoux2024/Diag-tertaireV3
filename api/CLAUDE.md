@@ -7,7 +7,7 @@ revendus à des partenaires (agents immobiliers, bureaux d'études, installateur
 Espace Pro en marque blanche pour professionnels (agents immo, CCI, experts comptables).
 
 ## Règles absolues — ne jamais enfreindre
-- Projet BUILDLESS — zéro npm, zéro webpack, zéro vite, zéro bundler
+- Frontend BUILDLESS — zero bundler cote `index.html` et `index.saaspro.html`
 - Ne jamais toucher aux namespaces `NEW_DIAGNOSTIC_*`
 - Ne jamais renommer les clés localStorage :
   `proAuth`, `proCases`, `proDiagDraft`, `proAccent`,
@@ -50,7 +50,7 @@ Voir `.claude/context/backlog.md`
 
 ## Interdictions
 - Pas de réécriture complète sans justification explicite
-- Pas d'ajout de dépendances npm
+- Pas d'ajout de dépendances front inutiles ; cote `/api/*`, seulement les dependances runtime strictement necessaires
 - Pas de duplication de composants ou logique existante
 - Pas de collage de fichiers entiers en sortie si un diff suffit
 - Ne jamais mettre de clés API en dur dans le code frontend

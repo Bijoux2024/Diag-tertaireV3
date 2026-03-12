@@ -18,10 +18,9 @@
     "url": "https://github.com/Bijoux2024/Diag-tertaireV3/issues"
   },
   "homepage": "https://github.com/Bijoux2024/Diag-tertaireV3#readme",
-  "devDependencies": {
-    "puppeteer": "^24.38.0"
-  },
   "dependencies": {
-    "@vercel/analytics": "^1.6.1"
+    "@sparticuz/chromium": "^138.0.2",
+    "@vercel/analytics": "^1.6.1",
+    "puppeteer-core": "^24.38.0"
   }
 }

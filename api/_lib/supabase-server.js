@@ -1,3 +1,38 @@
+/**
+ * ═══════════════════════════════════════════════════════════════════════════
+ * api/_lib/supabase-server.js — Helpers de configuration Supabase côté serveur
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * RÔLE :
+ *   Centralise la lecture et la validation des variables d'environnement
+ *   nécessaires aux connexions Supabase depuis les Serverless Functions.
+ *
+ * ARCHITECTURE :
+ *   Ce module distingue deux types de clés Supabase :
+ *   1. Clé publique (publishable / anon) :
+ *      - Safe à exposer au navigateur via /api/public-config
+ *      - Soumise aux Row Level Security (RLS) de Supabase
+ *      - Variable : SUPABASE_PUBLISHABLE_KEY
+ *   2. Clé de service (service_role) :
+ *      - JAMAIS exposée au front-end
+ *      - Bypassse les RLS — utilisée uniquement côté serveur
+ *      - Variable canonique : SUPABASE_SERVICE_KEY
+ *      - Un fallback legacy transitoire reste géré en interne pendant la migration.
+ *
+ * VARIABLES D'ENVIRONNEMENT REQUISES (Vercel) :
+ *   - SUPABASE_URL               → URL du projet Supabase
+ *   - SUPABASE_PUBLISHABLE_KEY   → Clé anon (publique)
+ *   - SUPABASE_SERVICE_KEY       → Clé service_role (secrète, côté serveur uniquement)
+ *
+ * EXPORTS :
+ *   - createSupabaseServerConfigError(message) → Crée une erreur avec statusCode
+ *   - getPublicSupabaseConfig()                → {supabaseUrl, supabasePublishableKey}
+ *   - getRequiredPublicSupabaseConfig()        → Idem mais lève une erreur si absent
+ *   - getRequiredServerSupabaseConfig()        → Inclut serviceKey (pour les routes serveur)
+ *   - getSupabaseServiceKey()                  → Retourne la clé service avec fallback
+ * ═══════════════════════════════════════════════════════════════════════════
+ */
+
 const createSupabaseServerConfigError = (message) => {
   const error = new Error(message);
   error.statusCode = 500;
@@ -45,7 +80,7 @@ const getSupabaseServiceKey = () => {
   }
 
   throw createSupabaseServerConfigError(
-    'Missing Supabase server key. Set SUPABASE_SERVICE_KEY (canonical) or SUPABASE_SECRET_KEY (temporary fallback) in the server environment.'
+    'Missing Supabase server key. Set SUPABASE_SERVICE_KEY in the server environment.'
   );
 };
 

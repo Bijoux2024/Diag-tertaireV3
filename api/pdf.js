@@ -1,3 +1,38 @@
+/**
+ * ═══════════════════════════════════════════════════════════════════════════
+ * api/pdf.js — Endpoint de génération PDF côté serveur
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * RÔLE :
+ *   Reçoit un payload JSON avec du HTML, valide et assainit les entrées,
+ *   puis délègue le rendu à pdf-renderer.js (Puppeteer + Chromium headless).
+ *   Retourne le PDF binaire en réponse HTTP.
+ *
+ * MÉTHODE : POST /api/pdf
+ *
+ * CORPS DE LA REQUÊTE (JSON) :
+ *   {
+ *     html        : string   — HTML complet de la page à convertir (obligatoire)
+ *     filename    : string   — Nom du fichier PDF téléchargé (optionnel, défaut: "rapport-diagnostic.pdf")
+ *     mediaType   : string   — "screen" | "print" (optionnel, défaut: "screen")
+ *     pdfOptions  : object   — Options PDF Puppeteer (optionnel)
+ *       { scale: 0.5–1, margin: {top, right, bottom, left}, landscape: bool }
+ *   }
+ *
+ * SÉCURITÉ :
+ *   - Seule la méthode POST est acceptée (405 sinon)
+ *   - Le JSON invalide est rejeté (400)
+ *   - Le nom de fichier est assaini : seuls [a-z0-9._-] autorisés (sanitizeFilename)
+ *   - Les marges PDF sont validées (format numérique ou unité CSS)
+ *   - La taille du HTML est limitée à DEFAULT_MAX_HTML_LENGTH (413 si dépassé)
+ *   - ⚠️ QUESTION ÉQUIPE (Q-AUTH-01) : cet endpoint n'exige pas de Bearer token.
+ *     Est-ce intentionnel ? Si non, ajouter une vérification d'authentification.
+ *
+ * TIMEOUT :
+ *   - 30 secondes max pour le rendu Puppeteer (504 si dépassé)
+ * ═══════════════════════════════════════════════════════════════════════════
+ */
+
 const { DEFAULT_MAX_HTML_LENGTH, renderPdfFromHtml } = require('./_lib/pdf-renderer');
 
 const safeJsonParse = (value) => {

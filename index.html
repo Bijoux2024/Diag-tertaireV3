@@ -12,14 +12,23 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Bibliothèques externes -->
+    <!-- TailwindCSS : framework CSS utilitaire (mode CDN, pas de build requis) -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React 18 (version production : optimisée, sans avertissements dev) -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <!-- PropTypes : validation des props React (utilisé par des composants Recharts si présent) -->
     <script src="https://unpkg.com/prop-types/prop-types.min.js"></script>
+    <!-- Iconify : bibliothèque d'icônes (>200 000 icônes via web component) -->
     <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
     <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+    <!-- Babel Standalone : compile le JSX en JavaScript dans le navigateur -->
+    <!-- ⚠️ NOTE PERFORMANCE : Babel Standalone est utilisé pour éviter un build step.
+         En production à fort trafic, envisager une pré-compilation (Vite, esbuild). -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- jsPDF : génération de PDF client-side (utilisé en fallback local si l'API /api/pdf est indisponible) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- html2canvas : capture d'un noeud DOM en image (utilisé par jsPDF pour les graphiques) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         /* Global & Reset */
@@ -608,10 +617,16 @@
            
            Imports des hooks React et de Recharts pour les graphiques
            ═══════════════════════════════════════════════════════════════════════════ */
+        /* Hooks React utilisés dans ce fichier :
+           - useState   : gestion de l'état local des composants
+           - useEffect  : effets de bord (fetch, timers, abonnements)
+           - useCallback: mémoïsation de fonctions pour éviter les re-renders
+           - useRef     : références DOM (focus, canvas, mesures) */
         const { useState, useEffect, useCallback, useRef } = React;
-        // Recharts non utilisé après refactoring (conservé en commentaire au cas où)
-        // const RechartsObj = window.Recharts || {};
+        const RechartsObj = window.Recharts || {};
 
+        /* Composant icône léger wrap de <iconify-icon> (web component).
+           Évite de réécrire React.createElement partout. */
         const Icon = ({ icon, style, className, width, height }) => (
             React.createElement('iconify-icon', { icon, style, class: className, width, height })
         );
@@ -1718,7 +1733,7 @@
                                             </div>
                                             <div>
                                                 <p style={{ fontSize: '13px', fontWeight: 700, color: '#0F172A', marginBottom: '2px' }}>Diagnostic terminé</p>
-                                                <p style={{ fontSize: '12px', color: '#64748B' }}>Rapport envoyé il y a 2 min</p>
+                                                <p style={{ fontSize: '12px', color: '#64748B' }}>Rapport disponible en téléchargement</p>
                                             </div>
                                         </div>
 
@@ -1780,7 +1795,7 @@
                             {[
                                 { num: '1', title: 'Renseignez votre usage', desc: 'Quelques informations clés : activité, surface, consommations, équipements, ancienneté et éventuels travaux déjà réalisés.' },
                                 { num: '2', title: 'Comparaison de vos données', desc: 'Vos informations sont mises en perspective avec les références cohérentes de votre usage.' },
-                                { num: '3', title: 'Recevez votre rapport PDF', desc: 'Obtenez une première lecture de vos écarts de consommation, les priorités d\'action et une estimation du potentiel d\'économie.' }
+                                { num: '3', title: 'Téléchargez votre rapport PDF', desc: 'Obtenez une première lecture de vos écarts de consommation, les priorités d\'action et une estimation du potentiel d\'économie.' }
                             ].map((step, i) => (
                                 <div key={i} style={{
                                     background: '#FFFFFF',
@@ -1967,32 +1982,19 @@
         );
 
         const PageExample = ({ navigate }) => {
-            // Données fictives alignées sur l'exemple de rapport cible
-            const FAKE_FORM_DATA = {
-                ...NEW_DIAGNOSTIC_DEFAULT_FORM_DATA,
-                address: '24 avenue Berthelot, 34000, montpellier',
-                email: 'demo@brasserie-quartier-montpellier.fr',
-                role: 'owner',
-                siteName: 'Brasserie de quartier',
-                postalCode: '34000',
-                activity: 'restauration',
-                surface: '220',
-                levels: '1',
-                mainHeating: 'gas',
-                hasCooling: true,
-                elecUsed: true,
-                elecKwh: '47000',
-                gasUsed: true,
-                gasKwh: '50000',
-                worksDone: [],
-            };
+            const [exampleReport] = useState(() => {
+                const storedReport = newDiagnosticReadStoredReportPayload();
+                if (storedReport && storedReport.source === NEW_DIAGNOSTIC_PUBLIC_EXAMPLE_SOURCE) {
+                    return storedReport;
+                }
 
-            let fakeReport = null;
-            try {
-                fakeReport = newDiagnosticBuildReportData(FAKE_FORM_DATA);
-            } catch (e) {
-                console.error('Erreur génération rapport exemple:', e);
-            }
+                try {
+                    return newDiagnosticBuildExampleReportPayload();
+                } catch (error) {
+                    console.error("Erreur génération rapport exemple :", error);
+                    return null;
+                }
+            });
 
             return (
                 <div className="fade-in bg-[#F8FAFC] min-h-screen">
@@ -2012,10 +2014,10 @@
                     </section>
 
                     <div className="max-w-5xl mx-auto px-4 py-10">
-                        {fakeReport ? (
+                        {exampleReport ? (
                             <NewDiagnosticReportScreen
-                                reportPayload={fakeReport}
-                                userEmail={FAKE_FORM_DATA.email}
+                                reportPayload={exampleReport}
+                                userEmail={exampleReport.inputs_summary?.email || 'demo@diag-tertiaire.fr'}
                                 showSecondaryCta={false}
                             />
                         ) : (
@@ -2813,7 +2815,7 @@
                 id: 'restaurant',
                 label: 'Restaurant',
                 icon: 'solar:chef-hat-linear',
-                refKwh: 400,
+                refKwh: 500,
                 source_level: 'hypothesis',
                 source_ref: 'Estimation produit',
                 source_note: 'Inclut cuisson process, valeur à confirmer'
@@ -2822,7 +2824,7 @@
                 id: 'health_local',
                 label: 'Santé (cabinet, local)',
                 icon: 'solar:heart-pulse-linear',
-                refKwh: 200,
+                refKwh: 220,
                 source_level: 'pending_expert',
                 source_ref: 'À confirmer',
                 source_note: 'Périmètre cabinet médical/dentaire, hors hôpital'
@@ -2855,6 +2857,30 @@
                 source_note: 'Mix bureaux/commerce selon % saisis'
             }
         ];
+
+        const NEW_DIAGNOSTIC_ACTIVITY_LABELS = Object.freeze({
+            offices: 'Bureaux et services',
+            bureau: 'Bureaux et services',
+            retail: 'Commerce non-alimentaire',
+            commerce_non_alim: 'Commerce non-alimentaire',
+            retail_food: 'Commerce alimentaire',
+            commerce_alim: 'Commerce alimentaire',
+            hotel: 'Hôtellerie',
+            hotellerie: 'Hôtellerie',
+            restaurant: 'Restauration',
+            restauration: 'Restauration',
+            education: 'Enseignement',
+            enseignement: 'Enseignement',
+            warehouse_heated: 'Entrepôt chauffé',
+            entrepot_chauffe: 'Entrepôt chauffé',
+            light_warehouse: 'Entrepôt non chauffé',
+            entrepot_non_chauffe: 'Entrepôt non chauffé',
+            health_local: 'Cabinet de santé',
+            sante: 'Cabinet de santé',
+            mixed: 'Usage mixte'
+        });
+        const NEW_DIAGNOSTIC_PUBLIC_EXAMPLE_SOURCE = 'example_navbar_mock';
+        const NEW_DIAGNOSTIC_HEALTH_NOTICE = "Ce diagnostic s'applique aux cabinets < 500 m². Obligations réglementaires de ventilation non couvertes par ce pré-diagnostic.";
 
         const NEW_DIAGNOSTIC_ROLES = [
             { id: 'owner', label: 'Propriétaire', icon: 'solar:home-linear' },
@@ -3817,7 +3843,7 @@
             const validate = () => {
                 const newErrors = {};
                 if (!formData.email || !newDiagnosticValidateEmail(formData.email)) {
-                    newErrors.email = 'Veuillez saisir une adresse email valide pour recevoir votre rapport';
+                    newErrors.email = 'Veuillez saisir une adresse email valide pour accéder à votre rapport';
                 }
                 setErrors(newErrors);
                 return Object.keys(newErrors).length === 0;
@@ -3836,7 +3862,7 @@
                 <div className="max-w-2xl mx-auto">
                     <h2 className="text-2xl font-bold text-[#102A43] mb-2">Contact et travaux réalisés</h2>
                     <p className="text-[#475569] mb-8">
-                        Indiquez votre email pour recevoir votre rapport
+                        Indiquez votre email pour accéder à votre rapport
                     </p>
 
                     {/* Contact fields */}
@@ -3850,7 +3876,7 @@
                             placeholder="vous@entreprise.fr"
                             required
                             error={errors.email}
-                            helper="Votre rapport PDF vous sera envoyé à cette adresse."
+                            helper="Votre rapport PDF sera aussi disponible en téléchargement."
                         />
                         <NewDiagnosticFormInput
                             label="Téléphone (optionnel)"
@@ -4002,13 +4028,13 @@
             last_updated: '2026-02-23',
 
             electricity: {
-                price_default_eur_kwh: 0.239,
+                price_default_eur_kwh: 0.196,
                 price_min_eur_kwh: 0.15,
                 price_max_eur_kwh: 0.30,
                 unit: '€/kWh TTC',
                 source_level: 'source_partial',
-                source_ref: 'CRE - TRVE électricité professionnelle 2025',
-                source_note: 'Ordre de grandeur TTC retenu : 0,239 €/kWh, hors abonnement',
+                source_ref: 'CRE - Prix de référence professionnels T3 2024',
+                source_note: 'Ordre de grandeur TTC retenu : 0,196 €/kWh, hors abonnement',
                 validity_limits: 'Tertiaire < 36 kVA, périmètre France métropolitaine',
                 subscription_excluded: true
             },
@@ -4071,10 +4097,10 @@
                 source_note: 'Hors blanchisserie industrielle et restauration', validity_limits: 'Hôtellerie standard, hors palace'
             },
             restaurant: {
-                median_kwh_m2_an: 300, low_kwh_m2_an: 220, high_kwh_m2_an: 450,
+                median_kwh_m2_an: 500, low_kwh_m2_an: 350, high_kwh_m2_an: 800,
                 unit: 'kWh EF/m²/an', energy_scope: 'final_energy', stat_type: 'median_q1_q3',
-                source_level: 'source_partial', source_ref: 'ADEME - Restauration commerciale (ordre de grandeur énergie finale)',
-                source_note: 'Restaurant / brasserie avec cuisson, valeurs ajustées pour un usage réel hors fast-food', validity_limits: 'Restaurant service, hors restauration très intensive'
+                source_level: 'source_partial', source_ref: 'ADEME - Restauration commerciale, profil brasserie',
+                source_note: 'Petite brasserie avec service continu, extraction présente et salle éclairée sur de longues plages', validity_limits: 'Restaurant service, hors restauration très intensive et hors cuisine de production lourde'
             },
             education: {
                 median_kwh_m2_an: 150, low_kwh_m2_an: 100, high_kwh_m2_an: 220,
@@ -4965,6 +4991,12 @@
             let calculatedAvgPrice = 0.20; // Prix moyen par défaut (mix)
             const elecPrice = NEW_DIAGNOSTIC_ENERGY_PRICES.electricity.price_default_eur_kwh;
             const gasPrice = NEW_DIAGNOSTIC_ENERGY_PRICES.gas.price_default_eur_kwh;
+            const activityLabel = newDiagnosticGetActivityLabel(activity, {
+                mixedUsage1: formData.mixedUsage1,
+                mixedUsage2: formData.mixedUsage2
+            });
+            const cityLabel = newDiagnosticExtractCityFromAddress(formData.address);
+            const siteName = formData.siteName || (formData.address ? formData.address.split(',')[0].trim() : 'Bâtiment diagnostiqué');
 
             if (totalKwh > 0) {
                 let totalEuro = 0;
@@ -5022,11 +5054,13 @@
                     email: formData.email,
                     address: formData.address,
                     role: formData.role,
-                    site_name: formData.siteName || (formData.address ? formData.address.split(',')[0].trim() : 'Bâtiment tertiaire'),
+                    site_name: siteName || 'Bâtiment diagnostiqué',
                     postal_code: formData.postalCode,
                     activity: activity,
+                    activity_label: activityLabel,
                     mixedUsage1: activity === 'mixed' ? formData.mixedUsage1 : null,
                     mixedUsage2: activity === 'mixed' ? formData.mixedUsage2 : null,
+                    city: cityLabel || '—',
                     surface: { value: surface, unit: 'm²' },
                     levels: { value: parseInt(formData.levels) || 1, unit: 'niveaux' },
                     works_done: formData.worksDone || [],
@@ -5101,7 +5135,7 @@
                     'Pré-diagnostic, non substituable à un audit énergétique réglementaire',
                     'Benchmarks issus de données publiques statistiques',
                     'Répartition par postes indicative (non mesurée sur site)',
-                    `Conversion € → kWh basée sur des prix simplifiés (élec ${newDiagnosticFormatDecimal(NEW_DIAGNOSTIC_ENERGY_PRICES.electricity.price_default_eur_kwh, 3)} €/kWh, gaz ${newDiagnosticFormatDecimal(NEW_DIAGNOSTIC_ENERGY_PRICES.gas.price_default_eur_kwh, 3)} €/kWh)`,
+                    'Prix de référence professionnels au T3 2024 (élec 0,196 €/kWh TTC, gaz 0,105 €/kWh TTC — source CRE)',
                     'Gains et ROI indicatifs à confirmer avant travaux',
                     'Aides indicatives à vérifier selon éligibilité réelle'
                 ],
@@ -5111,7 +5145,8 @@
                     'Hypothèses sur usages et horaires non vérifiées',
                     'Pas de prise en compte de l\'état réel des équipements',
                     'Gains cumulés plafonnés à 65% (anti-surpromesse)',
-                    'CAPEX et aides à confirmer par devis professionnel'
+                    'CAPEX et aides à confirmer par devis professionnel',
+                    ...((activity === 'sante' || activity === 'health_local') ? [NEW_DIAGNOSTIC_HEALTH_NOTICE] : [])
                 ]
             };
         };
@@ -5427,7 +5462,7 @@
         const NEW_DIAGNOSTIC_REPORT_COPY = {
             example: {
                 title: "À quoi ressemblerait votre rapport",
-                subtitle: "Exemple simulé pour une brasserie de 220 m² à Montpelllier."
+                subtitle: "Exemple simulé pour une boutique de 160 m² à Paris 75001."
             },
             actions: {
                 title: 'Actions prioritaires',
@@ -5485,6 +5520,253 @@
                 'assets/logo-diagtertiaire.png',
                 'assets/diagtertiaire.svg'
             ]
+        };
+
+        const NEW_DIAGNOSTIC_LEGAL_MODAL_CONTENT = Object.freeze({
+            mentions: {
+                title: 'Mentions légales',
+                sections: [
+                    {
+                        heading: 'Éditeur',
+                        body: "DiagTertiaire, service de pré-diagnostic énergétique tertiaire. Contact de publication : contact@diag-tertiaire.fr."
+                    },
+                    {
+                        heading: 'Hébergement',
+                        body: "Hébergement principal assuré par Vercel Inc., plateforme d'hébergement et de déploiement applicatif."
+                    }
+                ]
+            },
+            privacy: {
+                title: 'Politique de confidentialité',
+                sections: [
+                    {
+                        heading: 'Finalité',
+                        body: "Les informations saisies servent à produire l'estimation indicative, à conserver le rapport, à traiter les demandes commerciales et, en cas d'accord explicite, à organiser une mise en relation partenaire."
+                    },
+                    {
+                        heading: 'Durée de conservation',
+                        body: 'Les données de prospection sont conservées 18 mois maximum à compter du dernier échange utile.'
+                    },
+                    {
+                        heading: 'Droits',
+                        body: "Vous pouvez demander l'accès, la rectification, l'effacement ou la limitation du traitement de vos données."
+                    },
+                    {
+                        heading: 'Catégories de partenaires',
+                        body: "En cas de consentement explicite, la mise en relation peut être transmise à des partenaires qualifiés : bureaux d'études, installateurs, experts énergie et acteurs de l'accompagnement travaux."
+                    }
+                ]
+            }
+        });
+
+        function newDiagnosticSafeJsonParse(rawValue, fallback = null) {
+            if (typeof rawValue !== 'string' || !rawValue.trim()) {
+                return fallback;
+            }
+
+            try {
+                return JSON.parse(rawValue);
+            } catch (error) {
+                return fallback;
+            }
+        }
+
+        function newDiagnosticGetActivityLabel(activity, { mixedUsage1 = null, mixedUsage2 = null } = {}) {
+            const safeActivity = typeof activity === 'string' ? activity.trim() : '';
+            if (!safeActivity) return 'Activité à confirmer';
+
+            if (safeActivity === 'mixed') {
+                const mixedLabels = [mixedUsage1, mixedUsage2]
+                    .map((item) => NEW_DIAGNOSTIC_ACTIVITY_LABELS[item] || '')
+                    .filter(Boolean);
+                return mixedLabels.length > 0 ? `Usage mixte · ${mixedLabels.join(' + ')}` : 'Usage mixte';
+            }
+
+            return NEW_DIAGNOSTIC_ACTIVITY_LABELS[safeActivity] || safeActivity;
+        }
+
+        function newDiagnosticExtractCityFromAddress(address) {
+            const safeAddress = typeof address === 'string' ? address.trim() : '';
+            if (!safeAddress) return '';
+
+            const parts = safeAddress.split(',').map((part) => part.trim()).filter(Boolean);
+            if (!parts.length) return '';
+
+            const lastPart = parts[parts.length - 1] || '';
+            const previousPart = parts[parts.length - 2] || '';
+
+            if (/\d{5}/.test(lastPart)) {
+                return lastPart;
+            }
+
+            if (/\d{5}/.test(previousPart)) {
+                return `${previousPart} ${lastPart}`.trim();
+            }
+
+            return lastPart;
+        }
+
+        function newDiagnosticGetReportSiteName(reportPayload) {
+            const inputs = reportPayload && reportPayload.inputs_summary ? reportPayload.inputs_summary : {};
+            const candidates = [
+                inputs.site_name,
+                reportPayload && reportPayload.nomBatiment,
+                reportPayload && reportPayload.siteName,
+                reportPayload && reportPayload.clientName
+            ];
+            const siteName = candidates.find((value) => typeof value === 'string' && value.trim() && value !== 'uyktdtu');
+            return siteName ? siteName.trim() : 'Bâtiment diagnostiqué';
+        }
+
+        function newDiagnosticGetReportActivityLabel(reportPayload) {
+            const inputs = reportPayload && reportPayload.inputs_summary ? reportPayload.inputs_summary : {};
+            if (typeof inputs.activity_label === 'string' && inputs.activity_label.trim()) {
+                return inputs.activity_label.trim();
+            }
+
+            return newDiagnosticGetActivityLabel(inputs.activity, {
+                mixedUsage1: inputs.mixedUsage1,
+                mixedUsage2: inputs.mixedUsage2
+            });
+        }
+
+        function newDiagnosticGetReportCityLabel(reportPayload) {
+            const inputs = reportPayload && reportPayload.inputs_summary ? reportPayload.inputs_summary : {};
+            const explicitCity = [
+                inputs.city,
+                inputs.ville,
+                reportPayload && reportPayload.ville
+            ].find((value) => typeof value === 'string' && value.trim() && value !== 'uyktdtu');
+
+            if (explicitCity) {
+                return explicitCity.trim();
+            }
+
+            return newDiagnosticExtractCityFromAddress(inputs.address) || '—';
+        }
+
+        function newDiagnosticGetReportDateLabel(reportPayload) {
+            const generatedAt = reportPayload && reportPayload.generated_at ? reportPayload.generated_at : null;
+            const dateValue = generatedAt ? new Date(generatedAt) : new Date();
+            return Number.isNaN(dateValue.getTime()) ? new Date().toLocaleDateString('fr-FR') : dateValue.toLocaleDateString('fr-FR');
+        }
+
+        function newDiagnosticGetHealthNotice(reportPayload) {
+            const activity = reportPayload && reportPayload.inputs_summary ? reportPayload.inputs_summary.activity : '';
+            return activity === 'sante' || activity === 'health_local' ? NEW_DIAGNOSTIC_HEALTH_NOTICE : '';
+        }
+
+        function newDiagnosticReadStoredReportPayload() {
+            if (typeof window === 'undefined' || !window.localStorage) {
+                return null;
+            }
+
+            const parsed = newDiagnosticSafeJsonParse(window.localStorage.getItem('newDiagnosticLatestReport'), null);
+            return parsed && typeof parsed === 'object' ? parsed : null;
+        }
+
+        function newDiagnosticClearPersonalLocalData() {
+            ['local', 'session'].forEach((storageType) => {
+                const storage = newDiagnosticGetStorage(storageType);
+                if (!storage) return;
+
+                ['newDiagnosticLatestSubmission', 'newDiagnosticLatestReport'].forEach((key) => {
+                    try {
+                        storage.removeItem(key);
+                    } catch (error) { }
+                });
+
+                for (let index = storage.length - 1; index >= 0; index -= 1) {
+                    const key = storage.key(index);
+                    if (key && key.startsWith(`${NEW_DIAGNOSTIC_ANTISPAM_STORAGE_PREFIX}:`)) {
+                        try {
+                            storage.removeItem(key);
+                        } catch (error) { }
+                    }
+                }
+            });
+        }
+
+        function newDiagnosticBuildExampleReportPayload() {
+            const exampleFormData = {
+                ...NEW_DIAGNOSTIC_DEFAULT_FORM_DATA,
+                address: 'Rue de Rivoli, Paris 75001',
+                email: 'demo@diag-tertiaire.fr',
+                role: 'owner',
+                siteName: 'Boutique Rivoli Sélection',
+                postalCode: '75001',
+                activity: 'commerce_non_alim',
+                surface: '160',
+                levels: '1',
+                mainHeating: 'electric',
+                hasCooling: false,
+                elecUsed: true,
+                elecKwh: '51200',
+                elecEuro: '11500',
+                gasUsed: false,
+                worksDone: []
+            };
+            const reportPayload = newDiagnosticBuildReportData(exampleFormData);
+
+            return {
+                ...reportPayload,
+                source: NEW_DIAGNOSTIC_PUBLIC_EXAMPLE_SOURCE,
+                generated_at: new Date().toISOString(),
+                inputs_summary: {
+                    ...reportPayload.inputs_summary,
+                    site_name: 'Boutique Rivoli Sélection',
+                    activity: 'commerce_non_alim',
+                    activity_label: newDiagnosticGetActivityLabel('commerce_non_alim'),
+                    surface: { value: 160, unit: 'm²' },
+                    city: 'Paris 75001'
+                }
+            };
+        }
+
+        function newDiagnosticWriteExampleReportToStorage() {
+            const payload = newDiagnosticBuildExampleReportPayload();
+            try {
+                window.localStorage.setItem('newDiagnosticLatestReport', JSON.stringify(payload));
+            } catch (error) {
+                console.warn("Impossible d'enregistrer l'exemple de rapport dans le navigateur.", error);
+            }
+            return payload;
+        }
+
+        const NewDiagnosticLegalModal = ({ modalKey, onClose }) => {
+            if (!modalKey) return null;
+
+            const content = NEW_DIAGNOSTIC_LEGAL_MODAL_CONTENT[modalKey];
+            if (!content) return null;
+
+            return (
+                <div className="fixed inset-0 z-[70] bg-slate-950/70 backdrop-blur-sm px-4 py-6" onClick={onClose}>
+                    <div className="mx-auto flex min-h-full max-w-2xl items-center justify-center">
+                        <div
+                            className="w-full rounded-[28px] border border-slate-200 bg-white shadow-2xl"
+                            onClick={(event) => event.stopPropagation()}
+                        >
+                            <div className="flex items-center justify-between gap-4 border-b border-slate-200 px-6 py-5">
+                                <div>
+                                    <p className="text-[11px] font-bold uppercase tracking-wide text-[#1D4ED8] mb-1">DiagTertiaire</p>
+                                    <h3 className="text-xl font-bold text-slate-900">{content.title}</h3>
+                                </div>
+                                <button type="button" onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors" aria-label="Fermer la fenêtre légale">
+                                    <Icon icon="solar:close-circle-linear" className="text-2xl" />
+                                </button>
+                            </div>
+                            <div className="px-6 py-5 space-y-5">
+                                {content.sections.map((section) => (
+                                    <div key={section.heading} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+                                        <p className="text-sm font-bold text-slate-900 mb-2">{section.heading}</p>
+                                        <p className="text-sm text-slate-600 leading-relaxed">{section.body}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
         };
 
         function newDiagnosticLoadImageAsDataUrl(src) {
@@ -5862,6 +6144,11 @@
             const actionCopy = NEW_DIAGNOSTIC_REPORT_COPY.actions;
             const impactCopy = NEW_DIAGNOSTIC_REPORT_COPY.impact;
             const nextStepCopy = NEW_DIAGNOSTIC_REPORT_COPY.nextStep;
+            const siteNameLabel = newDiagnosticGetReportSiteName(reportPayload);
+            const activityLabel = newDiagnosticGetReportActivityLabel(reportPayload);
+            const cityLabel = newDiagnosticGetReportCityLabel(reportPayload);
+            const reportDateLabel = newDiagnosticGetReportDateLabel(reportPayload);
+            const healthNotice = newDiagnosticGetHealthNotice(reportPayload);
             const hasCtaConfirmation = !!reportPayload.partner_lead_submitted || ctaSent;
             const currentRank = NEW_DIAGNOSTIC_SECTOR_ORDER.indexOf(diagIndex.label);
             const targetRank = NEW_DIAGNOSTIC_SECTOR_ORDER.indexOf(targetDiagIndex.label);
@@ -6038,8 +6325,21 @@
                                         </div>
                                         <h1 className="text-3xl md:text-4xl font-black tracking-tight text-white mb-3">Lecture énergie simple et partageable</h1>
                                         <div className="space-y-2 text-slate-200">
-                                            <p className="text-lg font-semibold text-white break-words">{(reportPayload.inputs_summary.site_name && reportPayload.inputs_summary.site_name !== 'uyktdtu') ? reportPayload.inputs_summary.site_name : 'Bâtiment diagnostiqué'}</p>
-                                            <p className="text-sm md:text-base">{reportPayload.inputs_summary.activity} - {newDiagnosticFormatInteger(surfaceValue)} m² - {roleLabel}</p>
+                                            <p className="text-lg font-semibold text-white break-words">{siteNameLabel}</p>
+                                            <div className="mt-4 grid gap-2 rounded-[24px] border border-white/10 bg-slate-950/30 p-3 sm:grid-cols-2 xl:grid-cols-5">
+                                                {[
+                                                    { label: 'Bâtiment', value: siteNameLabel },
+                                                    { label: 'Activité', value: activityLabel },
+                                                    { label: 'Surface', value: `${newDiagnosticFormatInteger(surfaceValue)} m²` },
+                                                    { label: 'Ville', value: cityLabel },
+                                                    { label: 'Diagnostic', value: reportDateLabel }
+                                                ].map((item) => (
+                                                    <div key={item.label} className="rounded-2xl border border-white/10 bg-white/[0.06] px-3 py-2.5">
+                                                        <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-300">{item.label}</p>
+                                                        <p className="mt-1 text-sm font-semibold text-white break-words">{item.value}</p>
+                                                    </div>
+                                                ))}
+                                            </div>
                                             {(() => {
                                                 const addr = reportPayload.inputs_summary.address;
                                                 const cp = reportPayload.inputs_summary.postal_code;
@@ -6053,6 +6353,11 @@
                                                     </p>
                                                 );
                                             })()}
+                                            {healthNotice && (
+                                                <div className="rounded-2xl border border-amber-300/20 bg-amber-400/10 px-4 py-3 text-sm text-amber-50 leading-relaxed">
+                                                    {healthNotice}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
 
@@ -6075,7 +6380,7 @@
                                 </div>
 
                                 <div className="mt-8 grid gap-4 lg:grid-cols-[minmax(0,1fr)_180px_minmax(0,1fr)] items-stretch">
-                                    <EnergyScaleCard title="Étiquette actuelle" letterData={diagIndex} intensity={benchmark.site_intensity.value} />
+                                    <EnergyScaleCard title="Indice actuel" letterData={diagIndex} intensity={benchmark.site_intensity.value} />
 
                                     <div className="report-glass-card rounded-2xl px-4 py-5 flex flex-col items-center justify-center text-center">
                                         <div className="w-12 h-12 rounded-full bg-emerald-400/15 border border-emerald-300/20 flex items-center justify-center mb-3">
@@ -6083,13 +6388,13 @@
                                         </div>
                                         <p className="text-[11px] uppercase tracking-widest text-slate-300 font-bold">Amélioration estimée</p>
                                         <p className="text-3xl font-black text-white mt-1">-{savingsPct}%</p>
-                                        <p className="text-xs text-slate-200 mt-2">{classGain > 0 ? `+${classGain} classe${classGain > 1 ? 's' : ''} estimée${classGain > 1 ? 's' : ''}` : 'Étiquette stable, intensité réduite'}</p>
+                                        <p className="text-xs text-slate-200 mt-2">{classGain > 0 ? `+${classGain} palier${classGain > 1 ? 's' : ''} estimé${classGain > 1 ? 's' : ''}` : 'Indice stable, intensité réduite'}</p>
                                     </div>
 
-                                    <EnergyScaleCard title="Après travaux estimés" letterData={targetDiagIndex} intensity={targetIntensity} />
+                                    <EnergyScaleCard title="Indice après travaux estimé" letterData={targetDiagIndex} intensity={targetIntensity} />
                                 </div>
 
-                                <p className="text-xs text-slate-300 mt-4">Étiquette estimative relative à votre activité. Elle n’a pas valeur de diagnostic réglementaire.</p>
+                                <p className="text-xs text-slate-300 mt-4">Indice DiagTertiaire. Indicateur indicatif — non opposable, hors cadre OPERAT.</p>
                             </div>
 
                             <div className="bg-[#F8FAFC] px-6 py-6 md:px-8">
@@ -6482,6 +6787,9 @@
             const inputs = reportPayload.inputs_summary || {};
             const surfaceValue = Math.max(1, (inputs.surface && inputs.surface.value) || 1);
             const targetIntensity = Math.max(0, (benchmark.site_intensity && benchmark.site_intensity.value ? benchmark.site_intensity.value : 0) - ((composite.annual_kwh && composite.annual_kwh.value ? composite.annual_kwh.value : 0) / surfaceValue));
+            const siteNameLabel = newDiagnosticGetReportSiteName(reportPayload);
+            const activityLabel = newDiagnosticGetReportActivityLabel(reportPayload);
+            const cityLabel = newDiagnosticGetReportCityLabel(reportPayload);
             const currentLabel = newDiagnosticComputeSectorLabel(benchmark.site_intensity.value, benchmark.benchmark_median.value);
             const targetLabel = newDiagnosticComputeSectorLabel(targetIntensity, benchmark.benchmark_median.value);
             const decisionReadout = newDiagnosticBuildDecisionReadout(reportPayload);
@@ -6557,7 +6865,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${newDiagnosticEscapeHtml(NEW_DIAGNOSTIC_BRAND.name)} - Rapport ${newDiagnosticEscapeHtml(inputs.site_name || 'Bâtiment tertiaire')}</title>
+    <title>${newDiagnosticEscapeHtml(NEW_DIAGNOSTIC_BRAND.name)} - Rapport ${newDiagnosticEscapeHtml(siteNameLabel)}</title>
     <style>
         :root { --ink:#102A43; --blue:#1D4ED8; --blue-soft:#E8F0FF; --slate:#5B6B7F; --line:#D8E2EE; --bg:#EEF4F8; --card:#FFFFFF; --green:#15803D; --green-soft:#EAF7EE; }
         * { box-sizing:border-box; } html, body { margin:0; padding:0; background:var(--bg); color:var(--ink); font-family:Segoe UI, Arial, Helvetica, sans-serif; } body { padding:28px; } .page { max-width:1100px; margin:0 auto; } .hero { background:linear-gradient(135deg, #102A43 0%, #14395C 55%, #1D4ED8 100%); color:#fff; padding:32px; border-radius:28px; box-shadow:0 24px 60px rgba(16,42,67,.18); } .hero-head, .hero-meta, .grid, .actions-grid, .list-grid, .kpi-grid, .tone-grid, .budget-grid, .impact-grid { display:grid; gap:18px; } .hero-head { grid-template-columns:minmax(0,1fr) auto; align-items:start; } .brand img { width:64px; height:64px; object-fit:contain; border-radius:18px; background:#fff; padding:10px; } .eyebrow { display:inline-block; font-size:11px; letter-spacing:.14em; text-transform:uppercase; font-weight:800; color:#BFDBFE; margin-bottom:10px; } h1, h2, h3, p { margin:0; } .hero h1 { font-size:34px; line-height:1.05; letter-spacing:-.04em; margin-bottom:10px; max-width:14ch; } .hero p { color:rgba(255,255,255,.82); line-height:1.6; } .hero-meta, .kpi-grid, .tone-grid, .budget-grid, .impact-grid, .list-grid { grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); } .hero-pill { background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.18); border-radius:18px; padding:14px 16px; } .hero-pill strong { display:block; color:#fff; font-size:15px; margin-bottom:4px; } .section { margin-top:24px; background:var(--card); border:1px solid var(--line); border-radius:24px; padding:24px; box-shadow:0 12px 28px rgba(16,42,67,.06); } .section h2 { font-size:22px; letter-spacing:-.03em; margin-bottom:16px; } .metric-card, .tone-card, .budget-card, .impact-card { border:1px solid var(--line); border-radius:20px; padding:18px; background:#fff; } .metric-label, .label-caption { font-size:12px; text-transform:uppercase; letter-spacing:.12em; color:var(--slate); font-weight:800; } .metric-value { font-size:28px; font-weight:900; line-height:1.1; margin:10px 0 6px; letter-spacing:-.04em; } .metric-note, .subtle { color:var(--slate); font-size:13px; line-height:1.5; } .grid, .actions-grid { grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); } .score-card { padding:22px; border-radius:22px; } .score-card.current { background:#F8FBFF; border:1px solid #CFE0FF; } .score-card.target { background:var(--green-soft); border:1px solid #B7E1C3; } .score-letter { font-size:42px; font-weight:900; line-height:1; margin:10px 0; } .score-current { color:var(--blue); } .score-target { color:var(--green); } .action-card { border:1px solid var(--line); border-radius:22px; padding:20px; background:linear-gradient(180deg, #FFFFFF 0%, #F8FBFF 100%); } .action-card h3 { font-size:20px; line-height:1.2; margin:8px 0 14px; } .action-topline { font-size:11px; text-transform:uppercase; letter-spacing:.12em; font-weight:800; color:var(--blue); } .badge-row { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; } .badge { display:inline-flex; padding:7px 10px; border-radius:999px; background:var(--blue-soft); color:var(--blue); font-size:12px; font-weight:800; } .action-stats { display:grid; gap:8px; margin:0 0 14px; } .action-stats div { display:flex; justify-content:space-between; gap:16px; padding-bottom:8px; border-bottom:1px dashed var(--line); } .action-stats dt { color:var(--slate); } .action-stats dd { margin:0; font-weight:800; text-align:right; } ul { margin:0; padding-left:18px; color:#31475E; line-height:1.7; } .empty-state { border:1px dashed var(--line); border-radius:20px; padding:18px; color:var(--slate); background:#F8FBFF; } .footer-note { margin-top:20px; color:var(--slate); font-size:13px; line-height:1.6; text-align:center; } @media print { body { background:#fff; padding:0; } .page { max-width:none; } .hero, .section { box-shadow:none; break-inside:avoid; } }
@@ -6569,8 +6877,8 @@
             <div class="hero-head">
                 <div>
                     <div class="eyebrow">Rapport telechargeable autonome</div>
-                    <h1>${newDiagnosticEscapeHtml(inputs.site_name || 'Bâtiment tertiaire')}</h1>
-                    <p>${newDiagnosticEscapeHtml(inputs.activity || 'Activité à confirmer')} · ${newDiagnosticEscapeHtml(newDiagnosticFormatUnitValue(surfaceValue, 'm²'))} · ${newDiagnosticEscapeHtml(reportDate)}</p>
+                    <h1>${newDiagnosticEscapeHtml(siteNameLabel)}</h1>
+                    <p>${newDiagnosticEscapeHtml(activityLabel)} · ${newDiagnosticEscapeHtml(newDiagnosticFormatUnitValue(surfaceValue, 'm²'))} · ${newDiagnosticEscapeHtml(cityLabel)} · ${newDiagnosticEscapeHtml(reportDate)}</p>
                 </div>
                 <div class="brand">${logo && logo.dataUrl ? `<img src="${logo.dataUrl}" alt="${newDiagnosticEscapeHtml(NEW_DIAGNOSTIC_BRAND.name)}">` : ''}</div>
             </div>
@@ -7293,6 +7601,8 @@
             const pdfActions = (reportPayload.top_actions || []).slice(0, 3);
             const pdfCalc = reportPayload.calculation_results;
             const pdfSurface = Math.max(1, (reportPayload.inputs_summary.surface && reportPayload.inputs_summary.surface.value) || 1);
+            const pdfSiteName = newDiagnosticGetReportSiteName(reportPayload);
+            const pdfActivityLabel = newDiagnosticGetReportActivityLabel(reportPayload);
             const pdfTargetIntensity = Math.max(0, pdfBenchmark.site_intensity.value - ((pdfComposite.annual_kwh && pdfComposite.annual_kwh.value ? pdfComposite.annual_kwh.value : 0) / pdfSurface));
             const pdfCurrentLabel = newDiagnosticComputeSectorLabel(pdfBenchmark.site_intensity.value, pdfBenchmark.benchmark_median.value);
             const pdfTargetLabel = newDiagnosticComputeSectorLabel(pdfTargetIntensity, pdfBenchmark.benchmark_median.value);
@@ -7319,15 +7629,15 @@
                 addText(NEW_DIAGNOSTIC_BRAND.name, margin, { fontSize: 9, bold: true, color: [71, 85, 105] });
             }
             addText('PRÉ-DIAGNOSTIC ÉNERGÉTIQUE INDICATIF', headerX, { fontSize: 17, bold: true, color: [37, 99, 235] });
-            addText('Étiquette estimative relative au secteur - non réglementaire', headerX, { fontSize: 9, color: [120, 53, 15] });
+            addText('Indice DiagTertiaire indicatif - non opposable, hors cadre OPERAT', headerX, { fontSize: 9, color: [120, 53, 15] });
             y += 2;
-            addText(`Site : ${reportPayload.inputs_summary.site_name || 'Bâtiment tertiaire'}`, margin, { fontSize: 11, bold: true });
+            addText(`Site : ${pdfSiteName}`, margin, { fontSize: 11, bold: true });
             if (reportPayload.inputs_summary.address) addText(`Adresse : ${reportPayload.inputs_summary.address}`, margin, { fontSize: 9 });
-            addText(`Activité : ${reportPayload.inputs_summary.activity} - Surface : ${pdfSurfaceValue(pdfSurface)}`, margin, { fontSize: 9 });
+            addText(`Activité : ${pdfActivityLabel} - Surface : ${pdfSurfaceValue(pdfSurface)}`, margin, { fontSize: 9 });
             addText(`Confiance : ${reportPayload.confidence?.label || 'Moyen'} - Date : ${new Date(reportPayload.generated_at).toLocaleDateString('fr-FR')}`, margin, { fontSize: 9 });
             y += 2;
-            addText(`Étiquette actuelle : ${pdfCurrentLabel.label} (${pdfCurrentLabel.positioning}) - ${pdfIntensity(pdfBenchmark.site_intensity.value)}`, margin, { fontSize: 10, bold: true });
-            addText(`Étiquette après travaux : ${pdfTargetLabel.label} (${pdfTargetLabel.positioning}) - ${pdfIntensity(pdfTargetIntensity)}`, margin, { fontSize: 10, color: [16, 185, 129] });
+            addText(`Indice actuel : ${pdfCurrentLabel.label} (${pdfCurrentLabel.positioning}) - ${pdfIntensity(pdfBenchmark.site_intensity.value)}`, margin, { fontSize: 10, bold: true });
+            addText(`Indice après travaux : ${pdfTargetLabel.label} (${pdfTargetLabel.positioning}) - ${pdfIntensity(pdfTargetIntensity)}`, margin, { fontSize: 10, color: [16, 185, 129] });
             addText(`Médiane secteur : ${pdfIntensity(pdfBenchmark.benchmark_median.value)} - source ${pdfBenchmark.source_ref}`, margin, { fontSize: 8, color: [100, 100, 100] });
             y += 3;
 
@@ -7423,15 +7733,82 @@
                 newDiagnosticTrack('start_diagnostic');
                 newDiagnosticMarkFormRendered(diagnosticFormKey);
                 try {
-                    const saved = window.localStorage.getItem('newDiagnosticLatestReport');
-                    if (saved) {
-                        const parsed = JSON.parse(saved);
-                        if (parsed && parsed.report_id) {
-                            setReportPayload(parsed);
-                        }
+                    const parsed = newDiagnosticReadStoredReportPayload();
+                    if (parsed && parsed.report_id) {
+                        setReportPayload(parsed);
                     }
                 } catch (e) { /* silent */ }
             }, []);
+
+            const notifyRapportEmail = async (leadPayload, reportPayload) => {
+                if (!leadPayload?.email) return;
+
+                try {
+                    const inputsSummary = reportPayload?.inputs_summary || {};
+                    const benchmark = reportPayload?.benchmark_result || {};
+                    const computedScore = benchmark?.site_intensity?.value && benchmark?.benchmark_median?.value
+                        ? newDiagnosticComputeSectorLabel(benchmark.site_intensity.value, benchmark.benchmark_median.value).label
+                        : '';
+
+                    await fetch('/api/send-email', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            type: 'rapport_disponible',
+                            data: {
+                                email: leadPayload.email,
+                                prenom: leadPayload.prenom || leadPayload.name || '',
+                                nomBatiment: leadPayload.nomBatiment || leadPayload.site_name || leadPayload.company || newDiagnosticGetReportSiteName(reportPayload),
+                                surface: leadPayload.surface || leadPayload.raw_payload?.surface || reportPayload?.inputs_summary?.surface?.value || '',
+                                activite: leadPayload.activiteLabel || leadPayload.activite || inputsSummary.activity_label || newDiagnosticGetReportActivityLabel(reportPayload),
+                                scoreLettre: reportPayload?.benchmark_result?.score_letter || computedScore || '',
+                                economiesTotalesAnnuelles: reportPayload?.composite_savings?.annual_euro?.value || 0,
+                                reportUrl: window.location.origin + window.location.pathname
+                            }
+                        })
+                    });
+                } catch (_) {
+                    // silencieux
+                }
+            };
+
+            const notifyAdminNewLead = async (leadPayload, reportPayload, leadId) => {
+                try {
+                    const inputsSummary = reportPayload?.inputs_summary || {};
+                    const benchmark = reportPayload?.benchmark_result || {};
+                    const computedScore = benchmark?.site_intensity?.value && benchmark?.benchmark_median?.value
+                        ? newDiagnosticComputeSectorLabel(benchmark.site_intensity.value, benchmark.benchmark_median.value).label
+                        : '';
+
+                    await fetch('/api/send-email', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            type: 'nouveau_lead_admin',
+                            data: {
+                                leadId: leadId || 'N/A',
+                                email: leadPayload.email || '',
+                                prenom: leadPayload.prenom || leadPayload.name || '',
+                                telephone: leadPayload.telephone || leadPayload.phone || inputsSummary.phone || '',
+                                societe: leadPayload.societe || leadPayload.company || inputsSummary.site_name || '',
+                                activite: leadPayload.activiteLabel || leadPayload.activite || inputsSummary.activity_label || newDiagnosticGetReportActivityLabel(reportPayload),
+                                surface: leadPayload.surface || leadPayload.raw_payload?.surface || inputsSummary?.surface?.value || '',
+                                ville: leadPayload.ville || inputsSummary.city || newDiagnosticGetReportCityLabel(reportPayload),
+                                codePostal: leadPayload.codePostal || leadPayload.postalCode || leadPayload.raw_payload?.postal_code || inputsSummary.postal_code || '',
+                                scoreLettre: reportPayload?.benchmark_result?.score_letter || computedScore || '',
+                                intensiteKwhM2: reportPayload?.benchmark_result?.site_intensity?.value || '',
+                                economiesTotalesAnnuelles: reportPayload?.composite_savings?.annual_euro?.value || 0,
+                                scoreConfiance: reportPayload?.confidence?.level || '',
+                                objectif: leadPayload.primaryGoal || leadPayload.primary_goal || leadPayload.raw_payload?.primary_goal || '',
+                                horizonDecision: leadPayload.projectHorizon || leadPayload.project_horizon || leadPayload.raw_payload?.project_horizon || '',
+                                partnerConsent: !!leadPayload.partnerConsent
+                            }
+                        })
+                    });
+                } catch (_) {
+                    // silencieux
+                }
+            };
 
             const handleComplete = async () => {
                 setSubmitError(null);
@@ -7498,6 +7875,8 @@
                     }
 
                     setReportPayload(nextReportPayload);
+                    notifyRapportEmail(leadPayload, nextReportPayload);
+                    notifyAdminNewLead(leadPayload, nextReportPayload, leadResult.id);
 
                     if (typeof onComplete === 'function') {
                         onComplete(formData, nextReportPayload);
@@ -7635,11 +8014,23 @@
         const App = () => {
             const [currentPage, setCurrentPage] = useState('home');
             const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+            const [legalModalKey, setLegalModalKey] = useState('');
 
             const navigate = (page) => {
                 setCurrentPage(page);
                 setIsMobileMenuOpen(false);
                 window.scrollTo(0, 0);
+            };
+
+            const openExampleReport = () => {
+                newDiagnosticWriteExampleReportToStorage();
+                navigate('exemple');
+            };
+
+            const handleClearPersonalData = () => {
+                newDiagnosticClearPersonalLocalData();
+                setLegalModalKey('');
+                window.alert('Les données personnelles enregistrées dans ce navigateur ont été effacées.');
             };
 
             const isLandingPage = currentPage === 'home';
@@ -7659,7 +8050,7 @@
 
                 return (
                     <button type="button"
-                        onClick={() => navigate(page)}
+                        onClick={() => (page === 'exemple' ? openExampleReport() : navigate(page))}
                         className={classes}
                     >
                         {label}
@@ -7781,17 +8172,16 @@
                                             <li><button type="button" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Guide du décret tertiaire</button></li>
                                             <li><button type="button" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Références sectorielles</button></li>
                                             <li><button type="button" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Blog</button></li>
-                                            <li><button type="button" onClick={() => navigate('exemple')} className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Exemple de rapport</button></li>
+                                            <li><button type="button" onClick={openExampleReport} className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Exemple de rapport</button></li>
                                         </ul>
                                     </div>
 
                                     <div>
                                         <h4 className="text-sm font-bold text-white mb-4">Légal</h4>
                                         <ul className="space-y-2.5">
-                                            <li><button type="button" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Mentions légales</button></li>
-                                            <li><button type="button" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Politique de confidentialité</button></li>
-                                            <li><button type="button" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">CGU</button></li>
-                                            <li><button type="button" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Gestion des cookies</button></li>
+                                            <li><button type="button" onClick={() => setLegalModalKey('mentions')} className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Mentions légales</button></li>
+                                            <li><button type="button" onClick={() => setLegalModalKey('privacy')} className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Politique de confidentialité</button></li>
+                                            <li><button type="button" onClick={handleClearPersonalData} className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Effacer mes données</button></li>
                                         </ul>
                                     </div>
 
@@ -7816,6 +8206,7 @@
                             </div>
                         </footer>
                     )}
+                    <NewDiagnosticLegalModal modalKey={legalModalKey} onClose={() => setLegalModalKey('')} />
                 </div>
             );
         };

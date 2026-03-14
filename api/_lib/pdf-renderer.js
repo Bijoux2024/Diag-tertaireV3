@@ -1,3 +1,40 @@
+/**
+ * ═══════════════════════════════════════════════════════════════════════════
+ * api/_lib/pdf-renderer.js — Moteur de rendu PDF via Puppeteer + Chromium
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * RÔLE :
+ *   Génère un PDF à partir d'une chaîne HTML en lançant un navigateur
+ *   Chromium headless (sans interface graphique) via Puppeteer.
+ *
+ * CYCLE DE VIE D'UN RENDU :
+ *   1. launchChromiumBrowser()   → Lance Chromium (@sparticuz/chromium sur Vercel)
+ *   2. browser.newPage()         → Ouvre un onglet vide
+ *   3. page.setContent(html)     → Injecte le HTML et attend le chargement
+ *   4. document.fonts.ready      → Attend que les polices soient chargées
+ *   5. page.pdf()                → Génère le PDF au format A4
+ *   6. browser.close()           → Ferme Chromium (libère la mémoire)
+ *
+ * CONTRAINTES VERCEL :
+ *   - Lambda timeout : 30s max (configuré dans api/pdf.js)
+ *   - Mémoire : @sparticuz/chromium est optimisé pour les lambdas (< 50MB)
+ *   - Le navigateur est mis en cache entre les appels (cachedPuppeteerCore / cachedChromiumRuntime)
+ *     pour éviter de recharger les modules à chaque invocation.
+ *
+ * SÉCURITÉ :
+ *   - La taille maximale du HTML est limitée (DEFAULT_MAX_HTML_LENGTH = 1.5MB)
+ *   - Le rendu s'exécute dans un sandbox Chromium isolé
+ *   - Aucun accès réseau n'est bloqué pendant le rendu (le HTML est injecté directement,
+ *     pas chargé via une URL — networkidle0 attend la fin des requêtes internes)
+ *
+ * EXPORTS :
+ *   - DEFAULT_MAX_HTML_LENGTH   → Taille max du payload HTML (bytes)
+ *   - DEFAULT_TIMEOUT_MS        → Timeout global du rendu (ms)
+ *   - createPdfRenderError()    → Crée une erreur avec statusCode HTTP
+ *   - renderPdfFromHtml()       → Fonction principale de rendu
+ * ═══════════════════════════════════════════════════════════════════════════
+ */
+
 const DEFAULT_MAX_HTML_LENGTH = 1_500_000;
 const DEFAULT_TIMEOUT_MS = 45_000;
 const DEFAULT_VIEWPORT = Object.freeze({

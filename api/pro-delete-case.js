@@ -1,3 +1,45 @@
+/**
+ * ═══════════════════════════════════════════════════════════════════════════
+ * api/pro-delete-case.js — Suppression sécurisée d'un dossier Pro
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * RÔLE :
+ *   Supprime un dossier (case) de l'espace Pro de façon atomique et sécurisée :
+ *   1. Authentifie l'utilisateur via son Bearer token Supabase
+ *   2. Appelle la fonction RPC Supabase `soft_delete_case_bundle`
+ *      (soft-delete en base : marque les enregistrements comme supprimés)
+ *   3. Supprime les fichiers associés dans le Storage Supabase
+ *      (rapports PDF, logos organisation)
+ *   4. Met à jour le statut des fichiers → "deleted" en base
+ *
+ * MÉTHODE : POST /api/pro-delete-case
+ *
+ * CORPS DE LA REQUÊTE (JSON) :
+ *   { case_id: string }  — UUID du dossier à supprimer (format UUID v1-v5)
+ *
+ * AUTHENTIFICATION :
+ *   - Bearer token obligatoire dans l'en-tête Authorization
+ *   - Le token est vérifié auprès de Supabase Auth (GET /auth/v1/user)
+ *   - L'utilisateur doit être propriétaire du dossier (vérifié par la RPC côté Supabase)
+ *
+ * SÉCURITÉ STORAGE :
+ *   - Seul le bucket "organization-assets" est autorisé (validateStorageCleanupTarget)
+ *   - Les chemins de fichiers doivent commencer par org/{organizationId}/reports/
+ *     → Empêche toute suppression de fichiers hors du périmètre de l'organisation
+ *   - Le case_id est validé via UUID_REGEX avant tout traitement
+ *
+ * GESTION D'ERREURS :
+ *   - Si le nettoyage Storage échoue partiellement, la réponse inclut
+ *     pending_cleanup_paths pour permettre une reprise manuelle
+ *   - storage_cleanup_status : "complete" | "partial"
+ *
+ * VARIABLES D'ENVIRONNEMENT REQUISES :
+ *   - SUPABASE_URL
+ *   - SUPABASE_PUBLISHABLE_KEY  (pour vérifier le token utilisateur)
+ *   - SUPABASE_SERVICE_KEY      (pour les opérations privilegiées : RPC + Storage)
+ * ═══════════════════════════════════════════════════════════════════════════
+ */
+
 const ORGANIZATION_ASSETS_BUCKET = 'organization-assets';
 const { getRequiredServerSupabaseConfig } = require('./_lib/supabase-server');
 

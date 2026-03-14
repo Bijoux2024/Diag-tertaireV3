@@ -666,6 +666,30 @@
             logoPreviewUrl: ''
         };
 
+        const MAX_PRO_DIAGNOSTIC_DRAFT_ARCHIVES = 12;
+
+        const PRO_NEW_DIAG_INITIAL_FORM = {
+            step: 1,
+            contactName: '', company: '', email: '', phone: '', postalCode: '',
+            statut: '', objectif: '', horizon: '', urgence: '', isMulti: false,
+            activity: '', surface: '', constructionYear: '', niveaux: '', orientation: '',
+            commerceFroid: false, entrepotChauffe: false,
+            isolation_toiture: '', isolation_murs: '', isolation_plancher: '',
+            vitrage_type: '', ponts_thermiques: [],
+            heating: '', chauffage_age: '', chauffage_reseau: '', chauffage_regulation: [],
+            clim_presente: false, clim_type: '', clim_age: '',
+            vmc_type: '', vmc_horloge: false,
+            ecs_presente: true, ecs_systeme: '', ecs_calorifugeage: '', ecs_usage: '',
+            eclairage_type: '', eclairage_detecteurs: false,
+            elecKwh: '', elecEuro: '', elecSubscriptionYearly: '',
+            gasKwh: '', gasEuro: '',
+            periode_couverte: '', evenement_atypique: false,
+            heures_semaine: 40, semaines_annee: '', occupation_weekend: false,
+            nb_occupants: '', intensite_usage: 'standard',
+            travaux_realises: [], budget: '', contraintes: [],
+            noteInterne: '',
+        };
+
         const DEFAULT_USER_WORKSPACE_STATE = {
             draftPayload: {},
             uiState: {}
@@ -857,19 +881,150 @@
             });
         };
 
-        const hasMeaningfulDraftPayload = (draftPayload) => {
-            if (!draftPayload || typeof draftPayload !== 'object') return false;
-            return !!(draftPayload.contactName || draftPayload.company || draftPayload.activity || draftPayload.surface);
+        const clampProDraftStep = (value) => {
+            const step = Number(value);
+            return Number.isFinite(step) && step >= 1 && step <= 7 ? step : 1;
         };
 
         const buildDraftFormState = (initialState, draftPayload) => {
             const safeDraft = asPlainObject(draftPayload);
-            const nextStep = Number(safeDraft.step);
             return {
                 ...initialState,
                 ...safeDraft,
-                step: Number.isFinite(nextStep) && nextStep >= 1 && nextStep <= 7 ? nextStep : 1
+                step: clampProDraftStep(safeDraft.step)
             };
+        };
+
+        const hasMeaningfulDraftPayload = (draftPayload) => {
+            const safeDraft = buildDraftFormState(PRO_NEW_DIAG_INITIAL_FORM, draftPayload);
+
+            return Object.keys(PRO_NEW_DIAG_INITIAL_FORM).some((key) => {
+                if (key === 'step') {
+                    return safeDraft.step > 1;
+                }
+
+                const currentValue = safeDraft[key];
+                const initialValue = PRO_NEW_DIAG_INITIAL_FORM[key];
+
+                if (Array.isArray(currentValue)) {
+                    return currentValue.length > 0;
+                }
+
+                if (typeof currentValue === 'string') {
+                    return currentValue.trim() !== '' && currentValue !== initialValue;
+                }
+
+                if (typeof currentValue === 'number') {
+                    return Number.isFinite(currentValue) && currentValue !== initialValue;
+                }
+
+                if (typeof currentValue === 'boolean') {
+                    return currentValue !== initialValue;
+                }
+
+                return JSON.stringify(currentValue ?? null) !== JSON.stringify(initialValue ?? null);
+            });
+        };
+
+        const buildDiagnosticDraftArchiveMeta = (draftPayload) => {
+            const safeDraft = buildDraftFormState(PRO_NEW_DIAG_INITIAL_FORM, draftPayload);
+            const title = String(
+                safeDraft.company
+                || safeDraft.contactName
+                || safeDraft.activity
+                || safeDraft.postalCode
+                || 'Diagnostic sans titre'
+            ).trim();
+            const summaryParts = [];
+
+            if (safeDraft.contactName && safeDraft.company && safeDraft.contactName.trim() !== safeDraft.company.trim()) {
+                summaryParts.push(safeDraft.contactName.trim());
+            }
+
+            if (safeDraft.activity) {
+                summaryParts.push(safeDraft.activity);
+            }
+
+            if (safeDraft.surface) {
+                summaryParts.push(`${safeDraft.surface} m²`);
+            }
+
+            if (safeDraft.postalCode) {
+                summaryParts.push(safeDraft.postalCode);
+            }
+
+            summaryParts.push(`Etape ${safeDraft.step}/7`);
+
+            return {
+                step: safeDraft.step,
+                title,
+                summary: summaryParts.join(' · '),
+                formPayload: cloneJson(safeDraft, safeDraft)
+            };
+        };
+
+        const buildDiagnosticDraftArchiveEntry = (draftPayload, entryId = null, lastSavedAt = new Date().toISOString()) => {
+            const meta = buildDiagnosticDraftArchiveMeta(draftPayload);
+            return {
+                id: entryId || generateUuid(),
+                title: meta.title,
+                summary: meta.summary,
+                step: meta.step,
+                lastSavedAt,
+                formPayload: meta.formPayload
+            };
+        };
+
+        const areDraftPayloadsEqual = (leftPayload, rightPayload) => {
+            return JSON.stringify(buildDraftFormState(PRO_NEW_DIAG_INITIAL_FORM, leftPayload))
+                === JSON.stringify(buildDraftFormState(PRO_NEW_DIAG_INITIAL_FORM, rightPayload));
+        };
+
+        const getDiagnosticDraftArchives = (uiState) => {
+            const rawEntries = Array.isArray(uiState?.diagnosticDraftArchives) ? uiState.diagnosticDraftArchives : [];
+
+            return rawEntries
+                .map((entry) => {
+                    const safeEntry = asPlainObject(entry);
+                    const formPayload = asPlainObject(safeEntry.formPayload);
+
+                    if (!hasMeaningfulDraftPayload(formPayload)) {
+                        return null;
+                    }
+
+                    return buildDiagnosticDraftArchiveEntry(
+                        formPayload,
+                        typeof safeEntry.id === 'string' && safeEntry.id.trim() ? safeEntry.id.trim() : null,
+                        typeof safeEntry.lastSavedAt === 'string' && safeEntry.lastSavedAt.trim()
+                            ? safeEntry.lastSavedAt
+                            : new Date().toISOString()
+                    );
+                })
+                .filter(Boolean)
+                .sort((left, right) => {
+                    const rightTimestamp = Date.parse(right?.lastSavedAt || '') || 0;
+                    const leftTimestamp = Date.parse(left?.lastSavedAt || '') || 0;
+                    return rightTimestamp - leftTimestamp;
+                })
+                .slice(0, MAX_PRO_DIAGNOSTIC_DRAFT_ARCHIVES);
+        };
+
+        const archiveDiagnosticDraft = (archives, draftPayload, entryId = null) => {
+            const normalizedArchives = getDiagnosticDraftArchives({ diagnosticDraftArchives: archives });
+
+            if (!hasMeaningfulDraftPayload(draftPayload)) {
+                return normalizedArchives;
+            }
+
+            const nextEntry = buildDiagnosticDraftArchiveEntry(draftPayload, entryId);
+
+            return [
+                nextEntry,
+                ...normalizedArchives.filter((entry) => (
+                    entry.id !== nextEntry.id
+                    && !areDraftPayloadsEqual(entry.formPayload, nextEntry.formPayload)
+                ))
+            ].slice(0, MAX_PRO_DIAGNOSTIC_DRAFT_ARCHIVES);
         };
 
         const resolveBrandName = (settings, organization) => {
@@ -1029,15 +1184,86 @@
         };
 
         const cleanAuthMetadata = (metadata = {}) => {
-            return Object.entries({
+            const nextMetadata = Object.entries({
                 fullName: metadata.fullName || metadata.full_name || '',
-                companyName: metadata.companyName || metadata.company_name || ''
+                companyName: metadata.companyName || metadata.company_name || '',
+                onboardingFlow: metadata.onboardingFlow || metadata.onboarding_flow || '',
+                passwordSetupCompletedAt: metadata.passwordSetupCompletedAt || metadata.password_setup_completed_at || ''
             }).reduce((acc, [key, value]) => {
                 if (typeof value === 'string' && value.trim()) {
                     acc[key] = value.trim();
                 }
                 return acc;
             }, {});
+
+            if (typeof metadata.passwordSetupRequired === 'boolean') {
+                nextMetadata.passwordSetupRequired = metadata.passwordSetupRequired;
+            }
+
+            return nextMetadata;
+        };
+
+        const AUTH_CALLBACK_SEARCH_KEYS = ['code', 'type', 'error', 'error_code', 'error_description'];
+        const AUTH_CALLBACK_HASH_KEYS = ['access_token', 'refresh_token', 'expires_at', 'expires_in', 'token_type', 'type'];
+        const AUTH_MIN_PASSWORD_LENGTH = 8;
+
+        const getAuthFlowTypeFromLocation = () => {
+            if (typeof window === 'undefined') {
+                return '';
+            }
+
+            const currentUrl = new URL(window.location.href);
+            const searchType = currentUrl.searchParams.get('type') || '';
+            if (searchType) {
+                return searchType;
+            }
+
+            const rawHash = currentUrl.hash || '';
+            if (!rawHash || rawHash.startsWith('#report=')) {
+                return '';
+            }
+
+            return new URLSearchParams(rawHash.slice(1)).get('type') || '';
+        };
+
+        const isPasswordRecoveryFlow = () => getAuthFlowTypeFromLocation() === 'recovery';
+
+        const clearSupabaseAuthRedirectState = () => {
+            if (typeof window === 'undefined' || typeof window.history?.replaceState !== 'function') {
+                return;
+            }
+
+            const currentUrl = new URL(window.location.href);
+            let didChange = false;
+
+            AUTH_CALLBACK_SEARCH_KEYS.forEach((key) => {
+                if (currentUrl.searchParams.has(key)) {
+                    currentUrl.searchParams.delete(key);
+                    didChange = true;
+                }
+            });
+
+            const rawHash = currentUrl.hash || '';
+            if (rawHash && !rawHash.startsWith('#report=')) {
+                const hashParams = new URLSearchParams(rawHash.slice(1));
+                let hashDidChange = false;
+
+                AUTH_CALLBACK_HASH_KEYS.forEach((key) => {
+                    if (hashParams.has(key)) {
+                        hashParams.delete(key);
+                        hashDidChange = true;
+                    }
+                });
+
+                if (hashDidChange) {
+                    currentUrl.hash = hashParams.toString() ? `#${hashParams.toString()}` : '';
+                    didChange = true;
+                }
+            }
+
+            if (didChange) {
+                window.history.replaceState({}, document.title, currentUrl.toString());
+            }
         };
 
         const getSupabaseBrowserClient = async () => {
@@ -1071,7 +1297,7 @@
             return supabaseBrowserClientPromise;
         };
 
-        const sendMagicLink = async (email, metadata = {}) => {
+        const sendMagicLink = async (email, metadata = {}, options = {}) => {
             const browserClient = await getSupabaseBrowserClient();
             if (!browserClient) {
                 return {
@@ -1088,10 +1314,11 @@
                 };
             }
 
+            const shouldCreateUser = options.shouldCreateUser === true;
             const { error } = await browserClient.auth.signInWithOtp({
                 email: normalizedEmail,
                 options: {
-                    shouldCreateUser: true,
+                    shouldCreateUser,
                     emailRedirectTo: getAuthRedirectUrl(),
                     data: cleanAuthMetadata(metadata)
                 }
@@ -1101,6 +1328,180 @@
                 return {
                     ok: false,
                     error: error.message || "Impossible d'envoyer le lien de connexion."
+                };
+            }
+
+            return { ok: true };
+        };
+
+        const signUpWithPassword = async ({ email, password, fullName, companyName }) => {
+            const browserClient = await getSupabaseBrowserClient();
+            if (!browserClient) {
+                return {
+                    ok: false,
+                    error: "La création de compte n'est pas encore configurée sur cet environnement."
+                };
+            }
+
+            const normalizedEmail = typeof email === 'string' ? email.trim() : '';
+            const normalizedPassword = typeof password === 'string' ? password : '';
+
+            if (!normalizedEmail) {
+                return {
+                    ok: false,
+                    error: "Renseignez votre email professionnel."
+                };
+            }
+
+            if (normalizedPassword.length < AUTH_MIN_PASSWORD_LENGTH) {
+                return {
+                    ok: false,
+                    error: `Le mot de passe doit contenir au moins ${AUTH_MIN_PASSWORD_LENGTH} caractères.`
+                };
+            }
+
+            const { data, error } = await browserClient.auth.signUp({
+                email: normalizedEmail,
+                password: normalizedPassword,
+                options: {
+                    emailRedirectTo: getAuthRedirectUrl(),
+                    data: cleanAuthMetadata({ fullName, companyName })
+                }
+            });
+
+            if (error) {
+                return {
+                    ok: false,
+                    error: error.message || "Impossible de créer votre compte."
+                };
+            }
+
+            const isExistingUserMask = !data?.session
+                && Array.isArray(data?.user?.identities)
+                && data.user.identities.length === 0;
+
+            if (isExistingUserMask) {
+                return {
+                    ok: false,
+                    error: "Un compte existe déjà pour cet email. Connectez-vous avec votre mot de passe ou demandez un lien de connexion."
+                };
+            }
+
+            return {
+                ok: true,
+                session: data?.session || null,
+                user: data?.user || null,
+                requiresEmailConfirmation: !data?.session
+            };
+        };
+
+        const signInWithPassword = async ({ email, password }) => {
+            const browserClient = await getSupabaseBrowserClient();
+            if (!browserClient) {
+                return {
+                    ok: false,
+                    error: "La connexion par mot de passe n'est pas encore configurée sur cet environnement."
+                };
+            }
+
+            const normalizedEmail = typeof email === 'string' ? email.trim() : '';
+            const normalizedPassword = typeof password === 'string' ? password : '';
+
+            if (!normalizedEmail) {
+                return {
+                    ok: false,
+                    error: "Renseignez votre email professionnel."
+                };
+            }
+
+            if (!normalizedPassword) {
+                return {
+                    ok: false,
+                    error: "Renseignez votre mot de passe."
+                };
+            }
+
+            const { data, error } = await browserClient.auth.signInWithPassword({
+                email: normalizedEmail,
+                password: normalizedPassword
+            });
+
+            if (error) {
+                return {
+                    ok: false,
+                    error: error.message || "Impossible de vous connecter."
+                };
+            }
+
+            return {
+                ok: true,
+                session: data?.session || null,
+                user: data?.user || null
+            };
+        };
+
+        const requestPasswordReset = async (email) => {
+            const browserClient = await getSupabaseBrowserClient();
+            if (!browserClient) {
+                return {
+                    ok: false,
+                    error: "La réinitialisation du mot de passe n'est pas encore configurée sur cet environnement."
+                };
+            }
+
+            const normalizedEmail = typeof email === 'string' ? email.trim() : '';
+            if (!normalizedEmail) {
+                return {
+                    ok: false,
+                    error: "Renseignez votre email professionnel pour recevoir le lien de réinitialisation."
+                };
+            }
+
+            const { error } = await browserClient.auth.resetPasswordForEmail(normalizedEmail, {
+                redirectTo: getAuthRedirectUrl()
+            });
+
+            if (error) {
+                return {
+                    ok: false,
+                    error: error.message || "Impossible d'envoyer le lien de réinitialisation."
+                };
+            }
+
+            return { ok: true };
+        };
+
+        const updateProPassword = async (password, metadataPatch = {}) => {
+            const browserClient = await getSupabaseBrowserClient();
+            if (!browserClient) {
+                return {
+                    ok: false,
+                    error: "La mise à jour du mot de passe n'est pas encore configurée sur cet environnement."
+                };
+            }
+
+            const normalizedPassword = typeof password === 'string' ? password : '';
+            if (normalizedPassword.length < AUTH_MIN_PASSWORD_LENGTH) {
+                return {
+                    ok: false,
+                    error: `Le mot de passe doit contenir au moins ${AUTH_MIN_PASSWORD_LENGTH} caractères.`
+                };
+            }
+
+            const { data: currentUserResult } = await browserClient.auth.getUser();
+            const currentMetadata = currentUserResult?.user?.user_metadata || {};
+            const { error } = await browserClient.auth.updateUser({
+                password: normalizedPassword,
+                data: cleanAuthMetadata({
+                    ...currentMetadata,
+                    ...metadataPatch
+                })
+            });
+
+            if (error) {
+                return {
+                    ok: false,
+                    error: error.message || "Impossible de mettre à jour votre mot de passe."
                 };
             }
 
@@ -1168,6 +1569,53 @@
             return '';
         };
 
+        const isUserPasswordSetupPending = (user) => {
+            const flag = user?.user_metadata?.passwordSetupRequired;
+            return flag === true || flag === 'true';
+        };
+
+        const buildUserInitials = (fullName = '', email = '') => {
+            const source = String(fullName || '').trim();
+            if (source) {
+                const parts = source.split(/\s+/).filter(Boolean).slice(0, 2);
+                const initials = parts.map(part => part[0]?.toUpperCase() || '').join('');
+                if (initials) {
+                    return initials;
+                }
+            }
+
+            const emailPrefix = String(email || '').split('@')[0].replace(/[^a-zA-Z0-9]+/g, ' ').trim();
+            const fallbackParts = emailPrefix.split(/\s+/).filter(Boolean).slice(0, 2);
+            const fallbackInitials = fallbackParts.map(part => part[0]?.toUpperCase() || '').join('');
+            return fallbackInitials || 'DT';
+        };
+
+        const resolveWorkspaceUserDisplayName = (profile = null) => {
+            const fullName = typeof profile?.full_name === 'string' ? profile.full_name.trim() : '';
+            if (fullName) {
+                return fullName;
+            }
+
+            const email = typeof profile?.email === 'string' ? profile.email.trim() : '';
+            if (email) {
+                return email.split('@')[0];
+            }
+
+            return 'Mon compte';
+        };
+
+        const resolveWorkspaceUserRoleLabel = (profile = null, organization = null, authUserId = null) => {
+            if (profile?.id && organization?.owner_user_id && profile.id === organization.owner_user_id) {
+                return 'Admin';
+            }
+
+            if (profile?.id && authUserId && profile.id === authUserId && organization?.owner_user_id === authUserId) {
+                return 'Admin';
+            }
+
+            return 'Utilisateur';
+        };
+
         const ensureUserWorkspace = async (user) => {
             const browserClient = await getSupabaseBrowserClient();
             if (!browserClient) {
@@ -1178,9 +1626,11 @@
             }
 
             try {
+                const normalizedFullName = deriveFullName(user) || null;
+                const normalizedEmail = user?.email || null;
                 const { data: existingProfile, error: existingProfileError } = await browserClient
                     .from('profiles')
-                    .select('id, organization_id')
+                    .select('id, organization_id, email, full_name')
                     .eq('id', user.id)
                     .maybeSingle();
 
@@ -1189,6 +1639,29 @@
                 }
 
                 if (existingProfile) {
+                    const shouldPatchProfile = (
+                        (normalizedEmail && existingProfile.email !== normalizedEmail)
+                        || (normalizedFullName && existingProfile.full_name !== normalizedFullName)
+                    );
+
+                    if (shouldPatchProfile) {
+                        const { data: patchedProfile, error: patchedProfileError } = await browserClient
+                            .from('profiles')
+                            .update({
+                                email: normalizedEmail,
+                                full_name: normalizedFullName
+                            })
+                            .eq('id', user.id)
+                            .select('id, organization_id, email, full_name')
+                            .single();
+
+                        if (patchedProfileError) {
+                            throw patchedProfileError;
+                        }
+
+                        return { ok: true, profile: patchedProfile };
+                    }
+
                     return { ok: true, profile: existingProfile };
                 }
 
@@ -1225,17 +1698,17 @@
                     .from('profiles')
                     .insert({
                         id: user.id,
-                        email: user.email || null,
-                        full_name: deriveFullName(user) || null,
+                        email: normalizedEmail,
+                        full_name: normalizedFullName,
                         organization_id: organization.id
                     })
-                    .select('id, organization_id')
+                    .select('id, organization_id, email, full_name')
                     .single();
 
                 if (insertProfileError) {
                     const { data: fallbackProfile, error: fallbackProfileError } = await browserClient
                         .from('profiles')
-                        .select('id, organization_id')
+                        .select('id, organization_id, email, full_name')
                         .eq('id', user.id)
                         .maybeSingle();
 
@@ -1818,11 +2291,15 @@
         };
 
         const normalizeUserWorkspaceStateRecord = (record, userId = null, organizationId = null) => {
+            const safeUiState = asPlainObject(record?.ui_state);
             return {
                 userId: record?.user_id || userId || null,
                 organizationId: record?.organization_id || organizationId || null,
                 draftPayload: asPlainObject(record?.draft_payload),
-                uiState: asPlainObject(record?.ui_state)
+                uiState: {
+                    ...safeUiState,
+                    diagnosticDraftArchives: getDiagnosticDraftArchives(safeUiState)
+                }
             };
         };
 
@@ -1901,8 +2378,99 @@
             };
         };
 
+        const normalizeStringList = (value, limit = 6) => {
+            return (Array.isArray(value) ? value : [])
+                .map((item) => {
+                    if (typeof item === 'string') {
+                        return item.trim();
+                    }
+
+                    if (item && typeof item === 'object') {
+                        if (typeof item.title === 'string') {
+                            return item.title.trim();
+                        }
+
+                        if (typeof item.label === 'string') {
+                            return item.label.trim();
+                        }
+
+                        if (typeof item.description === 'string') {
+                            return item.description.trim();
+                        }
+                    }
+
+                    return '';
+                })
+                .filter(Boolean)
+                .slice(0, limit);
+        };
+
+        const buildDefaultReportSummaryText = (source = {}, engineResult = {}) => {
+            if (typeof source.summary === 'string' && source.summary.trim()) {
+                return source.summary.trim();
+            }
+
+            const score = String(engineResult.score || source.score || '').trim().toUpperCase();
+            const savingsValue = Number(engineResult.totalSavingsEur || source.estimatedSavingsPerYear || 0);
+            const savingsLabel = savingsValue > 0
+                ? `${Math.round(savingsValue).toLocaleString('fr-FR')} EUR / an`
+                : '';
+            const roiValue = Number(source.roiGlobal || engineResult.roiGlobal || 0);
+            const roiLabel = roiValue > 0 ? `${String(roiValue).replace('.', ',')} ans` : '';
+
+            if (score === 'A' || score === 'B') {
+                return savingsLabel
+                    ? `Batiment deja bien positionne. Les gains restants se situent sur des optimisations ciblees, avec un potentiel estime a ${savingsLabel}.`
+                    : "Batiment deja bien positionne. Les gains restants se situent sur des optimisations ciblees.";
+            }
+
+            if (score === 'C') {
+                return savingsLabel
+                    ? `Niveau de performance dans la mediane du secteur. Des gains accessibles restent mobilisables sur l'exploitation, pour un potentiel estime a ${savingsLabel}.`
+                    : "Niveau de performance dans la mediane du secteur. Des gains accessibles restent mobilisables sur l'exploitation.";
+            }
+
+            if (roiLabel) {
+                return `Surconsommation notable. Des actions prioritaires peuvent etre engages avec un ROI global estime a ${roiLabel}.`;
+            }
+
+            return "Surconsommation notable. Des actions prioritaires permettent des gains significatifs sur ce perimetre.";
+        };
+
+        const buildCanonicalReportNarrative = (source = {}, engineResult = {}) => {
+            const safeSource = asPlainObject(source);
+            const safeEngineResult = asPlainObject(engineResult);
+            const template = getTemplateForCase({
+                activity: safeSource.activity || safeSource.formData?.activity || safeSource.formData?.activite || '',
+                score: safeEngineResult.score || safeSource.score || '',
+                reliability: safeSource.reliability || ''
+            });
+
+            const resultBasis = normalizeStringList(safeSource.resultBasis, 6);
+            const providerQuestions = normalizeStringList(safeSource.providerQuestions, 6);
+            const executiveSummary = normalizeStringList(safeSource.executiveSummary, 6);
+
+            return {
+                reportFrameVersion: 'pro-v1',
+                summary: buildDefaultReportSummaryText(safeSource, safeEngineResult),
+                executiveSummary: executiveSummary.length ? executiveSummary : normalizeStringList(template.executiveSummary, 6),
+                resultBasis: resultBasis.length ? resultBasis : normalizeStringList(template.resultBasis, 6),
+                providerQuestions: providerQuestions.length ? providerQuestions : normalizeStringList(template.providerQuestions, 6)
+            };
+        };
+
+        const applyCanonicalReportNarrative = (source = {}) => {
+            const safeSource = asPlainObject(source);
+            const engineResult = asPlainObject(safeSource.engineResult);
+
+            return {
+                ...safeSource,
+                ...buildCanonicalReportNarrative(safeSource, engineResult)
+            };
+        };
+
         const normalizeProCaseRecord = (record) => {
-            const payload = asPlainObject(record?.case_data);
+            const payload = applyCanonicalReportNarrative(asPlainObject(record?.case_data));
             const legacyId = payload.legacyId || (!isUuid(payload.id) ? payload.id : null);
 
             return {
@@ -1924,7 +2492,7 @@
         };
 
         const normalizeProReportRecord = (record) => {
-            const payload = asPlainObject(record?.report_payload);
+            const payload = applyCanonicalReportNarrative(asPlainObject(record?.report_payload));
             return {
                 ...payload,
                 id: payload.id || record.case_id || record.id,
@@ -1989,7 +2557,7 @@
         };
 
         const sanitizeCasePayloadForStorage = (caseData = {}, recordId) => {
-            const payload = { ...cloneJson(caseData, {}) };
+            const payload = applyCanonicalReportNarrative({ ...cloneJson(caseData, {}) });
             delete payload._caseRecordId;
             delete payload._caseCreatedAt;
             delete payload._caseUpdatedAt;
@@ -2006,7 +2574,7 @@
         };
 
         const sanitizeReportPayloadForStorage = (reportPayload = {}, caseId) => {
-            const payload = { ...cloneJson(reportPayload, {}) };
+            const payload = applyCanonicalReportNarrative({ ...cloneJson(reportPayload, {}) });
             delete payload.reportRecordId;
             delete payload._reportCreatedAt;
             delete payload._reportUpdatedAt;
@@ -3176,18 +3744,18 @@
                 stepPrefix: "Étape",
             },
             hero: {
-                h1: "Cadrez un site tertiaire en 4 minutes",
+                h1: "Définir l'état d'un site tertiaire en 4 minutes",
                 subtitle: "Filtrez un dossier, testez un site ou cadrez un petit portefeuille avant audit, devis ou échange client. Un rapport lisible, à votre charte, prêt à partager.",
                 badges: [
                     "Accès bêta 100% gratuit",
-                    "Rapport à votre charte graphique",
+                    "Rapport selon votre charte graphique",
                 ],
                 stats: [
                     { value: "4 min", label: "pour un premier cadrage" },
                     { value: "0 €", label: "pendant la bêta" },
                 ],
-                ctaPrimary: "Obtenir mon accès gratuit →",
-                ctaSecondary: "Voir comment ça fonctionne",
+                ctaPrimary: "Obtenir mon accès gratuit",
+
                 trustLine: "Sans carte bancaire · Connexion par lien email",
                 mockup: {
                     portfolioLabel: "Portefeuille multi-sites",
@@ -3234,25 +3802,25 @@
                 title: "Ce que vous gagnez concrètement",
                 items: [
                     { kpi: "4 min", kpiColor: "#1D4ED8", title: "Premier cadrage rapide", text: "Un site ou un dossier qualifié sans repartir d'un tableur." },
-                    { kpi: "1 page", kpiColor: "#059669", title: "Lecture partageable", text: "Un support lisible pour un client, un associé ou une équipe." },
+                    { kpi: "Rapport", kpiColor: "#059669", title: "Lecture partageable", text: "Un support lisible pour un client, un associé ou une équipe." },
                     { kpi: "Priorité", kpiColor: "#7C3AED", title: "Sites à traiter d'abord", text: "Repérez plus vite les cas à approfondir." },
                     { kpi: "0 €", kpiColor: "#D97706", title: "Bêta gratuite", text: "Testez sur vos propres cas, sans engagement." },
                 ],
             },
             steps: {
-                title: "Comment obtenir votre accès",
-                intro: "En quelques étapes, vous voyez rapidement si la solution vous fait gagner du temps.",
+                title: "Comment accéder à l'espace Pro",
+                intro: "Un parcours simple pour créer votre espace ou retrouver un accès existant.",
                 items: [
-                    { title: "Remplissez le formulaire", text: "30 sec à 1 min pour nous partager votre contexte.", duration: "< 1 min" },
-                    { title: "Recevez votre lien de connexion", text: "Envoyé sur votre email professionnel pour ouvrir votre espace.", duration: "Quelques secondes" },
-                    { title: "Testez sur vos dossiers", text: "Lancez un diagnostic sur un cas réel.", duration: "4 min" },
-                    { title: "Partagez vos retours", text: "Vos retours améliorent le produit.", duration: "En continu" },
+                    { title: "Choisissez votre parcours", text: "Créez un compte ou reconnectez-vous selon votre situation.", duration: "< 10 sec" },
+                    { title: "Renseignez l'essentiel", text: "Nom, email, société, métier et mot de passe pour ouvrir votre espace.", duration: "< 1 min" },
+                    { title: "Validez votre email si nécessaire", text: "Selon l'environnement Supabase, un email de confirmation peut être demandé.", duration: "Quelques secondes" },
+                    { title: "Ouvrez votre workspace", text: "Retrouvez vos diagnostics et rapports dans l'espace Pro.", duration: "Immédiat" },
                 ],
-                cta: "Un seul formulaire visible, puis lien de connexion par email",
+
             },
             form: {
-                title: "Créez votre espace Pro",
-                subtitle: "Renseignez vos informations une seule fois. Nous enregistrons votre demande et nous vous envoyons automatiquement votre lien de connexion.",
+                title: "Créez ou retrouvez votre espace Pro",
+                subtitle: "Créez votre compte en quelques champs, ou reconnectez-vous directement si votre espace existe déjà.",
                 urgency: "Accès bêta gratuit en cours d'ouverture",
                 included: [
                     "Accès complet à l'espace Pro",
@@ -3262,10 +3830,10 @@
                 fields: {
                     fullName: "Prénom et nom",
                     email: "Email professionnel",
-                    company: "Société / Cabinet",
+                    company: "Société",
+                    password: "Mot de passe",
+                    confirmPassword: "Confirmer le mot de passe",
                     role: "Votre métier",
-                    siteVolume: "Volume de dossiers / an",
-                    message: "Message (optionnel)",
                 },
                 roleOptions: [
                     "Gestionnaire de patrimoine",
@@ -3276,33 +3844,42 @@
                     "Collectivité / EPA / ADEME",
                     "Autre",
                 ],
-                volumeOptions: [
-                    "Moins de 10 dossiers",
-                    "10 à 50 dossiers",
-                    "50 à 200 dossiers",
-                    "Plus de 200 dossiers",
-                ],
                 placeholders: {
                     fullName: "Ex : Marie Dupont",
                     email: "vous@entreprise.fr",
                     company: "Nom du cabinet ou de l'entreprise",
-                    message: "Contexte, portefeuille, besoin actuel...",
+                    password: "Au moins 8 caractères",
+                    confirmPassword: "Retapez votre mot de passe",
                 },
-                cta: "Créer mon espace Pro",
-                secondaryCta: "Vous avez déjà un compte ? Recevoir un lien de connexion",
-                resendCta: "Renvoyer le lien",
+                modes: {
+                    signup: "Créer un compte",
+                    login: "Se connecter",
+                    recovery: "Définir le mot de passe",
+                },
+                signupCta: "Créer mon espace Pro",
+                loginCta: "Se connecter",
+                secondaryCta: "Recevoir un lien de connexion",
+                forgotPasswordCta: "Mot de passe oublié ?",
+                resendCta: "Recevoir un lien de connexion",
+                resetPasswordCta: "Envoyer un lien de réinitialisation",
+                recoveryCta: "Enregistrer mon nouveau mot de passe",
                 submitting: "Création de votre espace...",
-                trustLine: "Sans carte bancaire · Données protégées (RGPD) · Connexion sécurisée par email",
-                successTitle: "Vérifiez votre email pour ouvrir votre espace",
-                successText: "Nous vous avons envoyé un lien de connexion. Cliquez dessus pour ouvrir votre espace Pro automatiquement.",
-                successHelper: "Vérifiez aussi vos spams si vous ne voyez rien dans les prochaines minutes.",
+                loginSubmitting: "Connexion...",
+                recoverySubmitting: "Mise à jour du mot de passe...",
+                trustLine: "Sans carte bancaire · Données protégées (RGPD)",
+                successTitle: "Vérifiez votre email pour activer votre espace",
+                successText: "Votre compte est créé. Confirmez votre adresse email pour activer votre espace, puis connectez-vous avec votre mot de passe.",
+                successHelper: "Si vous ne retrouvez pas l'email, demandez un lien de connexion en secours.",
+                magicLinkHelper: "Option secondaire si vous préférez une connexion sans mot de passe.",
+                resetHelper: "Nous vous enverrons un email pour choisir un nouveau mot de passe.",
+                recoveryHelper: "Une fois validé, votre workspace s'ouvrira automatiquement.",
             },
             closing: {
                 urgencyBadge: "Bêta ouverte · accès gratuit",
                 title: "Testez l'outil sur un cas réel.",
                 text: "Voyez en quelques minutes si DiagTertiaire Pro vous aide à filtrer, prioriser et partager une première lecture claire.",
                 cta: "Rejoindre la bêta gratuitement →",
-                helper: "Lien de connexion par email · Sans engagement",
+                helper: "Email + mot de passe · Lien email en secours",
             },
         };
 
@@ -5306,6 +5883,7 @@
             const [officialPdfSuccess, setOfficialPdfSuccess] = useState('');
             const [officialPdfUrl, setOfficialPdfUrl] = useState('');
             const [officialPdfFile, setOfficialPdfFile] = useState(null);
+            const [officialPdfOpenBlocked, setOfficialPdfOpenBlocked] = useState(false);
 
             useEffect(() => {
                 let isCancelled = false;
@@ -5315,6 +5893,7 @@
                         if (!isCancelled) {
                             setOfficialPdfUrl('');
                             setOfficialPdfFile(null);
+                            setOfficialPdfOpenBlocked(false);
                         }
                         return;
                     }
@@ -5365,11 +5944,14 @@
                 || (c.formData ? ENGINE_PRO.compute(c.formData) : null)
                 || buildEngineResultFromMock(c);
             const r = normalizeEngineResult(rawResult, c.benchmark?.median || c.benchmark?.med || 0);
+            const reportNarrative = buildCanonicalReportNarrative(c, r);
 
             const proLogoImg = isProAuth ? resolveBrandPreviewUrl(branding) : '';
             const proLogoName = isProAuth ? resolveBrandName(settings, organization) : DEFAULT_WORKSPACE_BRAND_NAME;
             const hasCustomBranding = !!(proLogoImg || proLogoName !== DEFAULT_WORKSPACE_BRAND_NAME);
             const canGenerateOfficialPdf = isProAuth && !sharedCase && !!c.reportRecordId && !!organization?.id;
+            const hasOfficialPdfAvailable = !!(c.latestPdfFileId || officialPdfUrl);
+            const isOfficialPdfBusy = officialPdfPending || c.pdfStatus === 'generating';
             const effectivePdfError = officialPdfError || c.pdfError || '';
             const effectivePdfSuccess = officialPdfSuccess || (
                 c.pdfStatus === 'ready' && c.latestPdfGeneratedAtLabel
@@ -5377,20 +5959,79 @@
                     : ''
             );
 
+            const openOfficialPdfWindow = () => {
+                const pdfWindow = window.open('', '_blank');
+                if (!pdfWindow) {
+                    return null;
+                }
+
+                try {
+                    pdfWindow.opener = null;
+                    pdfWindow.document.title = 'Preparation du PDF officiel';
+                    pdfWindow.document.body.innerHTML = `
+                        <div style="margin:0;padding:32px;font-family:Inter,Arial,sans-serif;background:#f8fafc;color:#0f172a;">
+                            <div style="max-width:480px;margin:0 auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:20px;padding:24px;box-shadow:0 10px 30px rgba(15,23,42,0.08);">
+                                <div style="font-size:12px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#64748b;margin-bottom:12px;">DiagTertiaire Pro</div>
+                                <h1 style="margin:0 0 12px;font-size:22px;line-height:1.2;">Preparation du PDF officiel...</h1>
+                                <p style="margin:0;font-size:14px;line-height:1.7;color:#475569;">Le document va s'ouvrir automatiquement des qu'il est pret.</p>
+                            </div>
+                        </div>
+                    `;
+                    pdfWindow.document.close();
+                } catch (error) {
+                    console.warn('Impossible de preparer la fenetre PDF officielle :', error);
+                }
+
+                return pdfWindow;
+            };
+
+            const closeOfficialPdfWindow = (pdfWindow) => {
+                if (!pdfWindow || pdfWindow.closed) {
+                    return;
+                }
+
+                try {
+                    pdfWindow.close();
+                } catch (error) {
+                    console.warn('Impossible de fermer la fenetre PDF officielle :', error);
+                }
+            };
+
+            const navigateOfficialPdfWindow = (pdfWindow, url) => {
+                if (!url) {
+                    return false;
+                }
+
+                if (pdfWindow && !pdfWindow.closed) {
+                    try {
+                        pdfWindow.location.replace(url);
+                        return true;
+                    } catch (error) {
+                        console.warn('Impossible de rediriger la fenetre PDF officielle :', error);
+                    }
+                }
+
+                const openedWindow = window.open(url, '_blank', 'noopener,noreferrer');
+                return !!openedWindow;
+            };
+
             const handlePrintPdf = () => {
                 const orig = document.title;
                 document.title = `Rapport_${c.clientName || c.id}`;
                 window.print();
                 document.title = orig;
             };
+
             const handleGenerateOfficialPdf = async () => {
-                if (!canGenerateOfficialPdf) {
+                if (!canGenerateOfficialPdf || isOfficialPdfBusy) {
                     return;
                 }
 
+                const pdfWindow = openOfficialPdfWindow();
                 setOfficialPdfPending(true);
                 setOfficialPdfError('');
                 setOfficialPdfSuccess('');
+                setOfficialPdfOpenBlocked(false);
 
                 try {
                     const generationResult = await requestOfficialPdfGeneration(c.reportRecordId);
@@ -5411,7 +6052,14 @@
                     setOfficialPdfFile(access.fileRecord || syncedResult.latestPdfFile || null);
                     setOfficialPdfUrl(access.url || '');
                     setOfficialPdfSuccess('PDF officiel généré et sauvegardé dans votre espace privé.');
+
+                    const didOpen = navigateOfficialPdfWindow(pdfWindow, access.url || '');
+                    if (!didOpen) {
+                        setOfficialPdfOpenBlocked(true);
+                        setOfficialPdfError("Le navigateur a bloqué l'ouverture automatique. Utilisez le bouton ci-dessous pour ouvrir le PDF officiel.");
+                    }
                 } catch (error) {
+                    closeOfficialPdfWindow(pdfWindow);
                     try {
                         await (onSyncReportPdfMetadata
                             ? onSyncReportPdfMetadata(c.reportRecordId)
@@ -5434,12 +6082,18 @@
                     return;
                 }
 
+                const pdfWindow = openOfficialPdfWindow();
                 setOfficialPdfError('');
+                setOfficialPdfSuccess('');
+                setOfficialPdfOpenBlocked(false);
+
                 try {
                     const access = await resolveStoredPdfAccess({
                         report: c,
                         organizationId: organization.id,
-                        latestPdfFile: officialPdfFile
+                        latestPdfFile: officialPdfFile && officialPdfFile.id === c.latestPdfFileId
+                            ? officialPdfFile
+                            : null
                     });
 
                     if (!access.url) {
@@ -5448,8 +6102,14 @@
 
                     setOfficialPdfFile(access.fileRecord || null);
                     setOfficialPdfUrl(access.url);
-                    window.open(access.url, '_blank', 'noopener,noreferrer');
+
+                    const didOpen = navigateOfficialPdfWindow(pdfWindow, access.url);
+                    if (!didOpen) {
+                        setOfficialPdfOpenBlocked(true);
+                        setOfficialPdfError("Le navigateur a bloqué l'ouverture automatique. Utilisez le bouton ci-dessous pour ouvrir le PDF officiel.");
+                    }
                 } catch (error) {
+                    closeOfficialPdfWindow(pdfWindow);
                     setOfficialPdfError(error?.message || "Impossible d'ouvrir le PDF officiel.");
                 }
             };
@@ -5498,35 +6158,49 @@
                             </button>
                         )}
                         <div className="flex gap-2 w-full sm:w-auto flex-wrap">
-                            <button onClick={handlePrintPdf} className="pro-btn bg-slate-800 text-white hover:bg-slate-700 flex-1 sm:flex-none text-sm px-3 py-2">
-                                <Icon icon="solar:printer-bold" />
-                                <span className="hidden sm:inline">Export local (secours)</span>
-                                <span className="sm:hidden">Secours</span>
-                            </button>
-                            {canGenerateOfficialPdf && (
-                                <button
-                                    onClick={handleGenerateOfficialPdf}
-                                    disabled={officialPdfPending}
-                                    className={`pro-btn flex-1 sm:flex-none text-sm px-3 py-2 ${officialPdfPending ? 'bg-slate-300 text-slate-600 cursor-wait' : 'pro-btn-secondary'}`}
-                                >
-                                    <Icon icon={officialPdfPending ? "solar:refresh-bold" : "solar:file-download-bold"} className={officialPdfPending ? 'animate-spin' : ''} />
-                                    <span className="hidden sm:inline">
-                                        {officialPdfPending
-                                            ? 'Generation en cours...'
-                                            : (c.latestPdfFileId ? 'Regenerer le PDF officiel' : 'Generer le PDF officiel')}
-                                    </span>
-                                    <span className="sm:hidden">
-                                        {officialPdfPending ? 'Gen...' : 'Officiel'}
-                                    </span>
-                                </button>
-                            )}
-                            {canGenerateOfficialPdf && (c.latestPdfFileId || officialPdfUrl) && (
+                            {canGenerateOfficialPdf && hasOfficialPdfAvailable ? (
                                 <button onClick={handleOpenOfficialPdf} className="pro-btn pro-btn-primary flex-1 sm:flex-none text-sm px-3 py-2">
                                     <Icon icon="solar:download-bold" />
                                     <span className="hidden sm:inline">Ouvrir le PDF officiel</span>
                                     <span className="sm:hidden">Ouvrir</span>
                                 </button>
+                            ) : canGenerateOfficialPdf ? (
+                                <button
+                                    onClick={handleGenerateOfficialPdf}
+                                    disabled={isOfficialPdfBusy}
+                                    className={`pro-btn pro-btn-primary flex-1 sm:flex-none text-sm px-3 py-2 ${isOfficialPdfBusy ? 'opacity-70 cursor-wait' : ''}`}
+                                >
+                                    <Icon icon={isOfficialPdfBusy ? "solar:refresh-bold" : "solar:file-download-bold"} className={isOfficialPdfBusy ? 'animate-spin' : ''} />
+                                    <span className="hidden sm:inline">
+                                        {isOfficialPdfBusy ? 'Generation en cours...' : 'Generer le PDF officiel'}
+                                    </span>
+                                    <span className="sm:hidden">
+                                        {isOfficialPdfBusy ? 'Gen...' : 'Generer'}
+                                    </span>
+                                </button>
+                            ) : null}
+
+                            {canGenerateOfficialPdf && hasOfficialPdfAvailable && (
+                                <button
+                                    onClick={handleGenerateOfficialPdf}
+                                    disabled={isOfficialPdfBusy}
+                                    className={`pro-btn flex-1 sm:flex-none text-sm px-3 py-2 ${isOfficialPdfBusy ? 'bg-slate-300 text-slate-600 cursor-wait' : 'pro-btn-secondary'}`}
+                                >
+                                    <Icon icon={isOfficialPdfBusy ? "solar:refresh-bold" : "solar:refresh-linear"} className={isOfficialPdfBusy ? 'animate-spin' : ''} />
+                                    <span className="hidden sm:inline">
+                                        {isOfficialPdfBusy ? 'Mise a jour en cours...' : 'Regenerer'}
+                                    </span>
+                                    <span className="sm:hidden">
+                                        {isOfficialPdfBusy ? 'Maj...' : 'Maj'}
+                                    </span>
+                                </button>
                             )}
+
+                            <button onClick={handlePrintPdf} className="pro-btn border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 flex-1 sm:flex-none text-sm px-3 py-2">
+                                <Icon icon="solar:printer-bold" />
+                                <span className="hidden sm:inline">Export local (secours)</span>
+                                <span className="sm:hidden">Secours</span>
+                            </button>
                             {isProAuth && !sharedCase && (
                                 <button onClick={handleShare} className="pro-btn pro-btn-primary flex-1 sm:flex-none text-sm px-3 py-2">
                                     <Icon icon="solar:link-bold" />
@@ -5544,20 +6218,39 @@
                                 <div className="min-w-0">
                                     <div className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">PDF officiel sauvegarde</div>
                                     <div className="text-sm text-slate-700 mt-1">
-                                        {effectivePdfSuccess || "Utilisez cette action pour generer la version serveur archivee. L export local navigateur reste disponible en secours."}
+                                        {effectivePdfSuccess || (
+                                            hasOfficialPdfAvailable
+                                                ? "Le PDF officiel est pret. Utilisez le bouton principal pour l'ouvrir, ou la regeneration pour le mettre a jour. L export local reste un secours."
+                                                : "Generez la version serveur archivee. Elle s'ouvrira automatiquement a la fin si le navigateur l'autorise. L export local reste un secours."
+                                        )}
                                     </div>
                                     {!!effectivePdfError && (
                                         <div className="text-sm text-red-600 mt-2 break-words">{effectivePdfError}</div>
                                     )}
+                                    {officialPdfOpenBlocked && officialPdfUrl && (
+                                        <div className="mt-3">
+                                            <a
+                                                href={officialPdfUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+                                            >
+                                                <Icon icon="solar:download-bold" />
+                                                Ouvrir le PDF officiel
+                                            </a>
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 shrink-0">
-                                    {c.pdfStatus === 'ready'
-                                        ? 'Statut : pret'
-                                        : c.pdfStatus === 'generating'
-                                            ? 'Statut : generation en cours'
+                                    {isOfficialPdfBusy
+                                        ? 'Statut : generation en cours'
+                                        : c.pdfStatus === 'ready'
+                                            ? 'Statut : pret'
                                             : c.pdfStatus === 'error'
                                                 ? 'Statut : erreur'
-                                                : 'Statut : non genere'}
+                                                : hasOfficialPdfAvailable
+                                                    ? 'Statut : pret'
+                                                    : 'Statut : non genere'}
                                 </div>
                             </div>
                         </div>
@@ -5630,9 +6323,12 @@
                         // Score après travaux : calculer la nouvelle intensité
                         const savingsPct = r.kwhTotal > 0 ? r.totalSavingsKwh / r.kwhTotal : 0;
                         const intensiteApres = Math.round(r.intensity * (1 - savingsPct));
-                        const scoreApres = computeScoreFromIntensity(intensiteApres, r.ref?.med || 0).score;
+                        const scoreApres = c.formData
+                            ? (c.scoreApresTravauxLabel || computeScoreFromIntensity(intensiteApres, r.ref?.med || 0).score)
+                            : computeScoreFromIntensity(intensiteApres, r.ref?.med || 0).score;
                         const cfgAvant = SCORE_CONFIG[r.score] || SCORE_CONFIG['C'];
                         const cfgApres = SCORE_CONFIG[scoreApres] || SCORE_CONFIG['C'];
+                        const shouldShowScoreBands = !!c.formData || r.score !== scoreApres;
 
                         const EtiquetteBande = ({ score, intensite, label, sectorRef }) => {
                             const ORDER = ['A', 'B', 'C', 'D', 'E'];
@@ -5681,7 +6377,7 @@
                             );
                         };
 
-                        if (r.score === scoreApres) return null;
+                        if (!shouldShowScoreBands) return null;
                         return (
                             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 mb-8">
                                 <h3 className="text-lg font-bold text-slate-800 mb-1 flex items-center gap-2">
@@ -6203,12 +6899,43 @@
                     )}
 
                     {/* Résumé */}
-                    {c.summary && (
+                    {reportNarrative.summary && (
                         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 mb-8">
                             <h3 className="text-lg font-bold text-slate-800 mb-2 flex items-center gap-2">
                                 <Icon icon="solar:document-text-bold" className="text-blue-600" /> Synthèse
                             </h3>
-                            <p className="text-slate-600">{c.summary}</p>
+                            <p className="text-slate-600">{reportNarrative.summary}</p>
+                        </div>
+                    )}
+
+                    {(reportNarrative.resultBasis.length > 0 || reportNarrative.providerQuestions.length > 0) && (
+                        <div className="grid md:grid-cols-2 gap-6 mb-8">
+                            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                                <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                                    <Icon icon="solar:document-add-bold" className="text-blue-600" /> Base de calcul
+                                </h3>
+                                <ul className="space-y-3 text-sm text-slate-600">
+                                    {reportNarrative.resultBasis.map((item, index) => (
+                                        <li key={index} className="flex items-start gap-3">
+                                            <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-blue-500"></span>
+                                            <span>{item}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                                <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                                    <Icon icon="solar:question-circle-bold" className="text-blue-600" /> Points a confirmer
+                                </h3>
+                                <ul className="space-y-3 text-sm text-slate-600">
+                                    {reportNarrative.providerQuestions.map((item, index) => (
+                                        <li key={index} className="flex items-start gap-3">
+                                            <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-slate-400"></span>
+                                            <span>{item}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
                         </div>
                     )}
 
@@ -6220,48 +6947,51 @@
         };
 
         /* ===== NOUVEAU DIAGNOSTIC - Wizard 7 modules ===== */
-        const ProNewDiag = ({ setPage, draftPayload, onSaveDraft, onClearDraft, onGenerateCase }) => {
-            const INITIAL = {
-                step: 1,
-                contactName: '', company: '', email: '', phone: '', postalCode: '',
-                statut: '', objectif: '', horizon: '', urgence: '', isMulti: false,
-                activity: '', surface: '', constructionYear: '', niveaux: '', orientation: '',
-                commerceFroid: false, entrepotChauffe: false,
-                isolation_toiture: '', isolation_murs: '', isolation_plancher: '',
-                vitrage_type: '', ponts_thermiques: [],
-                heating: '', chauffage_age: '', chauffage_reseau: '', chauffage_regulation: [],
-                clim_presente: false, clim_type: '', clim_age: '',
-                vmc_type: '', vmc_horloge: false,
-                ecs_presente: true, ecs_systeme: '', ecs_calorifugeage: '', ecs_usage: '',
-                eclairage_type: '', eclairage_detecteurs: false,
-                elecKwh: '', elecEuro: '', elecSubscriptionYearly: '',
-                gasKwh: '', gasEuro: '',
-                periode_couverte: '', evenement_atypique: false,
-                heures_semaine: 40, semaines_annee: '', occupation_weekend: false,
-                nb_occupants: '', intensite_usage: 'standard',
-                travaux_realises: [], budget: '', contraintes: [],
-                noteInterne: '',
-            };
-
-            const initialDraftState = buildDraftFormState(INITIAL, draftPayload);
+        const ProNewDiag = ({ setPage, draftPayload, draftArchives = [], onSaveDraft, onArchiveCurrentDraft, onRestoreArchivedDraft, onGenerateCase }) => {
+            const initialDraftState = buildDraftFormState(PRO_NEW_DIAG_INITIAL_FORM, draftPayload);
             const skipNextDraftSyncRef = useRef(false);
             const didMountRef = useRef(false);
             const [form, setForm] = React.useState(initialDraftState);
             const [isGenerating, setIsGenerating] = React.useState(false);
+            const [isDraftActionPending, setIsDraftActionPending] = React.useState(false);
             const [draftError, setDraftError] = React.useState('');
             const [generationError, setGenerationError] = React.useState('');
+            const archivedDrafts = Array.isArray(draftArchives) ? draftArchives : [];
+            const hasActiveDraft = hasMeaningfulDraftPayload(form);
 
             const [showResume, setShowResume] = React.useState(() => hasMeaningfulDraftPayload(initialDraftState));
             const handleResume = () => setShowResume(false); // garde le form chargé tel quel
-            const handleRestart = async () => {
+            const handleStartFresh = async () => {
                 try {
                     setDraftError('');
+                    setValidationError('');
+                    setIsDraftActionPending(true);
+                    await onArchiveCurrentDraft?.(form);
                     skipNextDraftSyncRef.current = true;
-                    await onClearDraft?.();
-                    setForm(INITIAL);
+                    setForm(PRO_NEW_DIAG_INITIAL_FORM);
                     setShowResume(false);
+                    window.scrollTo(0, 0);
                 } catch (error) {
-                    setDraftError(error?.message || "Impossible de reinitialiser le brouillon pour le moment.");
+                    setDraftError(error?.message || "Impossible de sauvegarder le brouillon avant de lancer un nouveau diagnostic.");
+                } finally {
+                    setIsDraftActionPending(false);
+                }
+            };
+
+            const handleRestoreArchived = async (archiveId) => {
+                try {
+                    setDraftError('');
+                    setValidationError('');
+                    setIsDraftActionPending(true);
+                    const restoredDraftPayload = await onRestoreArchivedDraft?.(archiveId, form);
+                    skipNextDraftSyncRef.current = true;
+                    setForm(buildDraftFormState(PRO_NEW_DIAG_INITIAL_FORM, restoredDraftPayload));
+                    setShowResume(false);
+                    window.scrollTo(0, 0);
+                } catch (error) {
+                    setDraftError(error?.message || "Impossible de reprendre ce brouillon sauvegarde pour le moment.");
+                } finally {
+                    setIsDraftActionPending(false);
                 }
             };
 
@@ -6328,6 +7058,9 @@
                 setIsGenerating(true);
                 setTimeout(async () => {
                     const result = ENGINE_PRO.compute(form);
+                    const savingsPct = result.kwhTotal > 0 ? result.totalSavingsKwh / result.kwhTotal : 0;
+                    const intensiteApresTravaux = Math.round(result.intensity * (1 - savingsPct));
+                    const scoreApresTravaux = computeScoreFromIntensity(intensiteApresTravaux, result.ref?.med || 0).score;
                     const newCase = {
                         id: generateUuid(),
                         legacyId: 'PRO-' + Date.now(),
@@ -6342,6 +7075,7 @@
                         status: 'nouveau',
                         createdAt: new Date().toLocaleDateString('fr-FR'),
                         score: result.score,
+                        scoreApresTravauxLabel: scoreApresTravaux,
                         scoreConfidence: result.badgeConfiance,
                         intensityPerSqm: result.intensity,
                         annualEnergyCostLabel: result.totalBill.toLocaleString('fr-FR') + ' € / an',
@@ -6435,13 +7169,13 @@
                                 Vous avez un diagnostic en cours (étape {form.step}/7).
                             </div>
                             <div className="flex gap-2 shrink-0">
-                                <button type="button" onClick={handleResume}
+                                <button type="button" onClick={handleResume} disabled={isDraftActionPending}
                                     className="px-3 py-1.5 text-xs font-bold bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                                     Reprendre
                                 </button>
-                                <button type="button" onClick={handleRestart}
+                                <button type="button" onClick={handleStartFresh} disabled={isDraftActionPending}
                                     className="px-3 py-1.5 text-xs font-semibold text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
-                                    Recommencer
+                                    Nouveau diagnostic
                                 </button>
                             </div>
                         </div>
@@ -6449,6 +7183,18 @@
 
                     <div className="mb-8 text-center">
                         <h2 className="text-3xl font-extrabold text-slate-900 mb-4 tracking-tight">Nouveau diagnostic assisté</h2>
+                        {!showResume && hasActiveDraft && (
+                            <div className="mb-4 inline-flex max-w-xl flex-col items-center gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm shadow-slate-200/40">
+                                <div className="text-sm text-slate-600">
+                                    Le formulaire en cours est sauvegarde automatiquement et peut etre archive avant d'ouvrir un nouveau diagnostic.
+                                </div>
+                                <button type="button" onClick={handleStartFresh} disabled={isDraftActionPending || isGenerating}
+                                    className="pro-btn pro-btn-secondary text-sm">
+                                    <Icon icon="solar:add-square-bold" />
+                                    {isDraftActionPending ? 'Sauvegarde...' : 'Sauvegarder ce brouillon et commencer un autre diagnostic'}
+                                </button>
+                            </div>
+                        )}
                         <div className="max-w-lg mx-auto">
                             <div className="flex justify-between text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">
                                 <span>{STEPS[form.step - 1]}</span>
@@ -6464,6 +7210,41 @@
                             </div>
                         </div>
                     </div>
+
+                    {archivedDrafts.length > 0 && (
+                        <div className="mb-6 bg-white rounded-2xl border border-slate-200 px-5 py-5 shadow-sm shadow-slate-200/40">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                <div>
+                                    <div className="text-sm font-bold text-slate-800">Brouillons sauvegardes</div>
+                                    <p className="text-sm text-slate-500 mt-1">Reprenez un formulaire abandonne sans perdre le diagnostic actuellement ouvert.</p>
+                                </div>
+                                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                                    {archivedDrafts.length} sauvegarde{archivedDrafts.length > 1 ? 's' : ''}
+                                </div>
+                            </div>
+                            <div className="mt-4 space-y-3">
+                                {archivedDrafts.map((archive) => (
+                                    <button
+                                        key={archive.id}
+                                        type="button"
+                                        onClick={() => handleRestoreArchived(archive.id)}
+                                        disabled={isDraftActionPending || isGenerating}
+                                        className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-left transition-colors hover:bg-white disabled:opacity-60 disabled:cursor-not-allowed"
+                                    >
+                                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                                            <div>
+                                                <div className="font-semibold text-slate-800">{archive.title}</div>
+                                                <div className="text-sm text-slate-500 mt-1">{archive.summary}</div>
+                                            </div>
+                                            <div className="text-xs text-slate-400">
+                                                Sauvegarde le {formatDateTimeForUi(archive.lastSavedAt)}
+                                            </div>
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
                     <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 p-8 md:p-10 min-h-[500px] relative">
 
@@ -7222,7 +8003,7 @@
         };
 
         /* ===== SIDEBAR & TOPBAR (Navigation et boutons responsives réparés) ===== */
-        const ProSidebar = ({ curPage, setPage, isMobileOpen, closeMobile, onLogout }) => {
+        const ProSidebar = ({ curPage, setPage, isMobileOpen, closeMobile, onLogout, profile = null, organization = null, authUserId = null }) => {
             const navs = [
                 { id: 'dashboard', label: 'Vue globale', icon: 'solar:pie-chart-2-bold' },
                 { id: 'cases', label: 'Dossiers clients', icon: 'solar:folder-with-files-bold' },
@@ -7230,6 +8011,9 @@
                 { id: 'plans', label: 'Plans & Tarifs', icon: 'solar:star-bold' },
                 { id: 'settings', label: 'Configuration', icon: 'solar:settings-bold' }
             ];
+            const displayName = resolveWorkspaceUserDisplayName(profile);
+            const roleLabel = resolveWorkspaceUserRoleLabel(profile, organization, authUserId);
+            const userInitials = buildUserInitials(displayName, profile?.email || '');
 
             return (
                 <>
@@ -7264,10 +8048,10 @@
                         {/* Profil Footer Premium */}
                         <div className="p-4 border-t border-slate-100 mt-4 bg-slate-50/50">
                             <div className="flex items-center gap-3 mb-4 px-2">
-                                <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xs shadow-inner">SL</div>
+                                <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xs shadow-inner">{userInitials}</div>
                                 <div className="overflow-hidden">
-                                    <div className="text-sm font-bold text-slate-800 truncate">Sophie Laurent</div>
-                                    <div className="text-[10px] text-blue-400 uppercase tracking-widest font-black">Admin</div>
+                                    <div className="text-sm font-bold text-slate-800 truncate">{displayName}</div>
+                                    <div className="text-[10px] text-blue-400 uppercase tracking-widest font-black">{roleLabel}</div>
                                 </div>
                             </div>
 
@@ -7302,26 +8086,40 @@
             </div>
         );
 
-        const ProLanding = ({ authError }) => {
+        const ProLanding = ({ authError, recoveryState }) => {
             const copy = PRO_LANDING_COPY;
             const heroBadges = copy.hero.badges.slice(0, 2);
             const heroStats = copy.hero.stats.slice(0, 2);
+            const [authMode, setAuthMode] = React.useState('signup');
             const [form, setForm] = React.useState({
                 fullName: '',
                 email: '',
                 company: '',
+                password: '',
+                confirmPassword: '',
                 role: '',
-                siteVolume: '',
-                message: '',
+                loginPassword: '',
+            });
+            const [recoveryForm, setRecoveryForm] = React.useState({
+                password: '',
+                confirmPassword: '',
             });
             const [isSubmitting, setIsSubmitting] = React.useState(false);
-            const [submitted, setSubmitted] = React.useState(false);
+            const [successState, setSuccessState] = React.useState(null);
             const [submitError, setSubmitError] = React.useState(null);
             const [honeypot, setHoneypot] = React.useState('');
             const landingFormKey = 'pro-landing-form';
             const [isSendingMagicLink, setIsSendingMagicLink] = React.useState(false);
             const [magicLinkError, setMagicLinkError] = React.useState(null);
             const [magicLinkSuccess, setMagicLinkSuccess] = React.useState(null);
+            const [isSendingPasswordReset, setIsSendingPasswordReset] = React.useState(false);
+            const [passwordResetError, setPasswordResetError] = React.useState(null);
+            const [passwordResetSuccess, setPasswordResetSuccess] = React.useState(null);
+            const [isUpdatingPassword, setIsUpdatingPassword] = React.useState(false);
+            const [passwordUpdateError, setPasswordUpdateError] = React.useState(null);
+            const submitted = !!successState;
+            const isFirstAccessSetup = recoveryState?.mode === 'first_access';
+            const isRecoveryMode = recoveryState?.mode === 'recovery';
 
             React.useEffect(() => {
                 markProFormRendered(landingFormKey);
@@ -7333,23 +8131,57 @@
                 return () => obs.disconnect();
             }, []);
 
+            React.useEffect(() => {
+                setSubmitError(null);
+                setMagicLinkError(null);
+                setMagicLinkSuccess(null);
+                setPasswordResetError(null);
+                setPasswordResetSuccess(null);
+            }, [authMode]);
+
+            React.useEffect(() => {
+                if (recoveryState?.active) {
+                    setSuccessState(null);
+                    setSubmitError(null);
+                    setMagicLinkError(null);
+                    setMagicLinkSuccess(null);
+                    setPasswordResetError(null);
+                    setPasswordResetSuccess(null);
+                    setPasswordUpdateError(null);
+                }
+            }, [recoveryState?.active, recoveryState?.mode]);
+
             const scrollToSection = (id) => {
                 const node = document.getElementById(id);
                 if (node) node.scrollIntoView({ behavior: 'smooth', block: 'start' });
             };
 
             const setField = (key, value) => setForm(prev => ({ ...prev, [key]: value }));
+            const setRecoveryField = (key, value) => setRecoveryForm(prev => ({ ...prev, [key]: value }));
+
+            const clearInlineFeedback = () => {
+                setSubmitError(null);
+                setMagicLinkError(null);
+                setMagicLinkSuccess(null);
+                setPasswordResetError(null);
+                setPasswordResetSuccess(null);
+                setPasswordUpdateError(null);
+            };
 
             const requestMagicLink = async ({ email, fullName, companyName }, options = {}) => {
                 const {
                     showSuccessMessage = true,
-                    successMessage
+                    successMessage,
+                    shouldCreateUser = false,
+                    onboardingFlow = ''
                 } = options;
                 const normalizedEmail = typeof email === 'string' ? email.trim() : '';
                 const normalizedFullName = typeof fullName === 'string' ? fullName.trim() : '';
                 const normalizedCompanyName = typeof companyName === 'string' ? companyName.trim() : '';
 
                 if (!normalizedEmail) {
+                    setPasswordResetSuccess(null);
+                    setPasswordResetError(null);
                     setMagicLinkSuccess(null);
                     setMagicLinkError("Renseignez votre email professionnel pour recevoir le lien de connexion.");
                     return false;
@@ -7358,11 +8190,17 @@
                 setIsSendingMagicLink(true);
                 setMagicLinkError(null);
                 setMagicLinkSuccess(null);
+                setPasswordResetError(null);
+                setPasswordResetSuccess(null);
 
                 try {
                     const result = await sendMagicLink(normalizedEmail, {
                         fullName: normalizedFullName,
-                        companyName: normalizedCompanyName
+                        companyName: normalizedCompanyName,
+                        onboardingFlow,
+                        passwordSetupRequired: shouldCreateUser
+                    }, {
+                        shouldCreateUser
                     });
 
                     if (!result.ok) {
@@ -7379,11 +8217,39 @@
                 }
             };
 
-            const handleSubmit = async (e) => {
+            const handlePasswordResetRequest = async () => {
+                clearInlineFeedback();
+                setIsSendingPasswordReset(true);
+
+                try {
+                    const result = await requestPasswordReset(form.email);
+                    if (!result.ok) {
+                        setPasswordResetError(result.error || "Impossible d'envoyer le lien de réinitialisation pour le moment.");
+                        return false;
+                    }
+
+                    setPasswordResetSuccess(`Lien de réinitialisation envoyé à ${form.email.trim()}. Vérifiez votre boîte mail et vos spams.`);
+                    return true;
+                } finally {
+                    setIsSendingPasswordReset(false);
+                }
+            };
+
+            const handleSignupSubmit = async (e) => {
                 e.preventDefault();
-                setSubmitError(null);
-                setMagicLinkError(null);
-                setMagicLinkSuccess(null);
+                clearInlineFeedback();
+                setSuccessState(null);
+
+                if (form.password.length < AUTH_MIN_PASSWORD_LENGTH) {
+                    setSubmitError(`Le mot de passe doit contenir au moins ${AUTH_MIN_PASSWORD_LENGTH} caractères.`);
+                    return;
+                }
+
+                if (form.password !== form.confirmPassword) {
+                    setSubmitError("Les deux mots de passe ne correspondent pas.");
+                    return;
+                }
+
                 const antiSpamCheck = runProFormAntiSpamChecks({
                     formKey: landingFormKey,
                     honeypotValue: honeypot,
@@ -7408,13 +8274,11 @@
                         company: form.company || null,
                         phone: null,
                         message: buildProInterestMessage(
-                            form.message || null,
-                            form.role ? `Role: ${form.role}` : null,
-                            form.siteVolume ? `Volume de sites: ${form.siteVolume}` : null
+                            null,
+                            form.role ? `Métier: ${form.role}` : null
                         ),
                         form: 'pro_landing',
                         role: form.role || null,
-                        siteVolume: form.siteVolume || null,
                         requestedAt: payload.requestedAt
                     });
 
@@ -7424,20 +8288,105 @@
                         return;
                     }
 
-                    await requestMagicLink(
-                        {
-                            email: form.email,
-                            fullName: form.fullName,
-                            companyName: form.company
-                        },
-                        { showSuccessMessage: false }
-                    );
-                    await new Promise(resolve => setTimeout(resolve, 400));
-                    setSubmitted(true);
+                    const authResult = await signUpWithPassword({
+                        email: form.email,
+                        password: form.password,
+                        fullName: form.fullName,
+                        companyName: form.company
+                    });
+
+                    if (!authResult.ok) {
+                        clearProFormCooldown(landingFormKey);
+                        setSubmitError(authResult.error || "Impossible de créer votre espace pour le moment.");
+                        return;
+                    }
+
+                    if (authResult.requiresEmailConfirmation) {
+                        setSuccessState({
+                            title: copy.form.successTitle,
+                            text: `${copy.form.successText} L'email a été envoyé à ${form.email.trim()}.`
+                        });
+                    }
                 } finally {
                     setIsSubmitting(false);
                 }
             };
+
+            const handleLoginSubmit = async (e) => {
+                e.preventDefault();
+                clearInlineFeedback();
+                setSuccessState(null);
+                setIsSubmitting(true);
+
+                try {
+                    const authResult = await signInWithPassword({
+                        email: form.email,
+                        password: form.loginPassword
+                    });
+
+                    if (!authResult.ok) {
+                        const loginError = authResult.error || "Impossible de vous connecter pour le moment.";
+                        setSubmitError(
+                            /email not confirmed/i.test(loginError)
+                                ? "Votre adresse email n'est pas encore validée. Vérifiez votre email de confirmation ou demandez un lien de connexion."
+                                : loginError
+                        );
+                    }
+                } finally {
+                    setIsSubmitting(false);
+                }
+            };
+
+            const handleRecoverySubmit = async (e) => {
+                e.preventDefault();
+                setPasswordUpdateError(null);
+
+                if (recoveryForm.password.length < AUTH_MIN_PASSWORD_LENGTH) {
+                    setPasswordUpdateError(`Le mot de passe doit contenir au moins ${AUTH_MIN_PASSWORD_LENGTH} caractères.`);
+                    return;
+                }
+
+                if (recoveryForm.password !== recoveryForm.confirmPassword) {
+                    setPasswordUpdateError("Les deux mots de passe ne correspondent pas.");
+                    return;
+                }
+
+                setIsUpdatingPassword(true);
+
+                try {
+                    const result = await updateProPassword(recoveryForm.password, {
+                        passwordSetupRequired: false,
+                        passwordSetupCompletedAt: new Date().toISOString(),
+                        onboardingFlow: isFirstAccessSetup ? 'saaspro-password-set' : 'saaspro-recovery'
+                    });
+                    if (!result.ok) {
+                        setPasswordUpdateError(result.error || "Impossible de mettre à jour votre mot de passe pour le moment.");
+                        return;
+                    }
+
+                    clearSupabaseAuthRedirectState();
+                    window.location.assign(getAuthRedirectUrl());
+                } finally {
+                    setIsUpdatingPassword(false);
+                }
+            };
+
+            const handleSubmit = (e) => {
+                if (authMode === 'login') {
+                    handleLoginSubmit(e);
+                    return;
+                }
+
+                handleSignupSubmit(e);
+            };
+
+            const activeAuthHelperText = recoveryState?.active
+                ? isFirstAccessSetup
+                    ? "Votre adresse email est validée. Définissez maintenant votre mot de passe pour ouvrir directement votre espace."
+                    : "Choisissez un nouveau mot de passe pour finaliser la récupération de votre accès."
+                : authMode === 'signup'
+                    ? "Créez votre accès avec les informations essentielles. Le lien email reste une solution de secours."
+                    : "Connectez-vous directement avec votre email et votre mot de passe. Le lien email reste un secours.";
 
             const SectionHeader = ({ eyebrow, title, text, centered }) => (
                 React.createElement('div', { className: centered ? 'max-w-3xl mx-auto text-center' : 'max-w-xl' },
@@ -7471,7 +8420,8 @@
                                     Accès / connexion
                                 </button>
                                 <button type="button" onClick={() => scrollToSection('pro-access-form')} className="pro-btn pro-btn-primary px-4 py-2 text-sm">
-                                    {copy.hero.ctaPrimary}
+                                    <span>{copy.hero.ctaPrimary}</span>
+                                    <Icon icon="solar:arrow-right-bold" style={{ fontSize: '16px' }} />
                                 </button>
                             </div>
                         </div>
@@ -7481,9 +8431,9 @@
                     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 md:pt-16 pb-14 md:pb-16">
                         <div className="grid lg:grid-cols-[minmax(0,1fr)_440px] gap-8 lg:gap-12 items-center">
                             {/* Texte gauche */}
-                            <div className="max-w-[40rem]">
+                            <div className="max-w-[43rem]">
                                 <div className="text-[10px] md:text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500 mb-4">{copy.meta.heroEyebrow}</div>
-                                <h1 className="max-w-[11.5ch] text-[2.7rem] sm:text-5xl xl:text-[3.25rem] font-black tracking-[-0.045em] text-slate-950 leading-[0.98]" style={{ fontFamily: "'Inter', sans-serif" }}>
+                                <h1 className="max-w-[13.6ch] text-[2.7rem] sm:text-5xl xl:text-[3.25rem] font-black tracking-[-0.045em] text-slate-950 leading-[0.98]" style={{ fontFamily: "'Inter', sans-serif" }}>
                                     {copy.hero.h1}
                                 </h1>
                                 <p className="text-[17px] text-slate-600 mt-5 leading-7 max-w-[36rem]">{copy.hero.subtitle}</p>
@@ -7500,15 +8450,21 @@
                                         <React.Fragment key={stat.value}>
                                             {i > 0 && <div className="w-px h-8 bg-slate-200"></div>}
                                             <div>
-                                                <div className="text-[1.7rem] font-black text-slate-900 tracking-[-0.03em]" style={{ fontFamily: "'Inter', sans-serif" }}>{stat.value}</div>
-                                                <div className="text-xs text-slate-500 mt-0.5">{stat.label}</div>
+                                                <div
+                                                    className={`text-[1.7rem] font-black tracking-[-0.03em] ${String(stat.value || '').trim().startsWith('0') ? 'text-emerald-600' : 'text-slate-900'}`}
+                                                    style={{ fontFamily: "'Inter', sans-serif" }}
+                                                >
+                                                    {stat.value}
+                                                </div>
+                                                <div className={`text-xs mt-0.5 ${String(stat.value || '').trim().startsWith('0') ? 'text-emerald-700' : 'text-slate-500'}`}>{stat.label}</div>
                                             </div>
                                         </React.Fragment>
                                     ))}
                                 </div>
                                 <div className="flex flex-col sm:flex-row sm:items-center gap-3 mt-8">
                                     <button type="button" onClick={() => scrollToSection('pro-access-form')} className="pro-btn pro-btn-primary px-6 py-3.5 text-[15px]">
-                                        {copy.hero.ctaPrimary}
+                                        <span>{copy.hero.ctaPrimary}</span>
+                                        <Icon icon="solar:arrow-right-bold" style={{ fontSize: '18px' }} />
                                     </button>
                                     <button type="button" onClick={() => scrollToSection('pro-how-it-works')} className="inline-flex items-center gap-2 px-1 py-2 text-sm font-semibold text-slate-500 hover:text-slate-900 transition-colors">
                                         {copy.hero.ctaSecondary}
@@ -7677,147 +8633,280 @@
                                         </div>
                                     )}
 
-                                    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 mb-6">
-                                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-                                            <div>
-                                                <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500 mb-2">Accès pro</div>
-                                                <p className="text-sm text-slate-600 leading-6">
-                                                    Un seul formulaire pour créer votre accès. Nous enregistrons vos informations puis nous envoyons automatiquement votre lien de connexion par email.
-                                                </p>
-                                            </div>
-                                            <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-semibold text-slate-600 shrink-0">
-                                                <Icon icon="solar:mailbox-bold" style={{ fontSize: '14px' }} />
-                                                Création + connexion email
-                                            </span>
-                                        </div>
+                                    <div className="mb-6">
+                                        <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-semibold text-slate-600">
+                                            <Icon icon={recoveryState?.active ? "solar:key-bold" : authMode === 'signup' ? "solar:user-plus-bold" : "solar:login-3-bold"} style={{ fontSize: '14px' }} />
+                                            {recoveryState?.active ? copy.form.modes.recovery : authMode === 'signup' ? copy.form.modes.signup : copy.form.modes.login}
+                                        </span>
+                                        <p className="text-sm text-slate-600 leading-6 mt-3">
+                                            {activeAuthHelperText}
+                                        </p>
                                     </div>
 
-                                    {!submitted ? (
-                                        <form onSubmit={handleSubmit} className="space-y-4">
-                                            <div style={PRO_FORM_ANTISPAM_HONEYPOT_STYLE} aria-hidden="true">
-                                                <label htmlFor="pro-landing-website">Site web</label>
-                                                <input
-                                                    id="pro-landing-website"
-                                                    name="website"
-                                                    type="text"
-                                                    tabIndex="-1"
-                                                    autoComplete="off"
-                                                    value={honeypot}
-                                                    onChange={e => setHoneypot(e.target.value)}
-                                                />
-                                            </div>
-                                            <div className="grid md:grid-cols-2 gap-4">
-                                                <div>
-                                                    <label className="pro-label">{copy.form.fields.fullName}</label>
-                                                    <input type="text" name="fullName" autoComplete="name" required className="pro-input" placeholder={copy.form.placeholders.fullName} value={form.fullName} onChange={e => setField('fullName', e.target.value)} />
+                                    {recoveryState?.active ? (
+                                        <form onSubmit={handleRecoverySubmit} className="space-y-4">
+                                            {recoveryState?.email && (
+                                                <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-700">
+                                                    <div className="font-semibold text-slate-900">{isFirstAccessSetup ? "Adresse validée" : "Compte concerné"}</div>
+                                                    <div className="mt-1 break-all">{recoveryState.email}</div>
                                                 </div>
-                                                <div>
-                                                    <label className="pro-label">{copy.form.fields.email}</label>
-                                                    <input type="email" name="email" autoComplete="email" required className="pro-input" placeholder={copy.form.placeholders.email} value={form.email} onChange={e => setField('email', e.target.value)} />
-                                                </div>
-                                            </div>
-
-                                            <div>
-                                                <label className="pro-label">{copy.form.fields.company}</label>
-                                                <input type="text" name="company" autoComplete="organization" required className="pro-input" placeholder={copy.form.placeholders.company} value={form.company} onChange={e => setField('company', e.target.value)} />
-                                            </div>
+                                            )}
 
                                             <div className="grid md:grid-cols-2 gap-4">
                                                 <div>
-                                                    <label className="pro-label">{copy.form.fields.role}</label>
-                                                    <select name="role" required className="pro-input" value={form.role} onChange={e => setField('role', e.target.value)}>
-                                                        <option value="">Sélectionnez votre métier</option>
-                                                        {copy.form.roleOptions.map(opt => (
-                                                            <option key={opt} value={opt}>{opt}</option>
-                                                        ))}
-                                                    </select>
+                                                    <label className="pro-label">{copy.form.fields.password}</label>
+                                                    <input type="password" name="recoveryPassword" autoComplete="new-password" required minLength={AUTH_MIN_PASSWORD_LENGTH} className="pro-input" placeholder={copy.form.placeholders.password} value={recoveryForm.password} onChange={e => setRecoveryField('password', e.target.value)} />
                                                 </div>
                                                 <div>
-                                                    <label className="pro-label">{copy.form.fields.siteVolume}</label>
-                                                    <select name="siteVolume" required className="pro-input" value={form.siteVolume} onChange={e => setField('siteVolume', e.target.value)}>
-                                                        <option value="">Volume estimé</option>
-                                                        {copy.form.volumeOptions.map(opt => (
-                                                            <option key={opt} value={opt}>{opt}</option>
-                                                        ))}
-                                                    </select>
+                                                    <label className="pro-label">{copy.form.fields.confirmPassword}</label>
+                                                    <input type="password" name="recoveryPasswordConfirmation" autoComplete="new-password" required minLength={AUTH_MIN_PASSWORD_LENGTH} className="pro-input" placeholder={copy.form.placeholders.confirmPassword} value={recoveryForm.confirmPassword} onChange={e => setRecoveryField('confirmPassword', e.target.value)} />
                                                 </div>
                                             </div>
 
-                                            <div>
-                                                <label className="pro-label">{copy.form.fields.message}</label>
-                                                <textarea name="message" className="pro-input min-h-[90px] resize-y" placeholder={copy.form.placeholders.message} value={form.message} onChange={e => setField('message', e.target.value)} />
-                                            </div>
-
-                                            {submitError && (
+                                            {passwordUpdateError && (
                                                 <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                                                    {submitError}
+                                                    {passwordUpdateError}
                                                 </div>
                                             )}
 
                                             <div className="pt-2">
-                                                <button type="submit" disabled={isSubmitting} className="pro-btn pro-btn-primary w-full justify-center py-3.5 text-[15px] gap-2">
-                                                    {isSubmitting ? (
+                                                <button type="submit" disabled={isUpdatingPassword} className="pro-btn pro-btn-primary w-full justify-center py-3.5 text-[15px] gap-2">
+                                                    {isUpdatingPassword ? (
                                                         <>
                                                             <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
                                                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                                                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                                                             </svg>
-                                                            {copy.form.submitting}
+                                                            {copy.form.recoverySubmitting}
                                                         </>
                                                     ) : (
                                                         <>
-                                                            <Icon icon="solar:arrow-right-bold" style={{ fontSize: '16px' }} />
-                                                            {copy.form.cta}
+                                                            <Icon icon="solar:key-bold" style={{ fontSize: '16px' }} />
+                                                            {isFirstAccessSetup ? "Enregistrer mon mot de passe et ouvrir mon espace" : copy.form.recoveryCta}
                                                         </>
                                                     )}
                                                 </button>
                                                 <p className="flex justify-center items-center gap-1.5 text-xs text-slate-500 text-center mt-3">
                                                     <Icon icon="solar:lock-bold" style={{ fontSize: '13px' }} />
-                                                    {copy.form.trustLine}
+                                                    {isFirstAccessSetup ? "Une fois validé, vous entrez directement dans votre workspace." : copy.form.recoveryHelper}
                                                 </p>
                                             </div>
-
-                                            <div className="pt-1 text-center">
+                                        </form>
+                                    ) : !submitted ? (
+                                        <>
+                                            <div className="grid grid-cols-2 gap-2 mb-6 rounded-2xl border border-slate-200 bg-slate-50 p-1.5">
                                                 <button
                                                     type="button"
-                                                    onClick={() => requestMagicLink({ email: form.email, fullName: form.fullName, companyName: form.company })}
-                                                    disabled={isSendingMagicLink || isSubmitting}
-                                                    className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors disabled:opacity-50"
+                                                    onClick={() => setAuthMode('signup')}
+                                                    className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors ${authMode === 'signup' ? 'bg-white text-slate-900 shadow-sm shadow-slate-200/60' : 'text-slate-500 hover:text-slate-900'}`}
                                                 >
-                                                    {isSendingMagicLink ? (
-                                                        <>
-                                                            <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
-                                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                                                            </svg>
-                                                            Envoi du lien...
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <Icon icon="solar:letter-bold" style={{ fontSize: '15px' }} />
-                                                            {copy.form.secondaryCta}
-                                                        </>
-                                                    )}
+                                                    {copy.form.modes.signup}
                                                 </button>
-                                                {(magicLinkError || magicLinkSuccess) && (
-                                                    <div className={`rounded-xl px-4 py-3 text-sm text-center mt-3 ${magicLinkError ? 'border border-red-200 bg-red-50 text-red-700' : 'border border-emerald-200 bg-emerald-50 text-emerald-700'}`}>
-                                                        {magicLinkError || magicLinkSuccess}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setAuthMode('login')}
+                                                    className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors ${authMode === 'login' ? 'bg-white text-slate-900 shadow-sm shadow-slate-200/60' : 'text-slate-500 hover:text-slate-900'}`}
+                                                >
+                                                    {copy.form.modes.login}
+                                                </button>
+                                            </div>
+
+                                            <form onSubmit={handleSubmit} className="space-y-4">
+                                                {authMode === 'signup' && (
+                                                    <div style={PRO_FORM_ANTISPAM_HONEYPOT_STYLE} aria-hidden="true">
+                                                        <label htmlFor="pro-landing-website">Site web</label>
+                                                        <input
+                                                            id="pro-landing-website"
+                                                            name="website"
+                                                            type="text"
+                                                            tabIndex="-1"
+                                                            autoComplete="off"
+                                                            value={honeypot}
+                                                            onChange={e => setHoneypot(e.target.value)}
+                                                        />
                                                     </div>
                                                 )}
-                                            </div>
-                                        </form>
+
+                                                {authMode === 'signup' ? (
+                                                    <>
+                                                        <div className="grid md:grid-cols-2 gap-4">
+                                                            <div>
+                                                                <label className="pro-label">{copy.form.fields.fullName}</label>
+                                                                <input type="text" name="fullName" autoComplete="name" required className="pro-input" placeholder={copy.form.placeholders.fullName} value={form.fullName} onChange={e => setField('fullName', e.target.value)} />
+                                                            </div>
+                                                            <div>
+                                                                <label className="pro-label">{copy.form.fields.email}</label>
+                                                                <input type="email" name="email" autoComplete="email" required className="pro-input" placeholder={copy.form.placeholders.email} value={form.email} onChange={e => setField('email', e.target.value)} />
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="grid md:grid-cols-2 gap-4">
+                                                            <div>
+                                                                <label className="pro-label">{copy.form.fields.company}</label>
+                                                                <input type="text" name="company" autoComplete="organization" required className="pro-input" placeholder={copy.form.placeholders.company} value={form.company} onChange={e => setField('company', e.target.value)} />
+                                                            </div>
+                                                            <div>
+                                                                <label className="pro-label">{copy.form.fields.role}</label>
+                                                                <select name="role" required className="pro-input" value={form.role} onChange={e => setField('role', e.target.value)}>
+                                                                    <option value="">Sélectionnez votre métier</option>
+                                                                    {copy.form.roleOptions.map(opt => (
+                                                                        <option key={opt} value={opt}>{opt}</option>
+                                                                    ))}
+                                                                </select>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="grid md:grid-cols-2 gap-4">
+                                                            <div>
+                                                                <label className="pro-label">{copy.form.fields.password}</label>
+                                                                <input type="password" name="password" autoComplete="new-password" required minLength={AUTH_MIN_PASSWORD_LENGTH} className="pro-input" placeholder={copy.form.placeholders.password} value={form.password} onChange={e => setField('password', e.target.value)} />
+                                                            </div>
+                                                            <div>
+                                                                <label className="pro-label">{copy.form.fields.confirmPassword}</label>
+                                                                <input type="password" name="confirmPassword" autoComplete="new-password" required minLength={AUTH_MIN_PASSWORD_LENGTH} className="pro-input" placeholder={copy.form.placeholders.confirmPassword} value={form.confirmPassword} onChange={e => setField('confirmPassword', e.target.value)} />
+                                                            </div>
+                                                        </div>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <div>
+                                                            <label className="pro-label">{copy.form.fields.email}</label>
+                                                            <input type="email" name="email" autoComplete="email" required className="pro-input" placeholder={copy.form.placeholders.email} value={form.email} onChange={e => setField('email', e.target.value)} />
+                                                        </div>
+
+                                                        <div>
+                                                            <label className="pro-label">{copy.form.fields.password}</label>
+                                                            <input type="password" name="currentPassword" autoComplete="current-password" required className="pro-input" placeholder="Votre mot de passe" value={form.loginPassword} onChange={e => setField('loginPassword', e.target.value)} />
+                                                        </div>
+                                                    </>
+                                                )}
+
+                                                {submitError && (
+                                                    <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                                                        {submitError}
+                                                    </div>
+                                                )}
+
+                                                <div className="pt-2">
+                                                    <button type="submit" disabled={isSubmitting} className="pro-btn pro-btn-primary w-full justify-center py-3.5 text-[15px] gap-2">
+                                                        {isSubmitting ? (
+                                                            <>
+                                                                <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+                                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                                                </svg>
+                                                                {authMode === 'signup' ? copy.form.submitting : copy.form.loginSubmitting}
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <Icon icon="solar:arrow-right-bold" style={{ fontSize: '16px' }} />
+                                                                {authMode === 'signup' ? copy.form.signupCta : copy.form.loginCta}
+                                                            </>
+                                                        )}
+                                                    </button>
+                                                    <p className="flex justify-center items-center gap-1.5 text-xs text-slate-500 text-center mt-3">
+                                                        <Icon icon="solar:lock-bold" style={{ fontSize: '13px' }} />
+                                                        {copy.form.trustLine}
+                                                    </p>
+                                                </div>
+
+                                                <div className="pt-4 mt-4 border-t border-slate-100">
+                                                    {authMode === 'login' && (
+                                                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => requestMagicLink({ email: form.email, fullName: form.fullName, companyName: form.company })}
+                                                                disabled={isSendingMagicLink || isSubmitting || isSendingPasswordReset}
+                                                                className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors disabled:opacity-50"
+                                                            >
+                                                                {isSendingMagicLink ? (
+                                                                    <>
+                                                                        <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+                                                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                                                        </svg>
+                                                                        Envoi du lien...
+                                                                    </>
+                                                                ) : (
+                                                                    <>
+                                                                        <Icon icon="solar:letter-bold" style={{ fontSize: '15px' }} />
+                                                                        {copy.form.secondaryCta}
+                                                                    </>
+                                                                )}
+                                                            </button>
+
+                                                            <button
+                                                                type="button"
+                                                                onClick={handlePasswordResetRequest}
+                                                                disabled={isSendingPasswordReset || isSubmitting || isSendingMagicLink}
+                                                                className="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors disabled:opacity-50"
+                                                            >
+                                                                {isSendingPasswordReset ? (
+                                                                    <>
+                                                                        <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+                                                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                                                        </svg>
+                                                                        Envoi du lien...
+                                                                    </>
+                                                                ) : (
+                                                                    <>
+                                                                        <Icon icon="solar:key-minimalistic-square-linear" style={{ fontSize: '15px' }} />
+                                                                        {copy.form.forgotPasswordCta}
+                                                                    </>
+                                                                )}
+                                                            </button>
+                                                        </div>
+                                                    )}
+
+                                                    {authMode === 'login' && (
+                                                        <p className="text-xs text-slate-500 mt-3">
+                                                            {copy.form.magicLinkHelper}
+                                                        </p>
+                                                    )}
+
+                                                    {(magicLinkError || magicLinkSuccess) && (
+                                                        <div className={`rounded-xl px-4 py-3 text-sm text-center mt-3 ${magicLinkError ? 'border border-red-200 bg-red-50 text-red-700' : 'border border-emerald-200 bg-emerald-50 text-emerald-700'}`}>
+                                                            {magicLinkError || magicLinkSuccess}
+                                                        </div>
+                                                    )}
+
+                                                    {(passwordResetError || passwordResetSuccess) && (
+                                                        <div className={`rounded-xl px-4 py-3 text-sm text-center mt-3 ${passwordResetError ? 'border border-red-200 bg-red-50 text-red-700' : 'border border-emerald-200 bg-emerald-50 text-emerald-700'}`}>
+                                                            {passwordResetError || passwordResetSuccess}
+                                                        </div>
+                                                    )}
+
+                                                    <div className="pt-3 text-sm text-slate-500">
+                                                        {authMode === 'signup' ? (
+                                                            <>
+                                                                Déjà inscrit ?{' '}
+                                                                <button type="button" onClick={() => setAuthMode('login')} className="font-semibold text-slate-700 hover:text-slate-900">
+                                                                    Se connecter
+                                                                </button>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                Pas encore de compte ?{' '}
+                                                                <button type="button" onClick={() => setAuthMode('signup')} className="font-semibold text-slate-700 hover:text-slate-900">
+                                                                    Créer mon espace
+                                                                </button>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </>
                                     ) : (
                                         <div className="fade-in">
-                                            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-5 ${magicLinkError ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600'}`}>
-                                                <Icon icon={magicLinkError ? "solar:danger-circle-bold" : "solar:letter-bold"} style={{ fontSize: '28px' }} />
+                                            <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-5 bg-emerald-50 text-emerald-600">
+                                                <Icon icon="solar:letter-bold" style={{ fontSize: '28px' }} />
                                             </div>
                                             <h3 className="text-2xl font-black text-slate-900 tracking-tight" style={{ fontFamily: "'Inter', sans-serif" }}>
-                                                {magicLinkError ? "Votre demande est enregistrée" : copy.form.successTitle}
+                                                {successState.title}
                                             </h3>
                                             <p className="text-slate-600 leading-7 mt-3">
-                                                {magicLinkError
-                                                    ? "Votre demande a bien été enregistrée, mais nous n'avons pas pu envoyer automatiquement le lien de connexion. Vous pouvez réessayer ci-dessous."
-                                                    : `${copy.form.successText} L'email a été envoyé à ${form.email}.`}
+                                                {successState.text}
                                             </p>
                                             <div className="mt-6 space-y-4">
                                                 <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-700">
@@ -7833,13 +8922,26 @@
                                                     type="button"
                                                     onClick={() => requestMagicLink(
                                                         { email: form.email, fullName: form.fullName, companyName: form.company },
-                                                        { successMessage: `Nouveau lien envoyé à ${form.email}. Vérifiez votre boîte mail et vos spams.` }
+                                                        {
+                                                            successMessage: `Lien de connexion envoyé à ${form.email}. Vérifiez votre boîte mail et vos spams.`
+                                                        }
                                                     )}
                                                     disabled={isSendingMagicLink}
                                                     className="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors disabled:opacity-50"
                                                 >
                                                     <Icon icon="solar:refresh-linear" style={{ fontSize: '15px' }} />
                                                     {isSendingMagicLink ? 'Envoi du lien...' : copy.form.resendCta}
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setSuccessState(null);
+                                                        setAuthMode('login');
+                                                    }}
+                                                    className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors"
+                                                >
+                                                    <Icon icon="solar:login-3-bold" style={{ fontSize: '15px' }} />
+                                                    {copy.form.loginCta}
                                                 </button>
                                                 <p className="text-xs text-slate-500">{copy.form.successHelper}</p>
                                             </div>
@@ -7888,6 +8990,7 @@
             const [authReady, setAuthReady] = useState(false);
             const [authError, setAuthError] = useState(null);
             const [authUserId, setAuthUserId] = useState(null);
+            const [authRecovery, setAuthRecovery] = useState({ active: false, email: '', mode: '' });
             const [page, setPage] = useState('cases');
             const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
             const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
@@ -7920,6 +9023,25 @@
                     });
                 };
 
+                const clearRecoveryState = () => {
+                    setAuthRecovery({ active: false, email: '', mode: '' });
+                };
+
+                const activateRecoveryState = (session, mode = 'recovery') => {
+                    const user = session?.user || null;
+                    setActiveProUserId(user?.id || null);
+                    resetWorkspace();
+                    setAuth(false);
+                    setAuthUserId(null);
+                    setPage('cases');
+                    setAuthError(null);
+                    setAuthRecovery({
+                        active: !!user,
+                        email: user?.email || '',
+                        mode
+                    });
+                };
+
                 const applySession = async (session) => {
                     const user = session?.user || null;
                     setActiveProUserId(user?.id || null);
@@ -7927,12 +9049,22 @@
                     if (!isMounted) return;
 
                     if (!user) {
+                        clearRecoveryState();
                         resetWorkspace();
                         setAuth(false);
                         setAuthUserId(null);
                         setPage('cases');
                         return;
                     }
+
+                    if (isUserPasswordSetupPending(user)) {
+                        clearSupabaseAuthRedirectState();
+                        activateRecoveryState(session, 'first_access');
+                        return;
+                    }
+
+                    clearRecoveryState();
+                    clearSupabaseAuthRedirectState();
 
                     const workspaceResult = await ensureUserWorkspace(user);
                     if (!isMounted) return;
@@ -7977,21 +9109,41 @@
                         const browserClient = await getSupabaseBrowserClient();
 
                         if (!browserClient) {
+                            clearRecoveryState();
                             setAuth(false);
                             setAuthUserId(null);
                             return;
                         }
 
+                        const initialRecoveryFlow = isPasswordRecoveryFlow();
                         const { session, error } = await getCurrentSession();
                         if (error) {
                             setAuth(false);
                             setAuthUserId(null);
                             setAuthError("Impossible de vérifier votre session pour le moment.");
+                        } else if (initialRecoveryFlow && session?.user) {
+                            activateRecoveryState(session, 'recovery');
                         } else {
                             await applySession(session);
                         }
 
-                        const { data } = browserClient.auth.onAuthStateChange(async (_event, nextSession) => {
+                        const { data } = browserClient.auth.onAuthStateChange(async (event, nextSession) => {
+                            if (event === 'PASSWORD_RECOVERY') {
+                                activateRecoveryState(nextSession, 'recovery');
+                                if (isMounted) {
+                                    setAuthReady(true);
+                                }
+                                return;
+                            }
+
+                            if (nextSession?.user && isUserPasswordSetupPending(nextSession.user)) {
+                                activateRecoveryState(nextSession, 'first_access');
+                                if (isMounted) {
+                                    setAuthReady(true);
+                                }
+                                return;
+                            }
+
                             await applySession(nextSession);
                             if (isMounted) {
                                 setAuthReady(true);
@@ -8090,12 +9242,17 @@
                 return savedState;
             };
 
-            const handleClearDraft = async () => {
+            const handleArchiveCurrentDraft = async (currentDraftPayload) => {
                 const { userId, organizationId } = requireWorkspaceContext();
+                const nextArchives = archiveDiagnosticDraft(
+                    workspace.userWorkspaceState?.uiState?.diagnosticDraftArchives,
+                    currentDraftPayload
+                );
                 const savedState = await saveUserWorkspaceState({
                     userId,
                     organizationId,
                     draftPayload: {},
+                    uiState: { diagnosticDraftArchives: nextArchives },
                     mergeWith: workspace.userWorkspaceState
                 });
 
@@ -8105,6 +9262,38 @@
                 }));
 
                 return savedState;
+            };
+
+            const handleRestoreArchivedDraft = async (archiveId, activeDraftPayload) => {
+                const { userId, organizationId } = requireWorkspaceContext();
+                const currentArchives = getDiagnosticDraftArchives(workspace.userWorkspaceState?.uiState);
+                const archiveToRestore = currentArchives.find(entry => entry.id === archiveId);
+
+                if (!archiveToRestore) {
+                    throw new Error("Brouillon sauvegarde introuvable.");
+                }
+
+                let nextArchives = currentArchives.filter(entry => entry.id !== archiveId);
+
+                if (hasMeaningfulDraftPayload(activeDraftPayload) && !areDraftPayloadsEqual(activeDraftPayload, archiveToRestore.formPayload)) {
+                    nextArchives = archiveDiagnosticDraft(nextArchives, activeDraftPayload);
+                }
+
+                const restoredDraftPayload = buildDraftFormState(PRO_NEW_DIAG_INITIAL_FORM, archiveToRestore.formPayload);
+                const savedState = await saveUserWorkspaceState({
+                    userId,
+                    organizationId,
+                    draftPayload: restoredDraftPayload,
+                    uiState: { diagnosticDraftArchives: nextArchives },
+                    mergeWith: workspace.userWorkspaceState
+                });
+
+                setWorkspace(prev => ({
+                    ...prev,
+                    userWorkspaceState: savedState
+                }));
+
+                return restoredDraftPayload;
             };
 
             const handleGenerateCase = async (caseData) => {
@@ -8236,7 +9425,7 @@
             if (!auth) {
                 return (
                     <>
-                        <ProLanding authError={authError} />
+                        <ProLanding authError={authError} recoveryState={authRecovery} />
                     </>
                 );
             }
@@ -8259,7 +9448,15 @@
             const renderPage = () => {
                 if (page === 'dashboard') return <ProDashboard setPage={setPage} openDemo={openDemoModal} cases={workspace.cases} />;
                 if (page === 'cases') return <ProCases setPage={setPage} cases={workspace.cases} onDeleteCase={handleDeleteCase} onUpdateCaseNote={handleUpdateCaseNote} />;
-                if (page === 'new') return <ProNewDiag setPage={setPage} draftPayload={workspace.userWorkspaceState.draftPayload} onSaveDraft={handleSaveDraft} onClearDraft={handleClearDraft} onGenerateCase={handleGenerateCase} />;
+                if (page === 'new') return <ProNewDiag
+                    setPage={setPage}
+                    draftPayload={workspace.userWorkspaceState.draftPayload}
+                    draftArchives={workspace.userWorkspaceState?.uiState?.diagnosticDraftArchives}
+                    onSaveDraft={handleSaveDraft}
+                    onArchiveCurrentDraft={handleArchiveCurrentDraft}
+                    onRestoreArchivedDraft={handleRestoreArchivedDraft}
+                    onGenerateCase={handleGenerateCase}
+                />;
                 if (page === 'settings') return <ProSettings settings={workspace.settings} branding={workspace.branding} organization={workspace.organization} userWorkspaceState={workspace.userWorkspaceState} onSaveSettings={handleSaveSettings} onSaveBranding={handleSaveBranding} />;
                 if (page === 'plans') return <ProPlans onDemoClick={openDemoModal} />;
                 if (page.startsWith('case-report-')) return <ProReport cId={page.replace('case-report-', '')} setPage={setPage} cases={workspace.cases} reportsByCaseId={reportsByCaseId} settings={workspace.settings} branding={workspace.branding} organization={workspace.organization} onSyncReportPdfMetadata={handleSyncReportPdfMetadata} />;
@@ -8284,6 +9481,9 @@
                         isMobileOpen={isMobileMenuOpen}
                         closeMobile={closeMobile}
                         onLogout={handleLogout}
+                        profile={workspace.profile}
+                        organization={workspace.organization}
+                        authUserId={authUserId}
                     />
                     <div className="pro-content flex-1 max-w-full">
                         <ProTopbar title={currentTitle} toggleMobile={toggleMobile} />

@@ -1,4 +1,6 @@
 const ORGANIZATION_ASSETS_BUCKET = 'organization-assets';
+const { getRequiredServerSupabaseConfig } = require('./_lib/supabase-server');
+
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 const safeJsonParse = (value) => {
@@ -27,15 +29,6 @@ const createHttpError = (statusCode, message) => {
   const error = new Error(message);
   error.statusCode = statusCode;
   return error;
-};
-
-const getRequiredEnv = (key) => {
-  const value = process.env[key];
-  if (!value) {
-    throw new Error(`Missing ${key}`);
-  }
-
-  return value;
 };
 
 const createRestHeaders = (serviceKey, extraHeaders = {}) => ({
@@ -218,9 +211,10 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const supabaseUrl = getRequiredEnv('SUPABASE_URL');
-    const publishableKey = getRequiredEnv('SUPABASE_PUBLISHABLE_KEY');
-    const serviceKey = getRequiredEnv('SUPABASE_SERVICE_KEY');
+    const serverSupabaseConfig = getRequiredServerSupabaseConfig();
+    const supabaseUrl = serverSupabaseConfig.supabaseUrl;
+    const publishableKey = serverSupabaseConfig.supabasePublishableKey;
+    const serviceKey = serverSupabaseConfig.serviceKey;
 
     const authorizationHeader = req.headers.authorization || req.headers.Authorization || '';
     const accessToken = authorizationHeader.startsWith('Bearer ')
@@ -360,6 +354,11 @@ module.exports = async function handler(req, res) {
       }
     });
   } catch (error) {
+    console.error('[pro-delete-case] Secure case deletion failed:', {
+      statusCode: Number.isInteger(error?.statusCode) ? error.statusCode : null,
+      message: error?.message || 'Unknown error'
+    });
+
     const message = error?.message || 'Unknown error';
     const statusCode = Number.isInteger(error?.statusCode)
       ? error.statusCode

@@ -9,7 +9,7 @@ Projet buildless avec deux surfaces runtime :
 ## Architecture actuelle
 
 - Public : front statique buildless
-- Espace pro : front statique buildless avec auth Supabase par magic link
+- Espace pro : front statique buildless avec auth Supabase email + mot de passe, magic link en option secondaire
 - Persistance workspace : `organization_settings`, `organization_branding`, `pro_cases`, `pro_reports`, `user_workspace_state`
 - Assets prives : `organization_files` + bucket Storage `organization-assets` cloisonne par `organization_id`
 - Shared report : lecture via `#report=` sans auth, basee uniquement sur le hash URL
@@ -26,11 +26,14 @@ Variables serveur requises :
 - `SUPABASE_PUBLISHABLE_KEY`
 - `SUPABASE_SERVICE_KEY`
 
+Fallback transitoire accepte cote serveur :
+- `SUPABASE_SECRET_KEY` (tant que `SUPABASE_SERVICE_KEY` n'est pas encore renseignee partout)
+
 Variable optionnelle pour executer les routes PDF localement hors Vercel :
 - `PUPPETEER_EXECUTABLE_PATH`
 
 Configuration minimale Supabase :
-- activer l'auth email / magic link
+- activer l'auth email + mot de passe, avec magic link conserve
 - activer Supabase Storage si ce n'est pas deja fait
 - verifier l'existence du bucket prive `organization-assets`
 - ajouter les redirect URLs de `index.saaspro.html` en local et en prod
@@ -48,6 +51,7 @@ Exemples de redirect URLs :
 ## PDF officiel
 
 - Runtime Vercel PDF : `puppeteer-core` et `@sparticuz/chromium` doivent rester en `dependencies` npm, pas en `devDependencies`.
+- Variable serveur canonique pour les routes Supabase privees : `SUPABASE_SERVICE_KEY` (`SUPABASE_SECRET_KEY` reste un fallback transitoire cote serveur).
 - le front pro appelle `/api/pro-report-pdf` avec le bearer token de la session Supabase
 - la route serveur valide ce token via `GET /auth/v1/user`
 - le `report_id` est resserre cote serveur sur l'organisation du profil connecte
@@ -75,11 +79,11 @@ Strategie de regeneration :
 ## Tests manuels minimum
 
 1. Ouvrir `index.saaspro.html`, se connecter, puis ouvrir un rapport pro deja sauvegarde.
-2. Lancer `Generer le PDF officiel`.
-3. Verifier `pro_reports.pdf_status = 'generating'` pendant le traitement puis `ready` apres succes.
+2. Si aucun PDF officiel n'existe, lancer `Generer le PDF officiel`.
+3. Verifier `pro_reports.pdf_status = 'generating'` pendant le traitement puis `ready` apres succes, avec ouverture automatique du PDF a la fin.
 4. Verifier la presence du PDF dans `organization-assets` sous `org/{organization_id}/reports/{report_id}/rapport-officiel.pdf`.
 5. Verifier la ligne `organization_files` associee et `pro_reports.latest_pdf_file_id`.
-6. Rafraichir la page puis ouvrir le PDF officiel via le bouton dedie.
+6. Si le navigateur bloque l'ouverture automatique, verifier que le lien / bouton de repli permet d'ouvrir le PDF officiel.
 7. Verifier que l'export local navigateur fonctionne toujours.
 8. Forcer un echec serveur de rendu PDF et verifier `pdf_status = 'error'`, `pdf_error` renseigne et fallback local toujours disponible.
 9. Verifier qu'un autre compte ne peut ni generer ni ouvrir le PDF d'une autre organisation.

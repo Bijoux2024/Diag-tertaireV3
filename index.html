@@ -20,6 +20,7 @@
     <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         /* Global & Reset */
         :root {
@@ -1032,6 +1033,36 @@
             };
         };
 
+        const newDiagnosticSubmitProInterestLead = async (leadData) => {
+            const payload = {
+                source: leadData.source || 'landing_pro',
+                name: leadData.name || null,
+                email: leadData.email || null,
+                company: leadData.company || null,
+                phone: leadData.phone || null,
+                message: leadData.message || null,
+                raw_payload: leadData
+            };
+
+            const result = await newDiagnosticInsertSupabaseRow('pro_interest_submissions', payload);
+
+            if (!result.ok) {
+                return {
+                    ok: false,
+                    status: result.status,
+                    error: result.error || "Impossible d'enregistrer votre demande B2B."
+                };
+            }
+
+            console.log('pro interest lead inserted');
+
+            return {
+                ok: true,
+                status: result.status,
+                error: null
+            };
+        };
+
         const newDiagnosticSubmitPartnerLead = async (leadData, insertedLeadId) => {
             if (!insertedLeadId) {
                 return {
@@ -1939,11 +1970,11 @@
             // Données fictives alignées sur l'exemple de rapport cible
             const FAKE_FORM_DATA = {
                 ...NEW_DIAGNOSTIC_DEFAULT_FORM_DATA,
-                address: '24 avenue Berthelot, 69007 Lyon',
-                email: 'demo@brasserie-quartier-lyon.fr',
+                address: '24 avenue Berthelot, 34000, montpellier',
+                email: 'demo@brasserie-quartier-montpellier.fr',
                 role: 'owner',
                 siteName: 'Brasserie de quartier',
-                postalCode: '69007',
+                postalCode: '34000',
                 activity: 'restauration',
                 surface: '220',
                 levels: '1',
@@ -1977,12 +2008,6 @@
                             <p className="text-[#475569] text-sm md:text-base">
                                 {NEW_DIAGNOSTIC_REPORT_COPY.example.subtitle}
                             </p>
-                            <div className="mt-5 flex flex-wrap justify-center gap-3">
-                                <button type="button" onClick={() => navigate('diagnostic')} className="bg-[#1D4ED8] text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-[#1E40AF] transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5">
-                                    Lancer mon diagnostic gratuit
-                                </button>
-
-                            </div>
                         </div>
                     </section>
 
@@ -1991,6 +2016,7 @@
                             <NewDiagnosticReportScreen
                                 reportPayload={fakeReport}
                                 userEmail={FAKE_FORM_DATA.email}
+                                showSecondaryCta={false}
                             />
                         ) : (
                             <div className="text-center py-12 text-[#475569]">
@@ -2065,7 +2091,7 @@
                 console.log('Contact Pro:', contactForm);
 
                 const leadPayload = newDiagnosticBuildProLeadPayload(contactForm);
-                const leadResult = await newDiagnosticSubmitLead(leadPayload);
+                const leadResult = await newDiagnosticSubmitProInterestLead(leadPayload);
 
                 if (!leadResult.ok) {
                     newDiagnosticClearFormCooldown(contactFormKey);
@@ -5400,8 +5426,8 @@
 
         const NEW_DIAGNOSTIC_REPORT_COPY = {
             example: {
-                title: "À quoi ressemble votre rapport",
-                subtitle: "Exemple simulé pour une brasserie de 220 m² à Lyon, avec une performance dégradée mais crédible."
+                title: "À quoi ressemblerait votre rapport",
+                subtitle: "Exemple simulé pour une brasserie de 220 m² à Montpelllier."
             },
             actions: {
                 title: 'Actions prioritaires',
@@ -5636,7 +5662,9 @@
         function newDiagnosticBuildDecisionReadout(reportPayload) {
             const benchmark = reportPayload.benchmark_result || {};
             const composite = reportPayload.composite_savings || {};
-            const confidence = reportPayload.confidence || {};
+            const confidenceLevel = reportPayload && reportPayload.confidence
+                ? reportPayload.confidence.level
+                : '';
             const totalPct = composite.total_pct ? composite.total_pct.value || 0 : 0;
             const position = benchmark.position || 'in_range';
 
@@ -5655,7 +5683,7 @@
             } else if (position === 'below_range') {
                 risk = 'Le risque est surtout de perdre ce niveau de performance sans pilotage continu.';
             }
-            if (confidence.level === 'low') {
+            if (confidenceLevel === 'low') {
                 risk = 'Le risque immédiat est de décider sur des données encore trop approximatives.';
             }
 
@@ -5686,8 +5714,8 @@
             };
         }
 
-        const NewDiagnosticReportScreen = ({ reportPayload, userEmail, onLeadSubmissionCreated, onPartnerSubmissionCreated }) => {
-            const [isPDFGenerating, setIsPDFGenerating] = useState(false);
+        const NewDiagnosticReportScreen = ({ reportPayload, userEmail, onLeadSubmissionCreated, onPartnerSubmissionCreated, showSecondaryCta = true }) => {
+            const [isReportDownloadPreparing, setIsReportDownloadPreparing] = useState(false);
             const [showCTAModal, setShowCTAModal] = useState(false);
             const [ctaName, setCtaName] = useState('');
             const [ctaMessage, setCtaMessage] = useState('');
@@ -5697,6 +5725,7 @@
             const [ctaError, setCtaError] = useState(reportPayload.partner_submission_error || null);
             const [brandLogoDataUrl, setBrandLogoDataUrl] = useState(null);
             const ctaFormKey = 'report-partner-cta';
+            const reportContentRef = useRef(null);
 
             useEffect(() => {
                 let isCancelled = false;
@@ -5738,18 +5767,18 @@
                 };
             }, [showCTAModal]);
 
-            const handleExportPDF = async () => {
-                setIsPDFGenerating(true);
+            const handleDownloadReportFile = async () => {
+                setIsReportDownloadPreparing(true);
                 newDiagnosticTrack('pdf_export_started');
 
                 try {
-                    await newDiagnosticExportPDF(reportPayload, userEmail);
+                    await newDiagnosticExportRenderedPdf(reportContentRef.current, reportPayload);
                     newDiagnosticTrack('pdf_downloaded');
                 } catch (error) {
-                    console.error('Erreur export PDF:', error);
-                    alert('Erreur lors de la génération du PDF');
+                    console.error('Erreur export PDF rendu:', error);
+                    alert('Erreur lors de la generation du PDF');
                 } finally {
-                    setIsPDFGenerating(false);
+                    setIsReportDownloadPreparing(false);
                 }
             };
 
@@ -5979,8 +6008,8 @@
             );
 
             return (
-                <div className="new-diagnostic-report fade-in py-12 px-4">
-                    <div className="max-w-5xl mx-auto">
+                <div ref={reportContentRef} className="new-diagnostic-report fade-in py-12 px-4">
+                    <div className="max-w-5xl mx-auto flex flex-col">
                         <div className="report-card p-0 overflow-hidden mb-6 border-[#F59E0B]/20">
                             <div className="px-5 py-3 bg-[#FFF8EE] flex items-start gap-3">
                                 <Icon icon="solar:danger-triangle-bold" className="text-[#F59E0B] text-lg mt-0.5" />
@@ -6034,12 +6063,13 @@
                                         </div>
                                         <p className="text-xs text-slate-300 lg:text-right">{new Date(reportPayload.generated_at).toLocaleDateString('fr-FR')} - {horizonLabel}</p>
                                         <button
-                                            onClick={handleExportPDF}
-                                            disabled={isPDFGenerating}
+                                            onClick={handleDownloadReportFile}
+                                            disabled={isReportDownloadPreparing}
+                                            data-html2canvas-ignore="true"
                                             className="inline-flex items-center justify-center gap-2 rounded-xl bg-white text-[#102A43] px-5 py-3 text-sm font-bold shadow-sm hover:bg-slate-100 disabled:bg-slate-300 disabled:text-slate-500 transition-colors"
                                         >
-                                            {isPDFGenerating ? <Icon icon="solar:spinner-linear" className="text-lg animate-spin" /> : <Icon icon="solar:download-linear" className="text-lg" />}
-                                            {isPDFGenerating ? 'Génération PDF...' : 'Télécharger PDF'}
+                                            {isReportDownloadPreparing ? <Icon icon="solar:spinner-linear" className="text-lg animate-spin" /> : <Icon icon="solar:download-linear" className="text-lg" />}
+                                            {isReportDownloadPreparing ? 'Preparation du PDF...' : 'Telecharger le rapport'}
                                         </button>
                                     </div>
                                 </div>
@@ -6197,17 +6227,17 @@
                             </div>
                         </div>
 
-                        <div className="report-card p-6 md:p-8 mb-8">
+                        <div className="report-card p-6 md:p-8 mb-8 order-last">
                             <div className="rounded-[28px] border border-[#DBEAFE] bg-gradient-to-r from-[#EFF6FF] via-white to-[#F8FAFC] p-6 md:p-7">
-                                <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-                                    <div className="min-w-0 flex-1">
-                                        <div className="flex items-center gap-2 text-[#1D4ED8] mb-3">
+                                <div className="mx-auto flex max-w-3xl flex-col items-center text-center">
+                                    <div className="min-w-0 w-full">
+                                        <div className="flex items-center justify-center gap-2 text-[#1D4ED8] mb-3">
                                             <Icon icon="solar:check-circle-bold" className="text-xl" />
                                             <p className="text-xs font-bold uppercase tracking-wide">Étape recommandée</p>
                                         </div>
                                         <h2 className="text-2xl font-bold text-[#102A43]">{nextStepCopy.title}</h2>
-                                        <p className="text-sm text-slate-600 mt-3 max-w-2xl">{nextStepCopy.intro}</p>
-                                        <div className="grid gap-3 mt-5 sm:grid-cols-2">
+                                        <p className="text-sm text-slate-600 mt-3 max-w-2xl mx-auto">{nextStepCopy.intro}</p>
+                                        <div className="grid gap-3 mt-5 w-full text-left sm:grid-cols-2">
                                             {nextStepCopy.bullets.slice(0, 4).map((bullet, index) => (
                                                 <div key={index} className="rounded-2xl border border-white bg-white/80 px-4 py-3 flex items-start gap-3 shadow-sm">
                                                     <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#DBEAFE] text-[#1D4ED8] text-xs font-bold shrink-0">{index + 1}</span>
@@ -6216,28 +6246,30 @@
                                             ))}
                                         </div>
                                     </div>
-                                    <div className="w-full lg:w-[300px] flex flex-col gap-3">
+                                    <div className="mt-8 flex w-full max-w-xl flex-col items-center gap-3">
                                         {hasCtaConfirmation ? (
-                                            <div className="rounded-2xl border border-green-200 bg-green-50 px-4 py-4">
-                                                <div className="flex items-start gap-3">
+                                            <div className="w-full rounded-2xl border border-green-200 bg-green-50 px-4 py-4">
+                                                <div className="flex flex-col items-center gap-3 text-center">
                                                     <Icon icon="solar:check-circle-bold" className="text-green-600 text-2xl shrink-0" />
                                                     <p className="text-sm text-green-800 font-medium">{nextStepCopy.success}</p>
                                                 </div>
                                             </div>
                                         ) : (
-                                            <button onClick={() => setShowCTAModal(true)} className="px-5 py-3 bg-[#1D4ED8] text-white rounded-xl text-sm font-semibold hover:bg-[#1E40AF] transition-colors shadow-sm">
+                                            <button onClick={() => setShowCTAModal(true)} className="w-full min-w-[260px] rounded-xl bg-[#1D4ED8] px-5 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#1E40AF] sm:w-auto">
                                                 {nextStepCopy.cta}
                                             </button>
                                         )}
-                                        <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="px-5 py-3 bg-white border border-[#DBEAFE] text-[#1D4ED8] rounded-xl text-sm font-semibold hover:bg-[#EFF6FF] transition-colors">
-                                            {nextStepCopy.secondary}
-                                        </button>
+                                        {showSecondaryCta && (
+                                            <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="w-full min-w-[260px] rounded-xl border border-[#DBEAFE] bg-white px-5 py-3 text-sm font-semibold text-[#1D4ED8] transition-colors hover:bg-[#EFF6FF] sm:w-auto">
+                                                {nextStepCopy.secondary}
+                                            </button>
+                                        )}
                                         {ctaError && !hasCtaConfirmation && (
-                                            <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                                            <div className="w-full rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                                                 {ctaError}
                                             </div>
                                         )}
-                                        <p className="text-xs text-slate-500 leading-relaxed">{nextStepCopy.proof}</p>
+                                        <p className="max-w-2xl text-xs text-slate-500 leading-relaxed">{nextStepCopy.proof}</p>
                                     </div>
                                 </div>
                             </div>
@@ -6409,6 +6441,10 @@
         };
 
         /* ─────────────────────────────────────────────────────────────────────────
+           FONCTION : EXPORT HTML AUTONOME
+           Le fichier telecharge est un HTML autonome, propre et imprimable.
+           Le PDF local legacy reste ci-dessous comme secours non prioritaire.
+
            FONCTION : EXPORT PDF
            
            Génère un PDF du rapport et le télécharge.
@@ -6416,6 +6452,781 @@
            
            TODO Phase V1.1 : harmoniser si besoin le rendu local navigateur avec le PDF officiel serveur
            ───────────────────────────────────────────────────────────────────────── */
+
+        function newDiagnosticEscapeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function newDiagnosticBuildDownloadFileName(siteName, extension = 'html') {
+            const safeSiteName = String(siteName || 'rapport')
+                .trim()
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/-+/g, '-')
+                .replace(/^-|-$/g, '') || 'rapport';
+
+            return `diagtertiaire-${safeSiteName}-${new Date().toISOString().slice(0, 10)}.${extension}`;
+        }
+
+        async function newDiagnosticBuildStandaloneReportHtml(reportPayload, userEmail) {
+            const calc = reportPayload.calculation_results || {};
+            const benchmark = reportPayload.benchmark_result || {};
+            const composite = reportPayload.composite_savings || {};
+            const actions = (reportPayload.top_actions || []).slice(0, 3);
+            const confidence = reportPayload.confidence || {};
+            const inputs = reportPayload.inputs_summary || {};
+            const surfaceValue = Math.max(1, (inputs.surface && inputs.surface.value) || 1);
+            const targetIntensity = Math.max(0, (benchmark.site_intensity && benchmark.site_intensity.value ? benchmark.site_intensity.value : 0) - ((composite.annual_kwh && composite.annual_kwh.value ? composite.annual_kwh.value : 0) / surfaceValue));
+            const currentLabel = newDiagnosticComputeSectorLabel(benchmark.site_intensity.value, benchmark.benchmark_median.value);
+            const targetLabel = newDiagnosticComputeSectorLabel(targetIntensity, benchmark.benchmark_median.value);
+            const decisionReadout = newDiagnosticBuildDecisionReadout(reportPayload);
+            const budgetProgram = newDiagnosticBuildProgramBudget(actions, composite.annual_euro.value);
+            const projection = newDiagnosticBuildProjectionData({
+                annualSavingsEuro: composite.annual_euro.value,
+                totalCostEuroAn: calc.total_cost_euro_an.value,
+                elecKwh: calc.elec_kwh_an.value,
+                gasKwh: calc.gas_kwh_an.value,
+                actions
+            });
+            const projectionEnd = projection.data && projection.data.length
+                ? projection.data[projection.data.length - 1]
+                : { sans_travaux: 0, avec_travaux: 0 };
+            const elecKwh = calc.elec_kwh_an.value || 0;
+            const gasKwh = calc.gas_kwh_an.value || 0;
+            const knownKwh = elecKwh + gasKwh;
+            const co2Factor = knownKwh > 0
+                ? ((elecKwh / knownKwh) * NEW_DIAGNOSTIC_CO2_FACTORS.elec) + ((gasKwh / knownKwh) * NEW_DIAGNOSTIC_CO2_FACTORS.gaz)
+                : 0.12;
+            const co2Annual = Math.max(0, Math.round((composite.annual_kwh.value || 0) * co2Factor));
+            const co2Eq = newDiagnosticGetCO2Equivalences(co2Annual);
+            const logo = await newDiagnosticResolveBrandLogoDataUrl().catch(() => null);
+            const reportDate = new Date(reportPayload.generated_at || Date.now()).toLocaleDateString('fr-FR');
+            const horizonLabel = (inputs.role || inputs.decision_role) === 'tenant' ? 'Lecture charges a 3 ans' : 'Lecture patrimoniale a 10 ans';
+            const contactLabel = userEmail || inputs.email || 'Non renseigne';
+            const metricCards = [
+                { label: 'Cout annuel actuel', value: newDiagnosticFormatCurrency(calc.total_cost_euro_an.value), note: 'Charges energie estimees' },
+                { label: 'Economies annuelles', value: newDiagnosticFormatCurrency(composite.annual_euro.value), note: '3 actions prioritaires visibles' },
+                { label: 'Budget net indicatif', value: newDiagnosticFormatCurrency(budgetProgram.capex_net), note: 'Aides deduites' },
+                { label: 'ROI indicatif', value: budgetProgram.roi_global_years !== null ? newDiagnosticFormatYears(budgetProgram.roi_global_years, 1) : 'A confirmer', note: horizonLabel }
+            ];
+            const metricCardsHtml = metricCards.map((card) => `
+                <article class="metric-card">
+                    <div class="metric-label">${newDiagnosticEscapeHtml(card.label)}</div>
+                    <div class="metric-value">${newDiagnosticEscapeHtml(card.value)}</div>
+                    <div class="metric-note">${newDiagnosticEscapeHtml(card.note)}</div>
+                </article>
+            `).join('');
+            const actionCardsHtml = actions.length
+                ? actions.map((action, index) => {
+                    const actionReason = newDiagnosticGetActionPriorityReason(action, reportPayload.usage_breakdown || {});
+                    const actionRobustness = newDiagnosticGetActionRobustness(action);
+                    return `
+                        <article class="action-card">
+                            <div class="action-topline">Priorite ${index + 1}</div>
+                            <h3>${newDiagnosticEscapeHtml(action.name || 'Action prioritaire')}</h3>
+                            <div class="badge-row">
+                                <span class="badge">${newDiagnosticEscapeHtml(actionRobustness.label)}</span>
+                                <span class="badge">${newDiagnosticEscapeHtml(newDiagnosticFormatYears(action.roi_years && action.roi_years.value, 1))}</span>
+                            </div>
+                            <dl class="action-stats">
+                                <div><dt>Economies / an</dt><dd>${newDiagnosticEscapeHtml(newDiagnosticFormatCurrency(action.gain_euro_an && action.gain_euro_an.value))}</dd></div>
+                                <div><dt>Gain energie</dt><dd>${newDiagnosticEscapeHtml(newDiagnosticFormatUnitValue(action.gain_kwh_an && action.gain_kwh_an.value, 'kWh/an'))}</dd></div>
+                                <div><dt>Budget estime</dt><dd>${newDiagnosticEscapeHtml(newDiagnosticFormatCurrency(action.capex && action.capex.value))}</dd></div>
+                            </dl>
+                            <p>${newDiagnosticEscapeHtml(actionReason.why)}</p>
+                            <p class="subtle">${newDiagnosticEscapeHtml(actionReason.posteText)}</p>
+                        </article>
+                    `;
+                }).join('')
+                : '<div class="empty-state">Aucune action prioritaire suffisamment robuste ne ressort avec le niveau de donnees actuel.</div>';
+            const renderListItems = (items, emptyLabel) => {
+                if (!Array.isArray(items) || !items.length) {
+                    return `<li>${newDiagnosticEscapeHtml(emptyLabel)}</li>`;
+                }
+
+                return items.slice(0, 6).map((item) => `<li>${newDiagnosticEscapeHtml(item)}</li>`).join('');
+            };
+
+            return `<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${newDiagnosticEscapeHtml(NEW_DIAGNOSTIC_BRAND.name)} - Rapport ${newDiagnosticEscapeHtml(inputs.site_name || 'Bâtiment tertiaire')}</title>
+    <style>
+        :root { --ink:#102A43; --blue:#1D4ED8; --blue-soft:#E8F0FF; --slate:#5B6B7F; --line:#D8E2EE; --bg:#EEF4F8; --card:#FFFFFF; --green:#15803D; --green-soft:#EAF7EE; }
+        * { box-sizing:border-box; } html, body { margin:0; padding:0; background:var(--bg); color:var(--ink); font-family:Segoe UI, Arial, Helvetica, sans-serif; } body { padding:28px; } .page { max-width:1100px; margin:0 auto; } .hero { background:linear-gradient(135deg, #102A43 0%, #14395C 55%, #1D4ED8 100%); color:#fff; padding:32px; border-radius:28px; box-shadow:0 24px 60px rgba(16,42,67,.18); } .hero-head, .hero-meta, .grid, .actions-grid, .list-grid, .kpi-grid, .tone-grid, .budget-grid, .impact-grid { display:grid; gap:18px; } .hero-head { grid-template-columns:minmax(0,1fr) auto; align-items:start; } .brand img { width:64px; height:64px; object-fit:contain; border-radius:18px; background:#fff; padding:10px; } .eyebrow { display:inline-block; font-size:11px; letter-spacing:.14em; text-transform:uppercase; font-weight:800; color:#BFDBFE; margin-bottom:10px; } h1, h2, h3, p { margin:0; } .hero h1 { font-size:34px; line-height:1.05; letter-spacing:-.04em; margin-bottom:10px; max-width:14ch; } .hero p { color:rgba(255,255,255,.82); line-height:1.6; } .hero-meta, .kpi-grid, .tone-grid, .budget-grid, .impact-grid, .list-grid { grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); } .hero-pill { background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.18); border-radius:18px; padding:14px 16px; } .hero-pill strong { display:block; color:#fff; font-size:15px; margin-bottom:4px; } .section { margin-top:24px; background:var(--card); border:1px solid var(--line); border-radius:24px; padding:24px; box-shadow:0 12px 28px rgba(16,42,67,.06); } .section h2 { font-size:22px; letter-spacing:-.03em; margin-bottom:16px; } .metric-card, .tone-card, .budget-card, .impact-card { border:1px solid var(--line); border-radius:20px; padding:18px; background:#fff; } .metric-label, .label-caption { font-size:12px; text-transform:uppercase; letter-spacing:.12em; color:var(--slate); font-weight:800; } .metric-value { font-size:28px; font-weight:900; line-height:1.1; margin:10px 0 6px; letter-spacing:-.04em; } .metric-note, .subtle { color:var(--slate); font-size:13px; line-height:1.5; } .grid, .actions-grid { grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); } .score-card { padding:22px; border-radius:22px; } .score-card.current { background:#F8FBFF; border:1px solid #CFE0FF; } .score-card.target { background:var(--green-soft); border:1px solid #B7E1C3; } .score-letter { font-size:42px; font-weight:900; line-height:1; margin:10px 0; } .score-current { color:var(--blue); } .score-target { color:var(--green); } .action-card { border:1px solid var(--line); border-radius:22px; padding:20px; background:linear-gradient(180deg, #FFFFFF 0%, #F8FBFF 100%); } .action-card h3 { font-size:20px; line-height:1.2; margin:8px 0 14px; } .action-topline { font-size:11px; text-transform:uppercase; letter-spacing:.12em; font-weight:800; color:var(--blue); } .badge-row { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; } .badge { display:inline-flex; padding:7px 10px; border-radius:999px; background:var(--blue-soft); color:var(--blue); font-size:12px; font-weight:800; } .action-stats { display:grid; gap:8px; margin:0 0 14px; } .action-stats div { display:flex; justify-content:space-between; gap:16px; padding-bottom:8px; border-bottom:1px dashed var(--line); } .action-stats dt { color:var(--slate); } .action-stats dd { margin:0; font-weight:800; text-align:right; } ul { margin:0; padding-left:18px; color:#31475E; line-height:1.7; } .empty-state { border:1px dashed var(--line); border-radius:20px; padding:18px; color:var(--slate); background:#F8FBFF; } .footer-note { margin-top:20px; color:var(--slate); font-size:13px; line-height:1.6; text-align:center; } @media print { body { background:#fff; padding:0; } .page { max-width:none; } .hero, .section { box-shadow:none; break-inside:avoid; } }
+    </style>
+</head>
+<body>
+    <main class="page">
+        <section class="hero">
+            <div class="hero-head">
+                <div>
+                    <div class="eyebrow">Rapport telechargeable autonome</div>
+                    <h1>${newDiagnosticEscapeHtml(inputs.site_name || 'Bâtiment tertiaire')}</h1>
+                    <p>${newDiagnosticEscapeHtml(inputs.activity || 'Activité à confirmer')} · ${newDiagnosticEscapeHtml(newDiagnosticFormatUnitValue(surfaceValue, 'm²'))} · ${newDiagnosticEscapeHtml(reportDate)}</p>
+                </div>
+                <div class="brand">${logo && logo.dataUrl ? `<img src="${logo.dataUrl}" alt="${newDiagnosticEscapeHtml(NEW_DIAGNOSTIC_BRAND.name)}">` : ''}</div>
+            </div>
+            <div class="hero-meta">
+                <div class="hero-pill"><strong>Contact de restitution</strong><span>${newDiagnosticEscapeHtml(contactLabel)}</span></div>
+                <div class="hero-pill"><strong>Confiance</strong><span>${newDiagnosticEscapeHtml(confidence.label || 'À confirmer')}</span></div>
+                <div class="hero-pill"><strong>Adresse</strong><span>${newDiagnosticEscapeHtml(inputs.address || 'Adresse à confirmer')}</span></div>
+                <div class="hero-pill"><strong>Lecture</strong><span>${newDiagnosticEscapeHtml(horizonLabel)}</span></div>
+            </div>
+        </section>
+        <section class="section"><h2>Vue d'ensemble</h2><div class="kpi-grid">${metricCardsHtml}</div></section>
+        <section class="section"><h2>Positionnement energie</h2><div class="grid"><article class="score-card current"><div class="label-caption">Situation actuelle</div><div class="score-letter score-current">${newDiagnosticEscapeHtml(currentLabel.label)}</div><p>${newDiagnosticEscapeHtml(currentLabel.positioning)}</p><p class="subtle">${newDiagnosticEscapeHtml(newDiagnosticFormatUnitValue(benchmark.site_intensity.value, 'kWh/m²/an'))}</p></article><article class="score-card target"><div class="label-caption">Apres travaux estimes</div><div class="score-letter score-target">${newDiagnosticEscapeHtml(targetLabel.label)}</div><p>${newDiagnosticEscapeHtml(targetLabel.positioning)}</p><p class="subtle">${newDiagnosticEscapeHtml(newDiagnosticFormatUnitValue(targetIntensity, 'kWh/m²/an'))}</p></article></div><p class="footer-note">Reference mediane : ${newDiagnosticEscapeHtml(newDiagnosticFormatUnitValue(benchmark.benchmark_median.value, 'kWh/m²/an'))}.</p></section>
+        <section class="section"><h2>Lecture decisionnelle</h2><div class="tone-grid"><article class="tone-card"><strong>Diagnostic</strong><p>${newDiagnosticEscapeHtml(decisionReadout.diagnostic)}</p></article><article class="tone-card"><strong>Risque</strong><p>${newDiagnosticEscapeHtml(decisionReadout.risk)}</p></article><article class="tone-card"><strong>Opportunite</strong><p>${newDiagnosticEscapeHtml(decisionReadout.opportunity)}</p></article></div></section>
+        <section class="section"><h2>Actions prioritaires</h2><div class="actions-grid">${actionCardsHtml}</div></section>
+        <section class="section"><h2>Budget et impact</h2><div class="budget-grid"><article class="budget-card"><div class="label-caption">Budget travaux estime</div><div class="metric-value">${newDiagnosticEscapeHtml(newDiagnosticFormatCurrency(budgetProgram.capex_brut))}</div></article><article class="budget-card"><div class="label-caption">Aides estimees</div><div class="metric-value">${newDiagnosticEscapeHtml(newDiagnosticFormatCurrency(budgetProgram.aides))}</div></article><article class="budget-card"><div class="label-caption">Sans travaux a 10 ans</div><div class="metric-value">${newDiagnosticEscapeHtml(newDiagnosticFormatCurrency(projectionEnd.sans_travaux || 0))}</div></article><article class="budget-card"><div class="label-caption">Avec plan a 10 ans</div><div class="metric-value">${newDiagnosticEscapeHtml(newDiagnosticFormatCurrency(projectionEnd.avec_travaux || 0))}</div></article></div><div class="impact-grid" style="margin-top:14px;"><article class="impact-card"><div class="label-caption">CO2 evite / an</div><div class="metric-value">${newDiagnosticEscapeHtml(newDiagnosticFormatUnitValue(co2Annual, 'kgCO2e'))}</div></article><article class="impact-card"><div class="label-caption">Equivalent arbres</div><div class="metric-value">${newDiagnosticEscapeHtml(newDiagnosticFormatInteger(co2Eq.arbres))}</div></article><article class="impact-card"><div class="label-caption">Equivalent voitures</div><div class="metric-value">${newDiagnosticEscapeHtml(newDiagnosticFormatDecimal(co2Eq.voitures, 1))}</div></article><article class="impact-card"><div class="label-caption">Point de rentabilite</div><div class="metric-value">${newDiagnosticEscapeHtml(projection.roiAnnee || 'A confirmer')}</div></article></div></section>
+        <section class="section"><h2>Hypotheses et limites</h2><div class="list-grid"><div><div class="label-caption" style="margin-bottom:10px;">Hypotheses</div><ul>${renderListItems(reportPayload.assumptions, 'Hypotheses a confirmer sur site.')}</ul></div><div><div class="label-caption" style="margin-bottom:10px;">Limites</div><ul>${renderListItems(reportPayload.limits, 'Limites a confirmer avec un expert.')}</ul></div></div><p class="footer-note">Fichier HTML autonome genere depuis ${newDiagnosticEscapeHtml(NEW_DIAGNOSTIC_BRAND.name)}. Ouvrez-le dans votre navigateur puis imprimez-le en PDF si vous avez besoin d'une version papier.</p></section>
+    </main>
+</body>
+</html>`;
+        }
+
+        const newDiagnosticDownloadReportHtml = async (reportPayload, userEmail) => {
+            const html = await newDiagnosticBuildStandaloneReportHtml(reportPayload, userEmail);
+            const fileName = newDiagnosticBuildDownloadFileName(reportPayload && reportPayload.inputs_summary ? reportPayload.inputs_summary.site_name : 'rapport');
+            const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+            const objectUrl = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+
+            link.href = objectUrl;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+
+            window.setTimeout(() => {
+                window.URL.revokeObjectURL(objectUrl);
+            }, 1500);
+        };
+
+        const newDiagnosticExportRenderedPdfFallback = async (targetNode, reportPayload) => {
+            if (!targetNode) {
+                throw new Error('Zone de rapport introuvable.');
+            }
+
+            if (typeof window.html2canvas === 'undefined') {
+                throw new Error('html2canvas non charge.');
+            }
+
+            if (typeof window.jspdf === 'undefined') {
+                throw new Error('jsPDF non charge.');
+            }
+
+            const waitForPaint = async (frameCount = 2) => {
+                let remainingFrames = Math.max(1, frameCount);
+
+                await new Promise((resolve) => {
+                    const tick = () => {
+                        remainingFrames -= 1;
+                        if (remainingFrames <= 0) {
+                            resolve();
+                            return;
+                        }
+                        window.requestAnimationFrame(tick);
+                    };
+
+                    window.requestAnimationFrame(tick);
+                });
+            };
+
+            const getOuterHeight = (node) => {
+                if (!node) {
+                    return 0;
+                }
+
+                const styles = window.getComputedStyle(node);
+                const marginTop = Number.parseFloat(styles.marginTop || '0') || 0;
+                const marginBottom = Number.parseFloat(styles.marginBottom || '0') || 0;
+
+                return Math.ceil(node.getBoundingClientRect().height + marginTop + marginBottom);
+            };
+
+            const createAccordionExportPanel = (title, items, tone) => {
+                const wrapper = document.createElement('div');
+                const markerClass = tone === 'warning'
+                    ? 'bg-amber-500/80'
+                    : 'bg-blue-500/80';
+                const itemsHtml = Array.isArray(items) && items.length
+                    ? items.map((item) => `
+                        <li class="flex items-start gap-3">
+                            <span class="mt-1.5 h-2.5 w-2.5 rounded-full shrink-0 ${markerClass}"></span>
+                            <span>${newDiagnosticEscapeHtml(item)}</span>
+                        </li>
+                    `).join('')
+                    : `
+                        <li class="flex items-start gap-3">
+                            <span class="mt-1.5 h-2.5 w-2.5 rounded-full shrink-0 ${markerClass}"></span>
+                            <span>${tone === 'warning' ? 'Aucune limite complementaire renseignee.' : 'Aucune hypothese complementaire renseignee.'}</span>
+                        </li>
+                    `;
+
+                wrapper.className = 'border border-neutral-200 rounded-lg overflow-hidden bg-white';
+                wrapper.innerHTML = `
+                    <div class="w-full px-6 py-4 bg-white border-b border-neutral-100">
+                        <span class="font-semibold text-neutral-900">${newDiagnosticEscapeHtml(title)}</span>
+                    </div>
+                    <div class="px-6 py-4 bg-neutral-50 border-t border-neutral-100">
+                        <ul class="space-y-2 text-sm text-neutral-600">
+                            ${itemsHtml}
+                        </ul>
+                    </div>
+                `;
+
+                return wrapper;
+            };
+
+            const buildPdfExportClone = () => {
+                const sourceWidth = Math.ceil(targetNode.getBoundingClientRect().width || targetNode.scrollWidth || 0);
+                const sourceHeight = Math.max(1200, Math.ceil(targetNode.scrollHeight || targetNode.getBoundingClientRect().height || 0));
+                const exportHost = document.createElement('div');
+                const exportStyle = document.createElement('style');
+                const clonedReport = targetNode.cloneNode(true);
+
+                exportHost.setAttribute('aria-hidden', 'true');
+                exportHost.className = 'new-diagnostic-pdf-export-host';
+                Object.assign(exportHost.style, {
+                    position: 'fixed',
+                    left: '-20000px',
+                    top: '0',
+                    width: `${sourceWidth}px`,
+                    minHeight: `${sourceHeight}px`,
+                    background: '#F8FAFC',
+                    pointerEvents: 'none',
+                    opacity: '1',
+                    overflow: 'hidden',
+                    zIndex: '-1'
+                });
+
+                exportStyle.textContent = `
+                    .new-diagnostic-pdf-export-host,
+                    .new-diagnostic-pdf-export-host * {
+                        animation: none !important;
+                        transition: none !important;
+                        caret-color: transparent !important;
+                    }
+                    .new-diagnostic-pdf-export-host [data-html2canvas-ignore="true"] {
+                        display: none !important;
+                    }
+                    .new-diagnostic-pdf-export-host .fade-in {
+                        opacity: 1 !important;
+                        transform: none !important;
+                    }
+                `;
+
+                clonedReport.classList.remove('fade-in');
+                clonedReport.style.opacity = '1';
+                clonedReport.style.transform = 'none';
+                clonedReport.style.width = `${sourceWidth}px`;
+                clonedReport.style.maxWidth = `${sourceWidth}px`;
+                clonedReport.style.paddingTop = '48px';
+                clonedReport.style.paddingBottom = '48px';
+                clonedReport.style.background = '#F8FAFC';
+
+                const hypothesisCard = Array.from(clonedReport.querySelectorAll('.report-card')).pop();
+                if (hypothesisCard) {
+                    const accordionContainers = Array.from(hypothesisCard.querySelectorAll('button[type="button"]'))
+                        .map((button) => button.parentElement)
+                        .filter(Boolean);
+                    const exportPanels = [
+                        createAccordionExportPanel('Hypotheses du calcul', reportPayload && reportPayload.assumptions, 'info'),
+                        createAccordionExportPanel("Limites de l'approche", reportPayload && reportPayload.limits, 'warning')
+                    ];
+
+                    accordionContainers.forEach((container, index) => {
+                        if (exportPanels[index]) {
+                            container.replaceWith(exportPanels[index]);
+                        }
+                    });
+                }
+
+                exportHost.appendChild(exportStyle);
+                exportHost.appendChild(clonedReport);
+                document.body.appendChild(exportHost);
+
+                return {
+                    exportHost,
+                    clonedReport,
+                    sourceWidth,
+                    sourceHeight
+                };
+            };
+
+            if (document.fonts && document.fonts.ready) {
+                try {
+                    await document.fonts.ready;
+                } catch (error) { }
+            }
+
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const pageWidth = pdf.internal.pageSize.getWidth();
+            const pageHeight = pdf.internal.pageSize.getHeight();
+            const margin = 8;
+            const printableWidth = pageWidth - (margin * 2);
+            const printableHeight = pageHeight - (margin * 2);
+            const fileName = newDiagnosticBuildDownloadFileName(
+                reportPayload && reportPayload.inputs_summary ? reportPayload.inputs_summary.site_name : 'rapport',
+                'pdf'
+            );
+            const exportScale = Math.max(2, Math.min(3, window.devicePixelRatio || 2));
+            let exportContext = null;
+
+            try {
+                await waitForPaint(3);
+
+                exportContext = buildPdfExportClone();
+                await waitForPaint(3);
+
+                const cloneInner = exportContext.clonedReport.querySelector('.max-w-5xl') || exportContext.clonedReport;
+                const reportCards = Array.from(cloneInner.children).filter((node) => (
+                    node instanceof HTMLElement && node.classList.contains('report-card')
+                ));
+
+                if (!reportCards.length) {
+                    throw new Error('Sections de rapport introuvables.');
+                }
+
+                const pageContentWidthPx = Math.max(
+                    1,
+                    Math.ceil(cloneInner.getBoundingClientRect().width || exportContext.sourceWidth)
+                );
+                const maxGroupHeightPx = Math.floor(((printableHeight - 2) * pageContentWidthPx) / printableWidth);
+                const groupedCards = [];
+                let currentGroup = [];
+                let currentGroupHeight = 0;
+
+                reportCards.forEach((card) => {
+                    const cardHeight = getOuterHeight(card);
+                    const shouldStartNewPage = currentGroup.length > 0 && (currentGroupHeight + cardHeight) > maxGroupHeightPx;
+
+                    if (shouldStartNewPage) {
+                        groupedCards.push(currentGroup);
+                        currentGroup = [card];
+                        currentGroupHeight = cardHeight;
+                        return;
+                    }
+
+                    currentGroup.push(card);
+                    currentGroupHeight += cardHeight;
+                });
+
+                if (currentGroup.length > 0) {
+                    groupedCards.push(currentGroup);
+                }
+
+                const pagesHost = document.createElement('div');
+                pagesHost.style.width = `${pageContentWidthPx}px`;
+                pagesHost.style.margin = '0 auto';
+                pagesHost.style.background = '#F8FAFC';
+
+                cloneInner.innerHTML = '';
+                cloneInner.appendChild(pagesHost);
+
+                const pageNodes = groupedCards.map((group, index) => {
+                    const pageNode = document.createElement('div');
+                    pageNode.className = 'new-diagnostic-pdf-page';
+                    Object.assign(pageNode.style, {
+                        width: '100%',
+                        background: '#F8FAFC',
+                        padding: index === groupedCards.length - 1 ? '0 0 6px' : '0 0 2px'
+                    });
+
+                    group.forEach((card) => {
+                        pageNode.appendChild(card);
+                    });
+
+                    pagesHost.appendChild(pageNode);
+                    return pageNode;
+                });
+
+                await waitForPaint(2);
+
+                for (let pageIndex = 0; pageIndex < pageNodes.length; pageIndex += 1) {
+                    const pageNode = pageNodes[pageIndex];
+                    const canvas = await window.html2canvas(pageNode, {
+                        backgroundColor: '#F8FAFC',
+                        useCORS: true,
+                        scale: exportScale,
+                        logging: false,
+                        scrollX: 0,
+                        scrollY: 0,
+                        windowWidth: exportContext.sourceWidth,
+                        windowHeight: Math.max(exportContext.sourceHeight, Math.ceil(pageNode.scrollHeight || pageNode.getBoundingClientRect().height || 0) + 120),
+                        ignoreElements: (element) => element && element.getAttribute && element.getAttribute('data-html2canvas-ignore') === 'true'
+                    });
+                    const imageData = canvas.toDataURL('image/png', 1.0);
+                    const renderScale = Math.min(printableWidth / canvas.width, printableHeight / canvas.height);
+                    const renderWidth = canvas.width * renderScale;
+                    const renderHeight = canvas.height * renderScale;
+                    const renderX = margin + ((printableWidth - renderWidth) / 2);
+                    const renderY = margin + ((printableHeight - renderHeight) / 2);
+
+                    if (pageIndex > 0) {
+                        pdf.addPage();
+                    }
+
+                    pdf.addImage(imageData, 'PNG', renderX, renderY, renderWidth, renderHeight, undefined, 'FAST');
+                }
+
+                pdf.save(fileName);
+            } finally {
+                if (exportContext && exportContext.exportHost && exportContext.exportHost.parentNode) {
+                    exportContext.exportHost.parentNode.removeChild(exportContext.exportHost);
+                }
+            }
+        };
+
+        function newDiagnosticResolveAbsoluteUrl(value) {
+            const raw = String(value || '').trim();
+            if (!raw) {
+                return '';
+            }
+
+            if (/^(data:|https?:|blob:)/i.test(raw)) {
+                return raw;
+            }
+
+            try {
+                return new URL(raw, window.location.href).href;
+            } catch (error) {
+                return raw;
+            }
+        }
+
+        function newDiagnosticCollectPdfHeadMarkup() {
+            const headNodes = Array.from(document.head.querySelectorAll('style, link[rel="stylesheet"], link[rel="preconnect"]'));
+            const parts = headNodes.map((node) => node.outerHTML);
+
+            parts.push('<script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"><\/script>');
+
+            return parts.join('\n');
+        }
+
+        function newDiagnosticBuildPdfAccordionPanel(title, items, tone = 'info') {
+            const panel = document.createElement('div');
+            const dotClass = tone === 'warning' ? 'bg-amber-500/80' : 'bg-blue-500/80';
+            const listItems = Array.isArray(items) && items.length
+                ? items.map((item) => `
+                    <li class="flex items-start gap-3">
+                        <span class="mt-1.5 h-2.5 w-2.5 rounded-full shrink-0 ${dotClass}"></span>
+                        <span>${newDiagnosticEscapeHtml(item)}</span>
+                    </li>
+                `).join('')
+                : `
+                    <li class="flex items-start gap-3">
+                        <span class="mt-1.5 h-2.5 w-2.5 rounded-full shrink-0 ${dotClass}"></span>
+                        <span>${tone === 'warning' ? 'Aucune limite complementaire renseignee.' : 'Aucune hypothese complementaire renseignee.'}</span>
+                    </li>
+                `;
+
+            panel.className = 'border border-neutral-200 rounded-lg overflow-hidden bg-white';
+            panel.innerHTML = `
+                <div class="w-full px-6 py-4 bg-white border-b border-neutral-100">
+                    <span class="font-semibold text-neutral-900">${newDiagnosticEscapeHtml(title)}</span>
+                </div>
+                <div class="px-6 py-4 bg-neutral-50 border-t border-neutral-100">
+                    <ul class="space-y-2 text-sm text-neutral-600">
+                        ${listItems}
+                    </ul>
+                </div>
+            `;
+
+            return panel;
+        }
+
+        function newDiagnosticNormalizeReportCloneForPdf(clonedReport, reportPayload) {
+            const exportWidthPx = 960;
+            const printableWidthPx = ((210 - 20) / 25.4) * 96;
+            const pdfScale = Number(Math.max(0.72, Math.min(0.82, printableWidthPx / exportWidthPx)).toFixed(3));
+
+            clonedReport.classList.remove('fade-in');
+            clonedReport.classList.add('pdf-export-root');
+            clonedReport.style.padding = '0';
+            clonedReport.style.background = 'transparent';
+            clonedReport.style.width = '100%';
+
+            const contentFrame = clonedReport.querySelector('.max-w-5xl') || clonedReport;
+            if (contentFrame) {
+                contentFrame.style.maxWidth = `${exportWidthPx}px`;
+                contentFrame.style.width = '100%';
+                contentFrame.style.marginLeft = 'auto';
+                contentFrame.style.marginRight = 'auto';
+            }
+
+            const hypothesisCard = Array.from(clonedReport.querySelectorAll('.report-card')).pop();
+            if (hypothesisCard) {
+                const accordionBlocks = Array.from(hypothesisCard.querySelectorAll('button[type="button"]'))
+                    .map((button) => button.parentElement)
+                    .filter(Boolean);
+                const exportPanels = [
+                    newDiagnosticBuildPdfAccordionPanel('Hypotheses du calcul', reportPayload && reportPayload.assumptions, 'info'),
+                    newDiagnosticBuildPdfAccordionPanel("Limites de l'approche", reportPayload && reportPayload.limits, 'warning')
+                ];
+
+                accordionBlocks.forEach((block, index) => {
+                    if (exportPanels[index]) {
+                        block.replaceWith(exportPanels[index]);
+                    }
+                });
+            }
+
+            clonedReport.querySelectorAll('[data-html2canvas-ignore="true"]').forEach((node) => node.remove());
+            clonedReport.querySelectorAll('.recharts-tooltip-wrapper').forEach((node) => node.remove());
+            clonedReport.querySelectorAll('button').forEach((button) => button.remove());
+
+            clonedReport.querySelectorAll('img').forEach((image) => {
+                const src = image.getAttribute('src');
+                if (src) {
+                    image.setAttribute('src', newDiagnosticResolveAbsoluteUrl(src));
+                }
+            });
+
+            clonedReport.querySelectorAll('source').forEach((sourceNode) => {
+                const srcset = sourceNode.getAttribute('srcset');
+                if (srcset) {
+                    sourceNode.setAttribute('srcset', newDiagnosticResolveAbsoluteUrl(srcset));
+                }
+            });
+
+            const reportCards = Array.from(clonedReport.querySelectorAll('.report-card'));
+            reportCards.forEach((card, index) => {
+                card.style.breakInside = 'avoid-page';
+                card.style.pageBreakInside = 'avoid';
+                card.style.marginBottom = index === reportCards.length - 1 ? '0' : '14px';
+
+                if (!card.className.includes('p-0')) {
+                    card.style.padding = '20px';
+                }
+            });
+
+            clonedReport.querySelectorAll('.report-subcard, .report-kpi-card, .break-inside-avoid, svg, img').forEach((node) => {
+                node.style.breakInside = 'avoid-page';
+                node.style.pageBreakInside = 'avoid';
+            });
+
+            clonedReport.querySelectorAll('[class*="h-[320px]"]').forEach((node) => {
+                node.style.height = '252px';
+            });
+
+            clonedReport.querySelectorAll('table').forEach((table) => {
+                table.style.fontSize = '12px';
+            });
+
+            return {
+                exportWidthPx,
+                pdfScale
+            };
+        }
+
+        function newDiagnosticBuildRenderedReportPdfHtml(targetNode, reportPayload) {
+            if (!targetNode) {
+                throw new Error('Zone de rapport introuvable.');
+            }
+
+            const clonedReport = targetNode.cloneNode(true);
+            const { exportWidthPx, pdfScale } = newDiagnosticNormalizeReportCloneForPdf(clonedReport, reportPayload);
+            const fileName = newDiagnosticBuildDownloadFileName(
+                reportPayload && reportPayload.inputs_summary ? reportPayload.inputs_summary.site_name : 'rapport',
+                'pdf'
+            );
+            const documentTitle = reportPayload && reportPayload.inputs_summary && reportPayload.inputs_summary.site_name
+                ? `DiagTertiaire - Rapport ${reportPayload.inputs_summary.site_name}`
+                : 'DiagTertiaire - Rapport';
+            const headMarkup = newDiagnosticCollectPdfHeadMarkup();
+            const baseHref = newDiagnosticResolveAbsoluteUrl(window.location.pathname || '/');
+
+            const html = `<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${newDiagnosticEscapeHtml(documentTitle)}</title>
+    <base href="${newDiagnosticEscapeHtml(baseHref)}">
+    ${headMarkup}
+    <style>
+        @page {
+            size: A4;
+            margin: 10mm;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            background: #F8FAFC;
+        }
+
+        body.pdf-export-body {
+            color: #0F172A;
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
+        }
+
+        .pdf-export-stage {
+            width: ${exportWidthPx}px;
+            max-width: ${exportWidthPx}px;
+            margin: 0 auto;
+            padding: 0;
+        }
+
+        .pdf-export-stage .new-diagnostic-report {
+            padding: 0 !important;
+            background: transparent !important;
+        }
+
+        .pdf-export-stage .max-w-5xl {
+            max-width: ${exportWidthPx}px !important;
+            width: 100% !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+        }
+
+        .pdf-export-root,
+        .pdf-export-root * {
+            box-sizing: border-box;
+        }
+
+        .pdf-export-root button,
+        .pdf-export-root [data-html2canvas-ignore="true"] {
+            display: none !important;
+        }
+
+        .pdf-export-root .report-card,
+        .pdf-export-root .report-subcard,
+        .pdf-export-root .report-kpi-card,
+        .pdf-export-root .break-inside-avoid,
+        .pdf-export-root svg,
+        .pdf-export-root img {
+            break-inside: avoid-page !important;
+            page-break-inside: avoid !important;
+        }
+
+        .pdf-export-root .report-card {
+            margin-bottom: 14px !important;
+        }
+
+        .pdf-export-root .report-section-title {
+            font-size: 1.22rem !important;
+        }
+
+        .pdf-export-root .report-hero-gradient {
+            padding: 22px 24px !important;
+        }
+
+        .pdf-export-root .report-glass-card {
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+        }
+
+        .pdf-export-root .recharts-tooltip-wrapper {
+            display: none !important;
+        }
+
+        .pdf-export-root [class*="xl:grid-cols-5"] {
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        }
+
+        .pdf-export-root [class*="xl:grid-cols-4"] {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        }
+
+        .pdf-export-root [class*="h-[320px]"] {
+            height: 252px !important;
+        }
+
+        .pdf-export-root p,
+        .pdf-export-root li {
+            orphans: 3;
+            widows: 3;
+        }
+
+        iconify-icon {
+            display: inline-block;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body class="pdf-export-body">
+    <div class="pdf-export-stage">
+        ${clonedReport.outerHTML}
+    </div>
+</body>
+</html>`;
+
+            return {
+                html,
+                fileName,
+                pdfOptions: {
+                    scale: pdfScale
+                }
+            };
+        }
+
+        async function newDiagnosticDownloadServerRenderedPdf({ html, fileName, pdfOptions }) {
+            const response = await fetch('/api/pdf', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    html,
+                    filename: fileName,
+                    mediaType: 'print',
+                    pdfOptions
+                })
+            });
+
+            if (!response.ok) {
+                let errorMessage = 'PDF generation failed';
+
+                try {
+                    const payload = await response.json();
+                    errorMessage = payload && (payload.details || payload.error) ? (payload.details || payload.error) : errorMessage;
+                } catch (error) { }
+
+                throw new Error(errorMessage);
+            }
+
+            const pdfBlob = await response.blob();
+            const objectUrl = window.URL.createObjectURL(pdfBlob);
+            const link = document.createElement('a');
+
+            link.href = objectUrl;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+
+            window.setTimeout(() => {
+                window.URL.revokeObjectURL(objectUrl);
+            }, 1500);
+        }
+
+        const newDiagnosticExportRenderedPdf = async (targetNode, reportPayload) => {
+            try {
+                const { html, fileName, pdfOptions } = newDiagnosticBuildRenderedReportPdfHtml(targetNode, reportPayload);
+                await newDiagnosticDownloadServerRenderedPdf({
+                    html,
+                    fileName,
+                    pdfOptions
+                });
+            } catch (error) {
+                console.warn('Export PDF Chromium indisponible, fallback local active.', error);
+                await newDiagnosticExportRenderedPdfFallback(targetNode, reportPayload);
+            }
+        };
 
         const newDiagnosticExportPDF = async (reportPayload, userEmail) => {
             // Vérifier que jsPDF est chargé

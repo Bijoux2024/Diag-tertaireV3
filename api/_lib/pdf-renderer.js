@@ -17,6 +17,10 @@ const DEFAULT_PDF_OPTIONS = Object.freeze({
   }
 });
 
+const normalizeMediaType = (value) => {
+  return value === 'print' ? 'print' : 'screen';
+};
+
 const createPdfRenderError = (message, statusCode = 500) => {
   const error = new Error(message);
   error.statusCode = statusCode;
@@ -93,7 +97,8 @@ const launchChromiumBrowser = async () => {
 const renderPdfFromHtml = async (html, {
   timeoutMs = DEFAULT_TIMEOUT_MS,
   maxHtmlLength = DEFAULT_MAX_HTML_LENGTH,
-  pdfOptions = {}
+  pdfOptions = {},
+  mediaType = 'screen'
 } = {}) => {
   if (typeof html !== 'string') {
     throw createPdfRenderError('Missing "html" content', 400);
@@ -117,7 +122,7 @@ const renderPdfFromHtml = async (html, {
     page.setDefaultNavigationTimeout(timeoutMs);
     page.setDefaultTimeout(timeoutMs);
 
-    await page.emulateMediaType('screen');
+    await page.emulateMediaType(normalizeMediaType(mediaType));
     await page.setContent(normalizedHtml, {
       waitUntil: ['domcontentloaded', 'networkidle0'],
       timeout: timeoutMs

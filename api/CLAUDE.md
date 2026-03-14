@@ -7,7 +7,7 @@ Stabiliser les routes `/api/*` qui soutiennent la pre-production de l'espace pro
 ## Regles absolues
 
 - `index.saaspro.html` est la route pro canonique
-- auth reelle = Supabase magic link, pas `proAuth`
+- auth reelle = Supabase email + mot de passe, magic link secondaire, pas `proAuth`
 - workspace pro = tables Supabase, pas `localStorage`
 - storage prive = bucket `organization-assets` + `organization_files`
 - PDF officiel = Chromium local / Vercel + Supabase, pas PDFShift
@@ -15,6 +15,7 @@ Stabiliser les routes `/api/*` qui soutiennent la pre-production de l'espace pro
 - suppression critique dossier / rapport / PDF = SQL transactionnel + route serveur, jamais front seul
 - ne pas casser `#report=`
 - aucune cle serveur ne sort du backend
+- variable serveur canonique = `SUPABASE_SERVICE_KEY` (`SUPABASE_SECRET_KEY` toleree seulement en fallback transitoire)
 
 ## Endpoints a connaitre
 

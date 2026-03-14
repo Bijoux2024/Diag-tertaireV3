@@ -12,6 +12,7 @@
 - serveur Vercel / Node
 - rendu PDF local via `puppeteer-core` + `@sparticuz/chromium`
 - plus aucun fournisseur PDF externe
+- variable serveur canonique : `SUPABASE_SERVICE_KEY` (`SUPABASE_SECRET_KEY` en fallback transitoire seulement)
 
 ## Contrats data a retenir
 

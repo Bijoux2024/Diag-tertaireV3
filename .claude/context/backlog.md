@@ -3,7 +3,7 @@
 ## Etat valide a retenir
 
 - route pro canonique : `index.saaspro.html`
-- auth Supabase minimale en place
+- auth Supabase email + mot de passe en place, magic link secondaire conserve
 - workspace pro persiste dans Supabase
 - storage prive en place
 - PDF officiel serveur en place (Vercel + Chromium + Supabase)

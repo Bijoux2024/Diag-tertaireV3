@@ -1,6 +1,5 @@
+const { getPublicSupabaseConfig } = require('./_lib/supabase-server');
+
 module.exports = function handler(req, res) {
-  res.status(200).json({
-    supabaseUrl: process.env.SUPABASE_URL || '',
-    supabasePublishableKey: process.env.SUPABASE_PUBLISHABLE_KEY || ''
-  });
+  res.status(200).json(getPublicSupabaseConfig());
 };

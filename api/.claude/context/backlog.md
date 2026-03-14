@@ -5,6 +5,7 @@
 - `/api/public-config` expose seulement les cles publiques Supabase
 - `/api/pro-report-pdf` genere et persiste le PDF officiel sans PDFShift
 - `/api/pro-delete-case` orchestre la suppression metier et la purge Storage
+- les routes serveur privees lisent `SUPABASE_SERVICE_KEY` en priorite, avec fallback transitoire `SUPABASE_SECRET_KEY`
 
 ## Verification prioritaire
 

@@ -8,7 +8,8 @@
 
 ## Source de verite reelle
 
-- auth pro : Supabase magic link minimal
+- auth pro : Supabase email + mot de passe, magic link secondaire
+- modele cible : `1 user = 1 organization`
 - workspace pro : Supabase (`organizations`, `profiles`, `organization_settings`, `organization_branding`, `pro_cases`, `pro_reports`, `user_workspace_state`)
 - storage prive : bucket `organization-assets` + catalogue `organization_files`
 - `localStorage` : migration douce / fallback legacy seulement, pas modele cible

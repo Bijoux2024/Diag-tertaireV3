@@ -3325,7 +3325,7 @@
                             </div>
                             <h3 className="text-2xl font-black text-slate-900 tracking-tight">Découvrez votre espace Pro</h3>
                             <p className="text-slate-600 mt-3 leading-7">
-                                Souhaitez-vous faire le tour du dashboard en 7 étapes ? (2 minutes)
+                                Souhaitez-vous faire le tour du dashboard en 7 étapes ? (30 secondes)
                             </p>
                             <div className="mt-8 flex flex-col sm:flex-row gap-3">
                                 <button type="button" onClick={onConfirm} className="pro-btn pro-btn-primary flex-1 justify-center py-3">
@@ -9877,10 +9877,18 @@
                 closeMobile();
                 setPage('dashboard');
 
+                await new Promise((resolve) => {
+                    if (typeof window === 'undefined' || typeof window.requestAnimationFrame !== 'function') {
+                        resolve();
+                        return;
+                    }
+
+                    window.requestAnimationFrame(() => resolve());
+                });
+
                 try {
                     await waitForTourElement(ONBOARDING_TOUR_SELECTORS.dashboardHeader);
                 } catch (error) {
-                    return;
                 }
 
                 setSuppressOnboardingPrompt(true);
@@ -9893,6 +9901,45 @@
                 }
 
                 let driverObj = null;
+                const resolveTourElementNode = (step) => {
+                    if (!step?.element || typeof document === 'undefined') {
+                        return null;
+                    }
+
+                    if (typeof step.element === 'string') {
+                        return document.querySelector(step.element);
+                    }
+
+                    if (typeof step.element === 'function') {
+                        return step.element();
+                    }
+
+                    return step.element || null;
+                };
+                const queueTourStepSkip = (driver) => {
+                    window.setTimeout(() => {
+                        if (!driver?.hasNextStep || !driver.hasNextStep()) {
+                            return;
+                        }
+
+                        driver.moveNext();
+                    }, 0);
+                };
+                const buildTourStep = ({ element, popover, skipIfMissing = !!element }) => ({
+                    element,
+                    onHighlightStarted: (_, step, options) => {
+                        if (!skipIfMissing) {
+                            return;
+                        }
+
+                        if (resolveTourElementNode(step)) {
+                            return;
+                        }
+
+                        queueTourStepSkip(options?.driver);
+                    },
+                    popover
+                });
 
                 const moveTourToStep = async (nextPage, selector, direction = 'next') => {
                     closeMobile();
@@ -9906,87 +9953,98 @@
                     }
 
                     if (direction === 'previous') {
+                        if (!driverObj) {
+                            return;
+                        }
                         driverObj.movePrevious();
                         return;
                     }
 
+                    if (!driverObj) {
+                        return;
+                    }
                     driverObj.moveNext();
                 };
 
                 const tourSteps = [
-                    {
+                    buildTourStep({
                         element: ONBOARDING_TOUR_SELECTORS.dashboardHeader,
                         popover: {
                             title: "Bienvenue dans votre espace Pro",
-                            description: "Voici votre tableau de bord. Vos dossiers clients apparaissent ici. Nous avons ajouté quelques exemples pour vous guider.",
+                            description: "Voici votre tableau de bord. Les KPIs en haut résument votre activité : nombre de diagnostics, répartition des indices, économies moyennes. L'activité récente liste vos derniers rapports générés.",
                             side: 'bottom',
                             align: 'start',
                             onNextClick: () => moveTourToStep('cases', ONBOARDING_TOUR_SELECTORS.casesList, 'next')
                         }
-                    },
-                    {
+                    }),
+                    buildTourStep({
                         element: ONBOARDING_TOUR_SELECTORS.casesList,
                         popover: {
                             title: "Vos dossiers clients",
-                            description: "Chaque dossier correspond à un bâtiment diagnostiqué. Cliquez sur un dossier pour consulter son rapport détaillé.",
+                            description: "Retrouvez tous vos dossiers dans cet onglet. Chaque carte affiche le nom du bâtiment, l'activité, la surface et l'indice DiagTertiaire. Cliquez sur un dossier pour ouvrir le rapport complet.",
                             side: 'top',
                             align: 'start',
-                            onPrevClick: () => moveTourToStep('dashboard', ONBOARDING_TOUR_SELECTORS.dashboardHeader, 'previous')
+                            onPrevClick: () => moveTourToStep('dashboard', ONBOARDING_TOUR_SELECTORS.dashboardHeader, 'previous'),
+                            onNextClick: () => moveTourToStep('dashboard', ONBOARDING_TOUR_SELECTORS.newCaseButton, 'next')
                         }
-                    },
-                    {
+                    }),
+                    buildTourStep({
                         element: ONBOARDING_TOUR_SELECTORS.newCaseButton,
                         popover: {
                             title: "Créer un nouveau dossier",
-                            description: "Lancez un nouveau diagnostic en quelques minutes. Le moteur calcule automatiquement les indicateurs énergétiques.",
-                            side: 'left',
-                            align: 'center'
-                        }
-                    },
-                    {
-                        element: ONBOARDING_TOUR_SELECTORS.reportButton,
-                        popover: {
-                            title: "Consulter et télécharger le rapport",
-                            description: "Chaque dossier génère un rapport PDF personnalisé à votre charte, prêt à envoyer à votre client.",
+                            description: "Ce bouton lance le wizard de diagnostic en 5 étapes. Renseignez les informations du bâtiment et les consommations - le rapport est généré automatiquement à la fin.",
                             side: 'left',
                             align: 'center',
+                            onPrevClick: () => moveTourToStep('cases', ONBOARDING_TOUR_SELECTORS.casesList, 'previous'),
+                            onNextClick: () => moveTourToStep('cases', ONBOARDING_TOUR_SELECTORS.reportButton, 'next')
+                        }
+                    }),
+                    buildTourStep({
+                        element: ONBOARDING_TOUR_SELECTORS.reportButton,
+                        popover: {
+                            title: "Rapport et PDF",
+                            description: "Dans chaque dossier, vous pouvez consulter le rapport détaillé et générer le PDF officiel personnalisé à votre charte graphique. Le PDF est archivé et accessible à tout moment.",
+                            side: 'left',
+                            align: 'center',
+                            onPrevClick: () => moveTourToStep('dashboard', ONBOARDING_TOUR_SELECTORS.newCaseButton, 'previous'),
                             onNextClick: () => moveTourToStep('settings', ONBOARDING_TOUR_SELECTORS.brandingSection, 'next')
                         }
-                    },
-                    {
+                    }),
+                    buildTourStep({
                         element: ONBOARDING_TOUR_SELECTORS.brandingSection,
                         popover: {
                             title: "Personnalisez votre charte",
-                            description: "Ajoutez votre logo et votre couleur principale. Tous vos rapports seront automatiquement à votre image.",
+                            description: "Dans Configuration, ajoutez votre logo et choisissez votre couleur principale. Ces éléments s'appliquent automatiquement à tous vos rapports PDF - vos clients voient votre identité visuelle, pas la nôtre.",
                             side: 'left',
                             align: 'start',
                             onPrevClick: () => moveTourToStep('cases', ONBOARDING_TOUR_SELECTORS.reportButton, 'previous'),
                             onNextClick: () => moveTourToStep('cases', ONBOARDING_TOUR_SELECTORS.deleteButton, 'next')
                         }
-                    },
-                    {
+                    }),
+                    buildTourStep({
                         element: ONBOARDING_TOUR_SELECTORS.deleteButton,
                         popover: {
                             title: "Supprimer les dossiers exemples",
-                            description: "Quand vous êtes prêt, supprimez ces dossiers exemples. Sélectionnez-les et cliquez sur Supprimer.",
+                            description: "Ces dossiers exemples vous ont permis de découvrir l'outil. Pour les supprimer, ouvrez un dossier exemple, cliquez sur les trois points ou le bouton Supprimer, et confirmez la suppression.",
                             side: 'left',
                             align: 'center',
                             onPrevClick: () => moveTourToStep('settings', ONBOARDING_TOUR_SELECTORS.brandingSection, 'previous')
                         }
-                    },
-                    {
+                    }),
+                    buildTourStep({
                         popover: {
                             title: "Vous êtes prêt",
-                            description: "Votre espace Pro est configuré. Créez votre premier vrai dossier client dès maintenant.",
+                            description: "Votre espace Pro est opérationnel. Créez votre premier vrai dossier client avec le bouton Nouveau diagnostic. En cas de question, contactez-nous à contact@diag-tertiaire.fr.",
                             onPrevClick: () => moveTourToStep('cases', ONBOARDING_TOUR_SELECTORS.deleteButton, 'previous')
                         }
-                    }
+                    })
                 ];
 
                 driverObj = driverFactory({
                     animate: true,
                     showProgress: true,
-                    allowClose: true,
+                    allowClose: false,
+                    showButtons: ['previous', 'next'],
                     stagePadding: 10,
                     overlayColor: 'rgba(15, 23, 42, 0.72)',
                     popoverClass: 'driverjs-pro-theme',

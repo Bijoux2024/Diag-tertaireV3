@@ -1344,7 +1344,8 @@
                     session: null,
                     error: null,
                     flowType: '',
-                    handled: false
+                    handled: false,
+                    usedDirectSessionTokens: false
                 };
             }
 
@@ -1359,20 +1360,13 @@
                     session: null,
                     error: null,
                     flowType,
-                    handled: false
+                    handled: false,
+                    usedDirectSessionTokens: false
                 };
             }
 
-            if (callbackParams.code && typeof browserClient.auth.exchangeCodeForSession === 'function') {
-                const { data, error } = await browserClient.auth.exchangeCodeForSession(callbackParams.code);
-                return {
-                    session: data?.session || null,
-                    error: error || null,
-                    flowType,
-                    handled: true
-                };
-            }
-
+            // Supabase email confirmation can return direct session tokens in the hash.
+            // In this case we must not use exchangeCodeForSession(), which expects a PKCE code.
             if (callbackParams.accessToken && callbackParams.refreshToken && typeof browserClient.auth.setSession === 'function') {
                 const { data, error } = await browserClient.auth.setSession({
                     access_token: callbackParams.accessToken,
@@ -1383,7 +1377,19 @@
                     session: data?.session || null,
                     error: error || null,
                     flowType,
-                    handled: true
+                    handled: true,
+                    usedDirectSessionTokens: true
+                };
+            }
+
+            if (callbackParams.code && typeof browserClient.auth.exchangeCodeForSession === 'function') {
+                const { data, error } = await browserClient.auth.exchangeCodeForSession(callbackParams.code);
+                return {
+                    session: data?.session || null,
+                    error: error || null,
+                    flowType,
+                    handled: true,
+                    usedDirectSessionTokens: false
                 };
             }
 
@@ -1392,7 +1398,8 @@
                 session: data?.session || null,
                 error: error || null,
                 flowType,
-                handled: true
+                handled: true,
+                usedDirectSessionTokens: false
             };
         };
 
@@ -9396,6 +9403,15 @@
                             activateRecoveryState(session, 'recovery');
                         } else {
                             await applySession(session);
+
+                            if (
+                                isMounted
+                                && callbackSessionResult.usedDirectSessionTokens
+                                && callbackSessionResult.flowType === 'signup'
+                                && session?.user
+                            ) {
+                                setPage('dashboard');
+                            }
                         }
 
                         const { data } = browserClient.auth.onAuthStateChange(async (event, nextSession) => {

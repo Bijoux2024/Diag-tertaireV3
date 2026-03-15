@@ -9253,6 +9253,7 @@
             const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
             const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
             const [legalModalKey, setLegalModalKey] = useState('');
+            const forceRecoveryFlowRef = useRef(false);
             const [workspace, setWorkspace] = useState(() => ({
                 ...DEFAULT_WORKSPACE_DATA,
                 profile: null
@@ -9283,11 +9284,13 @@
                 };
 
                 const clearRecoveryState = () => {
+                    forceRecoveryFlowRef.current = false;
                     setAuthRecovery({ active: false, email: '', mode: '' });
                 };
 
                 const activateRecoveryState = (session, mode = 'recovery') => {
                     const user = session?.user || null;
+                    forceRecoveryFlowRef.current = mode === 'recovery';
                     setActiveProUserId(user?.id || null);
                     resetWorkspace();
                     setAuth(false);
@@ -9400,6 +9403,7 @@
                             setAuthUserId(null);
                             setAuthError("Impossible de vérifier votre session pour le moment.");
                         } else if ((callbackSessionResult.flowType === 'recovery' || initialRecoveryFlow) && session?.user) {
+                            forceRecoveryFlowRef.current = true;
                             activateRecoveryState(session, 'recovery');
                         } else {
                             await applySession(session);
@@ -9415,12 +9419,24 @@
                         }
 
                         const { data } = browserClient.auth.onAuthStateChange(async (event, nextSession) => {
-                            if (event === 'PASSWORD_RECOVERY') {
+                            const currentFlowType = getAuthFlowTypeFromLocation();
+                            const shouldKeepRecoveryScreen = !!nextSession?.user && (
+                                event === 'PASSWORD_RECOVERY'
+                                || currentFlowType === 'recovery'
+                                || forceRecoveryFlowRef.current
+                            );
+
+                            if (shouldKeepRecoveryScreen) {
+                                forceRecoveryFlowRef.current = true;
                                 activateRecoveryState(nextSession, 'recovery');
                                 if (isMounted) {
                                     setAuthReady(true);
                                 }
                                 return;
+                            }
+
+                            if (!nextSession?.user) {
+                                forceRecoveryFlowRef.current = false;
                             }
 
                             if (nextSession?.user && isUserPasswordSetupPending(nextSession.user)) {

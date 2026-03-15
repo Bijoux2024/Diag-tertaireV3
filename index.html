@@ -712,34 +712,68 @@
             const surfaceValue = inputsSummary.surface && typeof inputsSummary.surface === 'object'
                 ? inputsSummary.surface.value
                 : formData.surface;
+            const companyName = formData.companyName || null;
+            const activityValue = formData.activity || inputsSummary.activity || null;
+            const activityLabel = newDiagnosticGetActivityLabel(activityValue, {
+                mixedUsage1: formData.mixedUsage1 || inputsSummary.mixedUsage1 || null,
+                mixedUsage2: formData.mixedUsage2 || inputsSummary.mixedUsage2 || null
+            });
+            const partnerConsent = !!formData.optInPartenaire;
+            const privacyConsent = !!formData.optInPolitique;
 
             return {
                 source: 'diagnostic_report',
-                name: null,
+                name: formData.firstName || null,
+                prenom: formData.firstName || null,
                 email: formData.email || null,
-                company: siteName,
+                company: companyName || siteName,
+                societe: companyName,
+                site_name: siteName,
+                nomBatiment: siteName,
                 phone: formData.phone || null,
+                telephone: formData.phone || null,
+                activite: activityValue,
+                activiteLabel: activityLabel,
+                surface: surfaceValue || null,
+                codePostal: formData.postalCode || inputsSummary.postal_code || null,
+                postalCode: formData.postalCode || inputsSummary.postal_code || null,
+                primaryGoal: formData.primaryGoal || null,
+                objectif: formData.primaryGoal || null,
+                projectHorizon: formData.projectHorizon || null,
+                horizon_decision: formData.projectHorizon || null,
+                opt_in_politique: privacyConsent,
+                opt_in_partenaire: partnerConsent,
                 message: newDiagnosticBuildLeadMessage(
                     formData.address ? `Adresse: ${formData.address}` : null,
+                    companyName ? `Societe: ${companyName}` : null,
                     formData.primaryGoal ? `Objectif: ${formData.primaryGoal}` : null,
                     formData.projectHorizon ? `Horizon: ${formData.projectHorizon}` : null,
-                    formData.contactOptIn ? 'Mise en relation expert: oui' : 'Mise en relation expert: non'
+                    privacyConsent ? 'Politique: oui' : 'Politique: non',
+                    partnerConsent ? 'Mise en relation expert: oui' : 'Mise en relation expert: non'
                 ),
                 report_id: reportPayload && reportPayload.report_id ? reportPayload.report_id : null,
-                partnerConsent: !!formData.contactOptIn,
+                partnerConsent: partnerConsent,
                 trigger_type: 'form_partner_checkbox',
                 raw_payload: {
                     form: 'diagnostic_report',
+                    prenom: formData.firstName || null,
                     email: formData.email || null,
                     phone: formData.phone || null,
+                    societe: companyName,
+                    site_name: siteName,
                     address: formData.address || null,
                     postal_code: formData.postalCode || inputsSummary.postal_code || null,
-                    activity: formData.activity || inputsSummary.activity || null,
+                    activity: activityValue,
                     surface: surfaceValue || null,
                     role: formData.decisionRole || formData.role || inputsSummary.decision_role || inputsSummary.role || null,
                     primary_goal: formData.primaryGoal || null,
                     project_horizon: formData.projectHorizon || null,
-                    contact_opt_in: !!formData.contactOptIn,
+                    construction_period: formData.constructionPeriod || null,
+                    no_invoices_mode: !!formData.noInvoicesMode,
+                    selected_energies: publicTunnelGetSelectedEnergyConfigs(formData).map((config) => config.id),
+                    opt_in_politique: privacyConsent,
+                    opt_in_partenaire: partnerConsent,
+                    contact_opt_in: partnerConsent,
                     report_id: reportPayload && reportPayload.report_id ? reportPayload.report_id : null
                 }
             };
@@ -1046,6 +1080,35 @@
                 status: result.status,
                 error: null
             };
+        };
+
+        const newDiagnosticBuildLegacyLeadRow = (leadData) => ({
+            source: leadData.source || null,
+            name: leadData.name || null,
+            prenom: leadData.prenom || leadData.name || null,
+            email: leadData.email || null,
+            company: leadData.company || null,
+            societe: leadData.societe || leadData.company || null,
+            phone: leadData.phone || null,
+            message: leadData.message || null,
+            report_id: leadData.report_id || null,
+            objectif: leadData.objectif || leadData.primaryGoal || leadData.primary_goal || null,
+            horizon_decision: leadData.horizon_decision || leadData.projectHorizon || leadData.project_horizon || null,
+            opt_in_politique: !!leadData.opt_in_politique,
+            opt_in_partenaire: !!leadData.opt_in_partenaire,
+            raw_payload: leadData,
+            created_at: new Date().toISOString()
+        });
+
+        const newDiagnosticMirrorLeadToLegacyTable = async (leadData) => {
+            const payload = newDiagnosticBuildLegacyLeadRow(leadData);
+            const result = await newDiagnosticInsertSupabaseRow('leads', payload);
+
+            if (!result.ok) {
+                console.warn('legacy leads mirror failed', result.error || result.status);
+            }
+
+            return result;
         };
 
         const newDiagnosticSubmitProInterestLead = async (leadData) => {
@@ -3042,6 +3105,73 @@
             return errors;
         };
 
+        const publicTunnelValidateEnergyData = (formData) => {
+            const errors = [];
+            const selectedEnergies = publicTunnelGetSelectedEnergyConfigs(formData);
+
+            if (!selectedEnergies.length) {
+                errors.push('Selectionnez au moins une energie.');
+                return errors;
+            }
+
+            if (!formData.noInvoicesMode) {
+                selectedEnergies.forEach((config) => {
+                    const hasKwh = Boolean(formData[`${config.fieldPrefix}Kwh`]);
+                    const hasEuro = Boolean(formData[`${config.fieldPrefix}Euro`]);
+
+                    if (!hasKwh && !hasEuro) {
+                        errors.push(`${config.label} : renseignez au moins les kWh ou le montant en EUR.`);
+                    }
+                });
+            }
+
+            selectedEnergies.forEach((config) => {
+                const kwhValue = parseFloat(formData[`${config.fieldPrefix}Kwh`] || 0);
+                const euroValue = parseFloat(formData[`${config.fieldPrefix}Euro`] || 0);
+
+                if (kwhValue > 0 && euroValue > 0) {
+                    const implicitPrice = euroValue / kwhValue;
+                    const minPrice = config.defaultPriceEurKwh * 0.55;
+                    const maxPrice = config.defaultPriceEurKwh * 1.8;
+
+                    if (implicitPrice < minPrice || implicitPrice > maxPrice) {
+                        errors.push({
+                            type: 'warning',
+                            code: 'PRICE_IMPLIED_OUT_OF_RANGE',
+                            message: `${config.label} : le prix implicite semble inhabituel (verifiez vos donnees).`,
+                            energy: config.id
+                        });
+                    }
+                }
+            });
+
+            if (formData.elecIncludesSubscription && !formData.elecSubscriptionYearly) {
+                errors.push({
+                    type: 'warning',
+                    code: 'SUBSCRIPTION_INCLUDED_NO_VALUE',
+                    message: 'Electricite : abonnement coche mais montant non renseigne (estimation moins precise).'
+                });
+            }
+
+            if (formData.gasIncludesSubscription && !formData.gasSubscriptionYearly) {
+                errors.push({
+                    type: 'warning',
+                    code: 'SUBSCRIPTION_INCLUDED_NO_VALUE',
+                    message: 'Gaz : abonnement coche mais montant non renseigne (estimation moins precise).'
+                });
+            }
+
+            if (formData.noInvoicesMode) {
+                errors.push({
+                    type: 'warning',
+                    code: 'DEFAULT_ESTIMATION_MODE',
+                    message: 'Mode estimation active : sans factures, le diagnostic s appuie sur vos energies selectionnees, la surface et des prix de reference.'
+                });
+            }
+
+            return errors;
+        };
+
         /* ─────────────────────────────────────────────────────────────────────────
            COMPOSANTS FORMULAIRE
            ───────────────────────────────────────────────────────────────────────── */
@@ -3156,6 +3286,8 @@
         const NewDiagnosticRadioCards = ({ options, selected, onChange, columns = 2 }) => {
             const gridClass = columns === 3
                 ? 'grid md:grid-cols-3 gap-4'
+                : columns === 4
+                    ? 'grid md:grid-cols-4 gap-4'
                 : columns === 1
                     ? 'grid md:grid-cols-1 gap-4'
                     : 'grid md:grid-cols-2 gap-4';
@@ -3280,11 +3412,33 @@
         const NewDiagnosticStep1Identification = ({ formData, setFormData, onNext }) => {
             const [errors, setErrors] = useState({});
             const [mixedTab, setMixedTab] = useState(0); // 0 = Usage 1, 1 = Usage 2
-
-            const isMixed = formData.activity === 'mixed';
+            const selectedActivityTile = publicTunnelGetSelectedActivityTile(formData);
+            const isMixed = selectedActivityTile === 'mixed';
+            const isCommerce = selectedActivityTile === 'commerce';
 
             // Non-mixed activities for the mixed tabs
-            const nonMixedActivities = NEW_DIAGNOSTIC_ACTIVITIES.filter(a => a.id !== 'mixed');
+            const nonMixedActivities = PUBLIC_TUNNEL_MIX_ACTIVITY_OPTIONS;
+
+            const handleActivityTileChange = (activityId) => {
+                if (activityId === 'commerce') {
+                    setFormData({
+                        ...formData,
+                        activityCategory: 'commerce',
+                        activity: ['commerce_alim', 'commerce_non_alim'].includes(formData.activity) ? formData.activity : '',
+                        mixedUsage1: '',
+                        mixedUsage2: ''
+                    });
+                    return;
+                }
+
+                setFormData({
+                    ...formData,
+                    activityCategory: activityId,
+                    activity: activityId === 'sante' ? 'sante' : activityId,
+                    mixedUsage1: '',
+                    mixedUsage2: ''
+                });
+            };
 
             const validate = () => {
                 const newErrors = {};
@@ -3301,7 +3455,10 @@
                 if (!formData.activity) {
                     newErrors.activity = 'Veuillez sélectionner une activité';
                 }
-                if (formData.activity === 'mixed') {
+                if (!formData.activity && isCommerce) {
+                    newErrors.activity = 'Choisissez le type de commerce correspondant a votre site.';
+                }
+                if (isMixed) {
                     if (!formData.mixedUsage1) newErrors.mixedUsage1 = 'Sélectionnez un usage pour Usage 1';
                     if (!formData.mixedUsage2) newErrors.mixedUsage2 = 'Sélectionnez un usage pour Usage 2';
                     if (formData.mixedUsage1 && formData.mixedUsage2 && formData.mixedUsage1 === formData.mixedUsage2) {
@@ -3321,8 +3478,8 @@
             };
 
             return (
-                <div className="max-w-2xl mx-auto">
-                    <h2 className="text-2xl font-bold text-[#102A43] mb-2">Identification</h2>
+                <div className="max-w-4xl mx-auto">
+                    <h2 className="text-2xl font-bold text-[#102A43] mb-2">Identification & activite</h2>
                     <p className="text-[#475569] mb-8">Commençons par quelques informations de base</p>
 
                     <NewDiagnosticFormInput
@@ -3357,7 +3514,8 @@
                         error={errors.postalCode}
                     />
 
-                    <NewDiagnosticFormSelect
+                    <div className="hidden">
+                        <NewDiagnosticFormSelect
                         label="Activité principale"
                         value={formData.activity}
                         onChange={(v) => setFormData({ ...formData, activity: v, mixedUsage1: '', mixedUsage2: '' })}
@@ -3366,6 +3524,50 @@
                         error={errors.activity}
                         placeholder="Sélectionnez une activité"
                     />
+
+                    </div>
+
+                    <div className="mb-6 mt-6">
+                        <label className="block text-sm font-medium text-neutral-700 mb-3">
+                            Activite principale <span className="text-red-500">*</span>
+                        </label>
+                        <NewDiagnosticRadioCards
+                            options={PUBLIC_TUNNEL_ACTIVITY_TILES.map((option) => {
+                                if (option.id !== 'commerce') {
+                                    return option;
+                                }
+
+                                const selectedCommerceOption = PUBLIC_TUNNEL_COMMERCE_OPTIONS.find((item) => item.id === formData.activity);
+                                return {
+                                    ...option,
+                                    desc: selectedCommerceOption ? selectedCommerceOption.label : 'Choisissez ensuite le sous-type'
+                                };
+                            })}
+                            selected={selectedActivityTile}
+                            onChange={handleActivityTileChange}
+                            columns={3}
+                        />
+                        {errors.activity && <p className="text-xs text-red-500 mt-2">{errors.activity}</p>}
+                    </div>
+
+                    {isCommerce && (
+                        <div className="mb-6 p-5 bg-white border border-[#E2E8F0] rounded-xl shadow-sm">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="w-10 h-10 rounded-lg bg-[#EFF6FF] text-[#1D4ED8] flex items-center justify-center">
+                                    <Icon icon="solar:shop-linear" className="text-2xl" />
+                                </div>
+                                <div>
+                                    <p className="font-semibold text-[#102A43]">Precisez le commerce</p>
+                                    <p className="text-sm text-neutral-500">Ce choix determine le bon benchmark energetique.</p>
+                                </div>
+                            </div>
+                            <NewDiagnosticRadioCards
+                                options={PUBLIC_TUNNEL_COMMERCE_OPTIONS}
+                                selected={formData.activity}
+                                onChange={(value) => setFormData({ ...formData, activityCategory: 'commerce', activity: value })}
+                            />
+                        </div>
+                    )}
 
                     {isMixed && (
                         <div className="mb-6 border border-[#E2E8F0] rounded-xl overflow-hidden">
@@ -3398,7 +3600,7 @@
                                 {mixedTab === 0 ? (
                                     <>
                                         <p className="text-sm text-neutral-600 mb-3">Sélectionnez le premier usage du bâtiment :</p>
-                                        <div className="grid grid-cols-2 gap-2">
+                                        <div className="grid md:grid-cols-3 gap-2">
                                             {nonMixedActivities.map(act => (
                                                 <button
                                                     key={act.id}
@@ -3421,7 +3623,7 @@
                                 ) : (
                                     <>
                                         <p className="text-sm text-neutral-600 mb-3">Sélectionnez le deuxième usage du bâtiment :</p>
-                                        <div className="grid grid-cols-2 gap-2">
+                                        <div className="grid md:grid-cols-3 gap-2">
                                             {nonMixedActivities.map(act => (
                                                 <button
                                                     key={act.id}
@@ -3995,6 +4197,493 @@
         /* ─────────────────────────────────────────────────────────────────────────
            MOTEUR DE CALCUL + RAPPORT DU NOUVEAU FORMULAIRE (RÉCUPÉRÉ DU FICHIER SOURCE)
            ───────────────────────────────────────────────────────────────────────── */
+
+        const PublicTunnelStep2Energies = ({ formData, setFormData, onNext, onBack }) => {
+            const [errors, setErrors] = useState([]);
+            const selectedConfigs = publicTunnelGetSelectedEnergyConfigs(formData);
+            const confidence = publicTunnelCalculateConfidence(formData);
+
+            const validate = () => {
+                const validationErrors = publicTunnelValidateEnergyData(formData);
+                const blockingErrors = validationErrors.filter((item) => typeof item === 'string');
+                setErrors(validationErrors);
+                return blockingErrors.length === 0;
+            };
+
+            const handleNext = () => {
+                if (validate()) {
+                    newDiagnosticTrack('diagnostic_step2_completed', {
+                        energies: selectedConfigs.map((config) => config.id),
+                        no_invoices_mode: !!formData.noInvoicesMode
+                    });
+                    onNext();
+                }
+            };
+
+            const toggleEnergy = (config) => {
+                const nextSelected = !formData[`${config.fieldPrefix}Used`];
+                const nextState = {
+                    ...formData,
+                    [`${config.fieldPrefix}Used`]: nextSelected
+                };
+
+                if (!nextSelected) {
+                    nextState[`${config.fieldPrefix}Kwh`] = '';
+                    nextState[`${config.fieldPrefix}Euro`] = '';
+                    if (config.fieldPrefix === 'elec' || config.fieldPrefix === 'gas') {
+                        nextState[`${config.fieldPrefix}IncludesSubscription`] = false;
+                        nextState[`${config.fieldPrefix}SubscriptionYearly`] = '';
+                    }
+                }
+
+                setFormData(nextState);
+            };
+
+            const blockingErrors = errors.filter((item) => typeof item === 'string');
+            const warnings = errors.filter((item) => typeof item === 'object' && item.type === 'warning');
+            const confidenceTone = confidence.level === 'strong'
+                ? 'border-emerald-200 bg-emerald-50 text-emerald-900'
+                : confidence.level === 'medium'
+                    ? 'border-amber-200 bg-amber-50 text-amber-900'
+                    : 'border-rose-200 bg-rose-50 text-rose-900';
+
+            return (
+                <div className="max-w-4xl mx-auto">
+                    <h2 className="text-2xl font-bold text-[#102A43] mb-2">Énergies</h2>
+                    <p className="text-[#475569] mb-8">Sélectionnez les énergies du site. Vous pouvez en cocher plusieurs.</p>
+
+                    {blockingErrors.length > 0 && (
+                        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                            <p className="text-sm font-semibold text-red-800 mb-2">Erreurs a corriger :</p>
+                            <ul className="list-disc list-inside text-sm text-red-700 space-y-1">
+                                {blockingErrors.map((err, index) => (
+                                    <li key={index}>{err}</li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+
+                    {warnings.length > 0 && (
+                        <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                            <p className="text-sm font-semibold text-yellow-800 mb-2">Avertissements :</p>
+                            <ul className="list-disc list-inside text-sm text-yellow-700 space-y-1">
+                                {warnings.map((warn, index) => (
+                                    <li key={index}>{warn.message}</li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+
+                    <div className="grid md:grid-cols-5 gap-3 mb-6">
+                        {PUBLIC_TUNNEL_ENERGY_CONFIG.map((config) => {
+                            const isSelected = Boolean(formData[`${config.fieldPrefix}Used`]);
+                            return (
+                                <button
+                                    key={config.id}
+                                    type="button"
+                                    onClick={() => toggleEnergy(config)}
+                                    className={`p-4 rounded-xl border-2 text-left transition-all ${publicTunnelGetEnergyCardTone(config.accent, isSelected)}`}
+                                >
+                                    <Icon icon={config.icon} className="text-2xl mb-2 block" />
+                                    <div className="font-semibold text-neutral-900">{config.label}</div>
+                                </button>
+                            );
+                        })}
+                    </div>
+
+                    <div className="mb-6 p-4 rounded-xl border border-[#E2E8F0] bg-white">
+                        <label className="flex items-start justify-between gap-4 cursor-pointer">
+                            <div>
+                                <p className="font-semibold text-neutral-900">Je n'ai pas mes factures</p>
+                                <p className="text-sm text-neutral-500 mt-1">Mode estimation par défaut. Références appliquées : électricité 0,196 EUR/kWh, gaz 0,105 EUR/kWh.</p>
+                            </div>
+                            <input
+                                type="checkbox"
+                                checked={!!formData.noInvoicesMode}
+                                onChange={(event) => setFormData({ ...formData, noInvoicesMode: event.target.checked })}
+                                className="mt-1 w-5 h-5 rounded border-[#E2E8F0] text-[#1D4ED8] focus:ring-[#1D4ED8]"
+                            />
+                        </label>
+                    </div>
+
+                    {selectedConfigs.map((config) => (
+                        <div key={config.id} className="mb-6 p-6 bg-white border border-[#E2E8F0] rounded-xl shadow-sm">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="w-10 h-10 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] flex items-center justify-center">
+                                    <Icon icon={config.icon} className="text-2xl text-[#102A43]" />
+                                </div>
+                                <div>
+                                    <p className="font-semibold text-[#102A43]">{config.label}</p>
+                                    <p className="text-sm text-neutral-500">Si vous n'avez pas les deux valeurs, renseignez au moins ce que vous connaissez.</p>
+                                </div>
+                            </div>
+
+                            <div className="grid md:grid-cols-2 gap-4">
+                                <NewDiagnosticFormInput
+                                    label="Consommation annuelle"
+                                    value={formData[`${config.fieldPrefix}Kwh`] || ''}
+                                    onChange={(value) => setFormData({ ...formData, [`${config.fieldPrefix}Kwh`]: value })}
+                                    type="number"
+                                    placeholder="120000"
+                                    suffix="kWh/an"
+                                />
+                                <NewDiagnosticFormInput
+                                    label="Montant annuel TTC"
+                                    value={formData[`${config.fieldPrefix}Euro`] || ''}
+                                    onChange={(value) => setFormData({ ...formData, [`${config.fieldPrefix}Euro`]: value })}
+                                    type="number"
+                                    placeholder="23280"
+                                    suffix="EUR/an"
+                                />
+                            </div>
+
+                            {(config.fieldPrefix === 'elec' || config.fieldPrefix === 'gas') && (
+                                <div className="mt-4 space-y-4">
+                                    <NewDiagnosticCheckbox
+                                        label="Mon montant inclut l abonnement"
+                                        checked={!!formData[`${config.fieldPrefix}IncludesSubscription`]}
+                                        onChange={(value) => setFormData({ ...formData, [`${config.fieldPrefix}IncludesSubscription`]: value })}
+                                    />
+                                    {formData[`${config.fieldPrefix}IncludesSubscription`] && (
+                                        <NewDiagnosticFormInput
+                                            label="Abonnement annuel"
+                                            value={formData[`${config.fieldPrefix}SubscriptionYearly`] || ''}
+                                            onChange={(value) => setFormData({ ...formData, [`${config.fieldPrefix}SubscriptionYearly`]: value })}
+                                            type="number"
+                                            placeholder="150"
+                                            suffix="EUR/an"
+                                        />
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    ))}
+
+                    <div className={`mt-6 p-4 rounded-xl border ${confidenceTone}`}>
+                        <p className="font-semibold">Confiance : {confidence.label}</p>
+                        <p className="text-sm mt-1">
+                            Élevée = kWh + euros renseignés, Moyenne = kWh seuls, Faible = toggle sans factures.
+                        </p>
+                    </div>
+
+                    <div className="flex justify-between mt-8">
+                        <button
+                            onClick={onBack}
+                            className="px-6 py-3 text-neutral-600 hover:text-neutral-900 font-semibold transition-colors"
+                        >
+                            Retour
+                        </button>
+                        <button
+                            onClick={handleNext}
+                            className="px-8 py-3 bg-[#1D4ED8] text-white font-semibold rounded-lg hover:bg-[#1E40AF] transition-colors shadow-sm"
+                        >
+                            Continuer
+                        </button>
+                    </div>
+                </div>
+            );
+        };
+
+        const PublicTunnelStep3BuildingUsage = ({ formData, setFormData, onNext, onBack }) => {
+            const [errors, setErrors] = useState({});
+            const coolingChoice = formData.hasCooling === true ? 'yes' : formData.hasCooling === false ? 'no' : '';
+
+            const validate = () => {
+                const nextErrors = {};
+
+                if (!newDiagnosticValidateNumber(formData.surface, 1)) {
+                    nextErrors.surface = 'Surface invalide (doit etre > 0).';
+                }
+                if (!formData.usageIntensity) {
+                    nextErrors.usageIntensity = 'Selectionnez une intensite d usage.';
+                }
+                if (!formData.mainHeating) {
+                    nextErrors.mainHeating = 'Selectionnez le chauffage principal.';
+                }
+                if (typeof formData.hasCooling !== 'boolean') {
+                    nextErrors.hasCooling = 'Indiquez si le site est climatise.';
+                }
+                if (!formData.constructionPeriod) {
+                    nextErrors.constructionPeriod = 'Selectionnez la periode de construction.';
+                }
+
+                setErrors(nextErrors);
+                return Object.keys(nextErrors).length === 0;
+            };
+
+            const handleNext = () => {
+                if (validate()) {
+                    newDiagnosticTrack('diagnostic_step3_completed', {
+                        surface: formData.surface,
+                        heating: formData.mainHeating,
+                        cooling: formData.hasCooling
+                    });
+                    onNext();
+                }
+            };
+
+            return (
+                <div className="max-w-4xl mx-auto">
+                    <h2 className="text-2xl font-bold text-[#102A43] mb-2">Bâtiment & usage</h2>
+                    <p className="text-[#475569] mb-8">Complétons les paramètres du site pour fiabiliser l'estimation.</p>
+
+                    <NewDiagnosticFormInput
+                        label="Surface totale"
+                        value={formData.surface}
+                        onChange={(value) => setFormData({ ...formData, surface: value })}
+                        type="number"
+                        placeholder="300"
+                        suffix="m2"
+                        required
+                        error={errors.surface}
+                    />
+
+                    <div className="mb-6">
+                        <label className="block text-sm font-medium text-neutral-700 mb-3">
+                            Intensite d usage <span className="text-red-500">*</span>
+                        </label>
+                        <NewDiagnosticRadioCards
+                            options={[
+                                { id: 'low', label: 'Faible', icon: 'solar:moon-linear' },
+                                { id: 'standard', label: 'Standard', icon: 'solar:clock-circle-linear' },
+                                { id: 'intense', label: 'Intense', icon: 'solar:bolt-circle-linear' }
+                            ]}
+                            selected={formData.usageIntensity === 'high' ? 'intense' : formData.usageIntensity}
+                            onChange={(value) => setFormData({ ...formData, usageIntensity: value })}
+                            columns={3}
+                        />
+                        {errors.usageIntensity && <p className="text-xs text-red-500 mt-2">{errors.usageIntensity}</p>}
+                    </div>
+
+                    <div className="mb-6">
+                        <label className="block text-sm font-medium text-neutral-700 mb-3">
+                            Systeme de chauffage principal <span className="text-red-500">*</span>
+                        </label>
+                        <NewDiagnosticRadioCards
+                            options={[
+                                { id: 'electric', label: 'Electrique', icon: 'solar:lightbulb-linear' },
+                                { id: 'gas', label: 'Gaz', icon: 'solar:fire-linear' },
+                                { id: 'network', label: 'Reseau', icon: 'solar:fire-square-linear' },
+                                { id: 'other', label: 'Autre', icon: 'solar:tuning-2-linear' }
+                            ]}
+                            selected={formData.mainHeating}
+                            onChange={(value) => setFormData({ ...formData, mainHeating: value })}
+                            columns={4}
+                        />
+                        {errors.mainHeating && <p className="text-xs text-red-500 mt-2">{errors.mainHeating}</p>}
+                    </div>
+
+                    <div className="mb-6">
+                        <label className="block text-sm font-medium text-neutral-700 mb-3">
+                            Climatisation <span className="text-red-500">*</span>
+                        </label>
+                        <NewDiagnosticRadioCards
+                            options={[
+                                { id: 'yes', label: 'Oui', icon: 'solar:snowflake-linear' },
+                                { id: 'no', label: 'Non', icon: 'solar:close-circle-linear' }
+                            ]}
+                            selected={coolingChoice}
+                            onChange={(value) => setFormData({ ...formData, hasCooling: value === 'yes' })}
+                        />
+                        {errors.hasCooling && <p className="text-xs text-red-500 mt-2">{errors.hasCooling}</p>}
+                    </div>
+
+                    <div className="mb-6">
+                        <label className="block text-sm font-medium text-neutral-700 mb-3">
+                            Annee de construction <span className="text-red-500">*</span>
+                        </label>
+                        <NewDiagnosticRadioCards
+                            options={PUBLIC_TUNNEL_CONSTRUCTION_PERIODS}
+                            selected={formData.constructionPeriod}
+                            onChange={(value) => setFormData({ ...formData, constructionPeriod: value })}
+                            columns={4}
+                        />
+                        {errors.constructionPeriod && <p className="text-xs text-red-500 mt-2">{errors.constructionPeriod}</p>}
+                    </div>
+
+                    <div className="flex justify-between mt-8">
+                        <button
+                            onClick={onBack}
+                            className="px-6 py-3 text-neutral-600 hover:text-neutral-900 font-semibold transition-colors"
+                        >
+                            Retour
+                        </button>
+                        <button
+                            onClick={handleNext}
+                            className="px-8 py-3 bg-[#1D4ED8] text-white font-semibold rounded-lg hover:bg-[#1E40AF] transition-colors shadow-sm"
+                        >
+                            Continuer
+                        </button>
+                    </div>
+                </div>
+            );
+        };
+
+        const PublicTunnelStep4Qualification = ({ formData, setFormData, onNext, onBack, honeypotValue, onHoneypotChange, isSubmitting }) => {
+            const [errors, setErrors] = useState({});
+
+            const validate = () => {
+                const nextErrors = {};
+
+                if (!formData.firstName || !formData.firstName.trim()) {
+                    nextErrors.firstName = 'Le prenom est requis.';
+                }
+                if (!formData.email || !newDiagnosticValidateEmail(formData.email)) {
+                    nextErrors.email = 'Veuillez saisir une adresse email valide.';
+                }
+                if (!formData.optInPolitique) {
+                    nextErrors.optInPolitique = 'Le consentement a la politique de confidentialite est obligatoire.';
+                }
+
+                setErrors(nextErrors);
+                return Object.keys(nextErrors).length === 0;
+            };
+
+            const handleNext = () => {
+                if (validate()) {
+                    newDiagnosticTrack('diagnostic_step4_completed', {
+                        partner_consent: !!formData.optInPartenaire,
+                        primary_goal: formData.primaryGoal || '',
+                        horizon: formData.projectHorizon || ''
+                    });
+                    onNext();
+                }
+            };
+
+            return (
+                <div className="max-w-3xl mx-auto">
+                    <h2 className="text-2xl font-bold text-[#102A43] mb-2">Contact & qualification</h2>
+                    <p className="text-[#475569] mb-8">Dernière étape pour générer votre diagnostic gratuit.</p>
+
+                    <div className="mb-6 p-6 bg-white border border-[#E2E8F0] rounded-xl shadow-sm">
+                        <p className="text-sm font-semibold text-neutral-900 mb-4">Vos coordonnées</p>
+                        <div className="grid md:grid-cols-2 gap-4">
+                            <NewDiagnosticFormInput
+                                label="Prenom"
+                                value={formData.firstName || ''}
+                                onChange={(value) => setFormData({ ...formData, firstName: value })}
+                                placeholder="Jean"
+                                required
+                                error={errors.firstName}
+                            />
+                            <NewDiagnosticFormInput
+                                label="Email professionnel"
+                                value={formData.email}
+                                onChange={(value) => setFormData({ ...formData, email: value })}
+                                type="email"
+                                placeholder="vous@entreprise.fr"
+                                required
+                                error={errors.email}
+                            />
+                        </div>
+                        <div className="grid md:grid-cols-2 gap-4">
+                            <NewDiagnosticFormInput
+                                label="Téléphone"
+                                value={formData.phone || ''}
+                                onChange={(value) => setFormData({ ...formData, phone: value })}
+                                type="tel"
+                                placeholder="06 12 34 56 78"
+                                helper="✓ Pour être rappelé gratuitement par un installateur RGE près de chez vous"
+                            />
+                            <NewDiagnosticFormInput
+                                label="Société"
+                                value={formData.companyName || ''}
+                                onChange={(value) => setFormData({ ...formData, companyName: value })}
+                                placeholder="Ma société"
+                            />
+                        </div>
+                        <div style={NEW_DIAGNOSTIC_ANTISPAM_HONEYPOT_STYLE} aria-hidden="true">
+                            <label htmlFor="public-diagnostic-website">Site web</label>
+                            <input
+                                id="public-diagnostic-website"
+                                name="website"
+                                type="text"
+                                tabIndex="-1"
+                                autoComplete="off"
+                                value={honeypotValue}
+                                onChange={(event) => onHoneypotChange(event.target.value)}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="mb-6 p-6 bg-white border border-[#E2E8F0] rounded-xl shadow-sm">
+                        <p className="text-sm font-semibold text-neutral-900 mb-4">Votre projet</p>
+
+                        <div className="mb-6">
+                            <label className="block text-sm font-medium text-neutral-700 mb-3">Objectif principal</label>
+                            <NewDiagnosticRadioCards
+                                options={PUBLIC_TUNNEL_PRIMARY_GOALS}
+                                selected={formData.primaryGoal}
+                                onChange={(value) => setFormData({ ...formData, primaryGoal: value })}
+                                columns={3}
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-neutral-700 mb-3">Horizon de décision</label>
+                            <NewDiagnosticRadioCards
+                                options={PUBLIC_TUNNEL_PROJECT_HORIZONS}
+                                selected={formData.projectHorizon}
+                                onChange={(value) => setFormData({ ...formData, projectHorizon: value })}
+                                columns={2}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="mb-6 p-6 bg-white border border-[#E2E8F0] rounded-xl shadow-sm">
+                        <p className="text-sm font-semibold text-neutral-900 mb-4">Consentements RGPD</p>
+                        <div className="space-y-4">
+                            <div>
+                                <NewDiagnosticCheckbox
+                                    label="J'accepte la politique de confidentialité pour générer mon diagnostic."
+                                    checked={!!formData.optInPolitique}
+                                    onChange={(value) => setFormData({ ...formData, optInPolitique: value })}
+                                />
+                                {errors.optInPolitique && <p className="text-xs text-red-500 mt-2">{errors.optInPolitique}</p>}
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={() => setFormData({ ...formData, optInPartenaire: !formData.optInPartenaire })}
+                                className={`w-full rounded-2xl border-2 px-5 py-4 text-left transition-all ${formData.optInPartenaire
+                                    ? 'border-emerald-500 bg-emerald-50 text-emerald-900 shadow-sm'
+                                    : 'border-emerald-200 bg-white text-emerald-800 hover:border-emerald-400'
+                                    }`}
+                            >
+                                <div className="flex items-start justify-between gap-4">
+                                    <div>
+                                        <p className="font-semibold">Oui, je souhaite être contacté par un professionnel partenaire</p>
+                                        <p className="text-sm mt-1">agent immobilier, bureau d'études énergie, installateur RGE</p>
+                                    </div>
+                                    <span className="text-sm font-semibold">{formData.optInPartenaire ? 'Activé' : 'Optionnel'}</span>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="flex justify-between mt-8">
+                        <button
+                            onClick={onBack}
+                            className="px-6 py-3 text-neutral-600 hover:text-[#102A43] font-semibold transition-colors"
+                        >
+                            Retour
+                        </button>
+                        <div className="text-right">
+                            {!formData.optInPolitique && (
+                                <p className="text-xs text-red-500 mb-2">Le consentement à la politique de confidentialité est requis pour activer le CTA.</p>
+                            )}
+                            <button
+                                onClick={handleNext}
+                                disabled={isSubmitting || !formData.optInPolitique}
+                                className="px-8 py-3 bg-[#1D4ED8] text-white font-semibold rounded-lg hover:bg-[#1E40AF] transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+                            >
+                                Générer mon diagnostic gratuit
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
 
         const NEW_DIAGNOSTIC_MAX_TOTAL_SAVINGS_PCT = 0.65;
 
@@ -4583,6 +5272,7 @@
            ───────────────────────────────────────────────────────────────────────── */
 
         const newDiagnosticConvertEuroToKwh = (energy, formData) => {
+            return publicTunnelConvertEnergyToKwh(energy, formData);
             const isElec = energy === 'elec';
             const priceDefault = isElec
                 ? NEW_DIAGNOSTIC_ENERGY_PRICES.electricity.price_default_eur_kwh
@@ -4844,6 +5534,39 @@
            ───────────────────────────────────────────────────────────────────────── */
 
         const newDiagnosticGenerateWarnings = (formData, conversionResults) => {
+            const genericWarnings = [];
+            const selectedEnergies = publicTunnelGetSelectedEnergyConfigs(formData);
+
+            selectedEnergies.forEach((config) => {
+                const kwhValue = parseFloat(formData[`${config.fieldPrefix}Kwh`] || 0);
+                const euroValue = parseFloat(formData[`${config.fieldPrefix}Euro`] || 0);
+
+                if (kwhValue > 0 && euroValue > 0) {
+                    const implicitPrice = euroValue / kwhValue;
+                    const minPrice = config.defaultPriceEurKwh * 0.55;
+                    const maxPrice = config.defaultPriceEurKwh * 1.8;
+
+                    if (implicitPrice < minPrice || implicitPrice > maxPrice) {
+                        genericWarnings.push({
+                            code: 'PRICE_IMPLIED_OUT_OF_RANGE',
+                            severity: 'warning',
+                            message: `${config.label} : prix implicite ${implicitPrice.toFixed(3)} EUR/kWh inhabituel`,
+                            energy: config.id
+                        });
+                    }
+                }
+            });
+
+            if (formData.noInvoicesMode) {
+                genericWarnings.push({
+                    code: 'DEFAULT_ESTIMATION_MODE',
+                    severity: 'warning',
+                    message: 'Mode estimation actif : les consommations peuvent etre approximees a partir du profil du site.',
+                    energy: null
+                });
+            }
+
+            return genericWarnings;
             const warnings = [];
 
             // Warning prix implicite
@@ -4890,6 +5613,7 @@
            ───────────────────────────────────────────────────────────────────────── */
 
         const newDiagnosticCalculateConfidenceScore = (formData, conversionResults) => {
+            return publicTunnelCalculateConfidence(formData);
             let score = 100;
 
             // Pénalité si conversion depuis €
@@ -4943,10 +5667,25 @@
             // ──────────────────────────────────────────────────────────────────────
             // 2. CONVERSION € → kWh
             // ──────────────────────────────────────────────────────────────────────
-            const elecConversion = formData.elecUsed ? newDiagnosticConvertEuroToKwh('elec', formData) : { value: 0, method: 'not_used' };
-            const gasConversion = formData.gasUsed ? newDiagnosticConvertEuroToKwh('gas', formData) : { value: 0, method: 'not_used' };
+            let elecConversion = formData.elecUsed ? publicTunnelConvertEnergyToKwh('elec', formData) : { value: 0, method: 'not_used', price_used: null };
+            let gasConversion = formData.gasUsed ? publicTunnelConvertEnergyToKwh('gas', formData) : { value: 0, method: 'not_used', price_used: null };
+            let heatNetworkConversion = formData.heatNetworkUsed ? publicTunnelConvertEnergyToKwh('heatNetwork', formData) : { value: 0, method: 'not_used', price_used: null };
+            let fuelOilConversion = formData.fuelOilUsed ? publicTunnelConvertEnergyToKwh('fuelOil', formData) : { value: 0, method: 'not_used', price_used: null };
+            let woodConversion = formData.woodUsed ? publicTunnelConvertEnergyToKwh('wood', formData) : { value: 0, method: 'not_used', price_used: null };
 
-            const totalKwh = elecConversion.value + gasConversion.value;
+            let totalKwh = elecConversion.value + gasConversion.value + heatNetworkConversion.value + fuelOilConversion.value + woodConversion.value;
+
+            if (formData.noInvoicesMode && totalKwh === 0) {
+                const estimatedConversions = publicTunnelEstimateEnergyConversions(formData);
+                if (estimatedConversions) {
+                    elecConversion = estimatedConversions.elec || elecConversion;
+                    gasConversion = estimatedConversions.gas || gasConversion;
+                    heatNetworkConversion = estimatedConversions.heatNetwork || heatNetworkConversion;
+                    fuelOilConversion = estimatedConversions.fuelOil || fuelOilConversion;
+                    woodConversion = estimatedConversions.wood || woodConversion;
+                    totalKwh = elecConversion.value + gasConversion.value + heatNetworkConversion.value + fuelOilConversion.value + woodConversion.value;
+                }
+            }
 
             // Garde-fou NaN
             if (isNaN(totalKwh) || !isFinite(totalKwh)) {
@@ -4991,6 +5730,9 @@
             let calculatedAvgPrice = 0.20; // Prix moyen par défaut (mix)
             const elecPrice = NEW_DIAGNOSTIC_ENERGY_PRICES.electricity.price_default_eur_kwh;
             const gasPrice = NEW_DIAGNOSTIC_ENERGY_PRICES.gas.price_default_eur_kwh;
+            const heatNetworkPrice = NEW_DIAGNOSTIC_ENERGY_PRICES.heat_network.price_default_eur_kwh;
+            const fuelOilPrice = NEW_DIAGNOSTIC_ENERGY_PRICES.fuel_oil.price_default_eur_kwh;
+            const woodPrice = NEW_DIAGNOSTIC_ENERGY_PRICES.wood_pellets.price_default_eur_kwh;
             const activityLabel = newDiagnosticGetActivityLabel(activity, {
                 mixedUsage1: formData.mixedUsage1,
                 mixedUsage2: formData.mixedUsage2
@@ -5011,6 +5753,21 @@
                 if (formData.gasUsed) {
                     if (formData.gasEuro && parseFloat(formData.gasEuro) > 0) totalEuro += Number(formData.gasEuro);
                     else totalEuro += gasConversion.value * gasPrice;
+                }
+
+                if (formData.heatNetworkUsed) {
+                    if (formData.heatNetworkEuro && parseFloat(formData.heatNetworkEuro) > 0) totalEuro += Number(formData.heatNetworkEuro);
+                    else totalEuro += heatNetworkConversion.value * heatNetworkPrice;
+                }
+
+                if (formData.fuelOilUsed) {
+                    if (formData.fuelOilEuro && parseFloat(formData.fuelOilEuro) > 0) totalEuro += Number(formData.fuelOilEuro);
+                    else totalEuro += fuelOilConversion.value * fuelOilPrice;
+                }
+
+                if (formData.woodUsed) {
+                    if (formData.woodEuro && parseFloat(formData.woodEuro) > 0) totalEuro += Number(formData.woodEuro);
+                    else totalEuro += woodConversion.value * woodPrice;
                 }
 
                 calculatedAvgPrice = totalKwh > 0 ? totalEuro / totalKwh : elecPrice;
@@ -5038,8 +5795,20 @@
             // ──────────────────────────────────────────────────────────────────────
             // WARNINGS & CONFIANCE
             // ──────────────────────────────────────────────────────────────────────
-            const warnings = newDiagnosticGenerateWarnings(formData, { elec: elecConversion, gas: gasConversion });
-            const confidence = newDiagnosticCalculateConfidenceScore(formData, { elec: elecConversion, gas: gasConversion });
+            const warnings = newDiagnosticGenerateWarnings(formData, {
+                elec: elecConversion,
+                gas: gasConversion,
+                heatNetwork: heatNetworkConversion,
+                fuelOil: fuelOilConversion,
+                wood: woodConversion
+            });
+            const confidence = newDiagnosticCalculateConfidenceScore(formData, {
+                elec: elecConversion,
+                gas: gasConversion,
+                heatNetwork: heatNetworkConversion,
+                fuelOil: fuelOilConversion,
+                wood: woodConversion
+            });
 
             // ──────────────────────────────────────────────────────────────────────
             // PAYLOAD STANDARDISÉ AVEC UNITÉS PARTOUT
@@ -5065,18 +5834,29 @@
                     levels: { value: parseInt(formData.levels) || 1, unit: 'niveaux' },
                     works_done: formData.worksDone || [],
                     phone: formData.phone || null,
+                    prenom: formData.firstName || null,
+                    societe: formData.companyName || null,
                     ecsSameSystem: formData.ecsSameSystem,
                     ecsSystem: formData.ecsSystem || null,
                     primary_goal: formData.primaryGoal || null,
                     project_horizon: formData.projectHorizon || null,
+                    construction_period: formData.constructionPeriod || null,
+                    selected_energies: publicTunnelGetSelectedEnergyConfigs(formData).map((config) => config.id),
+                    no_invoices_mode: !!formData.noInvoicesMode,
                     decision_role: formData.decisionRole || null,
-                    contactOptIn: formData.contactOptIn || false
+                    contactOptIn: !!formData.optInPartenaire,
+                    opt_in_politique: !!formData.optInPolitique,
+                    opt_in_partenaire: !!formData.optInPartenaire,
+                    partnerConsent: !!formData.optInPartenaire
                 },
 
                 // Calculation results
                 calculation_results: {
                     elec_kwh_an: { value: elecConversion.value, unit: 'kWh/an', method: elecConversion.method },
                     gas_kwh_an: { value: gasConversion.value, unit: 'kWh/an', method: gasConversion.method },
+                    heat_network_kwh_an: { value: heatNetworkConversion.value, unit: 'kWh/an', method: heatNetworkConversion.method },
+                    fuel_oil_kwh_an: { value: fuelOilConversion.value, unit: 'kWh/an', method: fuelOilConversion.method },
+                    wood_kwh_an: { value: woodConversion.value, unit: 'kWh/an', method: woodConversion.method },
                     total_kwh_an: { value: totalKwh, unit: 'kWh/an' },
                     intensity_kwh_m2_an: { value: intensity_kwh_m2_an, unit: 'kWh/m²/an' },
                     total_cost_euro_an: { value: Math.round(totalKwh * avgPrice), unit: '€/an', price_avg: avgPrice }
@@ -5149,6 +5929,314 @@
                     ...((activity === 'sante' || activity === 'health_local') ? [NEW_DIAGNOSTIC_HEALTH_NOTICE] : [])
                 ]
             };
+        };
+
+        const PUBLIC_TUNNEL_FORM_DEFAULTS = Object.freeze({
+            activityCategory: '',
+            noInvoicesMode: false,
+            heatNetworkUsed: false,
+            heatNetworkKwh: '',
+            heatNetworkEuro: '',
+            fuelOilUsed: false,
+            fuelOilKwh: '',
+            fuelOilEuro: '',
+            woodUsed: false,
+            woodKwh: '',
+            woodEuro: '',
+            constructionPeriod: '',
+            firstName: '',
+            companyName: '',
+            optInPolitique: false,
+            optInPartenaire: false
+        });
+
+        const PUBLIC_TUNNEL_ACTIVITY_TILES = Object.freeze([
+            { id: 'offices', label: 'Bureaux', icon: 'solar:buildings-2-linear' },
+            { id: 'commerce', label: 'Commerce', icon: 'solar:shop-linear' },
+            { id: 'hotel', label: 'Hôtellerie', icon: 'solar:bed-linear' },
+            { id: 'restaurant', label: 'Restauration', icon: 'solar:chef-hat-linear' },
+            { id: 'sante', label: 'Santé', icon: 'solar:heart-pulse-linear' },
+            { id: 'education', label: 'Enseignement', icon: 'solar:book-linear' },
+            { id: 'warehouse_heated', label: 'Entrepôt chauffé', icon: 'solar:box-linear' },
+            { id: 'light_warehouse', label: 'Entrepôt non chauffé', icon: 'solar:box-linear' },
+            { id: 'mixed', label: 'Usage mixte', icon: 'solar:transfer-horizontal-linear' }
+        ]);
+
+        const PUBLIC_TUNNEL_COMMERCE_OPTIONS = Object.freeze([
+            {
+                id: 'commerce_alim',
+                label: 'Alimentaire (avec froid)',
+                icon: 'solar:snowflake-linear',
+                desc: 'Commerce alimentaire avec froid integre'
+            },
+            {
+                id: 'commerce_non_alim',
+                label: 'Non-alimentaire',
+                icon: 'solar:tag-linear',
+                desc: 'Boutique, retail, showroom'
+            }
+        ]);
+
+        const PUBLIC_TUNNEL_MIX_ACTIVITY_OPTIONS = Object.freeze([
+            { id: 'offices', label: 'Bureaux', icon: 'solar:buildings-2-linear' },
+            { id: 'commerce_non_alim', label: 'Commerce non-alimentaire', icon: 'solar:shop-linear' },
+            { id: 'commerce_alim', label: 'Commerce alimentaire', icon: 'solar:snowflake-linear' },
+            { id: 'hotel', label: 'Hôtellerie', icon: 'solar:bed-linear' },
+            { id: 'restaurant', label: 'Restauration', icon: 'solar:chef-hat-linear' },
+            { id: 'sante', label: 'Santé', icon: 'solar:heart-pulse-linear' },
+            { id: 'education', label: 'Enseignement', icon: 'solar:book-linear' },
+            { id: 'warehouse_heated', label: 'Entrepôt chauffé', icon: 'solar:box-linear' },
+            { id: 'light_warehouse', label: 'Entrepôt non chauffé', icon: 'solar:box-linear' }
+        ]);
+
+        const PUBLIC_TUNNEL_ENERGY_CONFIG = Object.freeze([
+            {
+                id: 'elec',
+                fieldPrefix: 'elec',
+                label: 'Électricité',
+                icon: 'solar:lightbulb-linear',
+                accent: 'blue',
+                defaultPriceEurKwh: 0.196
+            },
+            {
+                id: 'gas',
+                fieldPrefix: 'gas',
+                label: 'Gaz',
+                icon: 'solar:fire-linear',
+                accent: 'amber',
+                defaultPriceEurKwh: 0.105
+            },
+            {
+                id: 'heatNetwork',
+                fieldPrefix: 'heatNetwork',
+                label: 'Réseau de chaleur',
+                icon: 'solar:fire-square-linear',
+                accent: 'rose',
+                defaultPriceEurKwh: 0.092
+            },
+            {
+                id: 'fuelOil',
+                fieldPrefix: 'fuelOil',
+                label: 'Fioul',
+                icon: 'solar:drop-linear',
+                accent: 'slate',
+                defaultPriceEurKwh: 0.118
+            },
+            {
+                id: 'wood',
+                fieldPrefix: 'wood',
+                label: 'Bois',
+                icon: 'solar:leaf-linear',
+                accent: 'emerald',
+                defaultPriceEurKwh: 0.065
+            }
+        ]);
+
+        const PUBLIC_TUNNEL_PRIMARY_GOALS = Object.freeze([
+            { id: 'reduce_cost', label: 'Réduire mes charges', icon: 'solar:wallet-money-linear' },
+            { id: 'comply_regulation', label: 'Me conformer à la réglementation', icon: 'solar:shield-check-linear' },
+            { id: 'valorisation', label: 'Valoriser mon patrimoine', icon: 'solar:home-angle-linear' }
+        ]);
+
+        const PUBLIC_TUNNEL_PROJECT_HORIZONS = Object.freeze([
+            { id: 'lt_6m', label: 'Immediat (< 6 mois)', icon: 'solar:flash-line-duotone' },
+            { id: '6m_1y', label: '6 mois a 1 an', icon: 'solar:calendar-linear' },
+            { id: '1_3y', label: '1 a 3 ans', icon: 'solar:calendar-search-linear' },
+            { id: 'exploratory', label: 'Je me renseigne', icon: 'solar:magnifer-linear' }
+        ]);
+
+        const PUBLIC_TUNNEL_CONSTRUCTION_PERIODS = Object.freeze([
+            { id: 'lt_1975', label: '< 1975', icon: 'solar:buildings-linear' },
+            { id: 'y1975_2000', label: '1975-2000', icon: 'solar:buildings-linear' },
+            { id: 'y2001_2012', label: '2001-2012', icon: 'solar:buildings-linear' },
+            { id: 'gt_2012', label: '> 2012', icon: 'solar:buildings-linear' }
+        ]);
+
+        const PUBLIC_TUNNEL_USAGE_INTENSITY_FACTORS = Object.freeze({
+            low: 0.85,
+            standard: 1,
+            intense: 1.15,
+            high: 1.15
+        });
+
+        const PUBLIC_TUNNEL_CONSTRUCTION_FACTORS = Object.freeze({
+            lt_1975: 1.12,
+            y1975_2000: 1,
+            y2001_2012: 0.92,
+            gt_2012: 0.82
+        });
+
+        const publicTunnelCreateInitialFormData = () => ({
+            ...NEW_DIAGNOSTIC_DEFAULT_FORM_DATA,
+            ...PUBLIC_TUNNEL_FORM_DEFAULTS,
+            usageIntensity: '',
+            hasCooling: null
+        });
+
+        const publicTunnelGetSelectedActivityTile = (formData) => {
+            if (formData && formData.activityCategory) {
+                return formData.activityCategory;
+            }
+            if (formData && ['commerce_alim', 'commerce_non_alim'].includes(formData.activity)) {
+                return 'commerce';
+            }
+            if (formData && formData.activity === 'health_local') {
+                return 'sante';
+            }
+            return formData && formData.activity ? formData.activity : '';
+        };
+
+        const publicTunnelGetSelectedEnergyConfigs = (formData) => {
+            return PUBLIC_TUNNEL_ENERGY_CONFIG.filter((config) => Boolean(formData && formData[`${config.fieldPrefix}Used`]));
+        };
+
+        const publicTunnelGetEnergyCardTone = (accent, selected) => {
+            const tones = {
+                blue: selected ? 'border-[#2563EB] bg-[#EFF6FF]' : 'border-[#E2E8F0] hover:border-[#2563EB]/40',
+                amber: selected ? 'border-[#F59E0B] bg-amber-50' : 'border-[#E2E8F0] hover:border-[#F59E0B]/40',
+                rose: selected ? 'border-rose-400 bg-rose-50' : 'border-[#E2E8F0] hover:border-rose-300',
+                slate: selected ? 'border-slate-400 bg-slate-50' : 'border-[#E2E8F0] hover:border-slate-300',
+                emerald: selected ? 'border-emerald-500 bg-emerald-50' : 'border-[#E2E8F0] hover:border-emerald-300'
+            };
+            return tones[accent] || tones.blue;
+        };
+
+        const publicTunnelGetLiveEnergyConversions = (formData) => {
+            return PUBLIC_TUNNEL_ENERGY_CONFIG.reduce((accumulator, config) => {
+                accumulator[config.id] = formData && formData[`${config.fieldPrefix}Used`]
+                    ? publicTunnelConvertEnergyToKwh(config.id, formData)
+                    : { value: 0, method: 'not_used', price_used: null };
+                return accumulator;
+            }, {});
+        };
+
+        const publicTunnelEstimateEnergyConversions = (formData) => {
+            const safeSurface = Math.max(0, parseFloat(formData && formData.surface) || 0);
+            const selected = publicTunnelGetSelectedEnergyConfigs(formData);
+
+            if (!safeSurface || !selected.length) {
+                return null;
+            }
+
+            const benchmark = newDiagnosticGetBenchmark((formData && formData.activity) || 'offices', formData);
+            const usageFactor = PUBLIC_TUNNEL_USAGE_INTENSITY_FACTORS[(formData && formData.usageIntensity) || 'standard'] || 1;
+            const constructionFactor = PUBLIC_TUNNEL_CONSTRUCTION_FACTORS[(formData && formData.constructionPeriod) || 'y1975_2000'] || 1;
+            const coolingFactor = formData && formData.hasCooling === true ? 1.05 : 1;
+            const estimatedTotalKwh = Math.round(Math.max(benchmark.median_kwh_m2_an * safeSurface * usageFactor * constructionFactor * coolingFactor, safeSurface * 40));
+            const selectedIds = selected.map((config) => config.id);
+            const shares = {};
+            const baseShare = 1 / selected.length;
+            const heatingMap = {
+                electric: 'elec',
+                gas: 'gas',
+                network: 'heatNetwork'
+            };
+            const preferredHeating = formData && formData.mainHeating === 'other'
+                ? selectedIds.find((id) => id === 'fuelOil' || id === 'wood') || selectedIds.find((id) => id !== 'elec') || selectedIds[0]
+                : heatingMap[formData && formData.mainHeating] || selectedIds[0];
+
+            selectedIds.forEach((id) => {
+                shares[id] = baseShare;
+            });
+
+            if (preferredHeating && shares[preferredHeating] !== undefined) {
+                shares[preferredHeating] += 0.35;
+            }
+
+            if (selectedIds.includes('elec') && formData && formData.hasCooling === true) {
+                shares.elec += 0.15;
+            }
+
+            const totalShare = Object.values(shares).reduce((sum, value) => sum + value, 0) || 1;
+            let remainingKwh = estimatedTotalKwh;
+
+            return selected.reduce((accumulator, config, index) => {
+                const normalizedShare = shares[config.id] / totalShare;
+                const allocatedValue = index === selected.length - 1
+                    ? remainingKwh
+                    : Math.round(estimatedTotalKwh * normalizedShare);
+
+                remainingKwh -= allocatedValue;
+                accumulator[config.id] = {
+                    value: Math.max(0, allocatedValue),
+                    method: 'estimated_default_profile',
+                    price_used: config.defaultPriceEurKwh
+                };
+                return accumulator;
+            }, {});
+        };
+
+        const publicTunnelConvertEnergyToKwh = (energyId, formData) => {
+            const config = PUBLIC_TUNNEL_ENERGY_CONFIG.find((item) => item.id === energyId);
+
+            if (!config) {
+                return { value: 0, method: 'none', price_used: null };
+            }
+
+            const kwh = formData && formData[`${config.fieldPrefix}Kwh`];
+            const euro = formData && formData[`${config.fieldPrefix}Euro`];
+            const includesSubscription = config.fieldPrefix === 'elec' || config.fieldPrefix === 'gas'
+                ? formData[`${config.fieldPrefix}IncludesSubscription`]
+                : false;
+            const subscriptionYearly = config.fieldPrefix === 'elec' || config.fieldPrefix === 'gas'
+                ? formData[`${config.fieldPrefix}SubscriptionYearly`]
+                : null;
+
+            if (kwh && parseFloat(kwh) > 0) {
+                return {
+                    value: parseFloat(kwh),
+                    method: 'kwh_provided',
+                    price_used: null
+                };
+            }
+
+            if (euro && parseFloat(euro) > 0) {
+                let amount = parseFloat(euro);
+
+                if (includesSubscription && subscriptionYearly && parseFloat(subscriptionYearly) > 0) {
+                    amount = Math.max(amount - parseFloat(subscriptionYearly), 0);
+                }
+
+                return {
+                    value: Math.round(amount / config.defaultPriceEurKwh),
+                    method: includesSubscription && subscriptionYearly
+                        ? 'euro_converted_subscription_deducted'
+                        : 'euro_converted_default_price',
+                    price_used: config.defaultPriceEurKwh
+                };
+            }
+
+            return {
+                value: 0,
+                method: 'none',
+                price_used: null
+            };
+        };
+
+        const publicTunnelCalculateConfidence = (formData) => {
+            const selectedEnergies = publicTunnelGetSelectedEnergyConfigs(formData);
+
+            if (!selectedEnergies.length) {
+                return { score: 0, level: 'low', label: 'Faible' };
+            }
+
+            if (formData.noInvoicesMode) {
+                return { score: 35, level: 'low', label: 'Faible' };
+            }
+
+            const allHaveKwh = selectedEnergies.every((config) => Boolean(formData[`${config.fieldPrefix}Kwh`]));
+            const allHaveKwhAndEuro = selectedEnergies.every((config) => Boolean(formData[`${config.fieldPrefix}Kwh`]) && Boolean(formData[`${config.fieldPrefix}Euro`]));
+            const anyKwh = selectedEnergies.some((config) => Boolean(formData[`${config.fieldPrefix}Kwh`]));
+
+            if (allHaveKwhAndEuro) {
+                return { score: 90, level: 'strong', label: 'Élevée' };
+            }
+
+            if (allHaveKwh || anyKwh) {
+                return { score: 70, level: 'medium', label: 'Moyenne' };
+            }
+
+            return { score: 45, level: 'low', label: 'Faible' };
         };
 
         // ─────────────────────────────────────────────────────────────────────────
@@ -5689,21 +6777,27 @@
 
         function newDiagnosticBuildExampleReportPayload() {
             const exampleFormData = {
-                ...NEW_DIAGNOSTIC_DEFAULT_FORM_DATA,
+                ...publicTunnelCreateInitialFormData(),
                 address: 'Rue de Rivoli, Paris 75001',
                 email: 'demo@diag-tertiaire.fr',
+                firstName: 'Demo',
+                companyName: 'DiagTertiaire Demo',
                 role: 'owner',
                 siteName: 'Boutique Rivoli Sélection',
                 postalCode: '75001',
+                activityCategory: 'commerce',
                 activity: 'commerce_non_alim',
                 surface: '160',
                 levels: '1',
                 mainHeating: 'electric',
                 hasCooling: false,
+                usageIntensity: 'standard',
+                constructionPeriod: 'y2001_2012',
                 elecUsed: true,
                 elecKwh: '51200',
                 elecEuro: '11500',
                 gasUsed: false,
+                optInPolitique: true,
                 worksDone: []
             };
             const reportPayload = newDiagnosticBuildReportData(exampleFormData);
@@ -7722,7 +8816,7 @@
 
         const NewDiagnosticForm = ({ onComplete }) => {
             const [currentStep, setCurrentStep] = useState(1);
-            const [formData, setFormData] = useState(NEW_DIAGNOSTIC_DEFAULT_FORM_DATA);
+            const [formData, setFormData] = useState(publicTunnelCreateInitialFormData);
             const [reportPayload, setReportPayload] = useState(null);
             const [submitError, setSubmitError] = useState(null);
             const [diagnosticHoneypot, setDiagnosticHoneypot] = useState('');
@@ -7798,9 +8892,10 @@
                                 scoreLettre: reportPayload?.benchmark_result?.score_letter || computedScore || '',
                                 intensiteKwhM2: reportPayload?.benchmark_result?.site_intensity?.value || '',
                                 economiesTotalesAnnuelles: reportPayload?.composite_savings?.annual_euro?.value || 0,
-                                scoreConfiance: reportPayload?.confidence?.level || '',
+                                scoreConfiance: reportPayload?.confidence?.label || reportPayload?.confidence?.level || '',
                                 objectif: leadPayload.primaryGoal || leadPayload.primary_goal || leadPayload.raw_payload?.primary_goal || '',
                                 horizonDecision: leadPayload.projectHorizon || leadPayload.project_horizon || leadPayload.raw_payload?.project_horizon || '',
+                                politiqueConsent: !!(leadPayload.opt_in_politique || leadPayload.raw_payload?.opt_in_politique),
                                 partnerConsent: !!leadPayload.partnerConsent
                             }
                         })
@@ -7837,16 +8932,16 @@
 
                     const payload = newDiagnosticBuildReportData(formData);
                     const leadPayload = newDiagnosticBuildDiagnosticLeadPayload(formData, payload);
+                    const legacyLeadMirrorPromise = newDiagnosticMirrorLeadToLegacyTable(leadPayload).catch(() => null);
                     const leadResult = await newDiagnosticSubmitLead(leadPayload);
+                    const leadSubmissionId = leadResult.ok && leadResult.id ? leadResult.id : null;
+                    leadSaved = !!leadSubmissionId;
 
-                    if (!leadResult.ok || !leadResult.id) {
-                        newDiagnosticClearFormCooldown(diagnosticFormKey);
-                        setSubmitError("Impossible d'enregistrer votre demande. Merci de vérifier vos informations puis de réessayer.");
-                        return;
+                    if (!leadSubmissionId) {
+                        console.warn('lead submission failed, report kept visible', leadResult?.error || leadResult?.status);
+                        console.warn('lead persistence warning', leadResult?.error || leadResult?.status);
                     }
 
-                    const leadSubmissionId = leadResult.id;
-                    leadSaved = true;
                     let nextReportPayload = {
                         ...payload,
                         lead_submission_id: leadSubmissionId,
@@ -7854,7 +8949,7 @@
                         partner_submission_error: null
                     };
 
-                    if (leadPayload.partnerConsent) {
+                    if (leadPayload.partnerConsent && leadSubmissionId) {
                         const partnerResult = await newDiagnosticSubmitPartnerLead(leadPayload, leadSubmissionId);
 
                         if (partnerResult.ok) {
@@ -7870,13 +8965,20 @@
                                 partner_submission_error: "Votre demande de mise en relation n'a pas pu être enregistrée. Vous pouvez réessayer depuis le rapport."
                             };
                         }
-                    } else {
-                        console.log('partner consent false, no partner insert');
+                    }
+
+                    if (leadPayload.partnerConsent && !leadSubmissionId) {
+                        nextReportPayload = {
+                            ...nextReportPayload,
+                            partner_lead_submitted: false,
+                            partner_submission_error: "Votre consentement partenaire n'a pas pu etre enregistre pour le moment. Vous pouvez reessayer depuis le rapport."
+                        };
                     }
 
                     setReportPayload(nextReportPayload);
+                    legacyLeadMirrorPromise.catch(() => null);
                     notifyRapportEmail(leadPayload, nextReportPayload);
-                    notifyAdminNewLead(leadPayload, nextReportPayload, leadResult.id);
+                    notifyAdminNewLead(leadPayload, nextReportPayload, leadSubmissionId || 'N/A');
 
                     if (typeof onComplete === 'function') {
                         onComplete(formData, nextReportPayload);
@@ -7899,7 +9001,7 @@
             };
 
             const handleReset = () => {
-                setFormData(NEW_DIAGNOSTIC_DEFAULT_FORM_DATA);
+                setFormData(publicTunnelCreateInitialFormData());
                 setCurrentStep(1);
                 setReportPayload(null);
                 setSubmitError(null);
@@ -7978,7 +9080,7 @@
                         )}
 
                         {currentStep === 2 && (
-                            <NewDiagnosticStep2Building
+                            <PublicTunnelStep2Energies
                                 formData={formData}
                                 setFormData={setFormData}
                                 onNext={() => setCurrentStep(3)}
@@ -7987,7 +9089,7 @@
                         )}
 
                         {currentStep === 3 && (
-                            <NewDiagnosticStep3Energies
+                            <PublicTunnelStep3BuildingUsage
                                 formData={formData}
                                 setFormData={setFormData}
                                 onNext={() => setCurrentStep(4)}
@@ -7996,7 +9098,7 @@
                         )}
 
                         {currentStep === 4 && (
-                            <NewDiagnosticStep4Works
+                            <PublicTunnelStep4Qualification
                                 formData={formData}
                                 setFormData={setFormData}
                                 onNext={handleComplete}

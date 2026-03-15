@@ -108,6 +108,7 @@ const buildAdminLeadEmail = (rawData, adminEmail) => {
   const scoreLabel = data.scoreLettre || 'N/A';
   const savingsLabel = formatCurrency(data.economiesTotalesAnnuelles || 0);
   const partnerConsent = data.partnerConsent ? 'Oui' : 'Non';
+  const politiqueConsent = data.politiqueConsent ? 'Oui' : 'Non';
   const rows = [
     ['Lead ID', data.leadId || 'N/A'],
     ['Email', data.email || ''],
@@ -124,6 +125,7 @@ const buildAdminLeadEmail = (rawData, adminEmail) => {
     ['Confiance', data.scoreConfiance || ''],
     ['Objectif', data.objectif || ''],
     ['Horizon décision', data.horizonDecision || ''],
+    ['Consentement politique', politiqueConsent],
     ['Consentement partenaire', partnerConsent]
   ];
 

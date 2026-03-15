@@ -22,8 +22,6 @@
     <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
     <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/driver.js@1.3.1/dist/driver.js.iife.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.3.1/dist/driver.css" />
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
         * {
@@ -369,53 +367,118 @@
             box-shadow: 0 24px 60px rgba(15, 23, 42, 0.25);
         }
 
-        .driverjs-pro-theme.driver-popover {
+        /* Diagnostic onboarding navigateur 2026-03-15 :
+           .driver-popover = z-index 1000000000 / pointer-events auto
+           .driver-popover-footer = z-index auto / pointer-events auto
+           .driver-popover-footer button = z-index auto / pointer-events auto
+           .pro-sidebar = z-index 50, topbar sticky = z-index 30
+           .modal-overlay = z-index 100, modale légale = z-index 120
+           Sonde directe sur .driver-overlay = z-index auto / position static / pointer-events auto
+           driver.css appliquait pointer-events:none sous .driver-active puis restaurait auto sur .driver-popover et ses descendants. */
+        .dt-tour-popover-shell {
+            position: fixed;
+            right: 24px;
+            bottom: 24px;
+            width: min(340px, calc(100vw - 32px));
+            z-index: 9999;
+            pointer-events: none;
+        }
+
+        .dt-tour-popover {
             background: #FFFFFF;
             border: 1px solid #E2E8F0;
-            border-radius: 20px;
+            border-radius: 16px;
             box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18);
             color: #0F172A;
-            max-width: 360px;
+            overflow: hidden;
+            pointer-events: auto;
         }
 
-        .driverjs-pro-theme .driver-popover-title {
-            color: #0F172A;
-            font-size: 18px;
-            font-weight: 800;
-            letter-spacing: -0.02em;
+        .dt-tour-popover-header {
+            padding: 18px 20px 0;
         }
 
-        .driverjs-pro-theme .driver-popover-description {
-            color: #475569;
-            font-size: 14px;
-            line-height: 1.6;
-        }
-
-        .driverjs-pro-theme .driver-popover-progress-text {
+        .dt-tour-popover-step {
             color: #64748B;
             font-size: 12px;
             font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
         }
 
-        .driverjs-pro-theme .driver-popover-footer button {
-            border-radius: 10px;
+        .dt-tour-popover-title {
+            color: #0F172A;
+            font-size: 19px;
+            font-weight: 800;
+            line-height: 1.25;
+            margin-top: 8px;
+        }
+
+        .dt-tour-popover-body {
+            color: #475569;
+            font-size: 14px;
+            line-height: 1.7;
+            padding: 12px 20px 0;
+        }
+
+        .dt-tour-popover-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 18px 20px 20px;
+        }
+
+        .dt-tour-popover-skip {
+            background: transparent;
+            border: none;
+            color: #64748B;
+            cursor: pointer;
+            font-size: 14px;
             font-weight: 700;
+            padding: 0;
         }
 
-        .driverjs-pro-theme .driver-popover-next-btn,
-        .driverjs-pro-theme .driver-popover-done-btn {
+        .dt-tour-popover-skip:hover {
+            color: #334155;
+        }
+
+        .dt-tour-popover-next {
             background: #1D4ED8;
             border: 1px solid #1D4ED8;
+            border-radius: 12px;
+            box-shadow: 0 12px 28px rgba(29, 78, 216, 0.24);
             color: #FFFFFF;
-            text-shadow: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 800;
+            padding: 11px 18px;
+            transition: background 0.2s ease, transform 0.2s ease;
         }
 
-        .driverjs-pro-theme .driver-popover-prev-btn,
-        .driverjs-pro-theme .driver-popover-close-btn {
-            background: #FFFFFF;
-            border: 1px solid #E2E8F0;
-            color: #475569;
-            text-shadow: none;
+        .dt-tour-popover-next:hover {
+            background: #1E40AF;
+            transform: translateY(-1px);
+        }
+
+        .dt-tour-progress-track {
+            background: #E2E8F0;
+            height: 5px;
+            width: 100%;
+        }
+
+        .dt-tour-progress-bar {
+            background: #1D4ED8;
+            height: 100%;
+            transition: width 0.2s ease;
+        }
+
+        @media (max-width: 640px) {
+            .dt-tour-popover-shell {
+                right: 16px;
+                bottom: 16px;
+                width: calc(100vw - 32px);
+            }
         }
 
         /* ===== CHATBOT ====== */
@@ -752,34 +815,101 @@
             userWorkspaceState: DEFAULT_USER_WORKSPACE_STATE
         };
 
-        const ONBOARDING_TOUR_SELECTORS = Object.freeze({
-            dashboardHeader: '[data-tour="dashboard-header"]',
-            casesList: '[data-tour="cases-list"]',
-            newCaseButton: '[data-tour="new-case-button"]',
-            reportButton: '[data-tour="example-report-button"], [data-tour="first-report-button"], [data-tour="cases-list"]',
-            brandingSection: '[data-tour="branding-section"]',
-            deleteButton: '[data-tour="example-delete-button"], [data-tour="first-delete-button"], [data-tour="cases-list"]'
+        const ONBOARDING_TOUR_STEPS = Object.freeze([
+            {
+                page: 'dashboard',
+                selector: '#ob-header',
+                title: "Bienvenue dans votre espace Pro",
+                description: "Voici votre tableau de bord. Les indicateurs en haut résument votre activité : nombre de diagnostics, répartition des indices énergétiques et économies moyennes estimées pour vos clients."
+            },
+            {
+                page: 'cases',
+                selector: '[data-tour=\"cases-list\"]',
+                title: "Vos dossiers clients",
+                description: "Cliquez sur Dossiers clients dans le menu pour accéder à la liste complète. Chaque carte affiche le bâtiment, l'activité, la surface et l'indice DiagTertiaire. Cliquez sur un dossier pour voir le rapport."
+            },
+            {
+                page: 'dashboard',
+                selector: '#ob-new-case-btn',
+                title: "Créer un nouveau diagnostic",
+                description: "Le bouton Nouveau diagnostic lance le wizard en 5 étapes. Renseignez le bâtiment et les consommations : le rapport et les recommandations sont générés automatiquement à la fin."
+            },
+            {
+                page: 'cases',
+                selector: '[data-tour=\"example-report-button\"], [data-tour=\"first-report-button\"], [data-tour=\"cases-list\"]',
+                title: "Rapport et PDF officiel",
+                description: "Dans chaque dossier, consultez le rapport détaillé et générez le PDF officiel à votre charte graphique. Le PDF est archivé et accessible à tout moment depuis le dossier."
+            },
+            {
+                page: 'settings',
+                selector: '[data-tour=\"branding-section\"]',
+                title: "Personnalisez votre charte",
+                description: "Dans Configuration, ajoutez votre logo et choisissez votre couleur. Ces éléments s'appliquent automatiquement à tous vos rapports — vos clients voient votre identité, pas la nôtre."
+            },
+            {
+                page: 'cases',
+                selector: '[data-tour=\"example-delete-button\"], [data-tour=\"first-delete-button\"], [data-tour=\"cases-list\"]',
+                title: "Les dossiers exemples",
+                description: "Les dossiers préfixés EXEMPLE sont là pour vous guider. Explorez-les librement. Quand vous êtes prêt, supprimez-les : ouvrez le dossier, puis cliquez sur Supprimer le dossier."
+            },
+            {
+                page: 'dashboard',
+                selector: '#ob-header',
+                title: "Vous êtes prêt",
+                description: "Votre espace Pro est opérationnel. Créez votre premier vrai dossier client avec Nouveau diagnostic. Une question ? Écrivez-nous à contact@diag-tertiaire.fr — nous répondons sous 24h."
+            }
+        ]);
+
+        const focusOnboardingTarget = (selector, timeoutMs = 2000) => new Promise((resolve) => {
+            if (typeof document === 'undefined') {
+                resolve(null);
+                return;
+            }
+
+            const normalizedSelector = typeof selector === 'string' ? selector.trim() : '';
+            if (!normalizedSelector) {
+                resolve(null);
+                return;
+            }
+
+            const revealNode = (node) => {
+                if (!node) {
+                    resolve(null);
+                    return true;
+                }
+
+                if (typeof node.scrollIntoView === 'function') {
+                    node.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'center',
+                        inline: 'nearest'
+                    });
+                }
+
+                resolve(node);
+                return true;
+            };
+
+            const existingNode = document.querySelector(normalizedSelector);
+            if (existingNode) {
+                revealNode(existingNode);
+                return;
+            }
+
+            const startedAt = Date.now();
+            const intervalId = window.setInterval(() => {
+                const nextNode = document.querySelector(normalizedSelector);
+                if (nextNode && revealNode(nextNode)) {
+                    window.clearInterval(intervalId);
+                    return;
+                }
+
+                if (Date.now() - startedAt >= timeoutMs) {
+                    window.clearInterval(intervalId);
+                    resolve(null);
+                }
+            }, 80);
         });
-
-        const resolveDriverFactory = () => {
-            if (typeof window === 'undefined' || !window.driver) {
-                return null;
-            }
-
-            if (typeof window.driver === 'function') {
-                return window.driver;
-            }
-
-            if (typeof window.driver.driver === 'function') {
-                return window.driver.driver.bind(window.driver);
-            }
-
-            if (window.driver.js && typeof window.driver.js.driver === 'function') {
-                return window.driver.js.driver.bind(window.driver.js);
-            }
-
-            return null;
-        };
 
         const waitForTourElement = (selector, timeoutMs = 4000) => new Promise((resolve, reject) => {
             if (typeof document === 'undefined') {
@@ -3357,6 +3487,43 @@
                                     Passer
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const OnboardingTourPopover = ({ isOpen, stepIndex, steps, onNext, onSkip }) => {
+            const step = steps[stepIndex] || null;
+            if (!isOpen || !step) {
+                return null;
+            }
+
+            const stepNumber = stepIndex + 1;
+            const totalSteps = steps.length;
+            const progress = `${Math.round((stepNumber / totalSteps) * 100)}%`;
+            const isLastStep = stepNumber >= totalSteps;
+
+            return (
+                <div className="dt-tour-popover-shell" aria-live="polite">
+                    <div className="dt-tour-popover" role="dialog" aria-label={`Étape ${stepNumber} sur ${totalSteps}`}>
+                        <div className="dt-tour-popover-header">
+                            <div className="dt-tour-popover-step">{`Étape ${stepNumber} / ${totalSteps}`}</div>
+                            <div className="dt-tour-popover-title">{step.title}</div>
+                        </div>
+                        <div className="dt-tour-popover-body">
+                            {step.description}
+                        </div>
+                        <div className="dt-tour-popover-footer">
+                            <button type="button" onClick={onSkip} className="dt-tour-popover-skip">
+                                Passer
+                            </button>
+                            <button type="button" onClick={onNext} className="dt-tour-popover-next">
+                                {isLastStep ? 'Terminer ✓' : 'Suivant →'}
+                            </button>
+                        </div>
+                        <div className="dt-tour-progress-track" aria-hidden="true">
+                            <div className="dt-tour-progress-bar" style={{ width: progress }} />
                         </div>
                     </div>
                 </div>
@@ -6083,10 +6250,10 @@
                 <div className="p-8 max-w-7xl mx-auto fade-in">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10" data-tour="dashboard-header">
                         <div>
-                            <h2 className="text-3xl font-bold text-slate-800 tracking-tight">Vue globale du parc</h2>
+                            <h2 id="ob-header" className="text-3xl font-bold text-slate-800 tracking-tight">Vue globale du parc</h2>
                             <p className="text-slate-500 mt-1">Synthèse de votre activité diagnostics.</p>
                         </div>
-                        <button type="button" onClick={() => setPage('new')} className="pro-btn pro-btn-primary shadow-lg shadow-blue-500/20" data-tour="new-case-button">
+                        <button id="ob-new-case-btn" type="button" onClick={() => setPage('new')} className="pro-btn pro-btn-primary shadow-lg shadow-blue-500/20" data-tour="new-case-button">
                             <span className="flex items-center gap-2">
                                 <Icon icon="solar:add-square-bold" style={{ fontSize: '18px' }} />
                                 <span>Nouveau diagnostic</span>
@@ -8531,10 +8698,10 @@
         }) => {
             const navs = [
                 { id: 'dashboard', label: 'Vue globale', icon: 'solar:pie-chart-2-bold' },
-                { id: 'cases', label: 'Dossiers clients', icon: 'solar:folder-with-files-bold' },
+                { id: 'cases', label: 'Dossiers clients', icon: 'solar:folder-with-files-bold', domId: 'ob-cases-link' },
                 { id: 'new', label: 'Nouveau diagnostic', icon: 'solar:add-square-bold' },
                 { id: 'plans', label: 'Plans & Tarifs', icon: 'solar:star-bold' },
-                { id: 'settings', label: 'Configuration', icon: 'solar:settings-bold' }
+                { id: 'settings', label: 'Configuration', icon: 'solar:settings-bold', domId: 'ob-config-link' }
             ];
             const displayName = resolveWorkspaceUserDisplayName(profile);
             const roleLabel = resolveWorkspaceUserRoleLabel(profile, organization, authUserId);
@@ -8563,7 +8730,7 @@
                             {navs.map(n => {
                                 const isActive = curPage === n.id || ((curPage.startsWith('report-') || curPage.startsWith('case-report-')) && n.id === 'cases');
                                 return (
-                                    <div key={n.id} className={`nav-item ${isActive ? 'active' : ''}`} onClick={() => { setPage(n.id); closeMobile(); }}>
+                                    <div id={n.domId || undefined} key={n.id} className={`nav-item ${isActive ? 'active' : ''}`} onClick={() => { setPage(n.id); closeMobile(); }}>
                                         <Icon icon={n.icon} style={{ fontSize: '20px' }} />
                                         {n.label}
                                     </div>
@@ -9565,10 +9732,10 @@
             const [legalModalKey, setLegalModalKey] = useState('');
             const [onboardingPromptOpen, setOnboardingPromptOpen] = useState(false);
             const [suppressOnboardingPrompt, setSuppressOnboardingPrompt] = useState(false);
+            const [tourStep, setTourStep] = useState(0);
+            const [tourActive, setTourActive] = useState(false);
             const [showChecklistCompletionNotice, setShowChecklistCompletionNotice] = useState(false);
             const forceRecoveryFlowRef = useRef(false);
-            const onboardingTourDriverRef = useRef(null);
-            const onboardingTourCleanupRef = useRef(false);
             const checklistCompletionPendingRef = useRef(false);
             const checklistCompletionTimeoutRef = useRef(null);
             const workspaceRef = useRef(null);
@@ -9577,6 +9744,8 @@
                 ...DEFAULT_WORKSPACE_DATA,
                 profile: null
             }));
+            const toggleMobile = () => setIsMobileMenuOpen(!isMobileMenuOpen);
+            const closeMobile = () => setIsMobileMenuOpen(false);
 
             const reportsByCaseId = useMemo(() => buildReportsByCaseId(workspace.reports), [workspace.reports]);
             const onboardingChecklist = useMemo(() => resolveOnboardingChecklistState({
@@ -9611,14 +9780,32 @@
                     window.clearTimeout(checklistCompletionTimeoutRef.current);
                     checklistCompletionTimeoutRef.current = null;
                 }
-
-                if (onboardingTourDriverRef.current?.destroy) {
-                    onboardingTourCleanupRef.current = true;
-                    onboardingTourDriverRef.current.destroy();
-                    onboardingTourDriverRef.current = null;
-                    onboardingTourCleanupRef.current = false;
-                }
             }, []);
+
+            useEffect(() => {
+                if (!tourActive) {
+                    return undefined;
+                }
+
+                const currentStep = ONBOARDING_TOUR_STEPS[tourStep];
+                if (!currentStep) {
+                    setTourActive(false);
+                    setTourStep(0);
+                    return undefined;
+                }
+
+                closeMobile();
+                if (currentStep.page && page !== currentStep.page) {
+                    setPage(currentStep.page);
+                    return undefined;
+                }
+
+                const timeoutId = window.setTimeout(() => {
+                    focusOnboardingTarget(currentStep.selector);
+                }, 120);
+
+                return () => window.clearTimeout(timeoutId);
+            }, [tourActive, tourStep, page]);
 
             // Check auth on mount
             useEffect(() => {
@@ -9889,7 +10076,7 @@
                 return persistWorkspaceUiStatePatch({ onboarding_seen: true }, { silent });
             };
 
-            const startOnboardingTour = async () => {
+            const legacyStartOnboardingTour = async () => {
                 const driverFactory = resolveDriverFactory();
                 if (!driverFactory) {
                     return;
@@ -10088,16 +10275,52 @@
                 driverObj.drive();
             };
 
-            const handleSkipOnboarding = async () => {
+            const legacyHandleSkipOnboarding = async () => {
                 setSuppressOnboardingPrompt(true);
                 setOnboardingPromptOpen(false);
                 await markOnboardingSeen({ silent: true });
+            };
+
+            const stopOnboardingTour = async ({ persist = false } = {}) => {
+                setTourActive(false);
+                setTourStep(0);
+
+                if (persist) {
+                    await markOnboardingSeen({ silent: true });
+                }
+            };
+
+            const startOnboardingTour = async () => {
+                setOnboardingPromptOpen(false);
+                setSuppressOnboardingPrompt(true);
+                setTourStep(0);
+                setTourActive(true);
+                closeMobile();
+                setPage(ONBOARDING_TOUR_STEPS[0]?.page || 'dashboard');
+            };
+
+            const advanceOnboardingTour = async () => {
+                const nextStep = tourStep + 1;
+                if (nextStep >= ONBOARDING_TOUR_STEPS.length) {
+                    await stopOnboardingTour({ persist: true });
+                    return;
+                }
+
+                setTourStep(nextStep);
+            };
+
+            const handleSkipOnboarding = async () => {
+                setSuppressOnboardingPrompt(true);
+                setOnboardingPromptOpen(false);
+                await stopOnboardingTour({ persist: true });
             };
 
             useEffect(() => {
                 if (!authUserId) {
                     setOnboardingPromptOpen(false);
                     setSuppressOnboardingPrompt(false);
+                    setTourActive(false);
+                    setTourStep(0);
                     setShowChecklistCompletionNotice(false);
                     checklistCompletionPendingRef.current = false;
 
@@ -10105,19 +10328,13 @@
                         window.clearTimeout(checklistCompletionTimeoutRef.current);
                         checklistCompletionTimeoutRef.current = null;
                     }
-
-                    if (onboardingTourDriverRef.current?.destroy) {
-                        onboardingTourCleanupRef.current = true;
-                        onboardingTourDriverRef.current.destroy();
-                        onboardingTourDriverRef.current = null;
-                        onboardingTourCleanupRef.current = false;
-                    }
                 }
             }, [authUserId]);
 
             useEffect(() => {
                 if (workspace.userWorkspaceState?.uiState?.onboarding_seen) {
                     setOnboardingPromptOpen(false);
+                    setTourActive(false);
                 }
             }, [workspace.userWorkspaceState?.uiState?.onboarding_seen]);
 
@@ -10472,9 +10689,6 @@
                 setPage('cases');
             };
 
-            const toggleMobile = () => setIsMobileMenuOpen(!isMobileMenuOpen);
-            const closeMobile = () => setIsMobileMenuOpen(false);
-
             const renderPage = () => {
                 if (page === 'dashboard') return <ProDashboard setPage={setPage} openDemo={openDemoModal} cases={workspace.cases} />;
                 if (page === 'cases') return <ProCases setPage={setPage} cases={workspace.cases} onDeleteCase={handleDeleteCase} onUpdateCaseNote={handleUpdateCaseNote} />;
@@ -10537,6 +10751,13 @@
                     <OnboardingPromptModal
                         isOpen={onboardingPromptOpen}
                         onConfirm={startOnboardingTour}
+                        onSkip={handleSkipOnboarding}
+                    />
+                    <OnboardingTourPopover
+                        isOpen={tourActive}
+                        stepIndex={tourStep}
+                        steps={ONBOARDING_TOUR_STEPS}
+                        onNext={advanceOnboardingTour}
                         onSkip={handleSkipOnboarding}
                     />
                     <DemoModal isOpen={isDemoModalOpen} onClose={closeDemoModal} />

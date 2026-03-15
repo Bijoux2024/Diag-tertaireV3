@@ -1526,7 +1526,7 @@
         } = {}) => {
             const uiState = asPlainObject(userWorkspaceState?.uiState);
             const activeCases = (Array.isArray(cases) ? cases : []).filter(item => item?.lifecycleStatus !== 'deleted');
-            const exampleCasesCount = activeCases.filter(item => item?.isExample).length;
+            const realCasesCount = activeCases.filter(item => !item?.isExample && !item?._isLocalExample).length;
             const hasCustomAccent = String(settings?.accent || DEFAULT_WORKSPACE_ACCENT).trim().toUpperCase() !== DEFAULT_WORKSPACE_ACCENT;
             const hasCustomBranding = Boolean(branding?.logoStoragePath) || hasCustomAccent;
             const hasReadyPdf = (Array.isArray(reports) ? reports : []).some(item => item?.recordStatus === 'active' && item?.pdfStatus === 'ready');
@@ -1540,7 +1540,7 @@
                 {
                     id: 'first-client-case',
                     label: 'Créer votre premier dossier client',
-                    done: activeCases.length > exampleCasesCount
+                    done: realCasesCount > 0
                 },
                 {
                     id: 'branding',
@@ -2812,11 +2812,11 @@
         };
 
         const normalizeUserWorkspaceStateRecord = (record, userId = null, organizationId = null) => {
-            const safeUiState = asPlainObject(record?.ui_state);
+            const safeUiState = asPlainObject(record?.ui_state || record?.uiState);
             return {
-                userId: record?.user_id || userId || null,
-                organizationId: record?.organization_id || organizationId || null,
-                draftPayload: asPlainObject(record?.draft_payload),
+                userId: record?.user_id || record?.userId || userId || null,
+                organizationId: record?.organization_id || record?.organizationId || organizationId || null,
+                draftPayload: asPlainObject(record?.draft_payload || record?.draftPayload),
                 uiState: {
                     ...safeUiState,
                     diagnosticDraftArchives: getDiagnosticDraftArchives(safeUiState)
@@ -5003,6 +5003,116 @@
 
         ];
 
+        const LOCAL_EXAMPLE_SOURCE_CASE_IDS = Object.freeze(['case_001', 'case_002', 'case_003', 'case_004']);
+
+        const parseMockCaseDateToIso = (rawValue) => {
+            const value = typeof rawValue === 'string' ? rawValue.trim() : '';
+            if (!value) {
+                return new Date().toISOString();
+            }
+
+            const match = value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+            if (!match) {
+                const parsed = new Date(value);
+                return Number.isNaN(parsed.getTime()) ? new Date().toISOString() : parsed.toISOString();
+            }
+
+            const [, day, month, year] = match;
+            return new Date(`${year}-${month}-${day}T00:00:00.000Z`).toISOString();
+        };
+
+        const getDismissedExampleIds = (userWorkspaceState = DEFAULT_USER_WORKSPACE_STATE) => {
+            const uiState = asPlainObject(userWorkspaceState?.uiState || userWorkspaceState?.ui_state || userWorkspaceState);
+            return (Array.isArray(uiState.dismissed_examples) ? uiState.dismissed_examples : [])
+                .map((value) => typeof value === 'string' ? value.trim() : '')
+                .filter(Boolean);
+        };
+
+        const adaptMockToWorkspaceCase = (mock, organizationId) => {
+            const baseMock = cloneJson(mock, {});
+            const createdAtIso = parseMockCaseDateToIso(baseMock.createdAt);
+            const updatedAtIso = parseMockCaseDateToIso(baseMock.lastUpdated || baseMock.reportGeneratedAt || baseMock.createdAt);
+            const displayName = baseMock.projectName || baseMock.clientName || 'Dossier exemple';
+            const legalCompanyName = baseMock.clientName || displayName;
+            const surfaceValue = parseSurfaceValue(baseMock.buildingArea);
+            const recordId = `${organizationId}-example-${baseMock.id}`;
+            const casePayload = applyCanonicalReportNarrative({
+                ...baseMock,
+                legacyId: baseMock.id,
+                company: legalCompanyName,
+                clientName: displayName,
+                projectName: displayName,
+                activity: baseMock.activity || '',
+                buildingArea: surfaceValue || baseMock.buildingArea || 0,
+                surfaceLabel: surfaceValue > 0 ? `${surfaceValue.toLocaleString('fr-FR')} m²` : '',
+                isExample: true,
+                formData: {
+                    activity: baseMock.activity || '',
+                    company: legalCompanyName,
+                    clientName: displayName,
+                    contactName: baseMock.contact?.name || '',
+                    phone: baseMock.contact?.phone || '',
+                    surface: surfaceValue || baseMock.buildingArea || ''
+                }
+            });
+            const syntheticRecord = {
+                id: recordId,
+                organization_id: organizationId,
+                title: `EXEMPLE — ${displayName}`,
+                status: 'completed',
+                lifecycle_status: 'active',
+                deleted_at: null,
+                site_name: displayName,
+                activity_type: baseMock.activity || '',
+                case_data: {
+                    ...casePayload,
+                    createdAt: casePayload.createdAt || baseMock.createdAt || formatDateForUi(createdAtIso),
+                    lastUpdated: casePayload.lastUpdated || baseMock.lastUpdated || formatDateForUi(updatedAtIso),
+                    reportGeneratedAt: casePayload.reportGeneratedAt || baseMock.reportGeneratedAt || casePayload.lastUpdated || formatDateForUi(updatedAtIso)
+                },
+                is_example: true,
+                created_at: createdAtIso,
+                updated_at: updatedAtIso
+            };
+            const normalizedCase = normalizeProCaseRecord(syntheticRecord);
+
+            return {
+                ...normalizedCase,
+                organization_id: organizationId,
+                name: syntheticRecord.title,
+                surface: surfaceValue || 0,
+                address: baseMock.address || '',
+                postal_code: baseMock.postalCode || '',
+                city: baseMock.address ? baseMock.address.split(',').pop().trim() : '',
+                is_example: true,
+                _isLocalExample: true,
+                diagnostic_data: cloneJson(syntheticRecord.case_data, {}),
+                case_data: cloneJson(syntheticRecord.case_data, {})
+            };
+        };
+
+        const injectDisplayOnlyExampleCases = ({
+            organizationId,
+            cases = [],
+            userWorkspaceState = DEFAULT_USER_WORKSPACE_STATE
+        } = {}) => {
+            const activeCases = Array.isArray(cases)
+                ? cases.filter(item => item?.lifecycleStatus !== 'deleted')
+                : [];
+
+            if (!organizationId || activeCases.some(item => item?.isExample)) {
+                return activeCases;
+            }
+
+            const dismissedExamples = new Set(getDismissedExampleIds(userWorkspaceState));
+            const localExamples = MOCK_PRO_CASES_V2
+                .filter(mock => LOCAL_EXAMPLE_SOURCE_CASE_IDS.includes(mock.id))
+                .map(mock => adaptMockToWorkspaceCase(mock, organizationId))
+                .filter(exampleCase => !dismissedExamples.has(exampleCase.id));
+
+            return localExamples.length ? [...localExamples, ...activeCases] : activeCases;
+        };
+
         function buildEngineResultFromMock(c) {
             // Convertit la structure des dossiers mock en un objet compatible avec la shape engineResult
             if (!c || !c.postes) return null;
@@ -5559,6 +5669,12 @@
             } catch (error) {
                 warnWorkspaceSchemaIssue("Le seed silencieux des dossiers exemples a échoué pendant le chargement du workspace.", error);
             }
+
+            cases = injectDisplayOnlyExampleCases({
+                organizationId: organization.id,
+                cases,
+                userWorkspaceState
+            });
 
             return {
                 organization,
@@ -6483,7 +6599,9 @@
                 computed = normalizeEngineResult(computed, c.benchmark?.median || c.benchmark?.med || 0);
                 const actLabel = getProActivityLabel(fd.activity || fd.activite || c.activityLabel || c.activity || c._actLabel || '');
                 const area = extractSurfaceValue(c);
-                const displayName = c.clientName || c.projectName || fd.clientName || '-';
+                const displayName = c._isLocalExample
+                    ? (c.projectName || c.clientName || fd.clientName || '-')
+                    : (c.clientName || c.projectName || fd.clientName || '-');
                 return { ...c, _computed: computed, _actLabel: actLabel, _area: area, _displayName: displayName };
             }), [cases]);
 
@@ -6498,7 +6616,11 @@
 
             const deleteCase = async (id) => {
                 try {
-                    if (!window.confirm('Supprimer ce dossier, ses rapports et le PDF officiel lie ?')) return;
+                    const caseRecord = casesWithData.find(item => item.id === id);
+                    const confirmationMessage = caseRecord?._isLocalExample
+                        ? "Supprimer ce dossier exemple de votre espace ?"
+                        : 'Supprimer ce dossier, ses rapports et le PDF officiel lie ?';
+                    if (!window.confirm(confirmationMessage)) return;
                     await onDeleteCase?.(id);
                 } catch (error) {
                     window.alert(error?.message || "Impossible de supprimer ce dossier pour le moment.");
@@ -6619,14 +6741,26 @@
                                                         >
                                                             <Icon icon="solar:pen-bold" style={{ fontSize: '13px' }} />
                                                         </button>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => deleteCase(c.id)}
-                                                            className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors"
-                                                            data-tour={isFirstExampleCase ? 'example-delete-button' : isFirstVisibleCase ? 'first-delete-button' : undefined}
-                                                        >
-                                                            <Icon icon="solar:trash-bin-minimalistic-bold" style={{ fontSize: '14px' }} />
-                                                        </button>
+                                                        {c._isLocalExample ? (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => deleteCase(c.id)}
+                                                                className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100 transition-colors"
+                                                                data-tour={isFirstExampleCase ? 'example-delete-button' : isFirstVisibleCase ? 'first-delete-button' : undefined}
+                                                            >
+                                                                <Icon icon="solar:trash-bin-minimalistic-bold" style={{ fontSize: '13px' }} />
+                                                                Supprimer ce dossier exemple
+                                                            </button>
+                                                        ) : (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => deleteCase(c.id)}
+                                                                className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors"
+                                                                data-tour={isFirstExampleCase ? 'example-delete-button' : isFirstVisibleCase ? 'first-delete-button' : undefined}
+                                                            >
+                                                                <Icon icon="solar:trash-bin-minimalistic-bold" style={{ fontSize: '14px' }} />
+                                                            </button>
+                                                        )}
                                                     </div>
                                                 </td>
                                             </tr>
@@ -6691,10 +6825,14 @@
             settings = DEFAULT_ORGANIZATION_SETTINGS,
             branding = DEFAULT_ORGANIZATION_BRANDING,
             organization = null,
-            onSyncReportPdfMetadata
+            onSyncReportPdfMetadata,
+            onDeleteCase
         }) => {
             // Hooks avant tout return conditionnel (règle des hooks React)
-            const c = sharedCase || resolveWorkspaceCaseForReport(caseId, cases, reportsByCaseId);
+            const sourceCase = sharedCase || resolveWorkspaceCaseForReport(caseId, cases, reportsByCaseId);
+            const c = sourceCase?._isLocalExample && sourceCase?.diagnostic_data
+                ? { ...sourceCase.diagnostic_data, ...sourceCase }
+                : sourceCase;
             const isProAuth = !sharedCase && !!getActiveProUserId();
             const [officialPdfPending, setOfficialPdfPending] = useState(false);
             const [officialPdfError, setOfficialPdfError] = useState('');
@@ -6767,7 +6905,8 @@
             const proLogoImg = isProAuth ? resolveBrandPreviewUrl(branding) : '';
             const proLogoName = isProAuth ? resolveBrandName(settings, organization) : DEFAULT_WORKSPACE_BRAND_NAME;
             const hasCustomBranding = !!(proLogoImg || proLogoName !== DEFAULT_WORKSPACE_BRAND_NAME);
-            const canGenerateOfficialPdf = isProAuth && !sharedCase && !!c.reportRecordId && !!organization?.id;
+            const isLocalExample = !!c._isLocalExample;
+            const canGenerateOfficialPdf = isProAuth && !sharedCase && !isLocalExample && !!c.reportRecordId && !!organization?.id;
             const hasOfficialPdfAvailable = !!(c.latestPdfFileId || officialPdfUrl);
             const isOfficialPdfBusy = officialPdfPending || c.pdfStatus === 'generating';
             const effectivePdfError = officialPdfError || c.pdfError || '';
@@ -6952,6 +7091,22 @@
                 else prompt('Lien :', url);
             };
 
+            const handleDeleteLocalExample = async () => {
+                if (!isLocalExample || !onDeleteCase) {
+                    return;
+                }
+
+                if (!window.confirm("Supprimer ce dossier exemple de votre espace ?")) {
+                    return;
+                }
+
+                try {
+                    await onDeleteCase(c.id);
+                } catch (error) {
+                    window.alert(error?.message || "Impossible de supprimer ce dossier exemple pour le moment.");
+                }
+            };
+
             const COLORS = { chauffage: '#F97316', clim: '#06B6D4', ventil: '#3B82F6', eclairage: '#F59E0B', ecs: '#8B5CF6', autres: '#94A3B8' };
             const LABELS = { chauffage: 'Chauffage', clim: 'Climatisation', ventil: 'Ventilation', eclairage: 'Éclairage', ecs: 'ECS', autres: 'Autres' };
             const OBJECTIF_LABELS = { reduction_charges: 'Reduction des charges', conformite_reglementaire: 'Conformite reglementaire (Decret Tertiaire)', valorisation_patrimoine: 'Valorisation du patrimoine', confort_occupants: 'Amelioration du confort', demarche_rse: 'Demarche RSE', facture: 'Reduction des charges', conformite: 'Conformite reglementaire', valo: 'Valorisation patrimoine' };
@@ -6976,6 +7131,11 @@
                             </button>
                         )}
                         <div className="flex gap-2 w-full sm:w-auto flex-wrap">
+                            {isLocalExample && isProAuth && !sharedCase && (
+                                <div className="inline-flex items-center rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-bold uppercase tracking-[0.08em] text-amber-700">
+                                    Rapport exemple - donnees fictives
+                                </div>
+                            )}
                             {canGenerateOfficialPdf && hasOfficialPdfAvailable ? (
                                 <button onClick={handleOpenOfficialPdf} className="pro-btn pro-btn-primary flex-1 sm:flex-none text-sm px-3 py-2">
                                     <Icon icon="solar:download-bold" />
@@ -7026,8 +7186,29 @@
                                     <span className="sm:hidden">Lien</span>
                                 </button>
                             )}
+                            {isLocalExample && isProAuth && !sharedCase && (
+                                <button onClick={handleDeleteLocalExample} className="pro-btn flex-1 sm:flex-none text-sm px-3 py-2 border border-red-200 bg-red-50 text-red-700 hover:bg-red-100">
+                                    <Icon icon="solar:trash-bin-minimalistic-bold" />
+                                    <span className="hidden sm:inline">Supprimer ce dossier exemple</span>
+                                    <span className="sm:hidden">Supprimer</span>
+                                </button>
+                            )}
                         </div>
                     </div>
+
+                    {isLocalExample && isProAuth && !sharedCase && (
+                        <div className="no-print mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 shadow-sm">
+                            <div className="flex items-start gap-3">
+                                <Icon icon="solar:info-circle-bold" className="text-amber-600 text-xl shrink-0 mt-0.5" />
+                                <div>
+                                    <div className="text-sm font-bold text-amber-900">Ceci est un dossier exemple.</div>
+                                    <div className="text-sm text-amber-800 mt-1 leading-6">
+                                        Les données sont fictives et servent de démonstration. Supprimez-le quand vous avez créé vos premiers vrais dossiers.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {/* En-tête */}
                     {canGenerateOfficialPdf && (
@@ -7091,7 +7272,7 @@
                         <div className="flex flex-col gap-4 md:flex-row justify-between">
                             <div className="min-w-0">
                                 <div className="text-blue-300 text-xs font-bold uppercase tracking-widest mb-2">Pre-diagnostic energetique</div>
-                                <h1 className="text-2xl md:text-3xl font-extrabold mb-1 break-words">{c.clientName || c.company || '-'}</h1>
+                                <h1 className="text-2xl md:text-3xl font-extrabold mb-1 break-words">{isLocalExample ? (c.projectName || c.clientName || c.company || '-') : (c.clientName || c.company || c.projectName || '-')}</h1>
                                 <div className="text-slate-300 text-sm flex flex-wrap gap-x-1">{getProActivityLabel(c.formData?.activity || c.activityLabel || c.activity)} · {c.surfaceLabel || (c.buildingArea ? c.buildingArea.toLocaleString('fr-FR') + ' m²' : '')} · {c.postalCode || c.address || ''}</div>
                                 <div className="text-slate-400 text-xs mt-1">Généré le {c.createdAt} · Dossier {c.id}</div>
                             </div>
@@ -8503,7 +8684,7 @@
         };
 
         /* ===== RAPPORT PRO ===== */
-        const ProReport = ({ cId, setPage, sharedCase, cases, reportsByCaseId, settings, branding, organization, onSyncReportPdfMetadata }) => {
+        const ProReport = ({ cId, setPage, sharedCase, cases, reportsByCaseId, settings, branding, organization, onSyncReportPdfMetadata, onDeleteCase }) => {
             return (
                 <ProCaseReport
                     caseId={cId}
@@ -8515,6 +8696,7 @@
                     branding={branding}
                     organization={organization}
                     onSyncReportPdfMetadata={onSyncReportPdfMetadata}
+                    onDeleteCase={onDeleteCase}
                 />
             );
         };
@@ -9891,9 +10073,11 @@
             const [tourActive, setTourActive] = useState(false);
             const [showChecklistCompletionNotice, setShowChecklistCompletionNotice] = useState(false);
             const [isRefreshingChecklist, setIsRefreshingChecklist] = useState(false);
+            const [workspaceToast, setWorkspaceToast] = useState(null);
             const forceRecoveryFlowRef = useRef(false);
             const checklistCompletionPendingRef = useRef(false);
             const checklistCompletionTimeoutRef = useRef(null);
+            const workspaceToastTimeoutRef = useRef(null);
             const workspaceRef = useRef(null);
             const authUserIdRef = useRef(null);
             const [workspace, setWorkspace] = useState(() => ({
@@ -9936,7 +10120,34 @@
                     window.clearTimeout(checklistCompletionTimeoutRef.current);
                     checklistCompletionTimeoutRef.current = null;
                 }
+
+                if (workspaceToastTimeoutRef.current) {
+                    window.clearTimeout(workspaceToastTimeoutRef.current);
+                    workspaceToastTimeoutRef.current = null;
+                }
             }, []);
+
+            useEffect(() => {
+                if (!workspaceToast?.message) {
+                    return undefined;
+                }
+
+                if (workspaceToastTimeoutRef.current) {
+                    window.clearTimeout(workspaceToastTimeoutRef.current);
+                }
+
+                workspaceToastTimeoutRef.current = window.setTimeout(() => {
+                    setWorkspaceToast(null);
+                    workspaceToastTimeoutRef.current = null;
+                }, 4000);
+
+                return () => {
+                    if (workspaceToastTimeoutRef.current) {
+                        window.clearTimeout(workspaceToastTimeoutRef.current);
+                        workspaceToastTimeoutRef.current = null;
+                    }
+                };
+            }, [workspaceToast]);
 
             useEffect(() => {
                 if (!tourActive) {
@@ -10425,15 +10636,20 @@
                     listProReports(organizationId),
                     loadUserWorkspaceState(userId, organizationId)
                 ]);
+                const nextCases = injectDisplayOnlyExampleCases({
+                    organizationId,
+                    cases,
+                    userWorkspaceState
+                });
 
                 setWorkspace(prev => ({
                     ...prev,
-                    cases,
+                    cases: nextCases,
                     reports,
                     userWorkspaceState
                 }));
 
-                return { cases, reports, userWorkspaceState };
+                return { cases: nextCases, reports, userWorkspaceState };
             };
 
             const handleRefreshChecklist = async () => {
@@ -10552,6 +10768,70 @@
             };
 
             const handleDeleteCase = async (caseId) => {
+                const existingCase = workspace.cases.find(item => item.id === caseId);
+
+                if (existingCase?._isLocalExample) {
+                    const currentState = normalizeUserWorkspaceStateRecord(
+                        workspace.userWorkspaceState,
+                        authUserId,
+                        workspace.organization?.id || null
+                    );
+                    const nextDismissedExamples = Array.from(new Set([
+                        ...getDismissedExampleIds(currentState),
+                        caseId
+                    ]));
+                    const nextUiState = {
+                        ...currentState.uiState,
+                        dismissed_examples: nextDismissedExamples
+                    };
+                    const remainingLocalExamples = workspace.cases.filter(item => item._isLocalExample && item.id !== caseId).length;
+
+                    setWorkspace(prev => ({
+                        ...prev,
+                        cases: prev.cases.filter(item => item.id !== caseId),
+                        reports: prev.reports.filter(item => item.caseId !== caseId),
+                        userWorkspaceState: {
+                            ...currentState,
+                            uiState: {
+                                ...nextUiState,
+                                diagnosticDraftArchives: getDiagnosticDraftArchives(nextUiState)
+                            }
+                        }
+                    }));
+
+                    if (page === `report-${caseId}` || page === `case-report-${caseId}`) {
+                        setPage('cases');
+                    }
+
+                    if (remainingLocalExamples === 0) {
+                        setWorkspaceToast({
+                            tone: 'info',
+                            message: "Tous les dossiers exemples ont été supprimés. Créez votre premier vrai dossier avec Nouveau diagnostic."
+                        });
+                    }
+
+                    try {
+                        const savedWorkspaceState = await saveUserWorkspaceState({
+                            userId: authUserId,
+                            organizationId: workspace.organization?.id,
+                            uiState: { dismissed_examples: nextDismissedExamples },
+                            mergeWith: {
+                                ...currentState,
+                                uiState: nextUiState
+                            }
+                        });
+
+                        setWorkspace(prev => ({
+                            ...prev,
+                            userWorkspaceState: savedWorkspaceState
+                        }));
+                    } catch (error) {
+                        warnWorkspaceSchemaIssue("La persistance des dossiers exemples masqués a rencontré un problème de schéma.", error);
+                    }
+
+                    return { localExampleDismissed: true };
+                }
+
                 const deletionResult = await requestSecureCaseDeletion(caseId);
 
                 setWorkspace(prev => ({
@@ -10691,8 +10971,8 @@
                 />;
                 if (page === 'settings') return <ProSettings settings={workspace.settings} branding={workspace.branding} organization={workspace.organization} userWorkspaceState={workspace.userWorkspaceState} onSaveSettings={handleSaveSettings} onSaveBranding={handleSaveBranding} />;
                 if (page === 'plans') return <ProPlans onDemoClick={openDemoModal} />;
-                if (page.startsWith('case-report-')) return <ProReport cId={page.replace('case-report-', '')} setPage={setPage} cases={workspace.cases} reportsByCaseId={reportsByCaseId} settings={workspace.settings} branding={workspace.branding} organization={workspace.organization} onSyncReportPdfMetadata={handleSyncReportPdfMetadata} />;
-                if (page.startsWith('report-')) return <ProReport cId={page.replace('report-', '')} setPage={setPage} cases={workspace.cases} reportsByCaseId={reportsByCaseId} settings={workspace.settings} branding={workspace.branding} organization={workspace.organization} onSyncReportPdfMetadata={handleSyncReportPdfMetadata} />;
+                if (page.startsWith('case-report-')) return <ProReport cId={page.replace('case-report-', '')} setPage={setPage} cases={workspace.cases} reportsByCaseId={reportsByCaseId} settings={workspace.settings} branding={workspace.branding} organization={workspace.organization} onSyncReportPdfMetadata={handleSyncReportPdfMetadata} onDeleteCase={handleDeleteCase} />;
+                if (page.startsWith('report-')) return <ProReport cId={page.replace('report-', '')} setPage={setPage} cases={workspace.cases} reportsByCaseId={reportsByCaseId} settings={workspace.settings} branding={workspace.branding} organization={workspace.organization} onSyncReportPdfMetadata={handleSyncReportPdfMetadata} onDeleteCase={handleDeleteCase} />;
                 return <ProDashboard setPage={setPage} openDemo={openDemoModal} cases={workspace.cases} />;
             };
 
@@ -10753,6 +11033,19 @@
                     />
                     <DemoModal isOpen={isDemoModalOpen} onClose={closeDemoModal} />
                     <ProLegalModal modalKey={legalModalKey} onClose={() => setLegalModalKey('')} onClearPersonalData={handleClearPersonalData} />
+                    {workspaceToast?.message && (
+                        <div className="fixed bottom-6 right-6 z-[140] max-w-sm rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-2xl shadow-slate-900/15">
+                            <div className="flex items-start gap-3">
+                                <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600">
+                                    <Icon icon="solar:info-circle-bold" className="text-lg" />
+                                </div>
+                                <div className="min-w-0">
+                                    <div className="text-sm font-bold text-slate-900">Mise à jour de l’espace</div>
+                                    <div className="mt-1 text-sm leading-6 text-slate-600">{workspaceToast.message}</div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             );
         };

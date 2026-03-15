@@ -22,6 +22,8 @@
     <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
     <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/driver.js@1.3.1/dist/driver.js.iife.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.3.1/dist/driver.css" />
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
         * {
@@ -367,6 +369,55 @@
             box-shadow: 0 24px 60px rgba(15, 23, 42, 0.25);
         }
 
+        .driverjs-pro-theme.driver-popover {
+            background: #FFFFFF;
+            border: 1px solid #E2E8F0;
+            border-radius: 20px;
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18);
+            color: #0F172A;
+            max-width: 360px;
+        }
+
+        .driverjs-pro-theme .driver-popover-title {
+            color: #0F172A;
+            font-size: 18px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .driverjs-pro-theme .driver-popover-description {
+            color: #475569;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .driverjs-pro-theme .driver-popover-progress-text {
+            color: #64748B;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .driverjs-pro-theme .driver-popover-footer button {
+            border-radius: 10px;
+            font-weight: 700;
+        }
+
+        .driverjs-pro-theme .driver-popover-next-btn,
+        .driverjs-pro-theme .driver-popover-done-btn {
+            background: #1D4ED8;
+            border: 1px solid #1D4ED8;
+            color: #FFFFFF;
+            text-shadow: none;
+        }
+
+        .driverjs-pro-theme .driver-popover-prev-btn,
+        .driverjs-pro-theme .driver-popover-close-btn {
+            background: #FFFFFF;
+            border: 1px solid #E2E8F0;
+            color: #475569;
+            text-shadow: none;
+        }
+
         /* ===== CHATBOT ====== */
         .chatbot-widget {
             position: fixed;
@@ -700,6 +751,69 @@
             reports: [],
             userWorkspaceState: DEFAULT_USER_WORKSPACE_STATE
         };
+
+        const ONBOARDING_TOUR_SELECTORS = Object.freeze({
+            dashboardHeader: '[data-tour="dashboard-header"]',
+            casesList: '[data-tour="cases-list"]',
+            newCaseButton: '[data-tour="new-case-button"]',
+            reportButton: '[data-tour="example-report-button"], [data-tour="first-report-button"], [data-tour="cases-list"]',
+            brandingSection: '[data-tour="branding-section"]',
+            deleteButton: '[data-tour="example-delete-button"], [data-tour="first-delete-button"], [data-tour="cases-list"]'
+        });
+
+        const resolveDriverFactory = () => {
+            if (typeof window === 'undefined' || !window.driver) {
+                return null;
+            }
+
+            if (typeof window.driver === 'function') {
+                return window.driver;
+            }
+
+            if (typeof window.driver.driver === 'function') {
+                return window.driver.driver.bind(window.driver);
+            }
+
+            if (window.driver.js && typeof window.driver.js.driver === 'function') {
+                return window.driver.js.driver.bind(window.driver.js);
+            }
+
+            return null;
+        };
+
+        const waitForTourElement = (selector, timeoutMs = 4000) => new Promise((resolve, reject) => {
+            if (typeof document === 'undefined') {
+                reject(new Error('Document indisponible.'));
+                return;
+            }
+
+            const normalizedSelector = typeof selector === 'string' ? selector.trim() : '';
+            if (!normalizedSelector) {
+                reject(new Error('Sélecteur de visite introuvable.'));
+                return;
+            }
+
+            const existingNode = document.querySelector(normalizedSelector);
+            if (existingNode) {
+                resolve(existingNode);
+                return;
+            }
+
+            const startedAt = Date.now();
+            const intervalId = window.setInterval(() => {
+                const nextNode = document.querySelector(normalizedSelector);
+                if (nextNode) {
+                    window.clearInterval(intervalId);
+                    resolve(nextNode);
+                    return;
+                }
+
+                if (Date.now() - startedAt >= timeoutMs) {
+                    window.clearInterval(intervalId);
+                    reject(new Error(`Element de visite introuvable: ${normalizedSelector}`));
+                }
+            }, 50);
+        });
 
         const PRO_ACTIVITY_LABELS = Object.freeze({
             bureau: 'Bureaux et services',
@@ -1214,6 +1328,51 @@
                 }
                 return acc;
             }, {});
+        };
+
+        const resolveOnboardingChecklistState = ({
+            cases = [],
+            reports = [],
+            settings = DEFAULT_ORGANIZATION_SETTINGS,
+            branding = DEFAULT_ORGANIZATION_BRANDING,
+            userWorkspaceState = DEFAULT_USER_WORKSPACE_STATE
+        } = {}) => {
+            const uiState = asPlainObject(userWorkspaceState?.uiState);
+            const activeCases = (Array.isArray(cases) ? cases : []).filter(item => item?.lifecycleStatus !== 'deleted');
+            const exampleCasesCount = activeCases.filter(item => item?.isExample).length;
+            const hasCustomAccent = String(settings?.accent || DEFAULT_WORKSPACE_ACCENT).trim().toUpperCase() !== DEFAULT_WORKSPACE_ACCENT;
+            const hasCustomBranding = Boolean(branding?.logoStoragePath) || hasCustomAccent;
+            const hasReadyPdf = (Array.isArray(reports) ? reports : []).some(item => item?.recordStatus === 'active' && item?.pdfStatus === 'ready');
+
+            const tasks = [
+                {
+                    id: 'discover-dashboard',
+                    label: 'Découvrir le dashboard',
+                    done: !!uiState.onboarding_seen
+                },
+                {
+                    id: 'first-client-case',
+                    label: 'Créer votre premier dossier client',
+                    done: activeCases.length > exampleCasesCount
+                },
+                {
+                    id: 'branding',
+                    label: 'Personnaliser votre charte',
+                    done: hasCustomBranding
+                },
+                {
+                    id: 'first-official-pdf',
+                    label: 'Générer votre premier PDF officiel',
+                    done: hasReadyPdf
+                }
+            ];
+
+            return {
+                done: !!uiState.onboarding_checklist_done,
+                allDone: tasks.every(task => task.done),
+                completedCount: tasks.filter(task => task.done).length,
+                tasks
+            };
         };
 
         const getLegacyCaseStorageKey = (caseData = {}) => {
@@ -2652,6 +2811,7 @@
                 ...payload,
                 id: record.id,
                 legacyId: legacyId || null,
+                isExample: !!record?.is_example || payload.isExample === true,
                 status: payload.status || record.status || 'nouveau',
                 lifecycleStatus: record?.lifecycle_status || 'active',
                 activity: payload.activity || payload.formData?.activity || payload.formData?.activite || record.activity_type || '',
@@ -3145,6 +3305,36 @@
                                     <p className="text-sm text-slate-700 leading-7 mt-2">{section.body}</p>
                                 </div>
                             ))}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const OnboardingPromptModal = ({ isOpen, onConfirm, onSkip }) => {
+            if (!isOpen) {
+                return null;
+            }
+
+            return (
+                <div className="modal-overlay">
+                    <div className="modal-box fade-in" onClick={(event) => event.stopPropagation()}>
+                        <div className="p-8">
+                            <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center mb-5">
+                                <Icon icon="solar:map-point-wave-bold" style={{ fontSize: '24px' }} />
+                            </div>
+                            <h3 className="text-2xl font-black text-slate-900 tracking-tight">Découvrez votre espace Pro</h3>
+                            <p className="text-slate-600 mt-3 leading-7">
+                                Souhaitez-vous faire le tour du dashboard en 7 étapes ? (2 minutes)
+                            </p>
+                            <div className="mt-8 flex flex-col sm:flex-row gap-3">
+                                <button type="button" onClick={onConfirm} className="pro-btn pro-btn-primary flex-1 justify-center py-3">
+                                    Oui, je découvre
+                                </button>
+                                <button type="button" onClick={onSkip} className="pro-btn pro-btn-secondary flex-1 justify-center py-3">
+                                    Passer
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -5019,6 +5209,29 @@
                 userWorkspaceState = migrationResult.userWorkspaceState || userWorkspaceState;
             }
 
+            try {
+                const isFirstLogin = !userWorkspaceState?.uiState?.onboarding_seen
+                    && !userWorkspaceState?.uiState?.examples_seeded;
+
+                if (isFirstLogin) {
+                    const browserClient = await getSupabaseBrowserClient();
+
+                    if (browserClient) {
+                        const seedResult = await browserClient.rpc('seed_example_cases', {
+                            target_organization_id: organization.id,
+                            actor_user_id: user.id
+                        });
+
+                        if (!seedResult?.error) {
+                            cases = await listProCases(organization.id);
+                            reports = await listProReports(organization.id);
+                            userWorkspaceState = await loadUserWorkspaceState(user.id, organization.id);
+                        }
+                    }
+                }
+            } catch (error) {
+            }
+
             return {
                 organization,
                 settings,
@@ -5846,12 +6059,12 @@
 
             return (
                 <div className="p-8 max-w-7xl mx-auto fade-in">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10" data-tour="dashboard-header">
                         <div>
                             <h2 className="text-3xl font-bold text-slate-800 tracking-tight">Vue globale du parc</h2>
                             <p className="text-slate-500 mt-1">Synthèse de votre activité diagnostics.</p>
                         </div>
-                        <button type="button" onClick={() => setPage('new')} className="pro-btn pro-btn-primary shadow-lg shadow-blue-500/20">
+                        <button type="button" onClick={() => setPage('new')} className="pro-btn pro-btn-primary shadow-lg shadow-blue-500/20" data-tour="new-case-button">
                             <span className="flex items-center gap-2">
                                 <Icon icon="solar:add-square-bold" style={{ fontSize: '18px' }} />
                                 <span>Nouveau diagnostic</span>
@@ -5952,6 +6165,8 @@
                 const name = (c._displayName || '').toLowerCase();
                 return (!q || name.includes(q)) && (!filterActivity || c._actLabel === filterActivity);
             });
+            const firstExampleCaseId = filtered.find(c => c.isExample)?.id || '';
+            const firstVisibleCaseId = filtered[0]?.id || '';
 
             const deleteCase = async (id) => {
                 try {
@@ -5969,12 +6184,12 @@
                             <h2 className="text-3xl font-bold text-slate-800 tracking-tight">Dossiers clients</h2>
                             <p className="text-slate-500 mt-1">{cases.length} dossier{cases.length > 1 ? 's' : ''} dans votre espace</p>
                         </div>
-                        <button type="button" onClick={() => setPage('new')} className="pro-btn pro-btn-primary shadow-lg shadow-blue-500/20">
+                        <button type="button" onClick={() => setPage('new')} className="pro-btn pro-btn-primary shadow-lg shadow-blue-500/20" data-tour="new-case-button">
                             <Icon icon="solar:add-square-bold" style={{ fontSize: '18px' }} /> Nouveau diagnostic
                         </button>
                     </div>
 
-                    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden" data-tour="cases-list">
                         <div className="p-5 border-b border-slate-100 flex flex-col sm:flex-row gap-4 bg-slate-50/50">
                             <div className="relative flex-1">
                                 <Icon icon="solar:magnifer-linear" className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -6005,10 +6220,19 @@
                                 <tbody>
                                     {filtered.map(c => {
                                         const comp = c._computed;
+                                        const isFirstExampleCase = c.id === firstExampleCaseId;
+                                        const isFirstVisibleCase = c.id === firstVisibleCaseId;
                                         return (
                                             <tr key={c.id} className="group transition-colors">
                                                 <td>
-                                                    <div className="font-bold text-slate-800 leading-tight">{c._displayName}</div>
+                                                    <div className="flex items-center gap-2 flex-wrap">
+                                                        <div className="font-bold text-slate-800 leading-tight">{c._displayName}</div>
+                                                        {c.isExample && (
+                                                            <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-amber-700">
+                                                                Exemple
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                     <div className="text-xs text-slate-400 mt-0.5 font-mono">{c.legacyId || c.id}</div>
                                                 </td>
                                                 <td><span className="text-sm text-slate-600 font-medium">{c._actLabel}</span></td>
@@ -6050,7 +6274,12 @@
                                                 <td className="hidden lg:table-cell"><span className="text-xs text-slate-400">{c.createdAt || c.lastUpdated || '-'}</span></td>
                                                 <td className="text-right">
                                                     <div className="flex items-center justify-end gap-2">
-                                                        <button type="button" onClick={() => setPage('report-' + c.id)} className="pro-btn pro-btn-secondary px-3 py-1.5 text-xs hover:border-blue-300 hover:text-blue-700">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setPage('report-' + c.id)}
+                                                            className="pro-btn pro-btn-secondary px-3 py-1.5 text-xs hover:border-blue-300 hover:text-blue-700"
+                                                            data-tour={isFirstExampleCase ? 'example-report-button' : isFirstVisibleCase ? 'first-report-button' : undefined}
+                                                        >
                                                             <Icon icon="solar:document-text-bold" style={{ fontSize: '13px' }} /> Voir rapport
                                                         </button>
                                                         <button
@@ -6061,7 +6290,12 @@
                                                         >
                                                             <Icon icon="solar:pen-bold" style={{ fontSize: '13px' }} />
                                                         </button>
-                                                        <button type="button" onClick={() => deleteCase(c.id)} className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => deleteCase(c.id)}
+                                                            className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors"
+                                                            data-tour={isFirstExampleCase ? 'example-delete-button' : isFirstVisibleCase ? 'first-delete-button' : undefined}
+                                                        >
                                                             <Icon icon="solar:trash-bin-minimalistic-bold" style={{ fontSize: '14px' }} />
                                                         </button>
                                                     </div>
@@ -8061,7 +8295,7 @@
                     <div className="grid lg:grid-cols-2 gap-8">
                         <div className="space-y-8">
                             {/* SECTION BRANDING */}
-                            <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm shadow-slate-200/40 border border-slate-200">
+                            <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm shadow-slate-200/40 border border-slate-200" data-tour="branding-section">
                                 <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
                                     <Icon icon="solar:paint-roller-bold" className="text-blue-600" /> Branding & Marque blanche
                                 </h3>
@@ -8261,7 +8495,18 @@
         };
 
         /* ===== SIDEBAR & TOPBAR (Navigation et boutons responsives réparés) ===== */
-        const ProSidebar = ({ curPage, setPage, isMobileOpen, closeMobile, onLogout, profile = null, organization = null, authUserId = null }) => {
+        const ProSidebar = ({
+            curPage,
+            setPage,
+            isMobileOpen,
+            closeMobile,
+            onLogout,
+            profile = null,
+            organization = null,
+            authUserId = null,
+            onboardingChecklist = null,
+            showChecklistCompletionNotice = false
+        }) => {
             const navs = [
                 { id: 'dashboard', label: 'Vue globale', icon: 'solar:pie-chart-2-bold' },
                 { id: 'cases', label: 'Dossiers clients', icon: 'solar:folder-with-files-bold' },
@@ -8272,6 +8517,7 @@
             const displayName = resolveWorkspaceUserDisplayName(profile);
             const roleLabel = resolveWorkspaceUserRoleLabel(profile, organization, authUserId);
             const userInitials = buildUserInitials(displayName, profile?.email || '');
+            const shouldShowChecklistBlock = showChecklistCompletionNotice || (!!onboardingChecklist && !onboardingChecklist.done);
 
             return (
                 <>
@@ -8302,6 +8548,48 @@
                                 );
                             })}
                         </nav>
+
+                        {shouldShowChecklistBlock && (
+                            <div className="px-4 pb-4">
+                                {showChecklistCompletionNotice ? (
+                                    <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4 shadow-sm">
+                                        <div className="flex items-center gap-2 text-sm font-bold text-emerald-800">
+                                            <Icon icon="solar:check-circle-bold" className="text-emerald-600" />
+                                            Espace configuré
+                                        </div>
+                                        <p className="text-xs leading-relaxed text-emerald-700 mt-2">
+                                            Vos repères de démarrage sont validés. Vous pouvez désormais travailler uniquement sur vos vrais dossiers clients.
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 shadow-sm">
+                                        <div className="flex items-start justify-between gap-3">
+                                            <div>
+                                                <div className="text-[11px] font-black uppercase tracking-[0.14em] text-blue-600">Démarrer</div>
+                                                <div className="text-sm font-bold text-slate-800 mt-1">
+                                                    {onboardingChecklist?.completedCount || 0}/4 étapes
+                                                </div>
+                                            </div>
+                                            <div className="text-[11px] font-semibold text-slate-500">
+                                                {(onboardingChecklist?.allDone ? 'Terminé' : 'En cours')}
+                                            </div>
+                                        </div>
+                                        <div className="mt-4 space-y-2.5">
+                                            {(onboardingChecklist?.tasks || []).map(task => (
+                                                <div key={task.id} className="flex items-start gap-2.5">
+                                                    <span className={`mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full border ${task.done ? 'border-emerald-200 bg-emerald-100 text-emerald-700' : 'border-slate-200 bg-white text-slate-300'}`}>
+                                                        <Icon icon={task.done ? 'solar:check-circle-bold' : 'solar:check-circle-linear'} className="text-[12px]" />
+                                                    </span>
+                                                    <span className={`text-xs leading-5 ${task.done ? 'font-semibold text-slate-700' : 'text-slate-500'}`}>
+                                                        {task.label}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
 
                         {/* Profil Footer Premium */}
                         <div className="p-4 border-t border-slate-100 mt-4 bg-slate-50/50">
@@ -9253,13 +9541,29 @@
             const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
             const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
             const [legalModalKey, setLegalModalKey] = useState('');
+            const [onboardingPromptOpen, setOnboardingPromptOpen] = useState(false);
+            const [suppressOnboardingPrompt, setSuppressOnboardingPrompt] = useState(false);
+            const [showChecklistCompletionNotice, setShowChecklistCompletionNotice] = useState(false);
             const forceRecoveryFlowRef = useRef(false);
+            const onboardingTourDriverRef = useRef(null);
+            const onboardingTourCleanupRef = useRef(false);
+            const checklistCompletionPendingRef = useRef(false);
+            const checklistCompletionTimeoutRef = useRef(null);
+            const workspaceRef = useRef(null);
+            const authUserIdRef = useRef(null);
             const [workspace, setWorkspace] = useState(() => ({
                 ...DEFAULT_WORKSPACE_DATA,
                 profile: null
             }));
 
             const reportsByCaseId = useMemo(() => buildReportsByCaseId(workspace.reports), [workspace.reports]);
+            const onboardingChecklist = useMemo(() => resolveOnboardingChecklistState({
+                cases: workspace.cases,
+                reports: workspace.reports,
+                settings: workspace.settings,
+                branding: workspace.branding,
+                userWorkspaceState: workspace.userWorkspaceState
+            }), [workspace.cases, workspace.reports, workspace.settings, workspace.branding, workspace.userWorkspaceState]);
 
             // Detect shared report from URL hash
             useEffect(() => {
@@ -9270,6 +9574,28 @@
                 syncSharedReport();
                 window.addEventListener('hashchange', syncSharedReport);
                 return () => window.removeEventListener('hashchange', syncSharedReport);
+            }, []);
+
+            useEffect(() => {
+                workspaceRef.current = workspace;
+            }, [workspace]);
+
+            useEffect(() => {
+                authUserIdRef.current = authUserId;
+            }, [authUserId]);
+
+            useEffect(() => () => {
+                if (checklistCompletionTimeoutRef.current) {
+                    window.clearTimeout(checklistCompletionTimeoutRef.current);
+                    checklistCompletionTimeoutRef.current = null;
+                }
+
+                if (onboardingTourDriverRef.current?.destroy) {
+                    onboardingTourCleanupRef.current = true;
+                    onboardingTourDriverRef.current.destroy();
+                    onboardingTourDriverRef.current = null;
+                    onboardingTourCleanupRef.current = false;
+                }
             }, []);
 
             // Check auth on mount
@@ -9472,6 +9798,316 @@
                     authSubscription?.unsubscribe?.();
                 };
             }, []);
+
+            const mergeWorkspaceUiStateLocally = (uiStatePatch = {}) => {
+                setWorkspace(prev => {
+                    const currentState = normalizeUserWorkspaceStateRecord(
+                        prev.userWorkspaceState,
+                        authUserIdRef.current,
+                        prev.organization?.id || null
+                    );
+                    const nextUiState = {
+                        ...currentState.uiState,
+                        ...asPlainObject(uiStatePatch)
+                    };
+
+                    return {
+                        ...prev,
+                        userWorkspaceState: {
+                            ...currentState,
+                            uiState: {
+                                ...nextUiState,
+                                diagnosticDraftArchives: getDiagnosticDraftArchives(nextUiState)
+                            }
+                        }
+                    };
+                });
+            };
+
+            const persistWorkspaceUiStatePatch = async (uiStatePatch = {}, { silent = false } = {}) => {
+                const currentWorkspace = workspaceRef.current;
+                const currentUserId = authUserIdRef.current;
+                const currentOrganizationId = currentWorkspace?.organization?.id || null;
+
+                if (!currentUserId || !currentOrganizationId) {
+                    if (silent) {
+                        return currentWorkspace?.userWorkspaceState || DEFAULT_USER_WORKSPACE_STATE;
+                    }
+
+                    throw new Error("Workspace Pro non initialisé.");
+                }
+
+                try {
+                    const savedState = await saveUserWorkspaceState({
+                        userId: currentUserId,
+                        organizationId: currentOrganizationId,
+                        uiState: uiStatePatch,
+                        mergeWith: currentWorkspace?.userWorkspaceState
+                    });
+
+                    setWorkspace(prev => ({
+                        ...prev,
+                        userWorkspaceState: savedState
+                    }));
+
+                    return savedState;
+                } catch (error) {
+                    if (silent) {
+                        return currentWorkspace?.userWorkspaceState || DEFAULT_USER_WORKSPACE_STATE;
+                    }
+
+                    throw error;
+                }
+            };
+
+            const markOnboardingSeen = async ({ silent = false } = {}) => {
+                setSuppressOnboardingPrompt(true);
+                setOnboardingPromptOpen(false);
+                mergeWorkspaceUiStateLocally({ onboarding_seen: true });
+                return persistWorkspaceUiStatePatch({ onboarding_seen: true }, { silent });
+            };
+
+            const startOnboardingTour = async () => {
+                const driverFactory = resolveDriverFactory();
+                if (!driverFactory) {
+                    return;
+                }
+
+                setOnboardingPromptOpen(false);
+                closeMobile();
+                setPage('dashboard');
+
+                try {
+                    await waitForTourElement(ONBOARDING_TOUR_SELECTORS.dashboardHeader);
+                } catch (error) {
+                    return;
+                }
+
+                setSuppressOnboardingPrompt(true);
+
+                if (onboardingTourDriverRef.current?.destroy) {
+                    onboardingTourCleanupRef.current = true;
+                    onboardingTourDriverRef.current.destroy();
+                    onboardingTourDriverRef.current = null;
+                    onboardingTourCleanupRef.current = false;
+                }
+
+                let driverObj = null;
+
+                const moveTourToStep = async (nextPage, selector, direction = 'next') => {
+                    closeMobile();
+                    if (nextPage) {
+                        setPage(nextPage);
+                    }
+
+                    try {
+                        await waitForTourElement(selector);
+                    } catch (error) {
+                    }
+
+                    if (direction === 'previous') {
+                        driverObj.movePrevious();
+                        return;
+                    }
+
+                    driverObj.moveNext();
+                };
+
+                const tourSteps = [
+                    {
+                        element: ONBOARDING_TOUR_SELECTORS.dashboardHeader,
+                        popover: {
+                            title: "Bienvenue dans votre espace Pro",
+                            description: "Voici votre tableau de bord. Vos dossiers clients apparaissent ici. Nous avons ajouté quelques exemples pour vous guider.",
+                            side: 'bottom',
+                            align: 'start',
+                            onNextClick: () => moveTourToStep('cases', ONBOARDING_TOUR_SELECTORS.casesList, 'next')
+                        }
+                    },
+                    {
+                        element: ONBOARDING_TOUR_SELECTORS.casesList,
+                        popover: {
+                            title: "Vos dossiers clients",
+                            description: "Chaque dossier correspond à un bâtiment diagnostiqué. Cliquez sur un dossier pour consulter son rapport détaillé.",
+                            side: 'top',
+                            align: 'start',
+                            onPrevClick: () => moveTourToStep('dashboard', ONBOARDING_TOUR_SELECTORS.dashboardHeader, 'previous')
+                        }
+                    },
+                    {
+                        element: ONBOARDING_TOUR_SELECTORS.newCaseButton,
+                        popover: {
+                            title: "Créer un nouveau dossier",
+                            description: "Lancez un nouveau diagnostic en quelques minutes. Le moteur calcule automatiquement les indicateurs énergétiques.",
+                            side: 'left',
+                            align: 'center'
+                        }
+                    },
+                    {
+                        element: ONBOARDING_TOUR_SELECTORS.reportButton,
+                        popover: {
+                            title: "Consulter et télécharger le rapport",
+                            description: "Chaque dossier génère un rapport PDF personnalisé à votre charte, prêt à envoyer à votre client.",
+                            side: 'left',
+                            align: 'center',
+                            onNextClick: () => moveTourToStep('settings', ONBOARDING_TOUR_SELECTORS.brandingSection, 'next')
+                        }
+                    },
+                    {
+                        element: ONBOARDING_TOUR_SELECTORS.brandingSection,
+                        popover: {
+                            title: "Personnalisez votre charte",
+                            description: "Ajoutez votre logo et votre couleur principale. Tous vos rapports seront automatiquement à votre image.",
+                            side: 'left',
+                            align: 'start',
+                            onPrevClick: () => moveTourToStep('cases', ONBOARDING_TOUR_SELECTORS.reportButton, 'previous'),
+                            onNextClick: () => moveTourToStep('cases', ONBOARDING_TOUR_SELECTORS.deleteButton, 'next')
+                        }
+                    },
+                    {
+                        element: ONBOARDING_TOUR_SELECTORS.deleteButton,
+                        popover: {
+                            title: "Supprimer les dossiers exemples",
+                            description: "Quand vous êtes prêt, supprimez ces dossiers exemples. Sélectionnez-les et cliquez sur Supprimer.",
+                            side: 'left',
+                            align: 'center',
+                            onPrevClick: () => moveTourToStep('settings', ONBOARDING_TOUR_SELECTORS.brandingSection, 'previous')
+                        }
+                    },
+                    {
+                        popover: {
+                            title: "Vous êtes prêt",
+                            description: "Votre espace Pro est configuré. Créez votre premier vrai dossier client dès maintenant.",
+                            onPrevClick: () => moveTourToStep('cases', ONBOARDING_TOUR_SELECTORS.deleteButton, 'previous')
+                        }
+                    }
+                ];
+
+                driverObj = driverFactory({
+                    animate: true,
+                    showProgress: true,
+                    allowClose: true,
+                    stagePadding: 10,
+                    overlayColor: 'rgba(15, 23, 42, 0.72)',
+                    popoverClass: 'driverjs-pro-theme',
+                    nextBtnText: 'Suivant',
+                    prevBtnText: 'Retour',
+                    doneBtnText: 'Terminer',
+                    steps: tourSteps,
+                    onDestroyStarted: () => {
+                        if (!onboardingTourCleanupRef.current && !driverObj.hasNextStep()) {
+                            markOnboardingSeen({ silent: true });
+                        }
+
+                        onboardingTourDriverRef.current = null;
+                        driverObj.destroy();
+                    }
+                });
+
+                onboardingTourDriverRef.current = driverObj;
+                driverObj.drive();
+            };
+
+            const handleSkipOnboarding = async () => {
+                setSuppressOnboardingPrompt(true);
+                setOnboardingPromptOpen(false);
+                await markOnboardingSeen({ silent: true });
+            };
+
+            useEffect(() => {
+                if (!authUserId) {
+                    setOnboardingPromptOpen(false);
+                    setSuppressOnboardingPrompt(false);
+                    setShowChecklistCompletionNotice(false);
+                    checklistCompletionPendingRef.current = false;
+
+                    if (checklistCompletionTimeoutRef.current) {
+                        window.clearTimeout(checklistCompletionTimeoutRef.current);
+                        checklistCompletionTimeoutRef.current = null;
+                    }
+
+                    if (onboardingTourDriverRef.current?.destroy) {
+                        onboardingTourCleanupRef.current = true;
+                        onboardingTourDriverRef.current.destroy();
+                        onboardingTourDriverRef.current = null;
+                        onboardingTourCleanupRef.current = false;
+                    }
+                }
+            }, [authUserId]);
+
+            useEffect(() => {
+                if (workspace.userWorkspaceState?.uiState?.onboarding_seen) {
+                    setOnboardingPromptOpen(false);
+                }
+            }, [workspace.userWorkspaceState?.uiState?.onboarding_seen]);
+
+            useEffect(() => {
+                if (!auth || sharedReport || !workspace.organization?.id) {
+                    return undefined;
+                }
+
+                if (workspace.userWorkspaceState?.uiState?.onboarding_seen || suppressOnboardingPrompt || onboardingPromptOpen) {
+                    return undefined;
+                }
+
+                if (page !== 'dashboard') {
+                    setPage('dashboard');
+                    return undefined;
+                }
+
+                const timeoutId = window.setTimeout(() => {
+                    setOnboardingPromptOpen(true);
+                }, 800);
+
+                return () => window.clearTimeout(timeoutId);
+            }, [
+                auth,
+                sharedReport,
+                page,
+                workspace.organization?.id,
+                workspace.userWorkspaceState?.uiState?.onboarding_seen,
+                suppressOnboardingPrompt,
+                onboardingPromptOpen
+            ]);
+
+            useEffect(() => {
+                if (!auth || !workspace.organization?.id) {
+                    return undefined;
+                }
+
+                if (onboardingChecklist.done || !onboardingChecklist.allDone || checklistCompletionPendingRef.current) {
+                    return undefined;
+                }
+
+                checklistCompletionPendingRef.current = true;
+                let isCancelled = false;
+
+                (async () => {
+                    try {
+                        await persistWorkspaceUiStatePatch({ onboarding_checklist_done: true });
+
+                        if (isCancelled) {
+                            return;
+                        }
+
+                        setShowChecklistCompletionNotice(true);
+                        if (checklistCompletionTimeoutRef.current) {
+                            window.clearTimeout(checklistCompletionTimeoutRef.current);
+                        }
+                        checklistCompletionTimeoutRef.current = window.setTimeout(() => {
+                            setShowChecklistCompletionNotice(false);
+                            checklistCompletionTimeoutRef.current = null;
+                        }, 3000);
+                    } catch (error) {
+                    } finally {
+                        checklistCompletionPendingRef.current = false;
+                    }
+                })();
+
+                return () => {
+                    isCancelled = true;
+                };
+            }, [auth, workspace.organization?.id, onboardingChecklist.allDone, onboardingChecklist.done]);
 
             const requireWorkspaceContext = () => {
                 if (!authUserId || !workspace.organization?.id) {
@@ -9798,6 +10434,8 @@
                         profile={workspace.profile}
                         organization={workspace.organization}
                         authUserId={authUserId}
+                        onboardingChecklist={onboardingChecklist}
+                        showChecklistCompletionNotice={showChecklistCompletionNotice}
                     />
                     <div className="pro-content flex-1 max-w-full">
                         <ProTopbar title={currentTitle} toggleMobile={toggleMobile} />
@@ -9816,6 +10454,11 @@
                         </footer>
                     </div>
                     <ChatbotWidget />
+                    <OnboardingPromptModal
+                        isOpen={onboardingPromptOpen}
+                        onConfirm={startOnboardingTour}
+                        onSkip={handleSkipOnboarding}
+                    />
                     <DemoModal isOpen={isDemoModalOpen} onClose={closeDemoModal} />
                     <ProLegalModal modalKey={legalModalKey} onClose={() => setLegalModalKey('')} />
                 </div>

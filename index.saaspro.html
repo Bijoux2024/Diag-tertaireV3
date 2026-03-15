@@ -1283,6 +1283,7 @@
         const AUTH_CALLBACK_SEARCH_KEYS = ['code', 'type', 'error', 'error_code', 'error_description'];
         const AUTH_CALLBACK_HASH_KEYS = ['access_token', 'refresh_token', 'expires_at', 'expires_in', 'token_type', 'type'];
         const AUTH_MIN_PASSWORD_LENGTH = 8;
+        const AUTH_CALLBACK_SESSION_FLOW_TYPES = ['signup', 'magiclink', 'recovery'];
 
         const getAuthFlowTypeFromLocation = () => {
             if (typeof window === 'undefined') {
@@ -1304,6 +1305,96 @@
         };
 
         const isPasswordRecoveryFlow = () => getAuthFlowTypeFromLocation() === 'recovery';
+
+        const getAuthCallbackParamsFromLocation = () => {
+            if (typeof window === 'undefined') {
+                return {
+                    type: '',
+                    code: '',
+                    accessToken: '',
+                    refreshToken: '',
+                    hasCallbackPayload: false
+                };
+            }
+
+            const currentUrl = new URL(window.location.href);
+            const rawHash = currentUrl.hash || '';
+            const hashParams = rawHash && !rawHash.startsWith('#report=')
+                ? new URLSearchParams(rawHash.slice(1))
+                : new URLSearchParams();
+            const type = currentUrl.searchParams.get('type')
+                || hashParams.get('type')
+                || '';
+            const code = currentUrl.searchParams.get('code') || '';
+            const accessToken = hashParams.get('access_token') || '';
+            const refreshToken = hashParams.get('refresh_token') || '';
+
+            return {
+                type,
+                code,
+                accessToken,
+                refreshToken,
+                hasCallbackPayload: !!(type || code || accessToken || refreshToken)
+            };
+        };
+
+        const establishSupabaseSessionFromAuthCallback = async (browserClient) => {
+            if (!browserClient?.auth) {
+                return {
+                    session: null,
+                    error: null,
+                    flowType: '',
+                    handled: false
+                };
+            }
+
+            const callbackParams = getAuthCallbackParamsFromLocation();
+            const flowType = callbackParams.type;
+            const shouldHandleSession = AUTH_CALLBACK_SESSION_FLOW_TYPES.includes(flowType)
+                || !!callbackParams.code
+                || !!callbackParams.accessToken;
+
+            if (!shouldHandleSession) {
+                return {
+                    session: null,
+                    error: null,
+                    flowType,
+                    handled: false
+                };
+            }
+
+            if (callbackParams.code && typeof browserClient.auth.exchangeCodeForSession === 'function') {
+                const { data, error } = await browserClient.auth.exchangeCodeForSession(callbackParams.code);
+                return {
+                    session: data?.session || null,
+                    error: error || null,
+                    flowType,
+                    handled: true
+                };
+            }
+
+            if (callbackParams.accessToken && callbackParams.refreshToken && typeof browserClient.auth.setSession === 'function') {
+                const { data, error } = await browserClient.auth.setSession({
+                    access_token: callbackParams.accessToken,
+                    refresh_token: callbackParams.refreshToken
+                });
+
+                return {
+                    session: data?.session || null,
+                    error: error || null,
+                    flowType,
+                    handled: true
+                };
+            }
+
+            const { data, error } = await browserClient.auth.getSession();
+            return {
+                session: data?.session || null,
+                error: error || null,
+                flowType,
+                handled: true
+            };
+        };
 
         const clearSupabaseAuthRedirectState = () => {
             if (typeof window === 'undefined' || typeof window.history?.replaceState !== 'function') {
@@ -9277,12 +9368,31 @@
                         }
 
                         const initialRecoveryFlow = isPasswordRecoveryFlow();
-                        const { session, error } = await getCurrentSession();
+                        const callbackSessionResult = await establishSupabaseSessionFromAuthCallback(browserClient);
+                        let sessionResult = null;
+
+                        if (callbackSessionResult.handled && callbackSessionResult.error) {
+                            sessionResult = {
+                                session: callbackSessionResult.session,
+                                error: callbackSessionResult.error
+                            };
+                        } else if (callbackSessionResult.handled && callbackSessionResult.session) {
+                            sessionResult = {
+                                session: callbackSessionResult.session,
+                                error: null
+                            };
+                        } else {
+                            sessionResult = await getCurrentSession();
+                        }
+
+                        const session = sessionResult.session;
+                        const error = sessionResult.error;
+
                         if (error) {
                             setAuth(false);
                             setAuthUserId(null);
                             setAuthError("Impossible de vérifier votre session pour le moment.");
-                        } else if (initialRecoveryFlow && session?.user) {
+                        } else if ((callbackSessionResult.flowType === 'recovery' || initialRecoveryFlow) && session?.user) {
                             activateRecoveryState(session, 'recovery');
                         } else {
                             await applySession(session);

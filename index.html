@@ -1019,6 +1019,10 @@
                 }
 
                 if (!response.ok) {
+                    newDiagnosticWarnSupabaseSchemaMismatch(
+                        tableName,
+                        `Erreur Supabase ${tableName}: ${response.status}${responseText ? ` ${responseText}` : ''}`
+                    );
                     return {
                         ok: false,
                         status: response.status,
@@ -2049,6 +2053,10 @@
                 const storedReport = newDiagnosticReadStoredReportPayload();
                 if (storedReport && storedReport.source === NEW_DIAGNOSTIC_PUBLIC_EXAMPLE_SOURCE) {
                     return storedReport;
+                }
+
+                if (newDiagnosticIsFlatExampleReportPayload(storedReport)) {
+                    return newDiagnosticBuildExampleReportPayload(storedReport);
                 }
 
                 try {
@@ -5275,8 +5283,8 @@
             return publicTunnelConvertEnergyToKwh(energy, formData);
             const isElec = energy === 'elec';
             const priceDefault = isElec
-                ? NEW_DIAGNOSTIC_ENERGY_PRICES.electricity.price_default_eur_kwh
-                : NEW_DIAGNOSTIC_ENERGY_PRICES.gas.price_default_eur_kwh;
+                ? PUBLIC_ENERGY_PRICE_CONFIG.electricity.price_default_eur_kwh
+                : PUBLIC_ENERGY_PRICE_CONFIG.gas.price_default_eur_kwh;
 
             const kwh = formData[`${energy}Kwh`];
             const euro = formData[`${energy}Euro`];
@@ -5728,11 +5736,11 @@
 
             // Calcul du prix moyen pondéré (avgPrice) — T03: use energy-specific fallback if only kWh
             let calculatedAvgPrice = 0.20; // Prix moyen par défaut (mix)
-            const elecPrice = NEW_DIAGNOSTIC_ENERGY_PRICES.electricity.price_default_eur_kwh;
-            const gasPrice = NEW_DIAGNOSTIC_ENERGY_PRICES.gas.price_default_eur_kwh;
-            const heatNetworkPrice = NEW_DIAGNOSTIC_ENERGY_PRICES.heat_network.price_default_eur_kwh;
-            const fuelOilPrice = NEW_DIAGNOSTIC_ENERGY_PRICES.fuel_oil.price_default_eur_kwh;
-            const woodPrice = NEW_DIAGNOSTIC_ENERGY_PRICES.wood_pellets.price_default_eur_kwh;
+            const elecPrice = PUBLIC_ENERGY_PRICE_CONFIG.electricity.price_default_eur_kwh;
+            const gasPrice = PUBLIC_ENERGY_PRICE_CONFIG.gas.price_default_eur_kwh;
+            const heatNetworkPrice = PUBLIC_ENERGY_PRICE_CONFIG.heat_network.price_default_eur_kwh;
+            const fuelOilPrice = PUBLIC_ENERGY_PRICE_CONFIG.fuel_oil.price_default_eur_kwh;
+            const woodPrice = PUBLIC_ENERGY_PRICE_CONFIG.wood_pellets.price_default_eur_kwh;
             const activityLabel = newDiagnosticGetActivityLabel(activity, {
                 mixedUsage1: formData.mixedUsage1,
                 mixedUsage2: formData.mixedUsage2
@@ -6248,8 +6256,8 @@
         } = window.Recharts;
 
         function newDiagnosticBuildProjectionData({ annualSavingsEuro, totalCostEuroAn, elecKwh = 0, gasKwh = 0, actions = [] }) {
-            const elecEur = elecKwh * NEW_DIAGNOSTIC_ENERGY_PRICES.electricity.price_default_eur_kwh;
-            const gazEur = gasKwh * NEW_DIAGNOSTIC_ENERGY_PRICES.gas.price_default_eur_kwh;
+            const elecEur = elecKwh * PUBLIC_ENERGY_PRICE_CONFIG.electricity.price_default_eur_kwh;
+            const gazEur = gasKwh * PUBLIC_ENERGY_PRICE_CONFIG.gas.price_default_eur_kwh;
             const totalBase = Math.max(elecEur + gazEur, 1);
             const partElec = elecEur / totalBase;
             const partGaz = gazEur / totalBase;
@@ -6647,6 +6655,145 @@
             }
         });
 
+        const PUBLIC_ENERGY_PRICE_CONFIG = Object.freeze({
+            electricity: { ...NEW_DIAGNOSTIC_ENERGY_PRICES.electricity },
+            gas: {
+                ...NEW_DIAGNOSTIC_ENERGY_PRICES.gas,
+                source_ref: 'CRE - Prix de référence professionnels T3 2024',
+                source_note: 'Ordre de grandeur TTC retenu : 0,105 €/kWh TTC — source CRE'
+            },
+            heat_network: { ...NEW_DIAGNOSTIC_ENERGY_PRICES.heat_network },
+            fuel_oil: { ...NEW_DIAGNOSTIC_ENERGY_PRICES.fuel_oil },
+            wood_pellets: { ...NEW_DIAGNOSTIC_ENERGY_PRICES.wood_pellets }
+        });
+
+        const PUBLIC_LEGAL_MODAL_CONTENT = Object.freeze({
+            mentions: {
+                title: 'Mentions légales',
+                sections: [
+                    {
+                        heading: 'Éditeur',
+                        body: '[Nom de la société] — [Adresse] — [Email contact]'
+                    },
+                    {
+                        heading: 'Hébergeur',
+                        body: 'Vercel Inc. — 340 Pine Street Suite 701, San Francisco, CA 94104'
+                    },
+                    {
+                        heading: 'Directeur de publication',
+                        body: '[Prénom Nom]'
+                    }
+                ]
+            },
+            privacy: {
+                title: 'Politique de confidentialité',
+                sections: [
+                    {
+                        heading: 'Finalité de la collecte',
+                        body: 'Pré-diagnostic énergétique et mise en relation avec des professionnels partenaires (si consentement)'
+                    },
+                    {
+                        heading: 'Durée de conservation',
+                        body: '18 mois'
+                    },
+                    {
+                        heading: 'Catégories de partenaires',
+                        body: "Bureaux d'études énergie, installateurs RGE, agents immobiliers"
+                    },
+                    {
+                        heading: 'Droits',
+                        body: 'Accès, rectification, suppression via contact@diag-tertiaire.fr'
+                    },
+                    {
+                        heading: 'Responsable de traitement',
+                        body: '[Nom société]'
+                    },
+                    {
+                        heading: 'Effacer mes données',
+                        body: 'Supprime les clés localStorage newDiagnosticLatestSubmission et newDiagnosticLatestReport.',
+                        actionLabel: 'Effacer mes données'
+                    }
+                ]
+            }
+        });
+
+        const PUBLIC_EXAMPLE_REPORT_STORAGE_PAYLOAD = Object.freeze({
+            nomBatiment: 'Boutique Rivoli Sélection',
+            activite: 'commerce_non_alim',
+            surface: 160,
+            ville: 'Paris 75001',
+            anneeConstruction: '1975-2000',
+            energiePrincipale: 'electricite',
+            elecKwh: 51200,
+            elecEuro: 11500,
+            scoreLettre: 'D',
+            scoreRatio: 1.40,
+            intensiteCalculee: 320,
+            medianeRef: 320,
+            economiesTotalesAnnuelles: 3200,
+            economiesTotales10ans: 32000,
+            scoreConfiance: 'Moyen'
+        });
+
+        const PUBLIC_EXAMPLE_CONFIDENCE_LEVELS = Object.freeze({
+            elevee: 'strong',
+            élevée: 'strong',
+            moyen: 'medium',
+            moyenne: 'medium',
+            faible: 'low'
+        });
+
+        const newDiagnosticWarnSupabaseSchemaMismatch = (tableName, errorMessage) => {
+            const message = String(errorMessage || '').trim();
+            if (!message || !/(column|schema cache|PGRST20\d|Could not find the '.*' column|record .* has no field)/i.test(message)) {
+                return;
+            }
+
+            if (tableName === 'leads') {
+                console.warn(
+                    'Schema Supabase leads à vérifier avant go live : prenom, societe, objectif, horizon_decision, opt_in_politique, opt_in_partenaire.',
+                    message
+                );
+                return;
+            }
+
+            console.warn(`Schema Supabase à vérifier sur ${tableName}.`, message);
+        };
+
+        function newDiagnosticClearStoredReportData() {
+            const storage = newDiagnosticGetStorage('local');
+            if (!storage) {
+                return false;
+            }
+
+            ['newDiagnosticLatestSubmission', 'newDiagnosticLatestReport'].forEach((key) => {
+                try {
+                    storage.removeItem(key);
+                } catch (error) { }
+            });
+
+            return true;
+        }
+
+        function newDiagnosticGetExampleConfidenceLevel(label) {
+            const normalizedLabel = typeof label === 'string'
+                ? label.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                : '';
+
+            return PUBLIC_EXAMPLE_CONFIDENCE_LEVELS[normalizedLabel] || 'medium';
+        }
+
+        function newDiagnosticIsFlatExampleReportPayload(reportPayload) {
+            return !!(
+                reportPayload
+                && typeof reportPayload === 'object'
+                && !reportPayload.inputs_summary
+                && typeof reportPayload.nomBatiment === 'string'
+                && typeof reportPayload.activite === 'string'
+                && Object.prototype.hasOwnProperty.call(reportPayload, 'scoreLettre')
+            );
+        }
+
         function newDiagnosticSafeJsonParse(rawValue, fallback = null) {
             if (typeof rawValue !== 'string' || !rawValue.trim()) {
                 return fallback;
@@ -6744,6 +6891,44 @@
             return activity === 'sante' || activity === 'health_local' ? NEW_DIAGNOSTIC_HEALTH_NOTICE : '';
         }
 
+        function newDiagnosticGetReportRawSurfaceValue(reportPayload) {
+            const inputs = reportPayload && reportPayload.inputs_summary ? reportPayload.inputs_summary : {};
+            const rawSurface = [
+                inputs.surface && typeof inputs.surface === 'object' ? inputs.surface.value : inputs.surface,
+                reportPayload && reportPayload.surface
+            ].find((value) => value !== null && value !== undefined && String(value).trim() !== '');
+
+            const parsedSurface = Number(rawSurface);
+            return Number.isFinite(parsedSurface) && parsedSurface > 0 ? parsedSurface : null;
+        }
+
+        function newDiagnosticGetReportSurfaceLabel(reportPayload) {
+            const surfaceValue = newDiagnosticGetReportRawSurfaceValue(reportPayload);
+            return surfaceValue !== null ? `${newDiagnosticFormatInteger(surfaceValue)} m²` : '— m²';
+        }
+
+        function newDiagnosticGetCurrentReportSectorLabel(reportPayload, intensityValue, medianValue) {
+            const explicitLabel = typeof (reportPayload && reportPayload.scoreLettre) === 'string'
+                ? reportPayload.scoreLettre.trim().toUpperCase()
+                : '';
+            const explicitConfig = explicitLabel ? NEW_DIAGNOSTIC_SECTOR_LABEL_CONFIG[explicitLabel] : null;
+
+            if (!explicitConfig) {
+                return newDiagnosticComputeSectorLabel(intensityValue, medianValue);
+            }
+
+            const fallback = newDiagnosticComputeSectorLabel(intensityValue, medianValue);
+            const explicitRatio = Number(reportPayload && reportPayload.scoreRatio);
+
+            return {
+                label: explicitLabel,
+                positioning: explicitConfig.positioning,
+                ratio: Number.isFinite(explicitRatio) && explicitRatio > 0 ? Math.round(explicitRatio * 100) / 100 : fallback.ratio,
+                color: explicitConfig.color,
+                bg: explicitConfig.bg
+            };
+        }
+
         function newDiagnosticReadStoredReportPayload() {
             if (typeof window === 'undefined' || !window.localStorage) {
                 return null;
@@ -6775,27 +6960,43 @@
             });
         }
 
-        function newDiagnosticBuildExampleReportPayload() {
+        function newDiagnosticBuildExampleReportPayload(exampleSeed = PUBLIC_EXAMPLE_REPORT_STORAGE_PAYLOAD) {
+            const safeExample = newDiagnosticIsFlatExampleReportPayload(exampleSeed)
+                ? { ...PUBLIC_EXAMPLE_REPORT_STORAGE_PAYLOAD, ...exampleSeed }
+                : { ...PUBLIC_EXAMPLE_REPORT_STORAGE_PAYLOAD };
+            const safeSurface = Number(safeExample.surface);
+            const safeElecKwh = Number(safeExample.elecKwh) || 0;
+            const safeElecEuro = Number(safeExample.elecEuro) || 0;
+            const safeAnnualSavingsEuro = Number(safeExample.economiesTotalesAnnuelles) || 0;
+            const safeScoreRatio = Number(safeExample.scoreRatio);
+            const safeIntensity = Number(safeExample.intensiteCalculee);
+            const safeMedian = Number(safeExample.medianeRef);
+            const defaultPrice = PUBLIC_ENERGY_PRICE_CONFIG.electricity.price_default_eur_kwh;
+            const avgPrice = safeElecKwh > 0 && safeElecEuro > 0 ? safeElecEuro / safeElecKwh : defaultPrice;
+            const annualSavingsKwh = safeAnnualSavingsEuro > 0 ? Math.round(safeAnnualSavingsEuro / Math.max(avgPrice, 0.01)) : 0;
+            const confidenceLabel = typeof safeExample.scoreConfiance === 'string' && safeExample.scoreConfiance.trim()
+                ? safeExample.scoreConfiance.trim()
+                : 'Moyen';
             const exampleFormData = {
                 ...publicTunnelCreateInitialFormData(),
-                address: 'Rue de Rivoli, Paris 75001',
+                address: `Rue de Rivoli, ${safeExample.ville || 'Paris 75001'}`,
                 email: 'demo@diag-tertiaire.fr',
                 firstName: 'Demo',
                 companyName: 'DiagTertiaire Demo',
                 role: 'owner',
-                siteName: 'Boutique Rivoli Sélection',
-                postalCode: '75001',
+                siteName: safeExample.nomBatiment || 'Bâtiment diagnostiqué',
+                postalCode: /\b\d{5}\b/.test(safeExample.ville || '') ? (safeExample.ville.match(/\b\d{5}\b/) || ['75001'])[0] : '75001',
                 activityCategory: 'commerce',
-                activity: 'commerce_non_alim',
-                surface: '160',
+                activity: safeExample.activite || 'commerce_non_alim',
+                surface: Number.isFinite(safeSurface) && safeSurface > 0 ? String(safeSurface) : '',
                 levels: '1',
-                mainHeating: 'electric',
+                mainHeating: safeExample.energiePrincipale === 'gaz' ? 'gas' : 'electric',
                 hasCooling: false,
                 usageIntensity: 'standard',
-                constructionPeriod: 'y2001_2012',
+                constructionPeriod: safeExample.anneeConstruction === '1975-2000' ? 'y1975_2000' : 'y2001_2012',
                 elecUsed: true,
-                elecKwh: '51200',
-                elecEuro: '11500',
+                elecKwh: safeElecKwh > 0 ? String(safeElecKwh) : '',
+                elecEuro: safeElecEuro > 0 ? String(safeElecEuro) : '',
                 gasUsed: false,
                 optInPolitique: true,
                 worksDone: []
@@ -6806,19 +7007,58 @@
                 ...reportPayload,
                 source: NEW_DIAGNOSTIC_PUBLIC_EXAMPLE_SOURCE,
                 generated_at: new Date().toISOString(),
+                nomBatiment: safeExample.nomBatiment || 'Bâtiment diagnostiqué',
+                activite: safeExample.activite || 'commerce_non_alim',
+                surface: Number.isFinite(safeSurface) && safeSurface > 0 ? safeSurface : null,
+                ville: safeExample.ville || 'Paris 75001',
+                anneeConstruction: safeExample.anneeConstruction || null,
+                energiePrincipale: safeExample.energiePrincipale || 'electricite',
+                elecKwh: safeElecKwh,
+                elecEuro: safeElecEuro,
+                scoreLettre: safeExample.scoreLettre || null,
+                scoreRatio: Number.isFinite(safeScoreRatio) ? safeScoreRatio : null,
+                intensiteCalculee: Number.isFinite(safeIntensity) ? safeIntensity : reportPayload.benchmark_result.site_intensity.value,
+                medianeRef: Number.isFinite(safeMedian) ? safeMedian : reportPayload.benchmark_result.benchmark_median.value,
+                economiesTotalesAnnuelles: safeAnnualSavingsEuro,
+                economiesTotales10ans: Number(safeExample.economiesTotales10ans) || safeAnnualSavingsEuro * 10,
+                scoreConfiance: confidenceLabel,
                 inputs_summary: {
                     ...reportPayload.inputs_summary,
-                    site_name: 'Boutique Rivoli Sélection',
-                    activity: 'commerce_non_alim',
-                    activity_label: newDiagnosticGetActivityLabel('commerce_non_alim'),
-                    surface: { value: 160, unit: 'm²' },
-                    city: 'Paris 75001'
+                    site_name: safeExample.nomBatiment || 'Bâtiment diagnostiqué',
+                    activity: safeExample.activite || 'commerce_non_alim',
+                    activity_label: newDiagnosticGetActivityLabel(safeExample.activite || 'commerce_non_alim'),
+                    surface: { value: Number.isFinite(safeSurface) && safeSurface > 0 ? safeSurface : null, unit: 'm²' },
+                    city: safeExample.ville || 'Paris 75001',
+                    construction_period: safeExample.anneeConstruction || reportPayload.inputs_summary.construction_period
+                },
+                calculation_results: {
+                    ...reportPayload.calculation_results,
+                    elec_kwh_an: { ...reportPayload.calculation_results.elec_kwh_an, value: safeElecKwh },
+                    gas_kwh_an: { ...reportPayload.calculation_results.gas_kwh_an, value: 0 },
+                    total_kwh_an: { ...reportPayload.calculation_results.total_kwh_an, value: safeElecKwh },
+                    intensity_kwh_m2_an: { ...reportPayload.calculation_results.intensity_kwh_m2_an, value: Number.isFinite(safeIntensity) ? safeIntensity : reportPayload.calculation_results.intensity_kwh_m2_an.value },
+                    total_cost_euro_an: { ...reportPayload.calculation_results.total_cost_euro_an, value: safeElecEuro, price_avg: avgPrice }
+                },
+                benchmark_result: {
+                    ...reportPayload.benchmark_result,
+                    site_intensity: { ...reportPayload.benchmark_result.site_intensity, value: Number.isFinite(safeIntensity) ? safeIntensity : reportPayload.benchmark_result.site_intensity.value },
+                    benchmark_median: { ...reportPayload.benchmark_result.benchmark_median, value: Number.isFinite(safeMedian) ? safeMedian : reportPayload.benchmark_result.benchmark_median.value }
+                },
+                composite_savings: {
+                    ...reportPayload.composite_savings,
+                    annual_kwh: { ...reportPayload.composite_savings.annual_kwh, value: annualSavingsKwh },
+                    annual_euro: { ...reportPayload.composite_savings.annual_euro, value: safeAnnualSavingsEuro }
+                },
+                confidence: {
+                    ...reportPayload.confidence,
+                    level: newDiagnosticGetExampleConfidenceLevel(confidenceLabel),
+                    label: confidenceLabel
                 }
             };
         }
 
         function newDiagnosticWriteExampleReportToStorage() {
-            const payload = newDiagnosticBuildExampleReportPayload();
+            const payload = { ...PUBLIC_EXAMPLE_REPORT_STORAGE_PAYLOAD };
             try {
                 window.localStorage.setItem('newDiagnosticLatestReport', JSON.stringify(payload));
             } catch (error) {
@@ -6827,10 +7067,10 @@
             return payload;
         }
 
-        const NewDiagnosticLegalModal = ({ modalKey, onClose }) => {
+        const NewDiagnosticLegalModal = ({ modalKey, onClose, onClearStoredReportData }) => {
             if (!modalKey) return null;
 
-            const content = NEW_DIAGNOSTIC_LEGAL_MODAL_CONTENT[modalKey];
+            const content = PUBLIC_LEGAL_MODAL_CONTENT[modalKey] || NEW_DIAGNOSTIC_LEGAL_MODAL_CONTENT[modalKey];
             if (!content) return null;
 
             return (
@@ -6854,6 +7094,15 @@
                                     <div key={section.heading} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
                                         <p className="text-sm font-bold text-slate-900 mb-2">{section.heading}</p>
                                         <p className="text-sm text-slate-600 leading-relaxed">{section.body}</p>
+                                        {section.actionLabel && typeof onClearStoredReportData === 'function' && (
+                                            <button
+                                                type="button"
+                                                onClick={onClearStoredReportData}
+                                                className="mt-4 inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:border-slate-400 hover:text-slate-900 transition-colors"
+                                            >
+                                                {section.actionLabel}
+                                            </button>
+                                        )}
                                     </div>
                                 ))}
                             </div>
@@ -7171,10 +7420,13 @@
             const confidence = reportPayload.confidence;
             const inputRole = reportPayload.inputs_summary.role || reportPayload.inputs_summary.decision_role || '';
             const role = inputRole === 'tenant' || inputRole === 'owner' ? inputRole : reportPayload.inputs_summary.role;
-            const surfaceValue = Math.max(1, (reportPayload.inputs_summary.surface && reportPayload.inputs_summary.surface.value) || 1);
+            const reportSurfaceValue = newDiagnosticGetReportRawSurfaceValue(reportPayload);
+            const surfaceValue = reportSurfaceValue || 1;
+            const surfaceLabel = newDiagnosticGetReportSurfaceLabel(reportPayload);
             const targetIntensity = Math.max(0, benchmark.site_intensity.value - (composite.annual_kwh.value / surfaceValue));
 
-            const diagIndex = newDiagnosticComputeSectorLabel(
+            const diagIndex = newDiagnosticGetCurrentReportSectorLabel(
+                reportPayload,
                 benchmark.site_intensity.value,
                 benchmark.benchmark_median.value
             );
@@ -7424,7 +7676,7 @@
                                                 {[
                                                     { label: 'Bâtiment', value: siteNameLabel },
                                                     { label: 'Activité', value: activityLabel },
-                                                    { label: 'Surface', value: `${newDiagnosticFormatInteger(surfaceValue)} m²` },
+                                                    { label: 'Surface', value: surfaceLabel },
                                                     { label: 'Ville', value: cityLabel },
                                                     { label: 'Diagnostic', value: reportDateLabel }
                                                 ].map((item) => (
@@ -7879,12 +8131,14 @@
             const actions = (reportPayload.top_actions || []).slice(0, 3);
             const confidence = reportPayload.confidence || {};
             const inputs = reportPayload.inputs_summary || {};
-            const surfaceValue = Math.max(1, (inputs.surface && inputs.surface.value) || 1);
+            const reportSurfaceValue = newDiagnosticGetReportRawSurfaceValue(reportPayload);
+            const surfaceValue = reportSurfaceValue || 1;
+            const surfaceLabel = newDiagnosticGetReportSurfaceLabel(reportPayload);
             const targetIntensity = Math.max(0, (benchmark.site_intensity && benchmark.site_intensity.value ? benchmark.site_intensity.value : 0) - ((composite.annual_kwh && composite.annual_kwh.value ? composite.annual_kwh.value : 0) / surfaceValue));
             const siteNameLabel = newDiagnosticGetReportSiteName(reportPayload);
             const activityLabel = newDiagnosticGetReportActivityLabel(reportPayload);
             const cityLabel = newDiagnosticGetReportCityLabel(reportPayload);
-            const currentLabel = newDiagnosticComputeSectorLabel(benchmark.site_intensity.value, benchmark.benchmark_median.value);
+            const currentLabel = newDiagnosticGetCurrentReportSectorLabel(reportPayload, benchmark.site_intensity.value, benchmark.benchmark_median.value);
             const targetLabel = newDiagnosticComputeSectorLabel(targetIntensity, benchmark.benchmark_median.value);
             const decisionReadout = newDiagnosticBuildDecisionReadout(reportPayload);
             const budgetProgram = newDiagnosticBuildProgramBudget(actions, composite.annual_euro.value);
@@ -7972,7 +8226,7 @@
                 <div>
                     <div class="eyebrow">Rapport telechargeable autonome</div>
                     <h1>${newDiagnosticEscapeHtml(siteNameLabel)}</h1>
-                    <p>${newDiagnosticEscapeHtml(activityLabel)} · ${newDiagnosticEscapeHtml(newDiagnosticFormatUnitValue(surfaceValue, 'm²'))} · ${newDiagnosticEscapeHtml(cityLabel)} · ${newDiagnosticEscapeHtml(reportDate)}</p>
+                    <p>${newDiagnosticEscapeHtml(activityLabel)} · ${newDiagnosticEscapeHtml(surfaceLabel)} · ${newDiagnosticEscapeHtml(cityLabel)} · ${newDiagnosticEscapeHtml(reportDate)}</p>
                 </div>
                 <div class="brand">${logo && logo.dataUrl ? `<img src="${logo.dataUrl}" alt="${newDiagnosticEscapeHtml(NEW_DIAGNOSTIC_BRAND.name)}">` : ''}</div>
             </div>
@@ -8694,11 +8948,13 @@
             const pdfComposite = reportPayload.composite_savings;
             const pdfActions = (reportPayload.top_actions || []).slice(0, 3);
             const pdfCalc = reportPayload.calculation_results;
-            const pdfSurface = Math.max(1, (reportPayload.inputs_summary.surface && reportPayload.inputs_summary.surface.value) || 1);
+            const pdfDisplaySurface = newDiagnosticGetReportRawSurfaceValue(reportPayload);
+            const pdfSurface = pdfDisplaySurface || 1;
+            const pdfSurfaceLabel = newDiagnosticGetReportSurfaceLabel(reportPayload);
             const pdfSiteName = newDiagnosticGetReportSiteName(reportPayload);
             const pdfActivityLabel = newDiagnosticGetReportActivityLabel(reportPayload);
             const pdfTargetIntensity = Math.max(0, pdfBenchmark.site_intensity.value - ((pdfComposite.annual_kwh && pdfComposite.annual_kwh.value ? pdfComposite.annual_kwh.value : 0) / pdfSurface));
-            const pdfCurrentLabel = newDiagnosticComputeSectorLabel(pdfBenchmark.site_intensity.value, pdfBenchmark.benchmark_median.value);
+            const pdfCurrentLabel = newDiagnosticGetCurrentReportSectorLabel(reportPayload, pdfBenchmark.site_intensity.value, pdfBenchmark.benchmark_median.value);
             const pdfTargetLabel = newDiagnosticComputeSectorLabel(pdfTargetIntensity, pdfBenchmark.benchmark_median.value);
             const pdfBudgetProgramSimple = newDiagnosticBuildProgramBudget(pdfActions, pdfComposite.annual_euro.value);
             const pdfDecisionReadoutSimple = newDiagnosticBuildDecisionReadout(reportPayload);
@@ -8727,7 +8983,7 @@
             y += 2;
             addText(`Site : ${pdfSiteName}`, margin, { fontSize: 11, bold: true });
             if (reportPayload.inputs_summary.address) addText(`Adresse : ${reportPayload.inputs_summary.address}`, margin, { fontSize: 9 });
-            addText(`Activité : ${pdfActivityLabel} - Surface : ${pdfSurfaceValue(pdfSurface)}`, margin, { fontSize: 9 });
+            addText(`Activité : ${pdfActivityLabel} - Surface : ${pdfSurfaceLabel}`, margin, { fontSize: 9 });
             addText(`Confiance : ${reportPayload.confidence?.label || 'Moyen'} - Date : ${new Date(reportPayload.generated_at).toLocaleDateString('fr-FR')}`, margin, { fontSize: 9 });
             y += 2;
             addText(`Indice actuel : ${pdfCurrentLabel.label} (${pdfCurrentLabel.positioning}) - ${pdfIntensity(pdfBenchmark.site_intensity.value)}`, margin, { fontSize: 10, bold: true });
@@ -9135,6 +9391,12 @@
                 window.alert('Les données personnelles enregistrées dans ce navigateur ont été effacées.');
             };
 
+            const handleClearStoredReportData = () => {
+                newDiagnosticClearStoredReportData();
+                setLegalModalKey('');
+                window.alert('Les clés localStorage du rapport ont été effacées sur ce navigateur.');
+            };
+
             const isLandingPage = currentPage === 'home';
             const headerPages = [
                 { page: 'exemple', label: 'Exemple de rapport' },
@@ -9308,7 +9570,7 @@
                             </div>
                         </footer>
                     )}
-                    <NewDiagnosticLegalModal modalKey={legalModalKey} onClose={() => setLegalModalKey('')} />
+                    <NewDiagnosticLegalModal modalKey={legalModalKey} onClose={() => setLegalModalKey('')} onClearStoredReportData={handleClearStoredReportData} />
                 </div>
             );
         };

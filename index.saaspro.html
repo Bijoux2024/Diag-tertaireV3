@@ -852,11 +852,15 @@
                 sections: [
                     {
                         heading: 'Éditeur',
-                        body: 'DiagTertiaire est un service de pré-diagnostic énergétique tertiaire. Contact de publication : contact@diag-tertiaire.fr.'
+                        body: '[Nom de la société] — [Adresse] — [Email contact]'
                     },
                     {
                         heading: 'Hébergement',
-                        body: 'Application hébergée sur Vercel Inc., plateforme de déploiement cloud utilisée pour la pré-production et la production.'
+                        body: 'Vercel Inc. — 340 Pine Street Suite 701, San Francisco, CA 94104'
+                    },
+                    {
+                        heading: 'Directeur de publication',
+                        body: '[Prénom Nom]'
                     }
                 ]
             },
@@ -865,19 +869,28 @@
                 sections: [
                     {
                         heading: 'Finalité de collecte',
-                        body: 'Les informations saisies sont utilisées pour produire une estimation indicative, générer les rapports et, lorsque vous en faites la demande, organiser une prise de contact commerciale.'
+                        body: 'Pré-diagnostic énergétique et mise en relation avec des professionnels partenaires (si consentement)'
                     },
                     {
                         heading: 'Durée de conservation',
-                        body: 'Les données de prospection sont conservées 18 mois maximum à compter du dernier échange utile, sauf obligation légale contraire.'
-                    },
-                    {
-                        heading: 'Vos droits',
-                        body: "Vous pouvez demander l'accès, la rectification ou l'effacement de vos données en écrivant à contact@diag-tertiaire.fr."
+                        body: '18 mois'
                     },
                     {
                         heading: 'Catégories de partenaires',
-                        body: "Selon le contexte, les échanges peuvent concerner des bureaux d'études, installateurs, experts énergie et partenaires d'accompagnement travaux."
+                        body: "Bureaux d'études énergie, installateurs RGE, agents immobiliers"
+                    },
+                    {
+                        heading: 'Droits',
+                        body: 'Accès, rectification, suppression via contact@diag-tertiaire.fr'
+                    },
+                    {
+                        heading: 'Responsable de traitement',
+                        body: '[Nom société]'
+                    },
+                    {
+                        heading: 'Effacer mes données',
+                        body: 'Supprime les clés localStorage newDiagnosticLatestSubmission et newDiagnosticLatestReport.',
+                        actionLabel: 'Effacer mes données'
                     }
                 ]
             }
@@ -3254,7 +3267,7 @@
         };
         const PRO_FORM_GENERIC_SUBMIT_ERROR = "Impossible d'envoyer votre demande pour le moment. Merci de réessayer dans quelques instants.";
 
-        const ProLegalModal = ({ modalKey, onClose }) => {
+        const ProLegalModal = ({ modalKey, onClose, onClearPersonalData }) => {
             const content = modalKey ? PRO_LEGAL_MODAL_CONTENT[modalKey] : null;
 
             React.useEffect(() => {
@@ -3303,6 +3316,15 @@
                                 <div key={section.heading} className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4">
                                     <h4 className="text-sm font-bold uppercase tracking-[0.12em] text-slate-500">{section.heading}</h4>
                                     <p className="text-sm text-slate-700 leading-7 mt-2">{section.body}</p>
+                                    {section.actionLabel && typeof onClearPersonalData === 'function' && (
+                                        <button
+                                            type="button"
+                                            onClick={onClearPersonalData}
+                                            className="mt-4 inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:border-slate-400 hover:text-slate-900 transition-colors"
+                                        >
+                                            {section.actionLabel}
+                                        </button>
+                                    )}
                                 </div>
                             ))}
                         </div>
@@ -7994,7 +8016,7 @@
                                     <Icon icon="solar:chart-2-bold" className="text-blue-600" /> Consommations énergétiques
                                 </h3>
                                 <p className="text-sm text-slate-500 -mt-2">Indiquez prioritairement les kWh. Si inconnus, les € permettent une estimation. Si rien n'est saisi, un ratio sectoriel sera utilisé.</p>
-                                <p className="text-sm text-slate-500 -mt-2">Les données sont traitées de manière sécurisée pour produire cette estimation indicative. Ne remplace pas un audit réglementaire complet.</p>
+                                <p className="text-sm text-slate-500 -mt-2">Vos données sont traitées de manière sécurisée pour produire cette estimation indicative. Ce diagnostic ne remplace pas un audit réglementaire complet.</p>
                                 <div className="bg-blue-50/40 border border-blue-100 rounded-xl p-5 space-y-3">
                                     <div className="flex items-center gap-2 font-bold text-blue-700 text-sm mb-1"><Icon icon="solar:bolt-bold" className="text-blue-600" /> Électricité</div>
                                     <div className="grid grid-cols-2 gap-3">
@@ -8874,7 +8896,7 @@
                         const loginError = authResult.error || "Impossible de vous connecter pour le moment.";
                         setSubmitError(
                             /email not confirmed/i.test(loginError)
-                                ? "Votre adresse email n'est pas encore validée. Vérifiez votre email de confirmation ou demandez un lien de connexion."
+                                ? "Impossible de vous connecter. Vérifiez vos identifiants ou utilisez le lien de connexion."
                                 : loginError
                         );
                     }
@@ -10433,7 +10455,7 @@
                             onOpenLegalModal={setLegalModalKey}
                             onClearPersonalData={handleClearPersonalData}
                         />
-                        <ProLegalModal modalKey={legalModalKey} onClose={() => setLegalModalKey('')} />
+                        <ProLegalModal modalKey={legalModalKey} onClose={() => setLegalModalKey('')} onClearPersonalData={handleClearPersonalData} />
                     </>
                 );
             }
@@ -10518,7 +10540,7 @@
                         onSkip={handleSkipOnboarding}
                     />
                     <DemoModal isOpen={isDemoModalOpen} onClose={closeDemoModal} />
-                    <ProLegalModal modalKey={legalModalKey} onClose={() => setLegalModalKey('')} />
+                    <ProLegalModal modalKey={legalModalKey} onClose={() => setLegalModalKey('')} onClearPersonalData={handleClearPersonalData} />
                 </div>
             );
         };

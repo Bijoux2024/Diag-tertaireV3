@@ -8835,10 +8835,8 @@
             authUserId = null,
             onboardingChecklist = null,
             showChecklistCompletionNotice = false,
-            exampleCasesCount = 0,
-            onReloadExampleCases = null,
-            isReloadingExampleCases = false,
-            exampleReloadMessage = ''
+            onRefreshChecklist = null,
+            isRefreshingChecklist = false
         }) => {
             const navs = [
                 { id: 'dashboard', label: 'Vue globale', icon: 'solar:pie-chart-2-bold' },
@@ -8903,8 +8901,21 @@
                                                     {onboardingChecklist?.completedCount || 0}/4 étapes
                                                 </div>
                                             </div>
-                                            <div className="text-[11px] font-semibold text-slate-500">
-                                                {(onboardingChecklist?.allDone ? 'Terminé' : 'En cours')}
+                                            <div className="flex flex-col items-end gap-2">
+                                                <div className="text-[11px] font-semibold text-slate-500">
+                                                    {(onboardingChecklist?.allDone ? 'Terminé' : 'En cours')}
+                                                </div>
+                                                {typeof onRefreshChecklist === 'function' && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={onRefreshChecklist}
+                                                        disabled={isRefreshingChecklist}
+                                                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-600 hover:text-blue-800 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+                                                    >
+                                                        <Icon icon={isRefreshingChecklist ? 'solar:refresh-circle-bold' : 'solar:refresh-linear'} className={isRefreshingChecklist ? 'animate-spin' : ''} />
+                                                        {isRefreshingChecklist ? 'Actualisation…' : 'Actualiser'}
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
                                         <div className="mt-4 space-y-2.5">
@@ -8921,30 +8932,6 @@
                                         </div>
                                     </div>
                                 )}
-                            </div>
-                        )}
-
-                        {exampleCasesCount === 0 && typeof onReloadExampleCases === 'function' && (
-                            <div className="px-4 pb-4">
-                                <div className="rounded-2xl border border-blue-200 bg-blue-50 px-4 py-4 shadow-sm">
-                                    <div className="text-[11px] font-black uppercase tracking-[0.14em] text-blue-600">Exemples</div>
-                                    <p className="text-xs leading-relaxed text-slate-700 mt-2">
-                                        Aucun dossier exemple n'est chargé dans votre organisation. Vous pouvez les recharger sans impacter vos dossiers clients.
-                                    </p>
-                                    <button
-                                        type="button"
-                                        onClick={onReloadExampleCases}
-                                        disabled={isReloadingExampleCases}
-                                        className="mt-4 inline-flex items-center justify-center rounded-xl border border-blue-300 bg-white px-4 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
-                                    >
-                                        {isReloadingExampleCases ? 'Rechargement…' : 'Recharger les dossiers exemples'}
-                                    </button>
-                                    {exampleReloadMessage && (
-                                        <p className="mt-3 text-[11px] leading-relaxed text-slate-600">
-                                            {exampleReloadMessage}
-                                        </p>
-                                    )}
-                                </div>
                             </div>
                         )}
 
@@ -9903,8 +9890,7 @@
             const [tourStep, setTourStep] = useState(0);
             const [tourActive, setTourActive] = useState(false);
             const [showChecklistCompletionNotice, setShowChecklistCompletionNotice] = useState(false);
-            const [isReloadingExampleCases, setIsReloadingExampleCases] = useState(false);
-            const [exampleReloadMessage, setExampleReloadMessage] = useState('');
+            const [isRefreshingChecklist, setIsRefreshingChecklist] = useState(false);
             const forceRecoveryFlowRef = useRef(false);
             const checklistCompletionPendingRef = useRef(false);
             const checklistCompletionTimeoutRef = useRef(null);
@@ -9925,10 +9911,6 @@
                 branding: workspace.branding,
                 userWorkspaceState: workspace.userWorkspaceState
             }), [workspace.cases, workspace.reports, workspace.settings, workspace.branding, workspace.userWorkspaceState]);
-            const exampleCasesCount = useMemo(
-                () => (Array.isArray(workspace.cases) ? workspace.cases : []).filter(item => item?.lifecycleStatus !== 'deleted' && item?.isExample).length,
-                [workspace.cases]
-            );
 
             // Detect shared report from URL hash
             useEffect(() => {
@@ -10297,8 +10279,7 @@
                     setTourActive(false);
                     setTourStep(0);
                     setShowChecklistCompletionNotice(false);
-                    setIsReloadingExampleCases(false);
-                    setExampleReloadMessage('');
+                    setIsRefreshingChecklist(false);
                     checklistCompletionPendingRef.current = false;
 
                     if (checklistCompletionTimeoutRef.current) {
@@ -10307,12 +10288,6 @@
                     }
                 }
             }, [authUserId]);
-
-            useEffect(() => {
-                if (exampleCasesCount > 0 && exampleReloadMessage) {
-                    setExampleReloadMessage('');
-                }
-            }, [exampleCasesCount, exampleReloadMessage]);
 
             useEffect(() => {
                 if (workspace.userWorkspaceState?.uiState?.onboarding_seen) {
@@ -10461,36 +10436,16 @@
                 return { cases, reports, userWorkspaceState };
             };
 
-            const handleReloadExampleCases = async () => {
+            const handleRefreshChecklist = async () => {
                 const { userId, organizationId } = requireWorkspaceContext();
-                setIsReloadingExampleCases(true);
-                setExampleReloadMessage('');
+                setIsRefreshingChecklist(true);
 
                 try {
-                    const browserClient = await getSupabaseBrowserClient();
-                    if (!browserClient) {
-                        throw new Error("Configuration Supabase indisponible.");
-                    }
-
-                    const seedResult = await browserClient.rpc('seed_example_cases', {
-                        target_organization_id: organizationId,
-                        actor_user_id: userId
-                    });
-
-                    if (seedResult?.error) {
-                        throw seedResult.error;
-                    }
-
                     await refreshWorkspaceCasesAndReports({ userId, organizationId });
                 } catch (error) {
-                    warnWorkspaceSchemaIssue("Le rechargement manuel des dossiers exemples a rencontré un problème de schéma.", error);
-                    setExampleReloadMessage(
-                        isWorkspaceSchemaIssue(error)
-                            ? "Le schéma Supabase n'est pas à jour. Appliquez la migration des exemples puis réessayez."
-                            : (error?.message || "Impossible de recharger les dossiers exemples pour le moment.")
-                    );
+                    warnWorkspaceSchemaIssue("L'actualisation manuelle de la checklist a rencontré un problème de schéma.", error);
                 } finally {
-                    setIsReloadingExampleCases(false);
+                    setIsRefreshingChecklist(false);
                 }
             };
 
@@ -10763,10 +10718,8 @@
                         authUserId={authUserId}
                         onboardingChecklist={onboardingChecklist}
                         showChecklistCompletionNotice={showChecklistCompletionNotice}
-                        exampleCasesCount={exampleCasesCount}
-                        onReloadExampleCases={handleReloadExampleCases}
-                        isReloadingExampleCases={isReloadingExampleCases}
-                        exampleReloadMessage={exampleReloadMessage}
+                        onRefreshChecklist={handleRefreshChecklist}
+                        isRefreshingChecklist={isRefreshingChecklist}
                     />
                     <div className="pro-content flex-1 max-w-full">
                         <ProTopbar title={currentTitle} toggleMobile={toggleMobile} />

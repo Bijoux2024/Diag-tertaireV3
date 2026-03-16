@@ -367,129 +367,151 @@
             box-shadow: 0 24px 60px rgba(15, 23, 42, 0.25);
         }
 
-        /* Diagnostic onboarding navigateur 2026-03-15 :
-           .driver-popover = z-index 1000000000 / pointer-events auto
-           .driver-popover-footer = z-index auto / pointer-events auto
-           .driver-popover-footer button = z-index auto / pointer-events auto
-           .pro-sidebar = z-index 50, topbar sticky = z-index 30
-           .modal-overlay = z-index 100, modale légale = z-index 120
-           Sonde directe sur .driver-overlay = z-index auto / position static / pointer-events auto
-           driver.css appliquait pointer-events:none sous .driver-active puis restaurait auto sur .driver-popover et ses descendants. */
-        .dt-tour-overlay {
+        /* ===== ONBOARDING NEW CSS ===== */
+        @keyframes ob-pulse-glow {
+            0% { box-shadow: 0 0 0 0px rgba(56, 189, 248, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(56, 189, 248, 0); }
+            100% { box-shadow: 0 0 0 0px rgba(56, 189, 248, 0); }
+        }
+
+        @keyframes ob-float {
+            0%   { transform: translateY(0px) scale(1); }
+            50%  { transform: translateY(-5px) scale(1.02); }
+            100% { transform: translateY(0px) scale(1); }
+        }
+
+        .ob-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.55);
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(3px);
             z-index: 9990;
             pointer-events: none;
+            transition: opacity 0.4s ease-in-out;
         }
 
-        .dt-tour-highlight {
-            position: relative;
-            z-index: 9995 !important;
-            box-shadow: 0 0 0 4px #1D4ED8, 0 0 0 8px rgba(29, 78, 216, 0.25) !important;
-            border-radius: 10px;
-            pointer-events: auto !important;
+        .ob-highlight-box {
+            position: fixed;
+            z-index: 9991;
+            box-shadow: 0 0 0 4px #0284c7, 0 0 0 9999px rgba(15, 23, 42, 0.6);
+            border-radius: 12px;
+            pointer-events: none;
+            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
         }
 
-        .dt-tour-popover-shell {
+        .ob-popover {
             position: fixed;
             z-index: 9999;
+            width: min(360px, calc(100vw - 32px));
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.25), 0 0 0 1px rgba(226, 232, 240, 0.5);
+            padding: 24px;
+            color: #0f172a;
             pointer-events: auto;
+            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            animation: ob-float 4s ease-in-out infinite;
         }
 
-        .dt-tour-popover {
-            width: min(340px, calc(100vw - 32px));
-            background: #FFFFFF;
-            border-radius: 16px;
-            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.18);
-            color: #0F172A;
-            overflow: hidden;
-            border: 1px solid #E2E8F0;
+        .ob-popover::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: #ffffff;
+            transform: rotate(45deg);
+            border: 1px solid rgba(226, 232, 240, 0.5);
+            /* Les bordures cachées par le z-index de la modale */
+            border-bottom: none;
+            border-right: none;
+            z-index: -1;
         }
 
-        .dt-tour-popover-header {
-            padding: 18px 20px 0;
-        }
+        /* Flèches directionnelles dynamiques */
+        .ob-popover.ob-arrow-bottom::after { bottom: -8px; left: 50%; margin-left: -8px; border: 1px solid rgba(226, 232, 240, 0.5); border-top: none; border-left: none; }
+        .ob-popover.ob-arrow-top::after    { top: -8px; left: 50%; margin-left: -8px; border: 1px solid rgba(226, 232, 240, 0.5); border-bottom: none; border-right: none;}
+        .ob-popover.ob-arrow-left::after   { left: -8px; top: 50%; margin-top: -8px; border: 1px solid rgba(226, 232, 240, 0.5); border-top: none; border-right: none;}
+        .ob-popover.ob-arrow-right::after  { right: -8px; top: 50%; margin-top: -8px; border: 1px solid rgba(226, 232, 240, 0.5); border-bottom: none; border-left: none;}
 
-        .dt-tour-popover-step {
-            color: #64748B;
-            font-size: 12px;
-            font-weight: 700;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-        }
-
-        .dt-tour-popover-title {
-            color: #0F172A;
-            font-size: 19px;
+        .ob-step-indicator {
+            color: #3b82f6;
+            font-size: 11px;
             font-weight: 800;
-            line-height: 1.25;
-            margin-top: 8px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            display: inline-block;
+            background: #eff6ff;
+            padding: 4px 10px;
+            border-radius: 20px;
         }
 
-        .dt-tour-popover-body {
+        .ob-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: #0f172a;
+            line-height: 1.3;
+            margin-bottom: 12px;
+            letter-spacing: -0.02em;
+        }
+
+        .ob-desc {
+            font-size: 14.5px;
             color: #475569;
-            font-size: 14px;
-            line-height: 1.7;
-            padding: 12px 20px 0;
+            line-height: 1.6;
+            margin-bottom: 24px;
         }
 
-        .dt-tour-popover-footer {
+        .ob-footer {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 12px;
-            padding: 18px 20px 20px;
+            margin-top: 8px;
+            border-top: 1px solid #f1f5f9;
+            padding-top: 20px;
         }
 
-        .dt-tour-popover-skip {
+        .ob-btn-skip {
             background: transparent;
             border: none;
-            color: #64748B;
-            cursor: pointer;
+            color: #94a3b8;
             font-size: 14px;
-            font-weight: 700;
-            padding: 0;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 8px;
+            transition: color 0.2s;
         }
+        .ob-btn-skip:hover { color: #64748b; }
 
-        .dt-tour-popover-skip:hover {
-            color: #334155;
-        }
-
-        .dt-tour-popover-next {
-            background: #1D4ED8;
-            border: 1px solid #1D4ED8;
+        .ob-btn-next {
+            background: #0ea5e9;
+            color: white;
+            border: none;
+            padding: 10px 20px;
             border-radius: 12px;
-            box-shadow: 0 12px 28px rgba(29, 78, 216, 0.24);
-            color: #FFFFFF;
-            cursor: pointer;
+            font-weight: 700;
             font-size: 14px;
-            font-weight: 800;
-            padding: 11px 18px;
-            transition: background 0.2s ease, transform 0.2s ease;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(14, 165, 233, 0.3);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .ob-btn-next:hover {
+            background: #0284c7;
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(14, 165, 233, 0.4);
         }
 
-        .dt-tour-popover-next:hover {
-            background: #1E40AF;
-            transform: translateY(-1px);
-        }
-
-        .dt-tour-progress-track {
-            background: #E2E8F0;
-            height: 5px;
-            width: 100%;
-        }
-
-        .dt-tour-progress-bar {
-            background: #1D4ED8;
-            height: 100%;
-            transition: width 0.2s ease;
-        }
-
-        @media (max-width: 640px) {
-            .dt-tour-popover-shell {
-                max-width: calc(100vw - 16px);
-            }
+        .ob-dot {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: #38bdf8;
+            border-radius: 50%;
+            z-index: 9992;
+            animation: ob-pulse-glow 2s infinite;
         }
 
         /* ===== CHATBOT ====== */
@@ -756,7 +778,7 @@
 <body>
     <div id="pro-root"></div>
     <script type="text/babel">
-        const { useState, useEffect, useRef, useMemo } = React;
+        const { useState, useEffect, useRef, useMemo, useCallback } = React;
 
         /* ===== CONFIG ===== */
 
@@ -826,168 +848,205 @@
             userWorkspaceState: DEFAULT_USER_WORKSPACE_STATE
         };
 
-        const ONBOARDING_TOUR_STEPS = Object.freeze([
-            {
-                targetId: 'ob-dashboard',
-                page: 'dashboard',
-                title: "Bienvenue dans votre espace Pro",
-                description: "Voici votre tableau de bord. Les indicateurs en haut résument votre activité : nombre de diagnostics, répartition des indices énergétiques et économies moyennes estimées pour vos clients."
-            },
-            {
-                targetId: 'ob-cases',
-                page: 'cases',
-                title: "Vos dossiers clients",
-                description: "Cliquez sur Dossiers clients dans le menu pour accéder à la liste complète. Chaque carte affiche le bâtiment, l'activité, la surface et l'indice DiagTertiaire. Cliquez sur un dossier pour voir le rapport."
-            },
-            {
-                targetId: 'ob-new-case',
-                page: 'dashboard',
-                title: "Créer un nouveau diagnostic",
-                description: "Le bouton Nouveau diagnostic lance le wizard en 5 étapes. Renseignez le bâtiment et les consommations : le rapport et les recommandations sont générés automatiquement à la fin."
-            },
-            {
-                targetId: 'ob-report',
-                page: 'cases',
-                title: "Rapport et PDF officiel",
-                description: "Dans chaque dossier, consultez le rapport détaillé et générez le PDF officiel à votre charte graphique. Le PDF est archivé et accessible à tout moment depuis le dossier."
-            },
-            {
-                targetId: 'ob-config',
-                page: 'settings',
-                title: "Personnalisez votre charte",
-                description: "Dans Configuration, ajoutez votre logo et choisissez votre couleur. Ces éléments s'appliquent automatiquement à tous vos rapports — vos clients voient votre identité, pas la nôtre."
-            },
-            {
-                targetId: null,
-                page: 'cases',
-                title: "Les dossiers exemples",
-                description: "Les dossiers préfixés EXEMPLE sont là pour vous guider. Explorez-les librement. Quand vous êtes prêt, supprimez-les : ouvrez le dossier, puis cliquez sur Supprimer le dossier."
-            },
-            {
-                targetId: null,
-                page: 'dashboard',
-                title: "Vous êtes prêt",
-                description: "Votre espace Pro est opérationnel. Créez votre premier vrai dossier client avec Nouveau diagnostic. Une question ? Écrivez-nous à contact@diag-tertiaire.fr — nous répondons sous 24h."
-            }
-        ]);
+// ====== NOUVEAU COMPOSANT ONBOARDING TOUR ======
+        const OnboardingTour = ({ isActive, currentStep, onNext, onClose, onComplete }) => {
+            const [popoverStyle, setPopoverStyle] = useState({});
+            const [highlightStyle, setHighlightStyle] = useState({});
+            const [arrowClass, setArrowClass] = useState('');
+            const [isVisible, setIsVisible] = useState(false);
 
-        const computePopoverPosition = (targetId) => {
-            const fallback = {
-                top: 'auto',
-                left: 'auto',
-                right: '32px',
-                bottom: '32px',
-                transform: 'none'
-            };
-
-            if (typeof window === 'undefined' || typeof document === 'undefined' || !targetId) {
-                return fallback;
-            }
-
-            const el = document.getElementById(targetId);
-            if (!el) {
-                return fallback;
-            }
-
-            const rect = el.getBoundingClientRect();
-            const popoverWidth = 340;
-            const popoverHeight = 220;
-            const margin = 12;
-            const left = Math.max(16, Math.min(rect.left, window.innerWidth - popoverWidth - 16));
-
-            if (rect.bottom + popoverHeight + margin < window.innerHeight) {
-                return {
-                    top: `${Math.max(16, rect.bottom + margin)}px`,
-                    left: `${left}px`,
-                    right: 'auto',
-                    bottom: 'auto',
-                    transform: 'none'
-                };
-            }
-
-            return {
-                top: `${Math.max(16, rect.top - popoverHeight - margin)}px`,
-                left: `${left}px`,
-                right: 'auto',
-                bottom: 'auto',
-                transform: 'none'
-            };
-        };
-
-        const computeTourOverlayStyle = (targetId) => {
-            if (typeof window === 'undefined' || typeof document === 'undefined' || !targetId) {
-                return null;
-            }
-
-            const el = document.getElementById(targetId);
-            if (!el) {
-                return null;
-            }
-
-            const rect = el.getBoundingClientRect();
-            const padding = 8;
-
-            return {
-                top: `${Math.max(rect.top - padding, 0)}px`,
-                left: `${Math.max(rect.left - padding, 0)}px`,
-                width: `${Math.min(rect.width + (padding * 2), window.innerWidth)}px`,
-                height: `${Math.min(rect.height + (padding * 2), window.innerHeight)}px`,
-                borderRadius: '12px',
-                background: 'transparent',
-                boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.55)'
-            };
-        };
-
-        const focusOnboardingTarget = (targetId, timeoutMs = 2000) => new Promise((resolve) => {
-            if (typeof document === 'undefined') {
-                resolve(null);
-                return;
-            }
-
-            const normalizedId = typeof targetId === 'string' ? targetId.trim() : '';
-            if (!normalizedId) {
-                resolve(null);
-                return;
-            }
-
-            const revealNode = (node) => {
-                if (!node) {
-                    resolve(null);
-                    return true;
+            // Using memo to avoid infinite renders if React isn't perfectly stable
+            const steps = useMemo(() => [
+                {
+                    id: 'ob-dashboard',
+                    title: "Bienvenue dans l'espace Pro",
+                    desc: "Voici votre tableau de bord. Suivez vos indicateurs de performance et pilotez l'ensemble de vos diagnostics depuis cette vue globale."
+                },
+                {
+                    id: 'ob-cases-link',
+                    title: "Vos dossiers clients",
+                    desc: "Accédez à tout moment à la liste complète de vos dossiers. Vous pouvez y rechercher un projet, filtrer par activité ou relancer un client."
+                },
+                {
+                    id: 'ob-new-case',
+                    title: "Créer un nouveau diagnostic",
+                    desc: "Démarrez un nouveau projet en 5 étapes simples. Le rapport et les recommandations se génèreront automatiquement à la fin du formulaire."
+                },
+                {
+                    id: 'ob-cases-list',
+                    title: "Suivi détaillé",
+                    desc: "Pour chaque dossier, consultez son score actuel, l'estimation des économies réalisables et accédez au rapport officiel en un clic."
+                },
+                {
+                    id: 'ob-config-link',
+                    title: "Personnalisez votre charte",
+                    desc: "Ajoutez votre logo et définissez votre couleur principale. Tous les rapports générés porteront l'identité visuelle de votre entreprise."
                 }
+            ], []);
 
-                if (typeof node.scrollIntoView === 'function') {
-                    node.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'center',
-                        inline: 'nearest'
+            const updatePosition = useCallback(() => {
+                const step = steps[currentStep];
+                if (!step) return;
+
+                const target = document.getElementById(step.id);
+                if (!target) {
+                    // Repli au centre si non trouvé (ex: mobile menu fermé)
+                    setHighlightStyle({ display: 'none' });
+                    setPopoverStyle({
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)'
                     });
-                }
-
-                resolve(node);
-                return true;
-            };
-
-            const existingNode = document.getElementById(normalizedId);
-            if (existingNode) {
-                revealNode(existingNode);
-                return;
-            }
-
-            const startedAt = Date.now();
-            const intervalId = window.setInterval(() => {
-                const nextNode = document.getElementById(normalizedId);
-                if (nextNode && revealNode(nextNode)) {
-                    window.clearInterval(intervalId);
+                    setArrowClass('');
                     return;
                 }
 
-                if (Date.now() - startedAt >= timeoutMs) {
-                    window.clearInterval(intervalId);
-                    resolve(null);
+                const rect = target.getBoundingClientRect();
+                
+                // --- Highlight Box ---
+                const padding = 6;
+                setHighlightStyle({
+                    top: `${rect.top - padding}px`,
+                    left: `${rect.left - padding}px`,
+                    width: `${rect.width + padding * 2}px`,
+                    height: `${rect.height + padding * 2}px`,
+                    display: 'block'
+                });
+
+                // --- Popover Position ---
+                const popoverWidth = 360; // max-width
+                const popoverHeight = 200; // approx
+                const gap = 16;
+                const viewWidth = window.innerWidth;
+                const viewHeight = window.innerHeight;
+
+                let top, left, arrow;
+
+                // Espace dispo
+                const spaceRight = viewWidth - rect.right;
+                const spaceBottom = viewHeight - rect.bottom;
+                const spaceLeft = rect.left;
+                const spaceTop = rect.top;
+
+                // Logique de placement (priorité : bas > droite > haut > gauche)
+                if (spaceBottom > popoverHeight + gap) {
+                    top = rect.bottom + gap;
+                    left = rect.left + (rect.width / 2) - (popoverWidth / 2);
+                    arrow = 'ob-arrow-top';
+                } else if (spaceRight > popoverWidth + gap) {
+                    top = rect.top + (rect.height / 2) - (popoverHeight / 2);
+                    left = rect.right + gap;
+                    arrow = 'ob-arrow-left';
+                } else if (spaceTop > popoverHeight + gap) {
+                    top = rect.top - popoverHeight - gap;
+                    left = rect.left + (rect.width / 2) - (popoverWidth / 2);
+                    arrow = 'ob-arrow-bottom';
+                } else if (spaceLeft > popoverWidth + gap) {
+                    top = rect.top + (rect.height / 2) - (popoverHeight / 2);
+                    left = rect.left - popoverWidth - gap;
+                    arrow = 'ob-arrow-right';
+                } else {
+                    top = viewHeight / 2 - popoverHeight / 2;
+                    left = viewWidth / 2 - popoverWidth / 2;
+                    arrow = '';
                 }
-            }, 80);
-        });
+
+                // Contraintes viewport
+                left = Math.max(16, Math.min(left, viewWidth - popoverWidth - 16));
+                top = Math.max(16, Math.min(top, viewHeight - popoverHeight - 16));
+
+                setPopoverStyle({ top: `${top}px`, left: `${left}px`, transform: 'none' });
+                setArrowClass(arrow);
+
+            }, [currentStep, steps]);
+
+            // Observer le changement de step pour mettre à jour la cible
+            useEffect(() => {
+                if (!isActive) {
+                    setIsVisible(false);
+                    return;
+                }
+
+                const step = steps[currentStep];
+                if (!step) return;
+
+                // On patiente un peu pour laisser le DOM se mettre à jour si la page change en JS
+                const timer = setTimeout(() => {
+                    updatePosition();
+                    setIsVisible(true);
+                }, 300);
+
+                // Repositionner au scroll et resize
+                window.addEventListener('scroll', updatePosition, true);
+                window.addEventListener('resize', updatePosition);
+
+                return () => {
+                    clearTimeout(timer);
+                    window.removeEventListener('scroll', updatePosition, true);
+                    window.removeEventListener('resize', updatePosition);
+                };
+            }, [currentStep, isActive, updatePosition]);
+
+            if (!isActive || !steps[currentStep]) return null;
+
+            const step = steps[currentStep];
+            const isLast = currentStep === steps.length - 1;
+
+            const handleNext = () => {
+                setIsVisible(false); // trigger fade-out
+                setTimeout(() => {
+                    if (currentStep < steps.length - 1) {
+                        onNext();
+                    } else {
+                        onComplete();
+                    }
+                }, 200); // Wait for transition
+            };
+
+            return (
+                <>
+                    {/* Voile assombrissant total avec classe dynamique */}
+                    <div className={`ob-overlay ${isVisible ? 'opacity-100' : 'opacity-0'}`} />
+
+                    {/* Boîte de focus mise en évidence */}
+                    <div 
+                        className={`ob-highlight-box ${isVisible ? 'opacity-100' : 'opacity-0'}`} 
+                        style={highlightStyle}
+                    >
+                        {/* Point pulsant optionnel au coin du focus */}
+                        {isVisible && (
+                            <div className="ob-dot" style={{ top: '-8px', right: '-8px' }} />
+                        )}
+                    </div>
+
+                    {/* Popover de contenu */}
+                    <div 
+                        className={`ob-popover ${arrowClass} ${isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`} 
+                        style={popoverStyle}
+                    >
+                        <div>
+                            <span className="ob-step-indicator">
+                                Étape {currentStep + 1}/{steps.length}
+                            </span>
+                            <h3 className="ob-title">{step.title}</h3>
+                            <p className="ob-desc">{step.description || step.desc}</p>
+                        </div>
+
+                        <div className="ob-footer">
+                            <button type="button" onClick={onClose} className="ob-btn-skip">Passer la visite</button>
+                            <button type="button" onClick={handleNext} className="ob-btn-next">
+                                {isLast ? (
+                                    <>Terminer <Icon icon="solar:check-circle-bold" /></>
+                                ) : (
+                                    <>Suivant <Icon icon="solar:alt-arrow-right-bold" /></>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </>
+            );
+        };
+        // ==========================================
 
         const PRO_ACTIVITY_LABELS = Object.freeze({
             bureau: 'Bureaux et services',
@@ -3548,17 +3607,13 @@
                             <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center mb-5">
                                 <Icon icon="solar:map-point-wave-bold" style={{ fontSize: '24px' }} />
                             </div>
-                            <h3 className="text-2xl font-black text-slate-900 tracking-tight">Découvrez votre espace Pro</h3>
+                            <h3 className="text-2xl font-black text-slate-900 tracking-tight">Bienvenue sur l'espace Pro</h3>
                             <p className="text-slate-600 mt-3 leading-7">
-                                Souhaitez-vous faire le tour du dashboard en 7 étapes ? (30 secondes)
+                                Souhaitez-vous faire le tour du dashboard pour découvrir ses fonctionnalités ? (30 secondes)
                             </p>
                             <div className="mt-8 flex flex-col sm:flex-row gap-3">
-                                <button type="button" onClick={onConfirm} className="pro-btn pro-btn-primary flex-1 justify-center py-3">
-                                    Oui, je découvre
-                                </button>
-                                <button type="button" onClick={onSkip} className="pro-btn pro-btn-secondary flex-1 justify-center py-3">
-                                    Passer
-                                </button>
+                                <button type="button" onClick={onConfirm} className="pro-btn pro-btn-primary flex-1 justify-center py-3">Oui, lancer la visite</button>
+                                <button type="button" onClick={onSkip} className="pro-btn pro-btn-secondary flex-1 justify-center py-3">Passer la visite</button>
                             </div>
                         </div>
                     </div>
@@ -3566,107 +3621,7 @@
             );
         };
 
-        const OnboardingTourPopover = ({ isOpen, stepIndex, steps, currentPage = '', onNext, onSkip }) => {
-            const step = steps[stepIndex] || null;
-            const [popoverPos, setPopoverPos] = useState(() => computePopoverPosition(step?.targetId || null));
-            const [overlayStyle, setOverlayStyle] = useState(null);
-            const highlightedElementRef = useRef(null);
 
-            useEffect(() => {
-                const clearHighlight = () => {
-                    if (highlightedElementRef.current) {
-                        highlightedElementRef.current.classList.remove('dt-tour-highlight');
-                        highlightedElementRef.current = null;
-                    }
-                };
-
-                if (!isOpen || !step) {
-                    clearHighlight();
-                    setOverlayStyle(null);
-                    setPopoverPos(computePopoverPosition(null));
-                    return undefined;
-                }
-
-                const syncHighlightState = () => {
-                    clearHighlight();
-                    setPopoverPos(computePopoverPosition(step.targetId || null));
-
-                    if (!step.targetId) {
-                        setOverlayStyle(null);
-                        return;
-                    }
-
-                    const targetNode = document.getElementById(step.targetId);
-                    if (!targetNode) {
-                        setOverlayStyle(null);
-                        return;
-                    }
-
-                    targetNode.classList.add('dt-tour-highlight');
-                    highlightedElementRef.current = targetNode;
-                    setOverlayStyle(computeTourOverlayStyle(step.targetId));
-                };
-
-                let animationFrameId = window.requestAnimationFrame(syncHighlightState);
-                const handleViewportChange = () => {
-                    if (animationFrameId) {
-                        window.cancelAnimationFrame(animationFrameId);
-                    }
-                    animationFrameId = window.requestAnimationFrame(syncHighlightState);
-                };
-
-                window.addEventListener('resize', handleViewportChange);
-                window.addEventListener('scroll', handleViewportChange, true);
-
-                return () => {
-                    if (animationFrameId) {
-                        window.cancelAnimationFrame(animationFrameId);
-                    }
-                    window.removeEventListener('resize', handleViewportChange);
-                    window.removeEventListener('scroll', handleViewportChange, true);
-                    clearHighlight();
-                };
-            }, [isOpen, stepIndex, step?.targetId, currentPage]);
-
-            if (!isOpen || !step) {
-                return null;
-            }
-
-            const stepNumber = stepIndex + 1;
-            const totalSteps = steps.length;
-            const progress = `${Math.round((stepNumber / totalSteps) * 100)}%`;
-            const isLastStep = stepNumber >= totalSteps;
-
-            return (
-                <>
-                    {overlayStyle && (
-                        <div className="dt-tour-overlay" style={overlayStyle} aria-hidden="true" />
-                    )}
-                    <div className="dt-tour-popover-shell" style={popoverPos} aria-live="polite">
-                        <div className="dt-tour-popover" role="dialog" aria-label={`Étape ${stepNumber} sur ${totalSteps}`}>
-                            <div className="dt-tour-popover-header">
-                                <div className="dt-tour-popover-step">{`Étape ${stepNumber} / ${totalSteps}`}</div>
-                                <div className="dt-tour-popover-title">{step.title}</div>
-                            </div>
-                            <div className="dt-tour-popover-body">
-                                {step.description}
-                            </div>
-                            <div className="dt-tour-popover-footer">
-                                <button type="button" onClick={onSkip} className="dt-tour-popover-skip">
-                                    Passer
-                                </button>
-                                <button type="button" onClick={onNext} className="dt-tour-popover-next">
-                                    {isLastStep ? 'Terminer ✓' : 'Suivant →'}
-                                </button>
-                            </div>
-                            <div className="dt-tour-progress-track" aria-hidden="true">
-                                <div className="dt-tour-progress-bar" style={{ width: progress }} />
-                            </div>
-                        </div>
-                    </div>
-                </>
-            );
-        };
 
         const getProFormAntiSpamStorage = (type = 'session') => {
             if (typeof window === 'undefined') {
@@ -6639,7 +6594,7 @@
                         </button>
                     </div>
 
-                    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden" data-tour="cases-list">
+                    <div id="ob-cases-list" className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden" data-tour="cases-list">
                         <div className="p-5 border-b border-slate-100 flex flex-col sm:flex-row gap-4 bg-slate-50/50">
                             <div className="relative flex-1">
                                 <Icon icon="solar:magnifer-linear" className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -9022,10 +8977,10 @@
         }) => {
             const navs = [
                 { id: 'dashboard', label: 'Vue globale', icon: 'solar:pie-chart-2-bold' },
-                { id: 'cases', label: 'Dossiers clients', icon: 'solar:folder-with-files-bold', domId: 'ob-cases' },
+                { id: 'cases', label: 'Dossiers clients', icon: 'solar:folder-with-files-bold', domId: 'ob-cases-link' },
                 { id: 'new', label: 'Nouveau diagnostic', icon: 'solar:add-square-bold' },
                 { id: 'plans', label: 'Plans & Tarifs', icon: 'solar:star-bold' },
-                { id: 'settings', label: 'Configuration', icon: 'solar:settings-bold', domId: 'ob-config' }
+                { id: 'settings', label: 'Configuration', icon: 'solar:settings-bold', domId: 'ob-config-link' }
             ];
             const displayName = resolveWorkspaceUserDisplayName(profile);
             const roleLabel = resolveWorkspaceUserRoleLabel(profile, organization, authUserId);
@@ -10149,37 +10104,6 @@
                 };
             }, [workspaceToast]);
 
-            useEffect(() => {
-                if (!tourActive) {
-                    return undefined;
-                }
-
-                const currentStep = ONBOARDING_TOUR_STEPS[tourStep];
-                if (!currentStep) {
-                    setTourActive(false);
-                    setTourStep(0);
-                    return undefined;
-                }
-
-                const targetsSidebarLink = currentStep.targetId === 'ob-cases' || currentStep.targetId === 'ob-config';
-                if (typeof window !== 'undefined' && window.innerWidth < 1024 && targetsSidebarLink) {
-                    setIsMobileMenuOpen(true);
-                } else {
-                    closeMobile();
-                }
-
-                if (currentStep.page && page !== currentStep.page) {
-                    setPage(currentStep.page);
-                    return undefined;
-                }
-
-                const timeoutId = window.setTimeout(() => {
-                    focusOnboardingTarget(currentStep.targetId);
-                }, 120);
-
-                return () => window.clearTimeout(timeoutId);
-            }, [tourActive, tourStep, page]);
-
             // Check auth on mount
             useEffect(() => {
                 let isMounted = true;
@@ -10468,13 +10392,7 @@
             };
 
             const advanceOnboardingTour = async () => {
-                const nextStep = tourStep + 1;
-                if (nextStep >= ONBOARDING_TOUR_STEPS.length) {
-                    await stopOnboardingTour({ persist: true });
-                    return;
-                }
-
-                setTourStep(nextStep);
+                setTourStep(prev => prev + 1);
             };
 
             const handleSkipOnboarding = async () => {
@@ -11023,13 +10941,12 @@
                         onConfirm={startOnboardingTour}
                         onSkip={handleSkipOnboarding}
                     />
-                    <OnboardingTourPopover
-                        isOpen={tourActive}
-                        stepIndex={tourStep}
-                        steps={ONBOARDING_TOUR_STEPS}
-                        currentPage={page}
+                    <OnboardingTour
+                        isActive={tourActive}
+                        currentStep={tourStep}
                         onNext={advanceOnboardingTour}
-                        onSkip={handleSkipOnboarding}
+                        onClose={handleSkipOnboarding}
+                        onComplete={handleSkipOnboarding}
                     />
                     <DemoModal isOpen={isDemoModalOpen} onClose={closeDemoModal} />
                     <ProLegalModal modalKey={legalModalKey} onClose={() => setLegalModalKey('')} onClearPersonalData={handleClearPersonalData} />

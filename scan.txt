@@ -1,0 +1,2 @@
+4588: secondaryCta: "Recevoir un lien de connexion",
+4590: resendCta: "Recevoir un lien de connexion",

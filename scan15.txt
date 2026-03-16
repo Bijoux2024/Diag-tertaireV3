@@ -1,0 +1,90 @@
+16: <script src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
+189: color: #15803D;
+225: color: #15803D;
+276: box-shadow: 0 4px 20px rgba(15, 23, 42, 0.03);
+283: box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06), 0 4px 10px rgba(15, 23, 42, 0.03);
+306: box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.15);
+313: color: #334155;
+333: color: #334155;
+351: background: rgba(15, 23, 42, 0.6);
+367: box-shadow: 0 24px 60px rgba(15, 23, 42, 0.25);
+373: 70% { box-shadow: 0 0 0 15px rgba(56, 189, 248, 0); }
+386: background: rgba(15, 23, 42, 0.4);
+396: box-shadow: 0 0 0 4px #0284c7, 0 0 0 9999px rgba(15, 23, 42, 0.6);
+408: box-shadow: 0 24px 60px rgba(15, 23, 42, 0.25), 0 0 0 1px rgba(226, 232, 240, 0.5);
+534: box-shadow: 0 8px 24px rgba(15, 23, 42, 0.3);
+553: box-shadow: 0 12px 48px rgba(15, 23, 42, 0.15);
+655: box-shadow: 0 12px 32px rgba(15, 23, 42, 0.05);
+3815: enseignement: { q1: 100, med: 150, q3: 220 }, // SOURCE_STRONG
+3846: bureaux: { chauffage: 45, clim: 8, ventil: 9, eclairage: 18, ecs: 5, process: 0, autres: 15 },
+3851: enseignement: { chauffage: 55, clim: 5, ventil: 10, eclairage: 15, ecs: 8, process: 0, autres: 7 },
+3864: 'avant_1948': 1.50, 'annees_50_70': 1.35, 'annees_75_88': 1.15,
+3869: 'avant_1948': 1.20, 'annees_50_70': 1.15, 'annees_75_88': 1.05,
+3891: capex: { low: 0, med: 500, high: 1500 }, roi_ans: { low: 0, med: 1, high: 3 },
+3899: poste: 'chauffage', gain: { low: 0.10, med: 0.15, high: 0.22 },
+3908: poste: 'chauffage', gain: { low: 0.07, med: 0.10, high: 0.15 },
+3918: capex: { low: 1500, med: 2500, high: 4500 }, roi_ans: { low: 2, med: 5, high: 10 },
+3927: capex: { low: 800, med: 1500, high: 3000 }, roi_ans: { low: 3, med: 6, high: 10 },
+3936: capex: { low: 3000, med: 5000, high: 9000 }, roi_ans: { low: 5, med: 8, high: 15 },
+3944: poste: 'ecs', gain: { low: 0.10, med: 0.15, high: 0.22 },
+3945: capex: { low: 800, med: 1500, high: 3000 }, roi_ans: { low: 2, med: 5, high: 8 },
+3954: capex_m2: 25, capex: { low: 5000, med: 15000, high: 35000 },
+3964: capex: { low: 1500, med: 3000, high: 6000 }, roi_ans: { low: 2, med: 5, high: 8 },
+3983: capex: { low: 8000, med: 18000, high: 40000 }, roi_ans: { low: 6, med: 10, high: 15 },
+3993: capex: { low: 8000, med: 15000, high: 30000 }, roi_ans: { low: 8, med: 12, high: 18 },
+4059: const pct_poste = (postes[activite] && postes[activite][action.poste]) || 15;
+4124: 'Enseignement': { q1: 100, med: 150, q3: 220, unit: 'kWh/m²/an', scope: 'Enseignement' },
+4152: 'avant1948': 1.50, '1948-1974': 1.35, '1975-1988': 1.15,
+4156: 'avant1948': 1.20, '1948-1974': 1.15, '1975-1988': 1.05,
+4161: 'Bureau': { chauffage: 45, clim: 8, ventil: 9, eclairage: 18, ecs: 5, autres: 15 },
+4163: 'Commerce_Froid': { chauffage: 20, clim: 35, ventil: 5, eclairage: 22, ecs: 3, autres: 15 },
+4165: 'Restauration': { chauffage: 20, clim: 8, ventil: 12, eclairage: 10, ecs: 15, autres: 35 },
+4169: 'Entrepôt-NonChauffé': { chauffage: 0, clim: 0, ventil: 5, eclairage: 80, ecs: 0, autres: 15 },
+4170: 'Autre': { chauffage: 40, clim: 10, ventil: 10, eclairage: 20, ecs: 5, autres: 15 },
+4182: { id: 'ACT01', title: 'Réglage horaires chauffage', scope: 'chauffage', gainRange: [8, 12, 18], capRange: [0, 750, 1500], capexType: 'forfait', cee: false, fiches: [], prerequis: [] },
+4183: { id: 'ACT02', title: 'Régulation centrale chauffage', scope: 'chauffage', gainRange: [10, 15, 22], capRange: [2000, 5000, 8000], capexType: 'forfait', cee: true, fiches: ['BAT-TH-116'], prerequis: ['reseau_eau'] },
+4184: { id: 'ACT03', title: 'Robinets thermostatiques', scope: 'chauffage', gainRange: [7, 10, 15], capRange: [500, 2750, 5000], capexType: 'forfait', cee: true, fiches: ['BAT-TH-024'], prerequis: ['reseau_eau'] },
+4185: { id: 'ACT04', title: 'Désembouage réseau', scope: 'chauffage', gainRange: [4, 7, 12], capRange: [1500, 3000, 4500], capexType: 'forfait', cee: false, fiches: [], prerequis: ['reseau_eau', 'chaudiere_age_10plus'], sourceWarning: 'Gain sous réserve d\'encrassement avéré' },
+4188: { id: 'ACT07', title: 'Calorifugeage ECS / réseaux', scope: 'ecs', gainRange: [10, 15, 22], capRange: [800, 1900, 3000], capexType: 'forfait', cee: true, fiches: ['BAT-TH-160'], prerequis: ['ecs_presente'] },
+4190: { id: 'ACT09', title: 'Détecteurs présence éclairage', scope: 'eclairage', gainRange: [12, 20, 30], capRange: [1500, 3750, 6000], capexType: 'forfait', cee: true, fiches: ['BAT-EQ-212'], prerequis: [] },
+4198: const H1 = [2, 8, 10, 51, 52, 54, 55, 57, 67, 68, 88, 3, 15, 19, 23, 43, 63, 87, 4, 5, 38, 73, 74];
+4342: else if (a.capexType === 'point_lumineux') capex = a.capRange[1] * (area / 15);
+4362: if (a.cee) aidesTotal += a.capex * 0.015;
+4378: const horizonAns = roiGlobal > 10 && roiGlobal <= 20 ? 15 : 10;
+4671: { id: "P-1015", clientName: "Institut Horizon", city: "Metz", postalCode: "57000", activity: "Enseignement", surfaceLabel: "980 m²", score: "C", reliability: "moyen", attention: "modéré", status: "à relancer", annualEnergyCostLabel: "28 000 EUR / an", annualSavingsLabel: "3 000 à 7 000 EUR / an", summary: "Dossier cohérent avec potentiel visible sur régulation et cadrage." },
+4727: postes: { chauffage: { pct: 20, kwh: 25200, eur: 2646 }, clim: { pct: 8, kwh: 10080, eur: 1058 }, ventil: { pct: 12, kwh: 15120, eur: 1588 }, eclairage: { pct: 10, kwh: 12600, eur: 1323 }, ecs: { pct: 15, kwh: 18900, eur: 1985 }, autres: { pct: 35, kwh: 44100, eur: 4631 } },
+4734: resultBasis: ['Factures réelles sur 12 mois (gaz + électricité)', 'Chaudière gaz standard > 15 ans identifiée', 'VMC cuisine fonctionnant 24h/24'],
+4782: postes: { chauffage: { pct: 45, kwh: 103950, eur: 14758 }, clim: { pct: 8, kwh: 18480, eur: 2626 }, ventil: { pct: 9, kwh: 20790, eur: 2954 }, eclairage: { pct: 18, kwh: 41580, eur: 5908 }, ecs: { pct: 5, kwh: 11550, eur: 1641 }, autres: { pct: 15, kwh: 34650, eur: 4923 } },
+4834: { name: 'Calorifugeage réseau ECS (stérilisation)', savingsEuro: 850, capex: 3500, roi: 4.1, eligCEE: true, fichesCEE: ['BAT-TH-160'], scope: 'ecs', description: 'Réseau ECS stérilisation non isolé sur 22 ml. Pertes estimées à 15% de la consommation ECS. Isolation élastomère DN25–DN40.' },
+4867: noteInterne: 'Décideur direct, budget validé en COPIL. Foncier en propriété - aucune contrainte bail. Dossier CEE à monter impérativement. Offre à envoyer sous 15 jours, concurrence en place.',
+4889: { name: 'Relamping LED haute baie (sodium 400W -> LED 150W)', savingsEuro: 11200, capex: 42000, roi: 3.75, eligCEE: true, fichesCEE: ['BAT-EQ-127'], scope: 'eclairage', description: '280 projecteurs sodium 400W remplacés par LED haute baie 150W. Économie 62% éclairage. Durée de vie LED : 50 000h.' },
+4892: postes: { chauffage: { pct: 60, kwh: 151200, eur: 22932 }, clim: { pct: 2, kwh: 5040, eur: 764 }, ventil: { pct: 8, kwh: 20160, eur: 3056 }, eclairage: { pct: 25, kwh: 63000, eur: 9554 }, ecs: { pct: 2, kwh: 5040, eur: 764 }, autres: { pct: 3, kwh: 7560, eur: 1146 } },
+4939: aidesEstimees: 11500,
+4944: { name: 'Optimisation condenseurs (nettoyage + réglage)', savingsEuro: 2800, capex: 1500, roi: 0.5, eligCEE: false, fichesCEE: [], scope: 'clim', description: 'Condenseurs groupe froid encrassés - température de condensation +8°C vs optimal. Nettoyage + recalibrage régulation. Action quasi-immédiate, forte rentabilité.' },
+4947: postes: { chauffage: { pct: 20, kwh: 88400, eur: 17320 }, clim: { pct: 35, kwh: 154700, eur: 30320 }, ventil: { pct: 6, kwh: 26520, eur: 5196 }, eclairage: { pct: 22, kwh: 97240, eur: 19052 }, ecs: { pct: 3, kwh: 13260, eur: 2598 }, autres: { pct: 14, kwh: 61880, eur: 12128 } },
+5813: {sel('vitrage_type', [['simple', 'Simple vitrage'], ['double_ancien', 'Double vitrage ancien (> 15 ans)'], ['double_recen', 'Double vitrage récent'], ['triple', 'Triple vitrage']])}
+5840: {sel('chauffage_age', [['moins_5ans', 'Moins de 5 ans'], ['5_15ans', '5 – 15 ans'], ['plus_15ans', 'Plus de 15 ans'], ['inconnu', 'Non renseigné']])}
+5882: {sel('clim_age', [['moins_5ans', 'Moins de 5 ans'], ['5_15ans', '5 – 15 ans'], ['plus_15ans', 'Plus de 15 ans'], ['inconnu', 'Non renseigné']])}
+6184: <button type="submit" disabled={isSubmitting} className="pro-btn pro-btn-primary w-full justify-center py-3 text-[15px] disabled:opacity-60">
+6299: <p className="text-slate-500 max-w-2xl mx-auto text-[15px]">
+6885: <div style="max-width:480px;margin:0 auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:20px;padding:24px;box-shadow:0 10px 30px rgba(15,23,42,0.08);">
+7475: <Recharts.XAxis type="number" domain={[0, Math.max(15, ...roiData.map(d => d.roi)) + 1]} tickFormatter={v => `${v} ans`} tick={{ fontSize: 11 }} />
+7568: .filter(function (a) { return a.roi > 0 && a.roi <= 15; })
+8038: annualSavingsLabel: Math.round(result.totalSavingsEur * 0.85).toLocaleString('fr-FR') + ' à ' + Math.round(result.totalSavingsEur * 1.15).toLocaleString('fr-FR') + ' € / an',
+8931: <div className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-sm" style={{ backgroundColor: `${proAccent}15`, color: proAccent, border: `1px solid ${proAccent}30` }}>
+9422: text && React.createElement('p', { className: 'text-[15px] md:text-base leading-7 text-slate-600 mt-3' }, text)
+9492: <button type="button" onClick={() => scrollToSection('pro-access-form')} className="pro-btn pro-btn-primary px-6 py-3.5 text-[15px]">
+9514: <p className="text-[12px] text-slate-600 leading-5 mt-1.5 max-w-[15rem]">{copy.hero.mockup.portfolioText}</p>
+9584: <p className="text-[15px] text-slate-600 leading-7 italic mb-4">"{item.quote}"</p>
+9601: <h3 className="text-[15px] font-black text-slate-900 mt-3 tracking-tight leading-6">{item.title}</h3>
+9635: <div className="grid xl:grid-cols-[1fr_1.15fr] gap-10 items-start">
+9700: <button type="submit" disabled={isUpdatingPassword} className="pro-btn pro-btn-primary w-full justify-center py-3.5 text-[15px] gap-2">
+9818: <button type="submit" disabled={isSubmitting} className="pro-btn pro-btn-primary w-full justify-center py-3.5 text-[15px] gap-2">
+9859: <Icon icon="solar:letter-bold" style={{ fontSize: '15px' }} />
+9881: <Icon icon="solar:key-minimalistic-square-linear" style={{ fontSize: '15px' }} />
+9959: <Icon icon="solar:refresh-linear" style={{ fontSize: '15px' }} />
+9970: <Icon icon="solar:login-3-bold" style={{ fontSize: '15px' }} />
+9984: <div className="bg-slate-900 text-white rounded-[24px] px-6 py-10 md:px-10 shadow-lg shadow-slate-900/15 text-center">
+9989: <p className="text-slate-300 text-[15px] leading-7 mt-3 max-w-xl mx-auto">{copy.closing.text}</p>
+9990: <button type="button" onClick={() => scrollToSection('pro-access-form')} className="pro-btn pro-btn-primary px-8 py-3.5 text-[15px] mt-7 mx-auto">
+10954: <div className="fixed bottom-6 right-6 z-[140] max-w-sm rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-2xl shadow-slate-900/15">

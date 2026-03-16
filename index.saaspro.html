@@ -1660,9 +1660,10 @@
         };
 
         const getAuthRedirectUrl = () => {
-            const url = new URL(window.location.href);
-            url.hash = '';
-            return url.toString();
+            // Renvoie uniquement origin + pathname (sans hash ni query params)
+            // Supabase ajoute ses propres params (#type=recovery, etc.) derrière cette URL
+            // L'URL doit être dans la liste des Redirect URLs autorisées du Dashboard Supabase
+            return window.location.origin + window.location.pathname;
         };
 
         const cleanAuthMetadata = (metadata = {}) => {
@@ -3708,7 +3709,7 @@
 
         const buildProFormCooldownMessage = (remainingMs) => {
             const seconds = Math.max(1, Math.ceil(remainingMs / 1000));
-            return `Merci de patienter ${seconds} seconde${seconds > 1 ? 's' : ''} avant de renvoyer votre demande.`;
+            return `Pour des raisons de sécurité, vous pourrez demander un nouveau lien dans ${seconds} seconde${seconds > 1 ? 's' : ''}.`;
         };
 
         // Point d'extension futur: brancher un CAPTCHA ici si la pression spam augmente.
@@ -4585,9 +4586,9 @@
                 },
                 signupCta: "Créer mon espace Pro",
                 loginCta: "Se connecter",
-                secondaryCta: "Recevoir un lien de connexion",
+                secondaryCta: "Recevoir à nouveau un lien de connexion",
                 forgotPasswordCta: "Mot de passe oublié ?",
-                resendCta: "Recevoir un lien de connexion",
+                resendCta: "Recevoir à nouveau un lien de connexion",
                 resetPasswordCta: "Envoyer un lien de réinitialisation",
                 recoveryCta: "Enregistrer mon nouveau mot de passe",
                 submitting: "Création de votre espace...",
@@ -9144,6 +9145,10 @@
             const [passwordResetSuccess, setPasswordResetSuccess] = React.useState(null);
             const [isUpdatingPassword, setIsUpdatingPassword] = React.useState(false);
             const [passwordUpdateError, setPasswordUpdateError] = React.useState(null);
+            const [magicLinkCooldownSec, setMagicLinkCooldownSec] = React.useState(0);
+            const [passwordResetCooldownSec, setPasswordResetCooldownSec] = React.useState(0);
+            const magicLinkCooldownTimerRef = React.useRef(null);
+            const passwordResetCooldownTimerRef = React.useRef(null);
             const submitted = !!successState;
             const isFirstAccessSetup = recoveryState?.mode === 'first_access';
             const isRecoveryMode = recoveryState?.mode === 'recovery';
@@ -9155,7 +9160,11 @@
                     { threshold: 0.1 }
                 );
                 document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
-                return () => obs.disconnect();
+                return () => {
+                    obs.disconnect();
+                    if (magicLinkCooldownTimerRef.current) clearInterval(magicLinkCooldownTimerRef.current);
+                    if (passwordResetCooldownTimerRef.current) clearInterval(passwordResetCooldownTimerRef.current);
+                };
             }, []);
 
             React.useEffect(() => {
@@ -9175,6 +9184,11 @@
                     setPasswordResetError(null);
                     setPasswordResetSuccess(null);
                     setPasswordUpdateError(null);
+                    // Scroll automatique vers la section auth au retour depuis l'email de reset
+                    const el = document.getElementById('pro-access-form');
+                    if (el) {
+                        setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
+                    }
                 }
             }, [recoveryState?.active, recoveryState?.mode]);
 
@@ -9235,6 +9249,19 @@
                         return false;
                     }
 
+                    // Démarrer un cooldown de 10 secondes après envoi réussi
+                    setMagicLinkCooldownSec(10);
+                    if (magicLinkCooldownTimerRef.current) clearInterval(magicLinkCooldownTimerRef.current);
+                    magicLinkCooldownTimerRef.current = setInterval(() => {
+                        setMagicLinkCooldownSec(prev => {
+                            if (prev <= 1) {
+                                clearInterval(magicLinkCooldownTimerRef.current);
+                                return 0;
+                            }
+                            return prev - 1;
+                        });
+                    }, 1000);
+
                     if (showSuccessMessage) {
                         setMagicLinkSuccess(successMessage || `Lien de connexion envoyé à ${normalizedEmail}. Vérifiez votre boîte mail et vos spams.`);
                     }
@@ -9254,6 +9281,19 @@
                         setPasswordResetError(result.error || "Impossible d'envoyer le lien de réinitialisation pour le moment.");
                         return false;
                     }
+
+                    // Démarrer un cooldown de 10 secondes après envoi réussi
+                    setPasswordResetCooldownSec(10);
+                    if (passwordResetCooldownTimerRef.current) clearInterval(passwordResetCooldownTimerRef.current);
+                    passwordResetCooldownTimerRef.current = setInterval(() => {
+                        setPasswordResetCooldownSec(prev => {
+                            if (prev <= 1) {
+                                clearInterval(passwordResetCooldownTimerRef.current);
+                                return 0;
+                            }
+                            return prev - 1;
+                        });
+                    }, 1000);
 
                     setPasswordResetSuccess(`Lien de réinitialisation envoyé à ${form.email.trim()}. Vérifiez votre boîte mail et vos spams.`);
                     return true;
@@ -9843,7 +9883,7 @@
                                                             <button
                                                                 type="button"
                                                                 onClick={() => requestMagicLink({ email: form.email, fullName: form.fullName, companyName: form.company })}
-                                                                disabled={isSendingMagicLink || isSubmitting || isSendingPasswordReset}
+                                                                disabled={isSendingMagicLink || isSubmitting || isSendingPasswordReset || magicLinkCooldownSec > 0}
                                                                 className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors disabled:opacity-50"
                                                             >
                                                                 {isSendingMagicLink ? (
@@ -9853,6 +9893,11 @@
                                                                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                                                                         </svg>
                                                                         Envoi du lien...
+                                                                    </>
+                                                                ) : magicLinkCooldownSec > 0 ? (
+                                                                    <>
+                                                                        <Icon icon="solar:hourglass-line-duotone" style={{ fontSize: '15px' }} />
+                                                                        Nouveau lien dans {magicLinkCooldownSec}s
                                                                     </>
                                                                 ) : (
                                                                     <>
@@ -9865,7 +9910,7 @@
                                                             <button
                                                                 type="button"
                                                                 onClick={handlePasswordResetRequest}
-                                                                disabled={isSendingPasswordReset || isSubmitting || isSendingMagicLink}
+                                                                disabled={isSendingPasswordReset || isSubmitting || isSendingMagicLink || passwordResetCooldownSec > 0}
                                                                 className="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors disabled:opacity-50"
                                                             >
                                                                 {isSendingPasswordReset ? (
@@ -9875,6 +9920,11 @@
                                                                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                                                                         </svg>
                                                                         Envoi du lien...
+                                                                    </>
+                                                                ) : passwordResetCooldownSec > 0 ? (
+                                                                    <>
+                                                                        <Icon icon="solar:hourglass-line-duotone" style={{ fontSize: '15px' }} />
+                                                                        Lien envoyé — nouveau dans {passwordResetCooldownSec}s
                                                                     </>
                                                                 ) : (
                                                                     <>
@@ -9953,11 +10003,28 @@
                                                             successMessage: `Lien de connexion envoyé à ${form.email}. Vérifiez votre boîte mail et vos spams.`
                                                         }
                                                     )}
-                                                    disabled={isSendingMagicLink}
+                                                    disabled={isSendingMagicLink || magicLinkCooldownSec > 0}
                                                     className="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors disabled:opacity-50"
                                                 >
-                                                    <Icon icon="solar:refresh-linear" style={{ fontSize: '15px' }} />
-                                                    {isSendingMagicLink ? 'Envoi du lien...' : copy.form.resendCta}
+                                                    {isSendingMagicLink ? (
+                                                        <>
+                                                            <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+                                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                                            </svg>
+                                                            Envoi du lien...
+                                                        </>
+                                                    ) : magicLinkCooldownSec > 0 ? (
+                                                        <>
+                                                            <Icon icon="solar:hourglass-line-duotone" style={{ fontSize: '15px' }} />
+                                                            Nouveau lien dans {magicLinkCooldownSec}s
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Icon icon="solar:refresh-linear" style={{ fontSize: '15px' }} />
+                                                            {copy.form.resendCta}
+                                                        </>
+                                                    )}
                                                 </button>
                                                 <button
                                                     type="button"

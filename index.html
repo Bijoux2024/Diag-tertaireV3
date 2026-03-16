@@ -3296,9 +3296,9 @@
                 ? 'grid md:grid-cols-3 gap-4'
                 : columns === 4
                     ? 'grid md:grid-cols-4 gap-4'
-                : columns === 1
-                    ? 'grid md:grid-cols-1 gap-4'
-                    : 'grid md:grid-cols-2 gap-4';
+                    : columns === 1
+                        ? 'grid md:grid-cols-1 gap-4'
+                        : 'grid md:grid-cols-2 gap-4';
 
             return (
                 <div className={gridClass}>
@@ -3524,14 +3524,14 @@
 
                     <div className="hidden">
                         <NewDiagnosticFormSelect
-                        label="Activité principale"
-                        value={formData.activity}
-                        onChange={(v) => setFormData({ ...formData, activity: v, mixedUsage1: '', mixedUsage2: '' })}
-                        options={NEW_DIAGNOSTIC_ACTIVITIES}
-                        required
-                        error={errors.activity}
-                        placeholder="Sélectionnez une activité"
-                    />
+                            label="Activité principale"
+                            value={formData.activity}
+                            onChange={(v) => setFormData({ ...formData, activity: v, mixedUsage1: '', mixedUsage2: '' })}
+                            options={NEW_DIAGNOSTIC_ACTIVITIES}
+                            required
+                            error={errors.activity}
+                            placeholder="Sélectionnez une activité"
+                        />
 
                     </div>
 

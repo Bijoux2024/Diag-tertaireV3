@@ -11,7 +11,10 @@
       "mcp__vercel__list_deployments",
       "Bash(git:*)",
       "Bash(sleep 3:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(ls c:/Users/yanni/Downloads/Diag-tertaireV3/*.txt)",
+      "Bash(ls c:/Users/yanni/Downloads/Diag-tertaireV3/extract*)",
+      "Read(//c/Users/yanni/Downloads/**)"
     ]
   }
 }

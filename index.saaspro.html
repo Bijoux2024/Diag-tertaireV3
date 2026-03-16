@@ -369,15 +369,31 @@
 
         /* ===== ONBOARDING NEW CSS ===== */
         @keyframes ob-pulse-glow {
-            0% { box-shadow: 0 0 0 0px rgba(56, 189, 248, 0.7); }
-            70% { box-shadow: 0 0 0 15px rgba(56, 189, 248, 0); }
-            100% { box-shadow: 0 0 0 0px rgba(56, 189, 248, 0); }
+            0% {
+                box-shadow: 0 0 0 0px rgba(56, 189, 248, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 15px rgba(56, 189, 248, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0px rgba(56, 189, 248, 0);
+            }
         }
 
         @keyframes ob-float {
-            0%   { transform: translateY(0px) scale(1); }
-            50%  { transform: translateY(-5px) scale(1.02); }
-            100% { transform: translateY(0px) scale(1); }
+            0% {
+                transform: translateY(0px) scale(1);
+            }
+
+            50% {
+                transform: translateY(-5px) scale(1.02);
+            }
+
+            100% {
+                transform: translateY(0px) scale(1);
+            }
         }
 
         .ob-overlay {
@@ -428,10 +444,41 @@
         }
 
         /* Flèches directionnelles dynamiques */
-        .ob-popover.ob-arrow-bottom::after { bottom: -8px; left: 50%; margin-left: -8px; border: 1px solid rgba(226, 232, 240, 0.5); border-top: none; border-left: none; }
-        .ob-popover.ob-arrow-top::after    { top: -8px; left: 50%; margin-left: -8px; border: 1px solid rgba(226, 232, 240, 0.5); border-bottom: none; border-right: none;}
-        .ob-popover.ob-arrow-left::after   { left: -8px; top: 50%; margin-top: -8px; border: 1px solid rgba(226, 232, 240, 0.5); border-top: none; border-right: none;}
-        .ob-popover.ob-arrow-right::after  { right: -8px; top: 50%; margin-top: -8px; border: 1px solid rgba(226, 232, 240, 0.5); border-bottom: none; border-left: none;}
+        .ob-popover.ob-arrow-bottom::after {
+            bottom: -8px;
+            left: 50%;
+            margin-left: -8px;
+            border: 1px solid rgba(226, 232, 240, 0.5);
+            border-top: none;
+            border-left: none;
+        }
+
+        .ob-popover.ob-arrow-top::after {
+            top: -8px;
+            left: 50%;
+            margin-left: -8px;
+            border: 1px solid rgba(226, 232, 240, 0.5);
+            border-bottom: none;
+            border-right: none;
+        }
+
+        .ob-popover.ob-arrow-left::after {
+            left: -8px;
+            top: 50%;
+            margin-top: -8px;
+            border: 1px solid rgba(226, 232, 240, 0.5);
+            border-top: none;
+            border-right: none;
+        }
+
+        .ob-popover.ob-arrow-right::after {
+            right: -8px;
+            top: 50%;
+            margin-top: -8px;
+            border: 1px solid rgba(226, 232, 240, 0.5);
+            border-bottom: none;
+            border-left: none;
+        }
 
         .ob-step-indicator {
             color: #3b82f6;
@@ -481,7 +528,10 @@
             padding: 8px;
             transition: color 0.2s;
         }
-        .ob-btn-skip:hover { color: #64748b; }
+
+        .ob-btn-skip:hover {
+            color: #64748b;
+        }
 
         .ob-btn-next {
             background: #0ea5e9;
@@ -498,6 +548,7 @@
             align-items: center;
             gap: 8px;
         }
+
         .ob-btn-next:hover {
             background: #0284c7;
             transform: translateY(-2px);
@@ -848,7 +899,7 @@
             userWorkspaceState: DEFAULT_USER_WORKSPACE_STATE
         };
 
-// ====== NOUVEAU COMPOSANT ONBOARDING TOUR ======
+        // ====== NOUVEAU COMPOSANT ONBOARDING TOUR ======
         const OnboardingTour = ({ isActive, currentStep, onNext, onClose, onComplete }) => {
             const [popoverStyle, setPopoverStyle] = useState({});
             const [highlightStyle, setHighlightStyle] = useState({});
@@ -902,7 +953,7 @@
                 }
 
                 const rect = target.getBoundingClientRect();
-                
+
                 // --- Highlight Box ---
                 const padding = 6;
                 setHighlightStyle({
@@ -1009,8 +1060,8 @@
                     <div className={`ob-overlay ${isVisible ? 'opacity-100' : 'opacity-0'}`} />
 
                     {/* Boîte de focus mise en évidence */}
-                    <div 
-                        className={`ob-highlight-box ${isVisible ? 'opacity-100' : 'opacity-0'}`} 
+                    <div
+                        className={`ob-highlight-box ${isVisible ? 'opacity-100' : 'opacity-0'}`}
                         style={highlightStyle}
                     >
                         {/* Point pulsant optionnel au coin du focus */}
@@ -1020,8 +1071,8 @@
                     </div>
 
                     {/* Popover de contenu */}
-                    <div 
-                        className={`ob-popover ${arrowClass} ${isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`} 
+                    <div
+                        className={`ob-popover ${arrowClass} ${isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}
                         style={popoverStyle}
                     >
                         <div>

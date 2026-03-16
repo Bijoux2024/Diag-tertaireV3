@@ -3996,6 +3996,7 @@
            MOTEUR DE CALCUL + RAPPORT DU NOUVEAU FORMULAIRE (RÉCUPÉRÉ DU FICHIER SOURCE)
            ───────────────────────────────────────────────────────────────────────── */
 
+
         const NEW_DIAGNOSTIC_MAX_TOTAL_SAVINGS_PCT = 0.65;
 
         const NewDiagnosticAccordion = ({ title, children, defaultOpen = false }) => {
@@ -4028,13 +4029,13 @@
             last_updated: '2026-02-23',
 
             electricity: {
-                price_default_eur_kwh: 0.239,
+                price_default_eur_kwh: 0.196,
                 price_min_eur_kwh: 0.15,
                 price_max_eur_kwh: 0.30,
                 unit: '€/kWh TTC',
                 source_level: 'source_partial',
-                source_ref: 'CRE - TRVE électricité professionnelle 2025',
-                source_note: 'Ordre de grandeur TTC retenu : 0,239 €/kWh, hors abonnement',
+                source_ref: 'CRE - TRVE électricité professionnelle T3 2024',
+                source_note: 'Ordre de grandeur TTC retenu : 0,196 €/kWh, hors abonnement',
                 validity_limits: 'Tertiaire < 36 kVA, périmètre France métropolitaine',
                 subscription_excluded: true
             },
@@ -6874,7 +6875,7 @@
                                         <div className="space-y-2">
                                             <button type="button" onClick={() => navigate('home')} className="block text-sm text-slate-400 hover:text-white transition-colors font-medium">A propos</button>
                                             <button type="button" className="block text-sm text-slate-400 hover:text-white transition-colors font-medium">Notre méthodologie</button>
-                                            <a href="mailto:contact@diagtertiaire.fr" className="block text-sm text-slate-400 hover:text-white transition-colors font-medium">Contact</a>
+                                            <a href="mailto:contact@diag-tertiaire.fr" className="block text-sm text-slate-400 hover:text-white transition-colors font-medium">Contact</a>
                                         </div>
                                     </div>
 

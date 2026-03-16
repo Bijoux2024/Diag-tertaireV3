@@ -1,3 +1,21 @@
+<!--
+    DiagTertiaire Pro - index.saaspro.html
+    =========================================================
+    REGLES DE CONFORMITE DES DONNEES MOCK (MOCK_PRO_CASES_V2)
+    ---------------------------------------------------------
+    Chaque objet case_XXX doit respecter 7 regles verifiees
+    au demarrage par validateMockCase() :
+      1. postes[x].pct -> somme exacte = 100%
+      2. postes[x].kwh -> somme = annualConsumption
+      3. intensityPerSqm = round(annualConsumption / buildingArea)
+      4. score in ['A','B','C','D','E','F','G']
+      5. totalCapexNet = totalCapex - aidesEstimees
+      6. sum(actions[x].savingsEuro) = estimatedSavingsPerYear
+      7. totalCapexNet / estimatedSavingsPerYear ~ roiGlobal (15%)
+    ---------------------------------------------------------
+    REGLE ABSOLUE : zero tiret cadratin U+2014 dans tout le fichier.
+    =========================================================
+-->
 <!DOCTYPE html>
 <html lang="fr">
 
@@ -5029,9 +5047,205 @@
                 resultBasis: ['Factures électricité 12 mois vérifiées (compteur unique)', '18 ml de linéaires positifs ouverts identifiés', 'Condenseurs groupe froid non entretenus depuis 3 ans'],
                 reliability: 'élevé',
                 providerQuestions: ['Les groupes froids sont-ils en propriété ou en location ?', 'Le bail autorise des modifications sur les linéaires ?', 'Un contrat de maintenance froid est-il en cours ?']
+            },
+
+            /* -- CAS 6 : HOTELLERIE -- Hotel Boutique 1 350 m2 Lyon - Score D -> B -- */
+            {
+                id: 'case_006',
+                projectName: 'Hotel Boutique Le Confluent',
+                clientName: 'SARL Le Confluent Hospitality',
+                activity: 'Hotellerie',
+                address: '12 quai Perrache, 69002 Lyon',
+                postalCode: '69002',
+                zone: 'H2',
+                energiePrincipale: 'gaz',
+                status: 'completed',
+                completionPercent: 100,
+                createdAt: '10/03/2026',
+                lastUpdated: '14/03/2026',
+                reportGeneratedAt: '14/03/2026',
+                contact: { name: 'Laurent Faure', phone: '06 52 38 17 49', role: 'Directeur' },
+                email: 'l.faure@confluent-hotel.fr',
+                scoreMaturite: 3,
+                noteInterne: 'Directeur souhaitant valoriser le bien avant cession potentielle en 2027. Sensible au label HQE. Budget partiel - validation CODIR attendue en juin. Relancer fin avril.',
+                objectif: 'valorisation_patrimoine',
+                horizon: '1an',
+                budget: '30k-100k',
+                urgenceVerbatim: 'Projet de cession en 2027, DPE obligatoire pour la mise en vente. Souhaite classer en B minimum.',
+                buildingArea: 1350,
+                annualConsumption: 432000,
+                annualCost: 55439,
+                intensityPerSqm: 320,
+                score: 'D',
+                scoreApresTravauxLabel: 'B',
+                scoreConfidence: 'Élevé',
+                benchmark: { q1: 200, median: 300, q3: 450 },
+                estimatedSavingsPerYear: 18200,
+                estimatedSavingsPercent: 33,
+                totalCapex: 42800,
+                totalCapexNet: 41800,
+                aidesEstimees: 1000,
+                roiGlobal: 2.3,
+                actions: [
+                    { name: 'Regulation chaudiere gaz + programmation relance matinale', savingsEuro: 6500, capex: 8500, roi: 1.3, eligCEE: false, fichesCEE: [], scope: 'chauffage', description: 'Chaudiere gaz a consigne unique 60 deg. Mise en place regulation meteorologique + horloge intermittence nuit (22h-6h) et week-end partiel. Economies estimees 28% sur le poste chauffage.' },
+                    { name: 'Isolation thermique toiture terrasse (laine de verre 200 mm)', savingsEuro: 5200, capex: 22000, roi: 4.2, eligCEE: true, fichesCEE: ['BAT-EN-102'], scope: 'chauffage', description: 'Toiture terrasse non isolee sur 800 m2 (terrasse accessible). Pose laine de verre soufflee R=6 sous etancheite. Eligible CEE fiche BAT-EN-102.' },
+                    { name: 'Relamping LED zones communes + couloirs (250 points lumineux)', savingsEuro: 3800, capex: 7200, roi: 1.9, eligCEE: true, fichesCEE: ['BAT-EQ-127'], scope: 'eclairage', description: '250 halogenes et fluo compactes en zones communes, couloirs et hall. Remplacement LED 2700K CRI90 avec variateur. Reduction 62% eclairage commun.' },
+                    { name: 'Regulation VMC double flux centralisee (horloges + recirculation)', savingsEuro: 2700, capex: 5100, roi: 1.9, eligCEE: false, fichesCEE: [], scope: 'ventil', description: 'VMC centrale tournant 24h/24 a debit nominal. Mise en place horloge taux reduit nuit (50% debit) et plages vide-sanitaire. Gain estime 30% sur ventilation.' }
+                ],
+                postes: { chauffage: { pct: 42, kwh: 181440, eur: 17237 }, clim: { pct: 10, kwh: 43200, eur: 8467 }, ventil: { pct: 7, kwh: 30240, eur: 5927 }, eclairage: { pct: 8, kwh: 34560, eur: 6774 }, ecs: { pct: 25, kwh: 108000, eur: 10260 }, autres: { pct: 8, kwh: 34560, eur: 6774 } },
+                projectionData: (() => { const d = [{ annee: 'Auj.', sans_travaux: 0, avec_travaux: 41800 }]; let cs = 0, ca = 41800; for (let i = 1; i <= 10; i++) { cs += 55439 * Math.pow(1.032, i); ca += (55439 - 18200) * Math.pow(1.032, i); d.push({ annee: 'A+' + i, sans_travaux: Math.round(cs), avec_travaux: Math.round(ca) }); } return d; })(),
+                tauxInflation: 3.2,
+                roiAnnee: 2,
+                graphiquePubliable: true,
+                horizonAns: 10,
+                summary: 'Hotel boutique 1 350 m2 avec chaudiere gaz non regulee et eclairage halogene. Intensite 320 kWh/m2/an au-dessus de la mediane hoteliere (300). 4 actions ciblees permettent de passer en classe B et de recuperer 33% de la facture avec un ROI global de 2,3 ans.',
+                resultBasis: ['Factures gaz + electricite 12 mois (compteurs separes)', 'Chaudiere gaz standard > 12 ans sans regulation meteorologique', 'VMC centrale sans horloge ni modulation'],
+                reliability: 'élevé',
+                providerQuestions: ['Le contrat de fourniture gaz est-il indexe ou a prix fixe ?', 'L age exact de la chaudiere et date du dernier entretien annuel ?', 'Le permis de construire autorise-t-il les travaux sur la toiture terrasse ?']
+            },
+
+            /* -- CAS 7 : COMMERCE -- Boutique Mode 340 m2 Paris 11e - Score E -> C -- */
+            {
+                id: 'case_007',
+                projectName: 'Boutique Madeline Mode',
+                clientName: 'SAS Madeline Mode Paris',
+                activity: 'Commerce',
+                address: '47 rue de la Roquette, 75011 Paris',
+                postalCode: '75011',
+                zone: 'H1',
+                energiePrincipale: 'electricite',
+                status: 'completed',
+                completionPercent: 100,
+                createdAt: '11/03/2026',
+                lastUpdated: '15/03/2026',
+                reportGeneratedAt: '15/03/2026',
+                contact: { name: 'Chloé Renard', phone: '06 85 24 60 13', role: 'Propriétaire' },
+                email: 'c.renard@madeline-mode.fr',
+                scoreMaturite: 5,
+                noteInterne: 'Proprietaire tres reactive, pret a signer. Bail se terminant en sept. 2026 - veut realiser les travaux avant renouvellement. ROI inferieur a 1 an, dossier tres bankable. Proposer offre ferme avant fin mars.',
+                objectif: 'reduction_charges',
+                horizon: 'immediat',
+                budget: '10k-30k',
+                urgenceVerbatim: 'Bail fin septembre, travaux a engager avant le renouvellement pour negocier les charges avec le bailleur.',
+                buildingArea: 340,
+                annualConsumption: 197200,
+                annualCost: 38652,
+                intensityPerSqm: 580,
+                score: 'E',
+                scoreApresTravauxLabel: 'C',
+                scoreConfidence: 'Élevé',
+                benchmark: { q1: 350, median: 500, q3: 750 },
+                estimatedSavingsPerYear: 20000,
+                estimatedSavingsPercent: 52,
+                totalCapex: 17300,
+                totalCapexNet: 17300,
+                aidesEstimees: 0,
+                roiGlobal: 0.9,
+                actions: [
+                    { name: 'Relamping LED haute efficacite vitrine + spots (340 m2)', savingsEuro: 9500, capex: 8500, roi: 0.9, eligCEE: true, fichesCEE: ['BAT-EQ-127'], scope: 'eclairage', description: '340 m2 eclaires par halogenes 50W et spots AR111. Remplacement integral LED 2700K CRI95 (rendu couleur mode). Reduction 62% sur poste eclairage. Intervention sur 1 journee de fermeture.' },
+                    { name: 'Remplacement resistances electriques par PAC air/air (3 unites)', savingsEuro: 7200, capex: 6200, roi: 0.9, eligCEE: false, fichesCEE: [], scope: 'chauffage', description: 'Radiateurs a accumulation et convecteurs electriques (COP 1). Remplacement par 3 unites PAC air/air COP 3,5. Economies estimees 65% sur le poste chauffage.' },
+                    { name: 'GTB eclairage presence + lumiere naturelle (devanture)', savingsEuro: 2100, capex: 1800, roi: 0.9, eligCEE: false, fichesCEE: [], scope: 'eclairage', description: 'Eclairage vitrine allume de l ouverture (7h) a minuit sans regulation. Detecteurs presence zone reserve + gradation lumiere naturelle devanture sud. Reduction estimee 25% eclairage residuel.' },
+                    { name: 'Isolation porte entree + rideau d air (seuil 3 m)', savingsEuro: 1200, capex: 800, roi: 0.7, eligCEE: false, fichesCEE: [], scope: 'chauffage', description: 'Infiltrations importantes par porte d entree non isolee (simple vitrage aluminium). Pose rideau d air motorise 3 m + joint de seuil. Reduction estimee des deperditions par infiltrations de 40%.' }
+                ],
+                postes: { chauffage: { pct: 35, kwh: 69020, eur: 13528 }, clim: { pct: 15, kwh: 29580, eur: 5798 }, ventil: { pct: 5, kwh: 9860, eur: 1933 }, eclairage: { pct: 30, kwh: 59160, eur: 11595 }, ecs: { pct: 3, kwh: 5916, eur: 1160 }, autres: { pct: 12, kwh: 23664, eur: 4638 } },
+                projectionData: (() => { const d = [{ annee: 'Auj.', sans_travaux: 0, avec_travaux: 17300 }]; let cs = 0, ca = 17300; for (let i = 1; i <= 10; i++) { cs += 38652 * Math.pow(1.048, i); ca += (38652 - 20000) * Math.pow(1.048, i); d.push({ annee: 'A+' + i, sans_travaux: Math.round(cs), avec_travaux: Math.round(ca) }); } return d; })(),
+                tauxInflation: 4.8,
+                roiAnnee: 1,
+                graphiquePubliable: true,
+                horizonAns: 10,
+                summary: 'Boutique mode 340 m2 100% electrique avec halogenes et chauffage a resistance. Intensite 580 kWh/m2/an, nettement au-dessus de la mediane commerce (500). 4 actions permettent de recuperer 52% de la facture avec un ROI exceptionnel sous 1 an.',
+                resultBasis: ['Factures electricite 12 mois (compteur unique)', 'Inventaire eclairage : 210 halogenes + 45 spots AR111 confirmes', 'Radiateurs a accumulation + 2 convecteurs electriques (COP 1)'],
+                reliability: 'élevé',
+                providerQuestions: ['Les armatures actuelles sont-elles compatibles retrofit LED T5 ?', 'Le systeme de chauffage est-il en propriete ou en bail mobilier ?', 'Le bailleur autorise-t-il les travaux sur l enveloppe (porte, seuil) ?']
+            },
+
+            /* -- CAS 8 : ENSEIGNEMENT -- Lycee 2 200 m2 Strasbourg - Score D -> B -- */
+            {
+                id: 'case_008',
+                projectName: 'Lycee Gutenberg - Batiment Principal',
+                clientName: 'Region Grand Est - Lycee Gutenberg',
+                activity: 'Enseignement',
+                address: '45 route de la Wantzenau, 67000 Strasbourg',
+                postalCode: '67000',
+                zone: 'H1',
+                energiePrincipale: 'gaz',
+                status: 'completed',
+                completionPercent: 100,
+                createdAt: '12/03/2026',
+                lastUpdated: '15/03/2026',
+                reportGeneratedAt: '15/03/2026',
+                contact: { name: 'Eric Hoffmann', phone: '03 88 42 17 65', role: 'Gestionnaire' },
+                email: 'e.hoffmann@lycee-gutenberg.fr',
+                scoreMaturite: 2,
+                noteInterne: 'Secteur public, circuit de decision long (vote CA Region). Forte motivation du gestionnaire mais blocage budgetaire. FEDER Bas Carbone possible sur VMC double flux. Relancer apres rentree 2026.',
+                objectif: 'reduction_charges',
+                horizon: '1an',
+                budget: 'plus_100k',
+                urgenceVerbatim: 'Contrat de chauffage a renouveler en septembre, opportunite de renegocier sur la base d un bilan energetique a jour.',
+                buildingArea: 2200,
+                annualConsumption: 407000,
+                annualCost: 53054,
+                intensityPerSqm: 185,
+                score: 'D',
+                scoreApresTravauxLabel: 'B',
+                scoreConfidence: 'Élevé',
+                benchmark: { q1: 100, median: 170, q3: 250 },
+                estimatedSavingsPerYear: 17400,
+                estimatedSavingsPercent: 33,
+                totalCapex: 47700,
+                totalCapexNet: 45700,
+                aidesEstimees: 2000,
+                roiGlobal: 2.6,
+                actions: [
+                    { name: 'Regulation chaudiere gaz par zones horaires (intermittence nuit + WE)', savingsEuro: 6800, capex: 12000, roi: 1.8, eligCEE: false, fichesCEE: [], scope: 'chauffage', description: 'Chaudiere gaz a consigne unique 65 deg. Mise en place regulation 4 zones + horloge intermittence nuit (22h-6h) et week-end complet. Economies estimees 30% sur le poste chauffage principal.' },
+                    { name: 'VMC double flux refectoire + gymnase (2 centrales)', savingsEuro: 5400, capex: 18500, roi: 3.4, eligCEE: true, fichesCEE: ['BAT-TH-125'], scope: 'ventil', description: 'VMC simple flux sur 2 zones a forts debits (refectoire 600 m2 + gymnase 400 m2). Remplacement par centrale double flux avec echangeur 85%. Eligible CEE fiche BAT-TH-125.' },
+                    { name: 'Relamping LED classes + couloirs avec detecteur presence (150 points)', savingsEuro: 3200, capex: 9200, roi: 2.9, eligCEE: true, fichesCEE: ['BAT-EQ-212'], scope: 'eclairage', description: '150 luminaires fluorescents T8 en salles de classe et 80 en couloirs. Remplacement LED + detecteurs presence 360 deg couloirs. Reduction 58% eclairage general.' },
+                    { name: 'Isolation chassis vitres batiment principal (double vitrage argon)', savingsEuro: 2000, capex: 8000, roi: 4.0, eligCEE: true, fichesCEE: ['BAT-EN-104'], scope: 'chauffage', description: 'Simple vitrage aluminium sur 200 m2 de fenetres (batiment 1965). Remplacement double vitrage 4/16/4 argon Ug=1.1. Eligible CEE fiche BAT-EN-104. Reduction estimee 15% deperditions enveloppe.' }
+                ],
+                postes: { chauffage: { pct: 55, kwh: 223850, eur: 21266 }, clim: { pct: 3, kwh: 12210, eur: 2393 }, ventil: { pct: 15, kwh: 61050, eur: 11966 }, eclairage: { pct: 12, kwh: 48840, eur: 9573 }, ecs: { pct: 10, kwh: 40700, eur: 3867 }, autres: { pct: 5, kwh: 20350, eur: 3989 } },
+                projectionData: (() => { const d = [{ annee: 'Auj.', sans_travaux: 0, avec_travaux: 45700 }]; let cs = 0, ca = 45700; for (let i = 1; i <= 10; i++) { cs += 53054 * Math.pow(1.040, i); ca += (53054 - 17400) * Math.pow(1.040, i); d.push({ annee: 'A+' + i, sans_travaux: Math.round(cs), avec_travaux: Math.round(ca) }); } return d; })(),
+                tauxInflation: 4.0,
+                roiAnnee: 3,
+                graphiquePubliable: true,
+                horizonAns: 10,
+                summary: 'Lycee 2 200 m2 avec chaudiere gaz non regulee et simple vitrage. Intensite 185 kWh/m2/an au-dessus de la mediane enseignement (170). 4 actions permettent de passer en classe B et de recuperer 33% des charges energetiques avec un ROI global de 2,6 ans.',
+                resultBasis: ['Factures gaz + electricite 24 mois (compteurs separés Region)', 'Chaudiere gaz unique sans zonage ni regulation meteorologique', 'VMC simple flux sur refectoire et gymnase (debits identifies)'],
+                reliability: 'élevé',
+                providerQuestions: ['La chaudiere gaz est-elle sous contrat P2 (entretien) ou P3 (exploitation) ?', 'Le batiment est-il classe ou inscrit aux monuments historiques ?', 'Les credits FEDER Bas Carbone ont-ils deja ete sollicites aupres de la Region ?']
             }
 
         ];
+
+        /* -- Validation conformite des cas mock (7 regles) -- */
+        const validateMockCase = (c) => {
+            const errors = [];
+            const keys = ['chauffage', 'clim', 'ventil', 'eclairage', 'ecs', 'autres'];
+            // 1. Postes pct sum = 100
+            const pctSum = keys.reduce((s, k) => s + (c.postes[k]?.pct || 0), 0);
+            if (Math.abs(pctSum - 100) > 0.5) errors.push('postes pct sum=' + pctSum + ' (expected 100)');
+            // 2. kWh coherence
+            const kwhSum = keys.reduce((s, k) => s + (c.postes[k]?.kwh || 0), 0);
+            if (Math.abs(kwhSum - c.annualConsumption) > 1) errors.push('postes kwh sum=' + kwhSum + ' (expected ' + c.annualConsumption + ')');
+            // 3. Intensity coherence
+            const intens = Math.round(c.annualConsumption / c.buildingArea);
+            if (Math.abs(intens - c.intensityPerSqm) > 2) errors.push('intensity=' + intens + ' (expected ' + c.intensityPerSqm + ')');
+            // 4. Score validity
+            if (!['A', 'B', 'C', 'D', 'E', 'F', 'G'].includes(c.score)) errors.push('score \'' + c.score + '\' not a valid DPE letter');
+            // 5. CAPEX net coherence
+            const capexNet = c.totalCapex - c.aidesEstimees;
+            if (Math.abs(capexNet - c.totalCapexNet) > 1) errors.push('capexNet=' + capexNet + ' (expected ' + c.totalCapexNet + ')');
+            // 6. Savings coherence
+            const savingsSum = (c.actions || []).reduce((s, a) => s + (a.savingsEuro || 0), 0);
+            if (Math.abs(savingsSum - c.estimatedSavingsPerYear) > 1) errors.push('savings sum=' + savingsSum + ' (expected ' + c.estimatedSavingsPerYear + ')');
+            // 7. ROI coherence (15% margin)
+            if (c.totalCapexNet && c.estimatedSavingsPerYear) {
+                const roi = c.totalCapexNet / c.estimatedSavingsPerYear;
+                if (Math.abs(roi - c.roiGlobal) > c.roiGlobal * 0.15) errors.push('ROI=' + roi.toFixed(2) + ' (expected ' + c.roiGlobal + ')');
+            }
+            if (errors.length) errors.forEach(e => console.warn('[validateMockCase]', c.id, e));
+            return errors;
+        };
+        MOCK_PRO_CASES_V2.forEach(c => validateMockCase(c));
 
         const LOCAL_EXAMPLE_SOURCE_CASE_IDS = Object.freeze(['case_001', 'case_002', 'case_003', 'case_004']);
 
@@ -6376,6 +6590,14 @@
                     </p>
                 </div>
 
+                <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 mb-8 max-w-5xl mx-auto text-center">
+                    <span className="inline-flex items-center gap-2 text-green-800 font-semibold text-sm">
+                        <Icon icon="solar:star-bold" className="text-green-500" style={{ fontSize: '15px' }} />
+                        Acces gratuit pendant la periode beta - aucun engagement requis
+                        <Icon icon="solar:star-bold" className="text-green-500" style={{ fontSize: '15px' }} />
+                    </span>
+                </div>
+
                 <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
                     {planCards.map((plan) => (
                         <div key={plan.key} className={`plan-card ${plan.featured ? 'featured' : ''}`}>
@@ -6384,7 +6606,11 @@
                                     Recommandé
                                 </div>
                             )}
-                            <h4 className="text-xl font-extrabold text-slate-800 mb-2">{plan.title}</h4>
+                            <div className="flex items-start justify-between mb-2">
+                                <h4 className="text-xl font-extrabold text-slate-800">{plan.title}</h4>
+                                <span className="inline-flex items-center bg-green-100 text-green-700 text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full animate-pulse shrink-0 ml-2 mt-0.5">Beta gratuit</span>
+                            </div>
+                            <p className="text-[11px] text-green-600 font-semibold mb-1">Offre beta sans engagement</p>
                             <p className="text-sm text-slate-500 mb-8 min-h-[40px]">{plan.subtitle}</p>
 
                             <ul className="space-y-4 mb-8 flex-1">
@@ -6437,6 +6663,14 @@
                         <p className="text-slate-500 max-w-xl mx-auto">Choisissez la formule adaptée à votre volume et vos besoins de personnalisation.</p>
                     </div>
 
+                    <div className="bg-green-50 border border-green-200 rounded-xl px-5 py-4 mb-8 text-center">
+                        <span className="inline-flex items-center gap-2 text-green-800 font-semibold text-sm">
+                            <Icon icon="solar:star-bold" className="text-green-500" style={{ fontSize: '16px' }} />
+                            Acces gratuit pendant la periode beta - aucun engagement, aucune carte bancaire requise
+                            <Icon icon="solar:star-bold" className="text-green-500" style={{ fontSize: '16px' }} />
+                        </span>
+                    </div>
+
                     <div className="grid md:grid-cols-3 gap-6 mb-12">
                         {plans.map(plan => (
                             <div key={plan.key} className={`plan-card ${plan.featured ? 'featured' : ''}`}>
@@ -6446,9 +6680,16 @@
                                     </div>
                                 )}
                                 <h4 className="text-xl font-extrabold text-slate-800 mb-1">{plan.title}</h4>
-                                <div className="mb-3 flex items-end gap-1">
-                                    <span className="text-4xl font-black text-slate-900">{plan.price}€</span>
-                                    <span className="text-slate-500 text-sm font-medium pb-1">/mois</span>
+                                <div className="mb-3">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <span className="text-sm text-slate-400 line-through">{plan.price}€/mois</span>
+                                        <span className="inline-flex items-center bg-green-100 text-green-700 text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full animate-pulse">Beta</span>
+                                    </div>
+                                    <div className="flex items-end gap-1">
+                                        <span className="text-4xl font-black text-slate-900">0€</span>
+                                        <span className="text-slate-500 text-sm font-medium pb-1">/mois</span>
+                                    </div>
+                                    <p className="text-[11px] text-green-600 font-semibold mt-0.5">Offre beta sans engagement</p>
                                 </div>
                                 <p className="text-sm text-slate-500 mb-8 min-h-[40px]">{plan.subtitle}</p>
                                 <ul className="space-y-3 mb-8 flex-1">

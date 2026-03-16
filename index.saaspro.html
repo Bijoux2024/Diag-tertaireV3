@@ -4359,9 +4359,13 @@
                 const billElecNet = Math.max(0, billElec - aboElec);
                 const implicitElec = (kwhElec > 0 && billElecNet > 0) ? billElecNet / kwhElec : this.prices.elec;
                 const implicitGaz = (kwhGaz > 0 && billGaz > 0) ? billGaz / kwhGaz : this.prices.gaz;
-                const avgPrice = kwhTotal > 0
-                    ? (kwhElec * implicitElec + kwhGaz * implicitGaz) / kwhTotal
-                    : this.prices.elec;
+                // Somme des kWh réellement saisis (avant substitution benchmark)
+                const _kwhInput = kwhElec + kwhGaz;
+                const _energiePrinc = data.energiePrincipale || data.energie_principale || data.energiePrincipale || 'electricite';
+                const _prixParEnergie = _energiePrinc === 'gaz' ? this.prices.gaz : _energiePrinc === 'fioul' ? this.prices.fioul : _energiePrinc === 'bois_granules' ? this.prices.bois : this.prices.elec;
+                const avgPrice = _kwhInput > 0
+                    ? (kwhElec * implicitElec + kwhGaz * implicitGaz) / _kwhInput
+                    : _prixParEnergie;
                 const totalBill = Math.round(billElecNet + billGaz) || Math.round(kwhTotal * avgPrice);
 
                 // === CORRECTIFS ANNÉE CONSTRUCTION ===
@@ -4388,7 +4392,15 @@
                 }
 
                 // === CO2 ===
-                const co2Total = Math.round(kwhElec * this.co2Factors.elec + kwhGaz * this.co2Factors.gaz);
+                // Fallback sur l energie principale quand aucun kWh n est saisi (mode benchmark)
+                const _co2FacteurPrinc = _energiePrinc === 'gaz' ? this.co2Factors.gaz
+                    : _energiePrinc === 'reseau_chaleur' ? this.co2Factors.reseau
+                        : _energiePrinc === 'fioul' ? this.co2Factors.fioul
+                            : _energiePrinc === 'bois_granules' ? this.co2Factors.bois
+                                : this.co2Factors.elec;
+                const co2Total = _kwhInput > 0
+                    ? Math.round(kwhElec * this.co2Factors.elec + kwhGaz * this.co2Factors.gaz)
+                    : Math.round(kwhTotal * _co2FacteurPrinc);
 
                 // === SÉLECTION DES ACTIONS (nouvelle bibliothèque) ===
                 const travaux = data.travaux_realises || data.travauxRealises || [];
@@ -7446,10 +7458,10 @@
                                 </button>
                             )}
 
-                            <button onClick={handlePrintPdf} className="pro-btn border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 flex-1 sm:flex-none text-sm px-3 py-2">
-                                <Icon icon="solar:printer-bold" />
-                                <span className="hidden sm:inline">Export local (secours)</span>
-                                <span className="sm:hidden">Secours</span>
+                            <button onClick={handlePrintPdf} className={`pro-btn flex-1 sm:flex-none text-sm px-3 py-2 ${isLocalExample ? 'pro-btn-primary' : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50'}`}>
+                                <Icon icon="solar:file-download-bold" />
+                                <span className="hidden sm:inline">{isLocalExample ? 'Télécharger PDF' : 'Export PDF local'}</span>
+                                <span className="sm:hidden">PDF</span>
                             </button>
                             {isProAuth && !sharedCase && (
                                 <button onClick={handleShare} className="pro-btn pro-btn-primary flex-1 sm:flex-none text-sm px-3 py-2">

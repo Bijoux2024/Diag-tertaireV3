@@ -400,7 +400,6 @@
             position: fixed;
             inset: 0;
             background: rgba(15, 23, 42, 0.4);
-            backdrop-filter: blur(3px);
             z-index: 9990;
             pointer-events: none;
             transition: opacity 0.4s ease-in-out;
@@ -899,6 +898,52 @@
             userWorkspaceState: DEFAULT_USER_WORKSPACE_STATE
         };
 
+        // ====== ÉTAPES DU TOUR (constante globale réutilisée par le composant et ProApp) ======
+        const ONBOARDING_TOUR_STEPS = [
+            {
+                id: 'ob-dashboard',
+                page: 'dashboard',
+                title: "Bienvenue dans l'espace Pro",
+                desc: "Voici votre tableau de bord. Suivez vos indicateurs et pilotez l'ensemble de vos diagnostics depuis cette vue globale."
+            },
+            {
+                id: 'ob-new-case',
+                page: 'dashboard',
+                title: "Lancer un nouveau diagnostic",
+                desc: "Cliquez ici pour démarrer un diagnostic en 7 étapes. Le rapport et les recommandations se génèrent automatiquement à la fin du formulaire."
+            },
+            {
+                id: 'ob-cases-link',
+                page: 'dashboard',
+                title: "Vos dossiers clients",
+                desc: "Retrouvez ici la liste complète de vos dossiers. Filtrez par activité, statut ou recherchez un projet spécifique."
+            },
+            {
+                id: 'ob-cases-list',
+                page: 'cases',
+                title: "Tableau de suivi",
+                desc: "Chaque ligne est un dossier client. Consultez le score, l'estimation des économies et accédez aux actions disponibles."
+            },
+            {
+                id: 'ob-report',
+                page: 'cases',
+                title: "Consulter un rapport",
+                desc: "Cliquez sur « Voir rapport » pour accéder au diagnostic complet : résultats, recommandations et pistes de travaux détaillées."
+            },
+            {
+                id: 'ob-delete-example',
+                page: 'cases',
+                title: "Supprimer les dossiers exemples",
+                desc: "Ces dossiers d'exemple sont là pour vous guider. Supprimez-les dès que vous souhaitez travailler uniquement sur vos vrais dossiers clients."
+            },
+            {
+                id: 'ob-config-link',
+                page: 'cases',
+                title: "Personnalisez votre charte",
+                desc: "Ajoutez votre logo et définissez votre couleur principale. Tous vos rapports porteront l'identité visuelle de votre entreprise."
+            }
+        ];
+
         // ====== NOUVEAU COMPOSANT ONBOARDING TOUR ======
         const OnboardingTour = ({ isActive, currentStep, onNext, onClose, onComplete }) => {
             const [popoverStyle, setPopoverStyle] = useState({});
@@ -906,34 +951,8 @@
             const [arrowClass, setArrowClass] = useState('');
             const [isVisible, setIsVisible] = useState(false);
 
-            // Using memo to avoid infinite renders if React isn't perfectly stable
-            const steps = useMemo(() => [
-                {
-                    id: 'ob-dashboard',
-                    title: "Bienvenue dans l'espace Pro",
-                    desc: "Voici votre tableau de bord. Suivez vos indicateurs de performance et pilotez l'ensemble de vos diagnostics depuis cette vue globale."
-                },
-                {
-                    id: 'ob-cases-link',
-                    title: "Vos dossiers clients",
-                    desc: "Accédez à tout moment à la liste complète de vos dossiers. Vous pouvez y rechercher un projet, filtrer par activité ou relancer un client."
-                },
-                {
-                    id: 'ob-new-case',
-                    title: "Créer un nouveau diagnostic",
-                    desc: "Démarrez un nouveau projet en 5 étapes simples. Le rapport et les recommandations se génèreront automatiquement à la fin du formulaire."
-                },
-                {
-                    id: 'ob-cases-list',
-                    title: "Suivi détaillé",
-                    desc: "Pour chaque dossier, consultez son score actuel, l'estimation des économies réalisables et accédez au rapport officiel en un clic."
-                },
-                {
-                    id: 'ob-config-link',
-                    title: "Personnalisez votre charte",
-                    desc: "Ajoutez votre logo et définissez votre couleur principale. Tous les rapports générés porteront l'identité visuelle de votre entreprise."
-                }
-            ], []);
+            // Étapes définies dans la constante globale ONBOARDING_TOUR_STEPS
+            const steps = ONBOARDING_TOUR_STEPS;
 
             const updatePosition = useCallback(() => {
                 const step = steps[currentStep];
@@ -1645,21 +1664,25 @@
                 {
                     id: 'discover-dashboard',
                     label: 'Découvrir le dashboard',
+                    desc: 'Cliquez sur "Relancer la visite" pour explorer l\'espace Pro étape par étape en 7 étapes guidées.',
                     done: !!uiState.onboarding_seen
                 },
                 {
                     id: 'first-client-case',
                     label: 'Créer votre premier dossier client',
+                    desc: 'Cliquez sur "Nouveau diagnostic" dans le menu ou sur le dashboard pour démarrer votre premier dossier réel.',
                     done: realCasesCount > 0
                 },
                 {
                     id: 'branding',
                     label: 'Personnaliser votre charte',
+                    desc: 'Rendez-vous dans Configuration pour ajouter votre logo et définir votre couleur d\'accent. Vos rapports porteront votre identité.',
                     done: hasCustomBranding
                 },
                 {
                     id: 'first-official-pdf',
                     label: 'Générer votre premier PDF officiel',
+                    desc: 'Ouvrez un rapport et cliquez sur "Générer le PDF". Le document est immédiatement disponible à partager avec votre client.',
                     done: hasReadyPdf
                 }
             ];
@@ -6750,6 +6773,7 @@
                                                         </button>
                                                         {c._isLocalExample ? (
                                                             <button
+                                                                id={isFirstExampleCase ? 'ob-delete-example' : undefined}
                                                                 type="button"
                                                                 onClick={() => deleteCase(c.id)}
                                                                 className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100 transition-colors"
@@ -9025,8 +9049,10 @@
             onboardingChecklist = null,
             showChecklistCompletionNotice = false,
             onRefreshChecklist = null,
-            isRefreshingChecklist = false
+            isRefreshingChecklist = false,
+            onStartTour = null
         }) => {
+            const [expandedTaskId, setExpandedTaskId] = React.useState(null);
             const navs = [
                 { id: 'dashboard', label: 'Vue globale', icon: 'solar:pie-chart-2-bold' },
                 { id: 'cases', label: 'Dossiers clients', icon: 'solar:folder-with-files-bold', domId: 'ob-cases-link' },
@@ -9094,28 +9120,42 @@
                                                 <div className="text-[11px] font-semibold text-slate-500">
                                                     {(onboardingChecklist?.allDone ? 'Terminé' : 'En cours')}
                                                 </div>
-                                                {typeof onRefreshChecklist === 'function' && (
+                                                {typeof onStartTour === 'function' && (
                                                     <button
                                                         type="button"
-                                                        onClick={onRefreshChecklist}
-                                                        disabled={isRefreshingChecklist}
-                                                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-600 hover:text-blue-800 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+                                                        onClick={onStartTour}
+                                                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-600 hover:text-blue-800 transition-colors"
                                                     >
-                                                        <Icon icon={isRefreshingChecklist ? 'solar:refresh-circle-bold' : 'solar:refresh-linear'} className={isRefreshingChecklist ? 'animate-spin' : ''} />
-                                                        {isRefreshingChecklist ? 'Actualisation…' : 'Actualiser'}
+                                                        <Icon icon="solar:play-circle-linear" />
+                                                        Relancer la visite
                                                     </button>
                                                 )}
                                             </div>
                                         </div>
-                                        <div className="mt-4 space-y-2.5">
+                                        <div className="mt-4 space-y-2">
                                             {(onboardingChecklist?.tasks || []).map(task => (
-                                                <div key={task.id} className="flex items-start gap-2.5">
-                                                    <span className={`mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full border ${task.done ? 'border-emerald-200 bg-emerald-100 text-emerald-700' : 'border-slate-200 bg-white text-slate-300'}`}>
-                                                        <Icon icon={task.done ? 'solar:check-circle-bold' : 'solar:check-circle-linear'} className="text-[12px]" />
-                                                    </span>
-                                                    <span className={`text-xs leading-5 ${task.done ? 'font-semibold text-slate-700' : 'text-slate-500'}`}>
-                                                        {task.label}
-                                                    </span>
+                                                <div
+                                                    key={task.id}
+                                                    className="rounded-lg cursor-pointer hover:bg-white transition-colors px-1 py-0.5 -mx-1"
+                                                    onClick={() => setExpandedTaskId(expandedTaskId === task.id ? null : task.id)}
+                                                >
+                                                    <div className="flex items-start gap-2.5">
+                                                        <span className={`mt-0.5 shrink-0 inline-flex h-5 w-5 items-center justify-center rounded-full border ${task.done ? 'border-emerald-200 bg-emerald-100 text-emerald-700' : 'border-slate-200 bg-white text-slate-300'}`}>
+                                                            <Icon icon={task.done ? 'solar:check-circle-bold' : 'solar:check-circle-linear'} className="text-[12px]" />
+                                                        </span>
+                                                        <span className={`text-xs leading-5 flex-1 ${task.done ? 'font-semibold text-slate-700' : 'text-slate-500'}`}>
+                                                            {task.label}
+                                                        </span>
+                                                        <Icon
+                                                            icon={expandedTaskId === task.id ? 'solar:alt-arrow-up-linear' : 'solar:alt-arrow-down-linear'}
+                                                            className="mt-0.5 shrink-0 text-slate-300 text-[11px]"
+                                                        />
+                                                    </div>
+                                                    {expandedTaskId === task.id && task.desc && (
+                                                        <div className="ml-7 mt-1 text-[11px] text-slate-500 leading-relaxed pb-0.5">
+                                                            {task.desc}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             ))}
                                         </div>
@@ -9211,6 +9251,22 @@
                     { threshold: 0.1 }
                 );
                 document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
+                // Retour depuis l'email de confirmation de compte
+                // Supabase ajoute ?type=signup ou #type=signup selon le flow
+                const searchType = new URLSearchParams(window.location.search).get('type') || '';
+                const hashType = new URLSearchParams((window.location.hash || '').slice(1)).get('type') || '';
+                const isSignupCallback = searchType === 'signup' || hashType === 'signup';
+                const pendingEmail = (() => { try { return sessionStorage.getItem('pro_pending_confirm_email') || ''; } catch (_) { return ''; } })();
+                if (isSignupCallback && pendingEmail) {
+                    setAuthMode('login');
+                    setForm(prev => ({ ...prev, email: pendingEmail }));
+                    setMagicLinkSuccess('Votre adresse email est confirmée. Connectez-vous avec votre mot de passe.');
+                    try { sessionStorage.removeItem('pro_pending_confirm_email'); } catch (_) { }
+                    const el = document.getElementById('pro-access-form');
+                    if (el) setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 200);
+                }
+
                 return () => {
                     obs.disconnect();
                     if (magicLinkCooldownTimerRef.current) clearInterval(magicLinkCooldownTimerRef.current);
@@ -9420,6 +9476,8 @@
                     }
 
                     if (authResult.requiresEmailConfirmation) {
+                        // Stocker l'email pour pré-remplir le formulaire login au retour du lien email
+                        try { sessionStorage.setItem('pro_pending_confirm_email', form.email.trim()); } catch (_) { }
                         setSuccessState({
                             title: copy.form.successTitle,
                             text: `${copy.form.successText} L'email a été envoyé à ${form.email.trim()}.`
@@ -10510,7 +10568,14 @@
             };
 
             const advanceOnboardingTour = async () => {
-                setTourStep(prev => prev + 1);
+                setTourStep(prev => {
+                    const nextStep = prev + 1;
+                    const nextStepData = ONBOARDING_TOUR_STEPS[nextStep];
+                    if (nextStepData?.page) {
+                        setPage(nextStepData.page);
+                    }
+                    return nextStep;
+                });
             };
 
             const handleSkipOnboarding = async () => {
@@ -11036,6 +11101,7 @@
                         showChecklistCompletionNotice={showChecklistCompletionNotice}
                         onRefreshChecklist={handleRefreshChecklist}
                         isRefreshingChecklist={isRefreshingChecklist}
+                        onStartTour={startOnboardingTour}
                     />
                     <div className="pro-content flex-1 max-w-full">
                         <ProTopbar title={currentTitle} toggleMobile={toggleMobile} />

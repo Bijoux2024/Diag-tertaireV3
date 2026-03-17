@@ -190,7 +190,7 @@ const renderPdfFromHtml = async (html, {
     throw createPdfRenderError(message, 500);
   } finally {
     if (browser) {
-      await browser.close().catch(() => {});
+      await browser.close().catch(() => { });
     }
   }
 };

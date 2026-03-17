@@ -21,7 +21,7 @@
     <script src="https://unpkg.com/prop-types/prop-types.min.js"></script>
     <!-- Iconify : bibliothèque d'icônes (>200 000 icônes via web component) -->
     <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
-    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+    <script src="https://unpkg.com/iconify-icon@1.0.7/dist/iconify-icon.min.js"></script>
     <!-- Babel Standalone : compile le JSX en JavaScript dans le navigateur -->
     <!-- ⚠️ NOTE PERFORMANCE : Babel Standalone est utilisé pour éviter un build step.
          En production à fort trafic, envisager une pré-compilation (Vite, esbuild). -->
@@ -31,6 +31,13 @@
     <!-- html2canvas : capture d'un noeud DOM en image (utilisé par jsPDF pour les graphiques) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
+        /* Correctif universel Iconify - assure le rendu des icônes web component */
+        iconify-icon {
+            display: inline-block;
+            line-height: 1;
+            vertical-align: -0.125em;
+        }
+
         /* Global & Reset */
         :root {
             --bg: #F8FAFC;
@@ -2013,6 +2020,73 @@
                 </section>
             </div>
         );
+
+        /* ─────────────────────────────────────────────────────────────────────────
+           HELPERS EXEMPLE DE RAPPORT
+           ───────────────────────────────────────────────────────────────────────── */
+
+        const NEW_DIAGNOSTIC_PUBLIC_EXAMPLE_SOURCE = 'public_example';
+
+        const newDiagnosticReadStoredReportPayload = () => {
+            try {
+                const raw = window.localStorage.getItem('newDiagnosticLatestReport');
+                if (!raw) return null;
+                return JSON.parse(raw);
+            } catch (_) {
+                return null;
+            }
+        };
+
+        const newDiagnosticIsFlatExampleReportPayload = (payload) => {
+            if (!payload || typeof payload !== 'object') return false;
+            // Un payload "flat" est une soumission de formulaire brut, pas un payload rapport structuré
+            return !!(payload.surface && payload.activity && !payload.calculation_results);
+        };
+
+        const newDiagnosticBuildExampleReportPayload = (flatPayload) => {
+            // Si un payload plat (formulaire) est fourni, on le convertit
+            if (flatPayload && newDiagnosticIsFlatExampleReportPayload(flatPayload)) {
+                return newDiagnosticBuildReportData(flatPayload);
+            }
+            // Sinon, on génère un exemple fictif réaliste (bureaux 450m², mix élec+gaz)
+            const exampleFormData = {
+                address: 'Immeuble Tertiaire - Exemple',
+                role: 'owner',
+                postalCode: '33000',
+                activity: 'offices',
+                mixedUsage1: '',
+                mixedUsage2: '',
+                mixOfficesPct: 50,
+                mixRetailPct: 50,
+                surface: '450',
+                mainHeating: 'gas',
+                hasCooling: true,
+                usageIntensity: 'standard',
+                ecsSameSystem: false,
+                ecsSystem: 'electric_boiler',
+                elecUsed: true,
+                elecKwh: '',
+                elecEuro: '3200',
+                elecPriceKwh: '',
+                elecIncludesSubscription: false,
+                elecSubscriptionYearly: '',
+                gasUsed: true,
+                gasKwh: '',
+                gasEuro: '4900',
+                gasPriceKwh: '',
+                gasIncludesSubscription: false,
+                gasSubscriptionYearly: '',
+                email: 'demo@diag-tertiaire.fr',
+                phone: '',
+                worksDone: ['lighting'],
+                primaryGoal: 'reduce_cost',
+                projectHorizon: '1_3y',
+                decisionRole: 'owner',
+                contactOptIn: false
+            };
+            const payload = newDiagnosticBuildReportData(exampleFormData);
+            return { ...payload, source: NEW_DIAGNOSTIC_PUBLIC_EXAMPLE_SOURCE };
+        };
 
         const PageExample = ({ navigate }) => {
             const [exampleReport] = useState(() => {

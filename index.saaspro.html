@@ -38,10 +38,17 @@
         if (typeof React !== 'undefined' && !React.PropTypes) React.PropTypes = window.PropTypes;
     </script>
     <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
-    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+    <script src="https://unpkg.com/iconify-icon@1.0.7/dist/iconify-icon.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
+        /* Correctif universel Iconify - assure le rendu des icônes web component */
+        iconify-icon {
+            display: inline-block;
+            line-height: 1;
+            vertical-align: -0.125em;
+        }
+
         * {
             box-sizing: border-box;
         }
@@ -823,6 +830,16 @@
 
         .pulse-dot {
             animation: pulse-dot 1.6s ease infinite;
+        }
+
+        .hero-mockup-float {
+            animation: ob-float 5s ease-in-out infinite;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .hero-mockup-float {
+                animation: none;
+            }
         }
 
         /* === PROLANDING FONTS === */
@@ -4565,7 +4582,6 @@
         const PRO_LANDING_COPY = {
             meta: {
                 brand: "DiagTertiaire Pro",
-                phase: "Bêta - Accès limité",
                 publicSite: "← Site public",
                 heroEyebrow: "Outil métier pour qualifier un site ou un portefeuille",
                 targetsEyebrow: "Pour qui",
@@ -8481,16 +8497,16 @@
                             </div>
                         )}
                         <div className="max-w-lg mx-auto">
-                            <div className="flex justify-between text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">
-                                <span>{STEPS[form.step - 1]}</span>
-                                <span>Étape {form.step} / 7</span>
+                            <div className="flex justify-between text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider gap-2">
+                                <span className="truncate">{STEPS[form.step - 1]}</span>
+                                <span className="shrink-0">Étape {form.step} / 7</span>
                             </div>
                             <div className="progress-bar-track">
                                 <div className="progress-bar-fill" style={{ width: `${(form.step / 7) * 100}%` }} />
                             </div>
                             <div className="flex justify-between mt-2">
                                 {STEPS.map((s, i) => (
-                                    <div key={i} className={`w-2 h-2 rounded-full transition-all ${i < form.step ? 'bg-blue-600' : 'bg-slate-200'}`} />
+                                    <div key={i} className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full transition-all ${i < form.step ? 'bg-blue-600' : 'bg-slate-200'}`} />
                                 ))}
                             </div>
                         </div>
@@ -9098,7 +9114,7 @@
                                 <div className="space-y-6">
                                     <div>
                                         <label className="pro-label block mb-2 text-sm font-semibold text-slate-700">Logo de votre cabinet</label>
-                                        <div className="flex items-center gap-4">
+                                        <div className="flex flex-col-reverse sm:flex-row items-start sm:items-center gap-4">
                                             {proLogoImg ? (
                                                 <div className="relative w-16 h-16 rounded-lg border border-slate-200 bg-slate-50 flex items-center justify-center p-1">
                                                     <img src={proLogoImg} alt="Logo" className="max-w-full max-h-full object-contain" />
@@ -9552,7 +9568,10 @@
                 }
             }, [recoveryState?.active, recoveryState?.mode]);
 
+            const [isMobileNavOpen, setIsMobileNavOpen] = React.useState(false);
+
             const scrollToSection = (id) => {
+                setIsMobileNavOpen(false);
                 const node = document.getElementById(id);
                 if (node) node.scrollIntoView({ behavior: 'smooth', block: 'start' });
             };
@@ -9826,20 +9845,20 @@
             );
 
             return (
-                <div className="pro-landing-typo min-h-screen bg-[#F8FAFC] text-slate-900 overflow-x-hidden">
+                <div className="pro-landing-typo min-h-screen bg-[#FAFAF8] text-slate-900 overflow-x-hidden">
                     {/* ===== HEADER ===== */}
                     <header className="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-slate-200">
                         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
                             <div className="flex items-center gap-3 min-w-0">
-                                <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-                                    <Icon icon="solar:buildings-2-bold" style={{ fontSize: '22px' }} />
+                                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                                    <Icon icon="solar:buildings-2-bold" style={{ fontSize: '20px' }} />
                                 </div>
                                 <div>
                                     <div className="font-black text-slate-900 text-sm tracking-tight" style={{ fontFamily: "'Inter', sans-serif" }}>{copy.meta.brand}</div>
-                                    <div className="text-[11px] text-slate-400">{copy.meta.phase}</div>
+                                    <div className="text-[11px] text-slate-400 hidden sm:block">{copy.meta.phase}</div>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-4 sm:gap-5">
+                            <div className="flex items-center gap-2 sm:gap-4 sm:gap-5">
                                 <a href="index.html" className="hidden sm:inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-900 hover:border-slate-300 transition-colors">
                                     <Icon icon="solar:alt-arrow-left-linear" style={{ fontSize: '16px' }} />
                                     Retour au site public
@@ -9848,39 +9867,112 @@
                                     <Icon icon="solar:login-3-bold" style={{ fontSize: '16px' }} />
                                     Accès / connexion
                                 </button>
-                                <button type="button" onClick={() => scrollToSection('pro-access-form')} className="pro-btn pro-btn-primary px-4 py-2 text-sm">
-                                    <span>{copy.hero.ctaPrimary}</span>
-                                    <Icon icon="solar:arrow-right-bold" style={{ fontSize: '16px' }} />
+                                {/* CTA - taille réduite sur mobile */}
+                                <button type="button" onClick={() => scrollToSection('pro-access-form')} className="pro-btn pro-btn-primary px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm">
+                                    <span className="hidden sm:inline">{copy.hero.ctaPrimary}</span>
+                                    <span className="sm:hidden">S'inscrire</span>
+                                    <Icon icon="solar:arrow-right-bold" style={{ fontSize: '14px' }} />
+                                </button>
+                                {/* Hamburger mobile */}
+                                <button
+                                    type="button"
+                                    onClick={() => setIsMobileNavOpen(!isMobileNavOpen)}
+                                    className="sm:hidden w-9 h-9 flex items-center justify-center rounded-xl bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200 transition-colors"
+                                    aria-label={isMobileNavOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
+                                >
+                                    <Icon icon={isMobileNavOpen ? 'solar:close-square-linear' : 'solar:hamburger-menu-linear'} style={{ fontSize: '20px' }} />
                                 </button>
                             </div>
                         </div>
+                        {/* Menu mobile déroulant */}
+                        {isMobileNavOpen && (
+                            <div className="sm:hidden border-t border-slate-200 bg-white">
+                                <div className="max-w-7xl mx-auto px-4 py-3 flex flex-col gap-2">
+                                    <a href="index.html" className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors">
+                                        <Icon icon="solar:alt-arrow-left-linear" style={{ fontSize: '16px' }} />
+                                        Retour au site public
+                                    </a>
+                                    <button type="button" onClick={() => scrollToSection('pro-access-form')} className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors w-full text-left">
+                                        <Icon icon="solar:login-3-bold" style={{ fontSize: '16px' }} />
+                                        Accès / connexion
+                                    </button>
+                                    <button type="button" onClick={() => scrollToSection('pro-how-it-works')} className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors w-full text-left">
+                                        <Icon icon="solar:info-circle-linear" style={{ fontSize: '16px' }} />
+                                        Comment ça fonctionne
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </header>
 
                     {/* ===== HERO ===== */}
-                    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 md:pt-16 pb-14 md:pb-16">
-                        <div className="grid lg:grid-cols-[minmax(0,1fr)_440px] gap-8 lg:gap-12 items-center">
-                            {/* Texte gauche */}
-                            <div className="max-w-[43rem]">
+                    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 sm:pt-14 md:pt-16 pb-10 sm:pb-14 md:pb-16">
+                        {/* Sur desktop : grille 2 colonnes. Sur mobile : flex colonne (titre → mockup → reste) */}
+                        <div className="grid lg:grid-cols-[minmax(0,1fr)_440px] lg:gap-12 lg:items-center">
+                            {/* Bloc titre (eyebrow + h1) — apparaît en premier sur mobile ET desktop */}
+                            <div className="max-w-[43rem] mb-5 lg:mb-0">
                                 <div className="text-[10px] md:text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500 mb-4">{copy.meta.heroEyebrow}</div>
-                                <h1 className="max-w-[13.6ch] text-[2.7rem] sm:text-5xl xl:text-[3.25rem] font-black tracking-[-0.045em] text-slate-950 leading-[0.98]" style={{ fontFamily: "'Inter', sans-serif" }}>
+                                <h1 className="max-w-[13.6ch] text-[2.2rem] sm:text-5xl xl:text-[3.25rem] font-black tracking-[-0.045em] text-slate-950 leading-[0.98]" style={{ fontFamily: "'Inter', sans-serif" }}>
                                     {copy.hero.h1}
                                 </h1>
-                                <p className="text-[17px] text-slate-600 mt-5 leading-7 max-w-[36rem]">{copy.hero.subtitle}</p>
-                                <div className="flex flex-wrap gap-2.5 mt-6">
+                            </div>
+
+                            {/* Mockup — sur mobile : juste après le titre, largeur adaptée. Sur desktop : colonne droite (row-span-2) */}
+                            <div className="hero-mockup-float lg:row-span-2 relative w-full max-w-[330px] sm:max-w-[400px] mx-auto lg:max-w-[440px] lg:ml-auto lg:mx-0 mb-6 lg:mb-0">
+                                <div className="relative space-y-2.5">
+                                    <div className="rounded-[20px] border border-slate-200 bg-white p-4 sm:p-5 shadow-sm shadow-slate-200/30">
+                                        <div className="flex items-start justify-between gap-4">
+                                            <div>
+                                                <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">{copy.hero.mockup.portfolioLabel}</div>
+                                                <h3 className="text-base sm:text-lg font-black tracking-[-0.03em] text-slate-900 mt-1" style={{ fontFamily: "'Inter', sans-serif" }}>{copy.hero.mockup.portfolioTitle}</h3>
+                                                <p className="text-[11px] sm:text-[12px] text-slate-600 leading-5 mt-1.5 max-w-[15rem]">{copy.hero.mockup.portfolioText}</p>
+                                            </div>
+                                            <span className="shrink-0 px-2 py-1 rounded-full bg-slate-100 text-slate-500 text-[10px] font-semibold">
+                                                {copy.hero.mockup.portfolioSummary}
+                                            </span>
+                                        </div>
+                                        <div className="mt-3 space-y-0 divide-y divide-slate-100">
+                                            {copy.hero.mockup.portfolioItems.slice(0, 3).map(item => (
+                                                <div key={item.name} className="flex items-center justify-between gap-3 py-2.5">
+                                                    <div className="min-w-0">
+                                                        <div className="text-xs font-bold text-slate-900 truncate">{item.name}</div>
+                                                        <div className="text-[11px] text-slate-500 mt-0.5 hidden sm:block">{item.meta}</div>
+                                                    </div>
+                                                    <div className="flex items-center gap-2 shrink-0">
+                                                        {item.tone === 'amber' && (
+                                                            <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[9px] font-semibold hidden sm:inline">Prioritaire</span>
+                                                        )}
+                                                        <span className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center text-xs font-black score-badge score-${item.score}`}>{item.score}</span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div className="mt-3 pt-3 border-t border-slate-100 hidden sm:block">
+                                            <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">{copy.hero.mockup.reportLabel}</div>
+                                            <div className="text-sm font-black mt-1 tracking-[-0.03em] text-slate-900" style={{ fontFamily: "'Inter', sans-serif" }}>{copy.hero.mockup.reportTitle}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Bloc texte bas — sous-titre, badges, stats, CTAs. Sur desktop : 2ème ligne colonne gauche */}
+                            <div className="max-w-[43rem]">
+                                <p className="text-[15px] sm:text-[17px] text-slate-600 leading-7 max-w-[36rem]">{copy.hero.subtitle}</p>
+                                <div className="flex flex-wrap gap-2 sm:gap-2.5 mt-4 sm:mt-6">
                                     {heroBadges.map(badge => (
-                                        <span key={badge} className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-[13px] font-medium text-slate-600">
+                                        <span key={badge} className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 sm:px-3.5 py-1 sm:py-1.5 text-[12px] sm:text-[13px] font-medium text-slate-600">
                                             <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0"></span>
                                             {badge}
                                         </span>
                                     ))}
                                 </div>
-                                <div className="flex items-center gap-5 mt-7 pt-5 border-t border-slate-100 max-w-md">
+                                <div className="flex items-center gap-4 sm:gap-5 mt-5 sm:mt-7 pt-4 sm:pt-5 border-t border-slate-100 max-w-md">
                                     {heroStats.map((stat, i) => (
                                         <React.Fragment key={stat.value}>
                                             {i > 0 && <div className="w-px h-8 bg-slate-200"></div>}
                                             <div>
                                                 <div
-                                                    className={`text-[1.7rem] font-black tracking-[-0.03em] ${String(stat.value || '').trim().startsWith('0') ? 'text-emerald-600' : 'text-slate-900'}`}
+                                                    className={`text-[1.5rem] sm:text-[1.7rem] font-black tracking-[-0.03em] ${String(stat.value || '').trim().startsWith('0') ? 'text-emerald-600' : 'text-slate-900'}`}
                                                     style={{ fontFamily: "'Inter', sans-serif" }}
                                                 >
                                                     {stat.value}
@@ -9890,10 +9982,10 @@
                                         </React.Fragment>
                                     ))}
                                 </div>
-                                <div className="flex flex-col sm:flex-row sm:items-center gap-3 mt-8">
-                                    <button type="button" onClick={() => scrollToSection('pro-access-form')} className="pro-btn pro-btn-primary px-6 py-3.5 text-[15px]">
+                                <div className="flex flex-col sm:flex-row sm:items-center gap-3 mt-6 sm:mt-8">
+                                    <button type="button" onClick={() => scrollToSection('pro-access-form')} className="pro-btn pro-btn-primary px-5 sm:px-6 py-3 sm:py-3.5 text-[14px] sm:text-[15px]">
                                         <span>{copy.hero.ctaPrimary}</span>
-                                        <Icon icon="solar:arrow-right-bold" style={{ fontSize: '18px' }} />
+                                        <Icon icon="solar:arrow-right-bold" style={{ fontSize: '16px' }} />
                                     </button>
                                     <button type="button" onClick={() => scrollToSection('pro-how-it-works')} className="inline-flex items-center gap-2 px-1 py-2 text-sm font-semibold text-slate-500 hover:text-slate-900 transition-colors">
                                         {copy.hero.ctaSecondary}
@@ -9902,131 +9994,6 @@
                                 <div className="flex items-center gap-2 mt-4 text-[12px] text-slate-500">
                                     <Icon icon="solar:lock-bold" style={{ fontSize: '14px' }} />
                                     {copy.hero.trustLine}
-                                </div>
-                            </div>
-
-                            {/* Mockup droite */}
-                            <div className="relative lg:max-w-[440px] lg:ml-auto">
-                                <div className="relative space-y-2.5">
-                                    <div className="rounded-[20px] border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/30">
-                                        <div className="flex items-start justify-between gap-4">
-                                            <div>
-                                                <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">{copy.hero.mockup.portfolioLabel}</div>
-                                                <h3 className="text-lg font-black tracking-[-0.03em] text-slate-900 mt-1" style={{ fontFamily: "'Inter', sans-serif" }}>{copy.hero.mockup.portfolioTitle}</h3>
-                                                <p className="text-[12px] text-slate-600 leading-5 mt-1.5 max-w-[15rem]">{copy.hero.mockup.portfolioText}</p>
-                                            </div>
-                                            <span className="shrink-0 px-2.5 py-1 rounded-full bg-slate-100 text-slate-500 text-[10px] font-semibold">
-                                                {copy.hero.mockup.portfolioSummary}
-                                            </span>
-                                        </div>
-                                        <div className="mt-4 space-y-0 divide-y divide-slate-100">
-                                            {copy.hero.mockup.portfolioItems.map(item => (
-                                                <div key={item.name} className="flex items-center justify-between gap-3 py-3">
-                                                    <div className="min-w-0">
-                                                        <div className="text-xs font-bold text-slate-900 truncate">{item.name}</div>
-                                                        <div className="text-[11px] text-slate-500 mt-0.5">{item.meta}</div>
-                                                    </div>
-                                                    <div className="flex items-center gap-2 shrink-0">
-                                                        {item.tone === 'amber' && (
-                                                            <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[9px] font-semibold">Prioritaire</span>
-                                                        )}
-                                                        <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black score-badge score-${item.score}`}>{item.score}</span>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                        <div className="mt-4 pt-4 border-t border-slate-100">
-                                            <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">{copy.hero.mockup.reportLabel}</div>
-                                            <div className="text-base font-black mt-1 tracking-[-0.03em] text-slate-900" style={{ fontFamily: "'Inter', sans-serif" }}>{copy.hero.mockup.reportTitle}</div>
-                                            <p className="text-[12px] text-slate-600 leading-5 mt-1.5 max-w-[19rem]">{copy.hero.mockup.reportText}</p>
-                                        </div>
-                                        <div className="flex flex-wrap gap-2 mt-4">
-                                            {copy.hero.mockup.reportItems.map(item => (
-                                                <span key={item} className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-medium text-slate-600">
-                                                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-                                                    {item}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                    {/* ===== AUDIENCE ===== */}
-                    <section className="reveal border-y border-slate-200 bg-white py-14">
-                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                            <SectionHeader eyebrow={copy.meta.targetsEyebrow} title={copy.trustBar.label} text={copy.trustBar.intro} centered={true} />
-                            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3 mt-8">
-                                {copy.trustBar.items.map(item => (
-                                    <div key={item.label} className="rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-4 transition-colors hover:bg-white">
-                                        <div className="w-10 h-10 rounded-xl bg-white text-blue-600 flex items-center justify-center border border-slate-200">
-                                            <Icon icon={item.icon} style={{ fontSize: '18px', color: '#1D4ED8' }} />
-                                        </div>
-                                        <div className="text-sm font-black text-slate-900 mt-3 tracking-tight leading-5">{item.label}</div>
-                                        <p className="text-sm text-slate-600 leading-6 mt-1.5">{item.text}</p>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </section>
-
-                    {/* ===== SOCIAL PROOF ===== */}
-                    <section className="reveal bg-white border-b border-slate-100 py-14">
-                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                            <SectionHeader eyebrow="Retours terrain" title={copy.proof.title} centered={true} />
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-8">
-                                {copy.proof.items.map((item, i) => (
-                                    <div
-                                        key={item.name}
-                                        className="rounded-2xl border border-slate-200 bg-white p-6"
-                                        style={{ borderLeft: `3px solid ${item.accentColor}`, transitionDelay: `${i * 100}ms` }}
-                                    >
-                                        <p className="text-[15px] text-slate-600 leading-7 italic mb-4">"{item.quote}"</p>
-                                        <div className="text-sm font-black text-slate-900">{item.name}</div>
-                                        <div className="text-xs text-slate-500 mt-0.5">{item.role}</div>
-                                    </div>
-                                ))}
-                            </div>
-                            <p className="text-xs text-slate-500 text-center mt-6">{copy.proof.disclaimer}</p>
-                        </div>
-                    </section>
-
-                    {/* ===== BENEFITS ===== */}
-                    <section className="reveal max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-                        <SectionHeader eyebrow={copy.meta.benefitsEyebrow} title={copy.benefits.title} centered={true} />
-                        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mt-8">
-                            {copy.benefits.items.map(item => (
-                                <div key={item.kpi} className="rounded-xl border border-slate-200 bg-white p-5">
-                                    <div className="text-[1.7rem] font-black tracking-[-0.03em]" style={{ fontFamily: "'Inter', sans-serif", color: item.kpiColor }}>{item.kpi}</div>
-                                    <h3 className="text-[15px] font-black text-slate-900 mt-3 tracking-tight leading-6">{item.title}</h3>
-                                    <p className="text-sm text-slate-600 mt-2 leading-6">{item.text}</p>
-                                </div>
-                            ))}
-                        </div>
-                    </section>
-
-                    {/* ===== STEPS ===== */}
-                    <section id="pro-how-it-works" className="reveal max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14" style={{ scrollMarginTop: '80px' }}>
-                        <SectionHeader eyebrow={copy.meta.stepsEyebrow} title={copy.steps.title} text={copy.steps.intro} centered={true} />
-                        <div className="relative mt-10">
-                            <div className="hidden lg:block absolute top-7 left-[calc(12.5%)] right-[calc(12.5%)] h-px bg-slate-200 z-0"></div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 relative z-10">
-                                {copy.steps.items.map((item, i) => (
-                                    <div key={item.title} className="flex flex-col items-center text-center">
-                                        <div className="w-14 h-14 rounded-full bg-white border-4 border-white ring-1 ring-blue-600 flex items-center justify-center shadow-md shadow-blue-600/10">
-                                            <span style={{ fontFamily: "'Inter', sans-serif", color: '#1D4ED8' }}>{i + 1}</span>
-                                        </div>
-                                        <h3 className="text-base font-black text-slate-900 mt-4 tracking-tight">{item.title}</h3>
-                                        <p className="text-sm text-slate-600 mt-2 leading-6">{item.text}</p>
-                                        <span className="mt-3 text-xs font-semibold text-slate-600 bg-slate-50 border border-slate-200 rounded-full px-3 py-1">{item.duration}</span>
-                                    </div>
-                                ))}
-                            </div>
-                            <div className="mt-10 text-center">
-                                <div className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-6 py-3 text-sm font-semibold text-slate-700">
-                                    {copy.steps.cta}
                                 </div>
                             </div>
                         </div>
@@ -10408,18 +10375,81 @@
                         </div>
                     </section>
 
-                    {/* ===== CLOSING ===== */}
-                    <section className="reveal max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-                        <div className="bg-slate-900 text-white rounded-[24px] px-6 py-10 md:px-10 shadow-lg shadow-slate-900/15 text-center">
-                            <div className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/10 text-slate-200 text-[11px] font-semibold px-4 py-1.5 mb-5">
-                                {copy.closing.urgencyBadge}
+                    {/* ===== AUDIENCE ===== */}
+                    <section className="reveal border-y border-slate-200 bg-white py-8 sm:py-14">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                            <SectionHeader eyebrow={copy.meta.targetsEyebrow} title={copy.trustBar.label} text={copy.trustBar.intro} centered={true} />
+                            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3 mt-8">
+                                {copy.trustBar.items.map(item => (
+                                    <div key={item.label} className="rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-4 transition-colors hover:bg-white">
+                                        <div className="w-10 h-10 rounded-xl bg-white text-blue-600 flex items-center justify-center border border-slate-200">
+                                            <Icon icon={item.icon} style={{ fontSize: '18px', color: '#1D4ED8' }} />
+                                        </div>
+                                        <div className="text-sm font-black text-slate-900 mt-3 tracking-tight leading-5">{item.label}</div>
+                                        <p className="text-sm text-slate-600 leading-6 mt-1.5">{item.text}</p>
+                                    </div>
+                                ))}
                             </div>
-                            <h2 className="text-2xl md:text-3xl font-black tracking-[-0.03em]" style={{ fontFamily: "'Inter', sans-serif" }}>{copy.closing.title}</h2>
-                            <p className="text-slate-300 text-[15px] leading-7 mt-3 max-w-xl mx-auto">{copy.closing.text}</p>
-                            <button type="button" onClick={() => scrollToSection('pro-access-form')} className="pro-btn pro-btn-primary px-8 py-3.5 text-[15px] mt-7 mx-auto">
-                                {copy.closing.cta}
-                            </button>
-                            <p className="text-xs text-slate-500 mt-3">{copy.closing.helper}</p>
+                        </div>
+                    </section>
+
+                    {/* ===== SOCIAL PROOF ===== */}
+                    <section className="reveal hidden sm:block bg-white border-b border-slate-100 py-14">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                            <SectionHeader eyebrow="Retours terrain" title={copy.proof.title} centered={true} />
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-8">
+                                {copy.proof.items.map((item, i) => (
+                                    <div
+                                        key={item.name}
+                                        className="rounded-2xl border border-slate-200 bg-white p-6"
+                                        style={{ borderLeft: `3px solid ${item.accentColor}`, transitionDelay: `${i * 100}ms` }}
+                                    >
+                                        <p className="text-[15px] text-slate-600 leading-7 italic mb-4">"{item.quote}"</p>
+                                        <div className="text-sm font-black text-slate-900">{item.name}</div>
+                                        <div className="text-xs text-slate-500 mt-0.5">{item.role}</div>
+                                    </div>
+                                ))}
+                            </div>
+                            <p className="text-xs text-slate-500 text-center mt-6">{copy.proof.disclaimer}</p>
+                        </div>
+                    </section>
+
+                    {/* ===== BENEFITS ===== */}
+                    <section className="reveal max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-14">
+                        <SectionHeader eyebrow={copy.meta.benefitsEyebrow} title={copy.benefits.title} centered={true} />
+                        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mt-8">
+                            {copy.benefits.items.map(item => (
+                                <div key={item.kpi} className="rounded-xl border border-slate-200 bg-white p-5">
+                                    <div className="text-[1.7rem] font-black tracking-[-0.03em]" style={{ fontFamily: "'Inter', sans-serif", color: item.kpiColor }}>{item.kpi}</div>
+                                    <h3 className="text-[15px] font-black text-slate-900 mt-3 tracking-tight leading-6">{item.title}</h3>
+                                    <p className="text-sm text-slate-600 mt-2 leading-6">{item.text}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+
+                    {/* ===== STEPS ===== */}
+                    <section id="pro-how-it-works" className="reveal max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-14" style={{ scrollMarginTop: '80px' }}>
+                        <SectionHeader eyebrow={copy.meta.stepsEyebrow} title={copy.steps.title} text={copy.steps.intro} centered={true} />
+                        <div className="relative mt-10">
+                            <div className="hidden lg:block absolute top-7 left-[calc(12.5%)] right-[calc(12.5%)] h-px bg-slate-200 z-0"></div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 relative z-10">
+                                {copy.steps.items.map((item, i) => (
+                                    <div key={item.title} className="flex flex-col items-center text-center">
+                                        <div className="w-14 h-14 rounded-full bg-white border-4 border-white ring-1 ring-blue-600 flex items-center justify-center shadow-md shadow-blue-600/10">
+                                            <span style={{ fontFamily: "'Inter', sans-serif", color: '#1D4ED8' }}>{i + 1}</span>
+                                        </div>
+                                        <h3 className="text-base font-black text-slate-900 mt-4 tracking-tight">{item.title}</h3>
+                                        <p className="text-sm text-slate-600 mt-2 leading-6">{item.text}</p>
+                                        <span className="mt-3 text-xs font-semibold text-slate-600 bg-slate-50 border border-slate-200 rounded-full px-3 py-1">{item.duration}</span>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="mt-10 text-center">
+                                <div className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-6 py-3 text-sm font-semibold text-slate-700">
+                                    {copy.steps.cta}
+                                </div>
+                            </div>
                         </div>
                     </section>
 
@@ -11274,7 +11304,7 @@
 
             if (!authReady) {
                 return (
-                    <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center px-6">
+                    <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center px-6">
                         <div className="bg-white border border-slate-200 rounded-3xl shadow-sm px-8 py-10 text-center max-w-md w-full">
                             <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto mb-5">
                                 <Icon icon="solar:shield-check-bold" style={{ fontSize: '28px' }} />
@@ -11341,7 +11371,7 @@
             const currentTitle = (page.startsWith('report-') || page.startsWith('case-report-')) ? "Rapport détaillé" : (titles[page] || "");
 
             return (
-                <div className="flex bg-[#F8FAFC]" data-auth-user={authUserId || ''}>
+                <div className="flex bg-[#FAFAF8]" data-auth-user={authUserId || ''}>
                     <ProSidebar
                         curPage={page}
                         setPage={setPage}

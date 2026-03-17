@@ -6077,14 +6077,37 @@
                                             <span className={`report-chip ${confidenceTone}`}>Confiance : {confidence.label}</span>
                                         </div>
                                         <p className="text-xs text-slate-300 lg:text-right">{new Date(reportPayload.generated_at).toLocaleDateString('fr-FR')} - {horizonLabel}</p>
-                                        <button
-                                            onClick={handleExportPDF}
-                                            disabled={isPDFGenerating}
-                                            className="inline-flex items-center justify-center gap-2 rounded-xl bg-white text-[#102A43] px-5 py-3 text-sm font-bold shadow-sm hover:bg-slate-100 disabled:bg-slate-300 disabled:text-slate-500 transition-colors"
-                                        >
-                                            {isPDFGenerating ? <Icon icon="solar:spinner-linear" className="text-lg animate-spin" /> : <Icon icon="solar:download-linear" className="text-lg" />}
-                                            {isPDFGenerating ? 'Génération PDF...' : 'Télécharger PDF'}
-                                        </button>
+                                        {reportPayload.pdf_url ? (
+                                            <div className="flex flex-col items-end gap-1">
+                                                <a
+                                                    href={reportPayload.pdf_url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-white text-[#102A43] px-5 py-3 text-sm font-bold shadow-sm hover:bg-slate-100 transition-colors"
+                                                >
+                                                    <Icon icon="solar:download-linear" className="text-lg" />
+                                                    Télécharger PDF
+                                                </a>
+                                                <span className="text-xs text-slate-400">Lien valable 15 jours · envoyé par email</span>
+                                                <button
+                                                    type="button"
+                                                    onClick={handleExportPDF}
+                                                    disabled={isPDFGenerating}
+                                                    className="text-xs text-slate-300 underline hover:text-white transition-colors"
+                                                >
+                                                    {isPDFGenerating ? 'Génération...' : 'Générer un nouveau PDF'}
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <button
+                                                onClick={handleExportPDF}
+                                                disabled={isPDFGenerating}
+                                                className="inline-flex items-center justify-center gap-2 rounded-xl bg-white text-[#102A43] px-5 py-3 text-sm font-bold shadow-sm hover:bg-slate-100 disabled:bg-slate-300 disabled:text-slate-500 transition-colors"
+                                            >
+                                                {isPDFGenerating ? <Icon icon="solar:spinner-linear" className="text-lg animate-spin" /> : <Icon icon="solar:download-linear" className="text-lg" />}
+                                                {isPDFGenerating ? 'Génération PDF...' : 'Télécharger PDF'}
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
 
@@ -6392,11 +6415,148 @@
         };
 
         /* ─────────────────────────────────────────────────────────────────────────
+           HELPERS : EXPORT PDF SERVEUR (save-public-report)
+           ───────────────────────────────────────────────────────────────────────── */
+
+        const newDiagnosticBuildDownloadFileName = (siteName, ext = 'pdf') => {
+            const stem = String(siteName || 'rapport')
+                .toLowerCase()
+                .replace(/[^\w]+/g, '-')
+                .replace(/-+/g, '-')
+                .replace(/^-|-$/g, '') || 'rapport';
+            return `${stem}.${ext}`;
+        };
+
+        const newDiagnosticBuildPdfExportPayload = (reportPayload) => {
+            const rp = reportPayload || {};
+            const meta = rp.inputs_summary || {};
+            const bench = rp.benchmark_result || {};
+            const composite = rp.composite_savings || {};
+            const calc = rp.calculation_results || {};
+            const actions = (rp.top_actions || []).slice(0, 6);
+            const confidence = rp.confidence || {};
+            const siteName = meta.site_name || 'Bâtiment diagnostiqué';
+            const activity = meta.activity || 'Activité à confirmer';
+            const address = meta.address || '';
+            const surface = Number((meta.surface && meta.surface.value) || meta.surface || 0);
+            const siteIntensity = Number((bench.site_intensity && bench.site_intensity.value) || 0);
+            const benchMedian = Number((bench.benchmark_median && bench.benchmark_median.value) || 0);
+            const annualKwh = Number((composite.annual_kwh && composite.annual_kwh.value) || 0);
+            const annualEuro = Number((composite.annual_euro && composite.annual_euro.value) || 0);
+            const totalCost = Number((calc.total_cost_euro_an && calc.total_cost_euro_an.value) || 0);
+            const reportId = rp.report_id || '';
+            const generatedAt = rp.generated_at || new Date().toISOString();
+
+            const ratio = benchMedian > 0 ? siteIntensity / benchMedian : 1;
+            const score = ratio < 0.6 ? 'A' : ratio < 0.9 ? 'B' : ratio < 1.2 ? 'C' : ratio < 1.7 ? 'D' : 'E';
+            const scoreColors = { A:'#16A34A', B:'#22C55E', C:'#F59E0B', D:'#F97316', E:'#EF4444' };
+            const scoreBgs = { A:'#DCFCE7', B:'#E8F5E9', C:'#FEF3C7', D:'#FFF7ED', E:'#FEE2E2' };
+            const scoreLabels = { A:'Très performant', B:'Performant', C:'Dans la médiane', D:'Surconsommation', E:'Très énergivore' };
+            const targetIntensity = Math.max(0, Math.round(siteIntensity - (surface > 0 ? annualKwh / surface : 0)));
+            const tRatio = benchMedian > 0 ? targetIntensity / benchMedian : 1;
+            const targetScore = tRatio < 0.6 ? 'A' : tRatio < 0.9 ? 'B' : tRatio < 1.2 ? 'C' : tRatio < 1.7 ? 'D' : 'E';
+
+            const fmtEur = (v) => `${Math.round(Number(v || 0)).toLocaleString('fr-FR')} EUR`;
+            const fmtInt = (v, u) => { const s = Math.round(Number(v || 0)).toLocaleString('fr-FR'); return u ? `${s} ${u}` : s; };
+            const esc = (v) => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+            const actionsRows = actions.length === 0
+                ? '<p style="font-size:13px;color:#64748b;">Aucune action prioritaire exploitable.</p>'
+                : `<table style="width:100%;border-collapse:collapse;font-size:13px;">
+                    <thead><tr>
+                      <th style="text-align:left;padding:10px 8px;border-bottom:1px solid #e2e8f0;font-size:11px;text-transform:uppercase;color:#64748b;">Action</th>
+                      <th style="text-align:left;padding:10px 8px;border-bottom:1px solid #e2e8f0;font-size:11px;text-transform:uppercase;color:#64748b;">Gain/an</th>
+                      <th style="text-align:left;padding:10px 8px;border-bottom:1px solid #e2e8f0;font-size:11px;text-transform:uppercase;color:#64748b;">Budget</th>
+                      <th style="text-align:left;padding:10px 8px;border-bottom:1px solid #e2e8f0;font-size:11px;text-transform:uppercase;color:#64748b;">ROI</th>
+                    </tr></thead>
+                    <tbody>${actions.map(a => {
+                        const roi = a.roi_years && a.roi_years.value != null ? `${String(a.roi_years.value).replace('.',',')} ans` : 'À confirmer';
+                        return `<tr>
+                          <td style="padding:10px 8px;border-bottom:1px solid #e2e8f0;vertical-align:top;"><strong>${esc(a.name||'Action recommandée')}</strong><div style="font-size:12px;color:#64748b;">${esc(a.category||'')}</div></td>
+                          <td style="padding:10px 8px;border-bottom:1px solid #e2e8f0;vertical-align:top;">${esc(fmtEur(a.gain_euro_an&&a.gain_euro_an.value||0))}</td>
+                          <td style="padding:10px 8px;border-bottom:1px solid #e2e8f0;vertical-align:top;">${esc(fmtEur(a.capex&&a.capex.value||0))}</td>
+                          <td style="padding:10px 8px;border-bottom:1px solid #e2e8f0;vertical-align:top;">${esc(roi)}</td>
+                        </tr>`;
+                    }).join('')}</tbody>
+                  </table>`;
+
+            const html = `<!DOCTYPE html>
+<html lang="fr"><head>
+<meta charset="UTF-8"/>
+<title>DiagTertiaire - ${esc(siteName)}</title>
+<style>
+*{box-sizing:border-box;}
+body{margin:0;font-family:Arial,sans-serif;background:#f8fafc;color:#0f172a;}
+.page{padding:28px;}
+.hero{background:linear-gradient(135deg,#102a43 0%,#1d4ed8 100%);color:#fff;border-radius:20px;padding:24px;}
+.hero-title{margin:8px 0;font-size:26px;font-weight:800;line-height:1.1;}
+.hero-meta{font-size:13px;color:rgba(255,255,255,0.85);line-height:1.6;}
+.hero-grid{display:grid;grid-template-columns:1.5fr 0.9fr;gap:14px;margin-top:18px;}
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:18px;page-break-inside:avoid;}
+.score-card{text-align:center;background:${scoreBgs[score]};color:${scoreColors[score]};}
+.score-val{font-size:52px;font-weight:900;line-height:1;margin:6px 0;}
+.score-lbl{font-size:14px;font-weight:700;color:#0f172a;}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px;}
+.stat{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:14px;}
+.stat-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#64748b;}
+.stat-val{font-size:22px;font-weight:900;margin-top:8px;}
+.stat-sub{font-size:11px;color:#64748b;margin-top:6px;}
+.section{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:18px;margin-top:14px;page-break-inside:avoid;}
+.section h2{margin:0 0 10px;font-size:16px;}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;}
+.detail{border:1px solid #e2e8f0;border-radius:12px;padding:12px;background:#f8fafc;}
+.detail strong{display:block;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;}
+.detail span{font-size:18px;font-weight:800;}
+.footer{margin-top:18px;font-size:11px;color:#94a3b8;text-align:center;}
+</style></head><body>
+<div class="page">
+  <div class="hero">
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;opacity:.8;">DiagTertiaire — Rapport public</div>
+    <div class="hero-title">${esc(siteName)}</div>
+    <div class="hero-meta">${esc(activity)}${surface > 0 ? ' | ' + fmtInt(surface, 'm²') : ''}${address ? ' | ' + esc(address) : ''}<br/>Rapport ${esc(reportId)} | Généré le ${esc(new Date(generatedAt).toLocaleDateString('fr-FR'))}</div>
+    <div class="hero-grid">
+      <div class="card">
+        <strong style="display:block;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.07em;">Lecture rapide</strong>
+        <p style="margin:8px 0 0;font-size:14px;line-height:1.7;">Le site se positionne en <strong>${esc(scoreLabels[score])}</strong>, avec un potentiel estimé à <strong>${esc(fmtEur(annualEuro))}</strong> d'économies par an.</p>
+        <div class="detail-grid">
+          <div class="detail"><strong>Intensité actuelle</strong><span>${esc(fmtInt(siteIntensity, 'kWh/m²/an'))}</span></div>
+          <div class="detail"><strong>Médiane secteur</strong><span>${esc(fmtInt(benchMedian, 'kWh/m²/an'))}</span></div>
+          <div class="detail"><strong>Cible estimée</strong><span>${esc(fmtInt(targetIntensity, 'kWh/m²/an'))}</span></div>
+          <div class="detail"><strong>Confiance</strong><span>${esc(confidence.label || 'Moyen')}</span></div>
+        </div>
+      </div>
+      <div class="card score-card">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:${scoreColors[score]};">Score énergie</div>
+        <div class="score-val">${esc(score)}</div>
+        <div class="score-lbl">${esc(scoreLabels[score])}</div>
+        <div style="font-size:12px;color:#334155;margin-top:4px;">Après travaux : ${esc(targetScore)}</div>
+      </div>
+    </div>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="stat-lbl">Coût annuel</div><div class="stat-val">${esc(fmtEur(totalCost))}</div><div class="stat-sub">Charges énergie estimées</div></div>
+    <div class="stat"><div class="stat-lbl">Économie annuelle</div><div class="stat-val">${esc(fmtEur(annualEuro))}</div><div class="stat-sub">${esc(fmtInt(annualKwh, 'kWh/an'))}</div></div>
+    <div class="stat"><div class="stat-lbl">Indice DiagTertiaire</div><div class="stat-val" style="color:${scoreColors[score]};">${esc(score)}</div><div class="stat-sub">${esc(scoreLabels[score])}</div></div>
+    <div class="stat"><div class="stat-lbl">Confiance calcul</div><div class="stat-val" style="font-size:16px;">${esc(confidence.label||'Moyen')}</div><div class="stat-sub">${esc(confidence.level||'medium')}</div></div>
+  </div>
+  <div class="section">
+    <h2>Actions prioritaires</h2>
+    ${actionsRows}
+  </div>
+  <p class="footer">Rapport DiagTertiaire généré le ${esc(new Date(generatedAt).toLocaleDateString('fr-FR'))} — diag-tertiaire.fr</p>
+</div>
+</body></html>`;
+
+            const fileName = newDiagnosticBuildDownloadFileName(siteName, 'pdf');
+            return { html, fileName };
+        };
+
+        /* ─────────────────────────────────────────────────────────────────────────
            FONCTION : EXPORT PDF
-           
+
            Génère un PDF du rapport et le télécharge.
            Utilise jsPDF (à charger via CDN).
-           
+
            TODO Phase V1.1 : Migrer vers PDFShift pour meilleur rendu
            ───────────────────────────────────────────────────────────────────────── */
 
@@ -6626,6 +6786,51 @@
                     }
 
                     setReportPayload(nextReportPayload);
+
+                    // Appel silencieux — ne jamais bloquer l'affichage du rapport
+                    const notifyAndSavePdf = async (rp, fd, lsId) => {
+                        try {
+                            const reportNode = document.querySelector('.new-diagnostic-report');
+                            if (!reportNode) return;
+
+                            const { html, fileName } = newDiagnosticBuildPdfExportPayload(rp);
+                            if (!html) return;
+
+                            const siteName = (rp.inputs_summary && rp.inputs_summary.site_name) || 'rapport';
+                            const filename = newDiagnosticBuildDownloadFileName(siteName, 'pdf');
+
+                            const response = await fetch('/api/save-public-report', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    html,
+                                    filename,
+                                    email: fd.email,
+                                    reportMeta: {
+                                        reportId: rp.report_id,
+                                        siteName: (rp.inputs_summary && rp.inputs_summary.site_name) || 'Bâtiment diagnostiqué',
+                                        activity: (rp.inputs_summary && rp.inputs_summary.activity) || '',
+                                        surface: (rp.inputs_summary && rp.inputs_summary.surface && rp.inputs_summary.surface.value) || 0,
+                                        scoreLettre: (rp.benchmark_result && rp.benchmark_result.score_letter) || newDiagnosticComputeSectorLabel(
+                                            rp.benchmark_result && rp.benchmark_result.site_intensity && rp.benchmark_result.site_intensity.value,
+                                            rp.benchmark_result && rp.benchmark_result.benchmark_median && rp.benchmark_result.benchmark_median.value
+                                        ).label || '',
+                                        economiesTotalesAnnuelles: (rp.composite_savings && rp.composite_savings.annual_euro && rp.composite_savings.annual_euro.value) || 0,
+                                        leadSubmissionId: lsId || null
+                                    }
+                                })
+                            });
+
+                            if (!response.ok) return;
+                            const result = await response.json();
+                            if (result && result.pdf_url) {
+                                setReportPayload((prev) => prev ? { ...prev, pdf_url: result.pdf_url } : prev);
+                            }
+                        } catch (_) {
+                            // Silencieux — le fallback local reste disponible
+                        }
+                    };
+                    notifyAndSavePdf(nextReportPayload, formData, leadSubmissionId);
 
                     if (typeof onComplete === 'function') {
                         onComplete(formData, nextReportPayload);
@@ -6892,9 +7097,9 @@
                                     <div>
                                         <h4 className="text-sm font-bold text-white mb-4">Légal</h4>
                                         <ul className="space-y-2.5">
-                                            <li><button type="button" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Mentions légales</button></li>
-                                            <li><button type="button" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Politique de confidentialité</button></li>
-                                            <li><button type="button" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">CGU</button></li>
+                                            <li><a href="./mentions-legales.html" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Mentions légales</a></li>
+                                            <li><a href="./politique-confidentialite.html" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Politique de confidentialité</a></li>
+                                            <li><a href="./conditions-generales-utilisation.html" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">CGU</a></li>
                                             <li><button type="button" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Gestion des cookies</button></li>
                                         </ul>
                                     </div>

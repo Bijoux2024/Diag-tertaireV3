@@ -61,6 +61,9 @@ const buildRapportDisponibleEmail = (rawData) => {
   const surfaceLabel = data.surface ? `${data.surface} m²` : 'Surface non renseignée';
   const savingsLabel = formatCurrency(data.economiesTotalesAnnuelles || 0);
   const firstName = String(data.prenom || '').trim();
+  const pdfUrl = String(data.pdfUrl || data.reportUrl || '').trim();
+  const ctaHref = escapeHtml(pdfUrl || '#');
+  const hasPdf = Boolean(pdfUrl);
 
   return {
     to: String(data.email || '').trim(),
@@ -75,8 +78,11 @@ const buildRapportDisponibleEmail = (rawData) => {
       `Indice : ${scoreLabel}`,
       `Économies annuelles estimées : ${savingsLabel}`,
       '',
-      `Accéder au rapport : ${data.reportUrl || ''}`
-    ].join('\n'),
+      hasPdf ? '📄 Votre rapport PDF est prêt — cliquez sur le lien ci-dessous pour le télécharger.' : '',
+      `Télécharger mon rapport PDF : ${pdfUrl || data.reportUrl || ''}`,
+      '',
+      hasPdf ? 'Ce lien est valable 15 jours à compter de la réception de cet email.' : ''
+    ].filter((line, i, arr) => line !== '' || (arr[i - 1] !== '' && arr[i + 1] !== '')).join('\n'),
     html: `
       <div style="font-family:Arial,sans-serif;background:#F8FAFC;padding:24px;color:#0F172A;">
         <div style="max-width:640px;margin:0 auto;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:20px;overflow:hidden;">
@@ -86,7 +92,8 @@ const buildRapportDisponibleEmail = (rawData) => {
           </div>
           <div style="padding:28px;">
             <p style="margin:0 0 18px;font-size:16px;line-height:1.6;">${escapeHtml(firstName ? `Bonjour ${firstName},` : 'Bonjour,')}</p>
-            <p style="margin:0 0 22px;font-size:15px;line-height:1.7;">Votre rapport DiagTertiaire est maintenant disponible en téléchargement.</p>
+            ${hasPdf ? `<p style="margin:0 0 8px;font-size:15px;line-height:1.7;">📄 Votre rapport PDF est prêt — cliquez sur le bouton ci-dessous pour le télécharger.</p>` : ''}
+            <p style="margin:0 0 22px;font-size:14px;line-height:1.7;color:#64748B;">Votre rapport DiagTertiaire est maintenant disponible en téléchargement.</p>
             <div style="display:grid;gap:12px;margin-bottom:24px;">
               <div style="padding:14px 16px;border:1px solid #E2E8F0;border-radius:14px;background:#F8FAFC;"><strong>Bâtiment</strong><br>${escapeHtml(buildingName)}</div>
               <div style="padding:14px 16px;border:1px solid #E2E8F0;border-radius:14px;background:#F8FAFC;"><strong>Activité</strong><br>${escapeHtml(activityLabel)}</div>
@@ -94,7 +101,8 @@ const buildRapportDisponibleEmail = (rawData) => {
               <div style="padding:14px 16px;border:1px solid #E2E8F0;border-radius:14px;background:#F8FAFC;"><strong>Indice DiagTertiaire</strong><br>${escapeHtml(scoreLabel)}</div>
               <div style="padding:14px 16px;border:1px solid #E2E8F0;border-radius:14px;background:#F8FAFC;"><strong>Économies annuelles estimées</strong><br>${escapeHtml(savingsLabel)}</div>
             </div>
-            <a href="${escapeHtml(data.reportUrl || '#')}" style="display:inline-block;padding:14px 20px;border-radius:12px;background:#1D4ED8;color:#FFFFFF;text-decoration:none;font-weight:700;">Accéder au rapport</a>
+            <a href="${ctaHref}" style="display:inline-block;padding:14px 20px;border-radius:12px;background:#1D4ED8;color:#FFFFFF;text-decoration:none;font-weight:700;">Télécharger mon rapport PDF</a>
+            ${hasPdf ? `<p style="margin:16px 0 0;font-size:12px;line-height:1.6;color:#94A3B8;">Ce lien est valable 15 jours à compter de la réception de cet email.</p>` : ''}
           </div>
         </div>
       </div>

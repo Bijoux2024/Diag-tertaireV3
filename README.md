@@ -43,6 +43,22 @@ Configuration minimale Supabase :
 3. `supabase/migrations/20260311_storage_assets.sql`
 4. `supabase/migrations/20260311_report_pdf_persistence.sql`
 5. `supabase/migrations/20260312_case_secure_deletion.sql`
+6. `supabase/migrations/20260316_public_report_pdfs.sql`
+
+## Bucket public-reports (rapport public PDF)
+
+A creer manuellement dans Supabase Dashboard -> Storage :
+1. Cliquer "New bucket"
+2. Nom : `public-reports`
+3. Cocher "Public bucket" : OUI
+4. File size limit : 10 MB
+5. Allowed MIME types : `application/pdf`
+
+Variables serveur supplementaires requises pour `/api/save-public-report` :
+- `RESEND_API_KEY`
+- `RESEND_FROM`
+
+Flux : formulaire public -> rapport interactif -> PDF Chromium -> bucket `public-reports` -> URL signee 15 jours -> email Resend -> `public_report_pdfs` + `lead_submissions.pdf_url`.
 
 Exemples de redirect URLs :
 - `http://localhost:3000/index.saaspro.html`

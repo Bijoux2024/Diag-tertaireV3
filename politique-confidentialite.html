@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Politique de confidentialité - DiagTertiaire</title>
+    
+    <!-- Polices -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- TailwindCSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+
+    <style>
+        :root {
+            --bg: #F8FAFC;
+            --text: #0F172A;
+            --muted: #64748B;
+            --border: #E2E8F0;
+            --blue-action: #1D4ED8;
+            --blue-hover: #1E40AF;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            -webkit-font-smoothing: antialiased;
+            line-height: 1.7;
+        }
+
+        h1, h2, h3 { letter-spacing: -0.02em; }
+        
+        a {
+            color: var(--blue-action);
+            text-decoration: underline;
+            text-underline-offset: 4px;
+            transition: color 0.2s;
+        }
+
+        a:hover { color: var(--blue-hover); }
+
+        .legal-card {
+            background: #FFFFFF;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(15, 23, 42, 0.03);
+            margin-bottom: 2rem;
+        }
+
+        .legal-section-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .legal-subsection-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .legal-content {
+            color: #334155;
+            font-size: 0.95rem;
+        }
+
+        .legal-content p { margin-bottom: 0.75rem; }
+        .legal-content p:last-child { margin-bottom: 0; }
+        .legal-content ul {
+            list-style-type: none;
+            padding-left: 0.5rem;
+            margin-top: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+        .legal-content ul li {
+            position: relative;
+            padding-left: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .legal-content ul li::before {
+            content: "•";
+            color: var(--blue-action);
+            font-weight: bold;
+            display: inline-block;
+            width: 1rem;
+            margin-left: -1rem;
+        }
+
+        @media (max-width: 768px) {
+            .legal-card {
+                padding: 1.5rem;
+                border-radius: 12px;
+            }
+        }
+    </style>
+</head>
+
+<body class="flex flex-col min-h-screen">
+    
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto px-4 flex items-center justify-between h-[74px]">
+            <a href="/" class="flex items-center gap-2 hover:opacity-80 transition-opacity" style="text-decoration: none;">
+                <div class="w-8 h-8 bg-blue-600/10 rounded-lg flex items-center justify-center">
+                    <iconify-icon icon="solar:buildings-2-linear" style="color: #1D4ED8; font-size: 18px;"></iconify-icon>
+                </div>
+                <span class="font-bold text-slate-900 text-lg">DiagTertiaire</span>
+            </a>
+            <a href="/" class="text-sm font-semibold text-slate-500 hover:text-slate-900 flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 px-4 py-2 rounded-lg transition-colors" style="text-decoration: none;">
+                <iconify-icon icon="solar:arrow-left-linear" class="text-lg"></iconify-icon>
+                Retour
+            </a>
+        </div>
+    </header>
+
+    <main class="flex-1 py-12 md:py-20 px-4">
+        <div class="max-w-3xl mx-auto">
+            
+            <div class="mb-10 text-center">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-sm font-semibold mb-4 border border-blue-100">
+                    <iconify-icon icon="solar:shield-check-linear"></iconify-icon>
+                    Confidentialité
+                </div>
+                <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 mb-4">Politique de confidentialité</h1>
+                <p class="text-slate-500 text-sm font-medium">Dernière mise à jour : XX/XX/20XX</p>
+            </div>
+            
+            <div class="legal-card">
+                <h2 class="legal-section-title"><iconify-icon icon="solar:document-text-linear" class="text-blue-600"></iconify-icon> Objet de la politique</h2>
+                <div class="legal-content">
+                    <p>La présente politique de confidentialité explique comment DiagTertiaire collecte, utilise, conserve, sécurise et, le cas échéant, transmet des données personnelles dans le cadre du site public DiagTertiaire, du service de pré-diagnostic énergétique, des demandes de contact et de mise en relation, de l’espace professionnel DiagTertiaire Pro et, le cas échéant, des futures déclinaisons professionnelles ou marque blanche du service.</p>
+                    <p>Cette politique a pour objet d’informer les personnes concernées de manière claire sur les traitements réalisés.</p>
+                </div>
+            </div>
+
+            <div class="legal-card">
+                <h2 class="legal-section-title"><iconify-icon icon="solar:buildings-linear" class="text-blue-600"></iconify-icon> Responsable du traitement</h2>
+                <div class="legal-content">
+                    <p>Le responsable du traitement est :</p>
+                    <p>
+                        <strong>Dénomination sociale :</strong> XX<br>
+                        <strong>Forme juridique :</strong> XX<br>
+                        <strong>Siège social :</strong> XX<br>
+                        <strong>RCS / SIREN :</strong> XX
+                    </p>
+                    <p>
+                        <strong>Adresse e-mail de contact :</strong> <a href="mailto:contact@diag-tertiaire.fr">contact@diag-tertiaire.fr</a><br>
+                        <strong>Téléphone :</strong> XX
+                    </p>
+                    <p>Lorsque la présente politique mentionne « DiagTertiaire », « nous », « notre » ou « nos », elle désigne l’entité ci-dessus.</p>
+                </div>
+            </div>
+
+            <div class="legal-card">
+                <h2 class="legal-section-title"><iconify-icon icon="solar:users-group-two-rounded-linear" class="text-blue-600"></iconify-icon> Champ d’application</h2>
+                <div class="legal-content">
+                    <p>La présente politique s’applique aux visiteurs du site, aux utilisateurs du pré-diagnostic public, aux personnes qui remplissent un formulaire de contact ou demandent une mise en relation, aux utilisateurs de l’espace professionnel et, plus largement, aux personnes dont certaines données peuvent être renseignées dans l’espace professionnel, lorsque ces données constituent des données à caractère personnel.</p>
+                </div>
+            </div>
+
+            <div class="legal-card">
+                <h2 class="legal-section-title"><iconify-icon icon="solar:database-linear" class="text-blue-600"></iconify-icon> Données susceptibles d’être collectées</h2>
+                <div class="legal-content">
+                    <h3 class="legal-subsection-title">Données fournies dans le cadre du pré-diagnostic public</h3>
+                    <ul>
+                        <li>adresse e-mail ;</li>
+                        <li>numéro de téléphone, lorsqu’il est renseigné ;</li>
+                        <li>nom du site ou du bâtiment ;</li>
+                        <li>adresse ou localisation du site ;</li>
+                        <li>code postal ;</li>
+                        <li>activité du site ;</li>
+                        <li>surface ;</li>
+                        <li>année ou période de construction ;</li>
+                        <li>type d’énergie utilisée ;</li>
+                        <li>données de consommation et de dépenses énergétiques ;</li>
+                        <li>informations sur les travaux déjà réalisés ;</li>
+                        <li>objectif principal, horizon de projet, rôle dans la décision ;</li>
+                        <li>consentements exprimés par l’utilisateur ;</li>
+                        <li>contenu du rapport généré à partir des données saisies.</li>
+                    </ul>
+
+                    <h3 class="legal-subsection-title">Données fournies dans le cadre d’une demande de contact ou d’intérêt Pro</h3>
+                    <ul>
+                        <li>prénom et nom ;</li>
+                        <li>adresse e-mail professionnelle ;</li>
+                        <li>société ;</li>
+                        <li>message libre ;</li>
+                        <li>informations liées à la demande.</li>
+                    </ul>
+
+                    <h3 class="legal-subsection-title">Données liées à l’espace professionnel</h3>
+                    <ul>
+                        <li>prénom et nom ;</li>
+                        <li>adresse e-mail professionnelle ;</li>
+                        <li>société ou organisation ;</li>
+                        <li>rôle ou métier ;</li>
+                        <li>identifiants techniques de compte ;</li>
+                        <li>informations liées à l’authentification ;</li>
+                        <li>paramètres du workspace ;</li>
+                        <li>identité visuelle chargée par l’utilisateur, notamment logo et éléments de branding ;</li>
+                        <li>dossiers, rapports, notes, documents, fichiers et métadonnées associés ;</li>
+                        <li>données relatives à l’usage du service, à la sécurité, à la maintenance et à l’administration technique.</li>
+                    </ul>
+
+                    <h3 class="legal-subsection-title">Données de navigation et données techniques</h3>
+                    <ul>
+                        <li>adresse IP ;</li>
+                        <li>journaux techniques ;</li>
+                        <li>événements de sécurité ;</li>
+                        <li>informations liées au navigateur et au terminal ;</li>
+                        <li>données de session ;</li>
+                        <li>données stockées localement sur le navigateur lorsque cela est nécessaire au fonctionnement du service, à la continuité d’usage, à la sécurité ou à la restauration locale d’un rapport.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="legal-card">
+                <h2 class="legal-section-title"><iconify-icon icon="solar:target-linear" class="text-blue-600"></iconify-icon> Finalités et bases légales des traitements</h2>
+                <div class="legal-content">
+                    <h3 class="legal-subsection-title">Fourniture du pré-diagnostic et du rapport</h3>
+                    <p><strong>Finalités :</strong> permettre à l’utilisateur de renseigner les informations nécessaires ; produire une estimation énergétique indicative ; générer, afficher, télécharger ou transmettre le rapport correspondant ; conserver temporairement les données nécessaires à la continuité du service et au support.</p>
+                    <p><strong>Base légale :</strong> exécution de mesures précontractuelles ou d’un service demandé par l’utilisateur.</p>
+
+                    <h3 class="legal-subsection-title">Gestion des demandes de contact et d’intérêt commercial</h3>
+                    <p><strong>Finalités :</strong> répondre à une demande entrante ; recontacter un utilisateur au sujet de sa demande ; organiser un échange commercial ou une démonstration du service ; suivre les demandes reçues et leur traitement.</p>
+                    <p><strong>Base légale :</strong> exécution de mesures précontractuelles prises à la demande de la personne concernée ; et, selon les cas, intérêt légitime de DiagTertiaire à gérer les demandes adressées au service.</p>
+
+                    <h3 class="legal-subsection-title">Mise en relation avec des partenaires</h3>
+                    <p><strong>Finalités :</strong> transmettre les coordonnées de l’utilisateur et les éléments utiles à son projet à un ou plusieurs partenaires qualifiés ; permettre à ces partenaires de recontacter l’utilisateur ; tracer la preuve du consentement donné à cette transmission.</p>
+                    <p><strong>Base légale :</strong> consentement de la personne concernée.</p>
+                    <p>Aucune transmission à un partenaire au titre de cette finalité n’est effectuée sans action positive explicite de l’utilisateur lorsque le service prévoit une case ou un mécanisme de consentement dédié.</p>
+
+                    <h3 class="legal-subsection-title">Création, gestion et sécurisation de l’espace professionnel</h3>
+                    <p><strong>Finalités :</strong> créer et administrer un compte utilisateur ; authentifier l’utilisateur ; fournir le workspace Pro ; enregistrer les paramètres de l’organisation ; stocker les dossiers, rapports, fichiers et éléments de branding ; permettre la génération et l’archivage de rapports ; administrer, sécuriser, maintenir et améliorer le service.</p>
+                    <p><strong>Base légale :</strong> exécution du service ou de mesures précontractuelles ; intérêt légitime de DiagTertiaire à assurer la sécurité, la maintenance, la prévention des abus et la continuité du service ; respect des obligations légales applicables, lorsqu’elles existent.</p>
+
+                    <h3 class="legal-subsection-title">Sécurité, prévention de la fraude et gestion des preuves</h3>
+                    <p><strong>Finalités :</strong> détecter les usages abusifs, frauduleux ou automatisés ; protéger l’intégrité du site, des comptes et des données ; conserver des preuves techniques en cas d’incident, litige, suppression, restauration ou exercice de droits ; gérer la traçabilité minimale nécessaire à l’administration du service.</p>
+                    <p><strong>Base légale :</strong> intérêt légitime de DiagTertiaire à sécuriser ses services, prévenir les abus et défendre ses droits.</p>
+
+                    <h3 class="legal-subsection-title">Respect des obligations légales</h3>
+                    <p><strong>Finalités :</strong> répondre aux demandes d’exercice des droits ; respecter les obligations comptables, fiscales, judiciaires, réglementaires ou de sécurité ; coopérer avec les autorités habilitées lorsque la loi l’impose.</p>
+                    <p><strong>Base légale :</strong> obligation légale.</p>
+                </div>
+            </div>
+
+            <div class="legal-card">
+                <h2 class="legal-section-title"><iconify-icon icon="solar:info-square-linear" class="text-blue-600"></iconify-icon> Caractère obligatoire ou facultatif des données</h2>
+                <div class="legal-content">
+                    <p>Les champs strictement nécessaires à la fourniture d’un service ou d’une fonctionnalité peuvent être signalés comme obligatoires.</p>
+                    <p>En particulier : une adresse e-mail peut être nécessaire pour accéder à un rapport ou créer un compte ; certaines informations techniques sur le site ou le bâtiment sont nécessaires pour générer un pré-diagnostic pertinent ; certaines données sont nécessaires pour créer et exploiter un espace professionnel.</p>
+                    <p>Si les données marquées comme obligatoires ne sont pas fournies, certaines fonctionnalités peuvent ne pas être accessibles ou ne pas fonctionner correctement.</p>
+                    <p>Les données facultatives demeurent facultatives, mais leur absence peut limiter la précision, la fluidité ou la personnalisation du service.</p>
+                </div>
+            </div>
+
+            <div class="legal-card">
+                <h2 class="legal-section-title"><iconify-icon icon="solar:share-circle-linear" class="text-blue-600"></iconify-icon> Destinataires des données</h2>
+                <div class="legal-content">
+                    <p>Les données personnelles sont accessibles, dans la limite de leurs attributions respectives, aux seules personnes habilitées.</p>
+                    <p>Peuvent notamment être destinataires des données : les membres autorisés de l’équipe DiagTertiaire ; les prestataires techniques intervenant pour l’hébergement, l’authentification, la base de données, le stockage, la maintenance, l’envoi d’e-mails transactionnels et la sécurité ; les partenaires professionnels, uniquement lorsque l’utilisateur a expressément demandé ou accepté une mise en relation ; les autorités administratives, judiciaires ou organismes habilités, lorsque la loi l’impose.</p>
+                </div>
+            </div>
+
+            <div class="legal-card">
+                <h2 class="legal-section-title"><iconify-icon icon="solar:handshake-linear" class="text-blue-600"></iconify-icon> Cas particulier de la mise en relation partenaire</h2>
+                <div class="legal-content">
+                    <p>Lorsqu’un utilisateur demande à être mis en relation avec un partenaire, DiagTertiaire peut transmettre aux partenaires concernés les informations strictement utiles au traitement de cette demande, notamment : identité ou coordonnées de contact ; informations sur le site ou le bâtiment ; contexte du besoin ; éléments utiles au premier niveau de qualification du projet.</p>
+                    <p>Cette transmission ne vaut ni recommandation personnalisée, ni garantie de disponibilité, ni garantie de résultat, ni validation de l’offre ou de la qualité du partenaire.</p>
+                    <p>Les partenaires destinataires deviennent ensuite responsables des traitements qu’ils réalisent pour leur propre compte à partir des données qui leur ont été transmises.</p>
+                </div>
+            </div>
+
+            <div class="legal-card">
+                <h2 class="legal-section-title"><iconify-icon icon="solar:user-circle-linear" class="text-blue-600"></iconify-icon> Cas particulier de l’espace Pro et des données de tiers</h2>
+                <div class="legal-content">
+                    <p>L’espace Pro peut permettre à un utilisateur professionnel de renseigner, organiser, stocker, traiter ou partager certaines données relatives à ses propres prospects, clients, contacts, sites, dossiers ou projets.</p>
+                    <p>Dans un tel cas :</p>
+                    <ul>
+                        <li>l’utilisateur Pro demeure responsable de la licéité des données qu’il renseigne dans le service et, le cas échéant, de l’information des personnes concernées ;</li>
+                        <li>DiagTertiaire agit, selon les cas d’usage et la documentation contractuelle applicable, soit comme responsable de traitement pour l’administration et la sécurité du service, soit comme prestataire technique traitant certaines données pour le compte de l’utilisateur Pro ;</li>
+                        <li>lorsque DiagTertiaire intervient en qualité de sous-traitant pour un client Pro, un cadre contractuel spécifique pourra préciser les instructions, les finalités, les catégories de données, les sous-traitants ultérieurs et les mesures de sécurité applicables.</li>
+                    </ul>
+                    <p>En l’absence d’instruction contraire ou de cadre spécifique plus précis, DiagTertiaire limite ses opérations sur ces données à ce qui est nécessaire au fonctionnement, à l’hébergement, à la sécurité, à la maintenance, à la sauvegarde, à la restauration et au support technique du service.</p>
+                </div>
+            </div>
+
+            <div class="legal-card">
+                <h2 class="legal-section-title"><iconify-icon icon="solar:global-linear" class="text-blue-600"></iconify-icon> Transferts de données hors Union européenne</h2>
+                <div class="legal-content">
+                    <p>Certains prestataires techniques ou sous-traitants peuvent être situés hors de l’Union européenne ou de l’Espace économique européen, notamment aux États-Unis.</p>
+                    <p>Lorsque de tels transferts existent, DiagTertiaire s’efforce de les encadrer au moyen des mécanismes juridiques appropriés prévus par la réglementation applicable, notamment : décision d’adéquation ; clauses contractuelles types ; ou tout autre mécanisme valable au jour du transfert.</p>
+                    <p>Lorsque le prestataire concerné relève d’un mécanisme de transfert reconnu applicable, ce mécanisme peut être utilisé pour encadrer le transfert.</p>
+                </div>
+            </div>
+
+            <div class="legal-card">
+                <h2 class="legal-section-title"><iconify-icon icon="solar:history-linear" class="text-blue-600"></iconify-icon> Durées de conservation</h2>
+                <div class="legal-content">
+                    <h3 class="legal-subsection-title">Site public et pré-diagnostic</h3>
+                    <p>Les données issues du pré-diagnostic, des demandes de contact et des demandes entrantes de prospection sont conservées pendant une durée maximale de 18 mois à compter du dernier échange utile, sauf obligation légale particulière, nécessité de conservation probatoire, ou poursuite d’une relation contractuelle ou précontractuelle.</p>
+
+                    <h3 class="legal-subsection-title">Consentement de mise en relation partenaire</h3>
+                    <p>La preuve du consentement et les éléments liés à la demande de mise en relation peuvent être conservés pendant la durée nécessaire à la gestion de la demande, à la traçabilité du consentement et à la défense des droits de DiagTertiaire, dans la limite des durées légalement applicables.</p>
+
+                    <h3 class="legal-subsection-title">Compte et espace Pro</h3>
+                    <p>Les données liées au compte Pro et au workspace sont conservées pendant la durée d’existence du compte, puis pendant une durée de XX après fermeture ou suppression du compte pour permettre la gestion des demandes résiduelles, sauvegardes, incidents, litiges et obligations légales ; ou, lorsque la loi l’impose, pendant la durée requise par cette loi.</p>
+                    <p>Les contenus supprimés peuvent subsister temporairement dans des sauvegardes techniques ou dans des environnements d’archivage transitoire avant effacement définitif ou anonymisation.</p>
+
+                    <h3 class="legal-subsection-title">Journaux de sécurité et événements techniques</h3>
+                    <p>Les journaux techniques et de sécurité sont conservés pendant une durée maximale de XX, sauf nécessité particulière liée à un incident, à une enquête, à la prévention de la fraude ou à une obligation légale.</p>
+                </div>
+            </div>
+
+            <div class="legal-card">
+                <h2 class="legal-section-title"><iconify-icon icon="solar:lock-keyhole-linear" class="text-blue-600"></iconify-icon> Sécurité des données</h2>
+                <div class="legal-content">
+                    <p>DiagTertiaire met en œuvre des mesures techniques et organisationnelles raisonnables destinées à protéger les données personnelles contre la destruction, la perte, l’altération, la divulgation non autorisée, l’accès non autorisé ou tout autre traitement non autorisé.</p>
+                    <p>Ces mesures peuvent inclure, selon les cas : cloisonnement des accès ; authentification ; journalisation ; restrictions d’accès par organisation ; stockage privé ; limitation des accès internes ; mécanismes de suppression sécurisée ; sauvegardes et mesures de restauration ; et dispositifs de prévention des abus.</p>
+                    <p>Aucune mesure de sécurité n’offrant une garantie absolue, l’utilisateur est invité à faire preuve de prudence dans les informations qu’il transmet, partage ou conserve via le service.</p>
+                </div>
+            </div>
+
+            <div class="legal-card">
+                <h2 class="legal-section-title"><iconify-icon icon="solar:browser-linear" class="text-blue-600"></iconify-icon> Données stockées localement sur le navigateur</h2>
+                <div class="legal-content">
+                    <p>Pour certaines fonctionnalités, DiagTertiaire peut utiliser des mécanismes techniques locaux du navigateur, notamment du stockage local ou de session, afin de maintenir une session ou un état de formulaire, faciliter la reprise d’un parcours interrompu, restaurer localement un rapport, limiter les abus ou comportements automatisés, et améliorer la continuité d’usage du service.</p>
+                    <p>Ces données peuvent être effacées par l’utilisateur depuis son navigateur ou, lorsque le service le permet, via une action dédiée dans l’interface.</p>
+                </div>
+            </div>
+
+            <div class="legal-card">
+                <h2 class="legal-section-title"><iconify-icon icon="solar:link-linear" class="text-blue-600"></iconify-icon> Partage par lien et données publiées à l’initiative de l’utilisateur</h2>
+                <div class="legal-content">
+                    <p>Certaines fonctionnalités de partage peuvent générer un lien permettant de consulter un rapport ou un contenu sans authentification forte, lorsque ce lien est détenu.</p>
+                    <p>L’utilisateur reconnaît qu’un tel lien doit être traité comme un lien de partage et non comme un coffre-fort confidentiel.</p>
+                    <p>DiagTertiaire recommande de ne pas intégrer de données personnelles inutiles, excessives ou sensibles dans un contenu destiné à être partagé.</p>
+                </div>
+            </div>
+
+            <div class="legal-card">
+                <h2 class="legal-section-title"><iconify-icon icon="solar:danger-triangle-linear" class="text-blue-600"></iconify-icon> Données sensibles et mineurs</h2>
+                <div class="legal-content">
+                    <p>Le service n’a pas vocation à collecter des données sensibles au sens de la réglementation, ni des données sans lien direct avec les finalités décrites dans la présente politique.</p>
+                    <p>Les utilisateurs s’engagent à ne pas transmettre, sauf nécessité juridique clairement identifiée et base légale appropriée, de données sensibles, de secrets non nécessaires, ou de données excessives au regard des finalités poursuivies.</p>
+                    <p>Le service n’est pas destiné aux mineurs agissant seuls dans un cadre de consommation grand public.</p>
+                </div>
+            </div>
+
+            <div class="legal-card">
+                <h2 class="legal-section-title"><iconify-icon icon="solar:user-id-linear" class="text-blue-600"></iconify-icon> Droits des personnes concernées</h2>
+                <div class="legal-content">
+                    <p>Sous réserve des conditions prévues par la réglementation applicable, toute personne concernée dispose notamment des droits suivants : droit d’accès ; droit de rectification ; droit à l’effacement ; droit à la limitation du traitement ; droit d’opposition ; droit à la portabilité lorsque ce droit est applicable ; droit de retirer son consentement à tout moment lorsque le traitement repose sur le consentement, sans remettre en cause la licéité du traitement antérieur à ce retrait ; droit de définir des directives relatives au sort de ses données après son décès, dans les conditions prévues par le droit français.</p>
+                </div>
+            </div>
+
+            <div class="legal-card">
+                <h2 class="legal-section-title"><iconify-icon icon="solar:letter-linear" class="text-blue-600"></iconify-icon> Exercice des droits</h2>
+                <div class="legal-content">
+                    <p>Les demandes relatives aux données personnelles peuvent être adressées à :</p>
+                    <p><a href="mailto:contact@diag-tertiaire.fr">contact@diag-tertiaire.fr</a></p>
+                    <p>Afin de protéger les personnes concernées, DiagTertiaire peut demander des éléments raisonnables permettant de vérifier l’identité du demandeur avant de donner suite à une demande.</p>
+                    <p>En cas de difficulté non résolue, la personne concernée peut introduire une réclamation auprès de la CNIL.</p>
+                </div>
+            </div>
+
+            <div class="legal-card">
+                <h2 class="legal-section-title"><iconify-icon icon="solar:cpu-linear" class="text-blue-600"></iconify-icon> Absence de décision automatisée produisant des effets juridiques</h2>
+                <div class="legal-content">
+                    <p>Les résultats, scores, estimations, priorisations et rapports générés par DiagTertiaire ont une finalité indicative d’aide à la décision.</p>
+                    <p>Ils ne constituent pas, en eux-mêmes, une décision automatisée produisant des effets juridiques sur la personne concernée au sens où ils ne remplacent ni une décision humaine, ni une instruction réglementaire, ni un audit opposable.</p>
+                </div>
+            </div>
+
+            <div class="legal-card">
+                <h2 class="legal-section-title"><iconify-icon icon="solar:pen-linear" class="text-blue-600"></iconify-icon> Modification de la politique</h2>
+                <div class="legal-content">
+                    <p>DiagTertiaire peut modifier la présente politique de confidentialité à tout moment pour tenir compte d’une évolution légale ou réglementaire, d’une évolution du service, d’un changement de prestataire, ou d’une évolution des traitements réalisés.</p>
+                    <p>La version applicable est celle publiée sur le site à sa date de mise à jour.</p>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <footer class="bg-[#0F172A] py-8 border-t border-white/5 mt-auto">
+        <div class="max-w-4xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-[#475569]">
+            <p>© 2026 DiagTertiaire • Tous droits réservés.</p>
+            <div class="flex items-center gap-3">
+                <span class="bg-white/5 px-2.5 py-1.5 rounded-lg font-medium">SSL</span>
+                <span class="bg-white/5 px-2.5 py-1.5 rounded-lg font-medium">RGPD</span>
+                <span class="bg-white/5 px-2.5 py-1.5 rounded-lg font-medium">🇫🇷 FR</span>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

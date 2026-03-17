@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conditions générales d'utilisation - DiagTertiaire</title>
+    
+    <!-- Polices -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- TailwindCSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+
+    <style>
+        :root {
+            --bg: #F8FAFC;
+            --text: #0F172A;
+            --muted: #64748B;
+            --border: #E2E8F0;
+            --blue-action: #1D4ED8;
+            --blue-hover: #1E40AF;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            -webkit-font-smoothing: antialiased;
+            line-height: 1.7;
+        }
+
+        h1, h2, h3 { letter-spacing: -0.02em; }
+        
+        a {
+            color: var(--blue-action);
+            text-decoration: underline;
+            text-underline-offset: 4px;
+            transition: color 0.2s;
+        }
+
+        a:hover { color: var(--blue-hover); }
+
+        .legal-card {
+            background: #FFFFFF;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(15, 23, 42, 0.03);
+            margin-bottom: 2rem;
+        }
+
+        .legal-section-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .legal-content {
+            color: #334155;
+            font-size: 0.95rem;
+        }
+
+        .legal-content p { margin-bottom: 0.75rem; }
+        .legal-content p:last-child { margin-bottom: 0; }
+
+        @media (max-width: 768px) {
+            .legal-card {
+                padding: 1.5rem;
+                border-radius: 12px;
+            }
+        }
+    </style>
+</head>
+
+<body class="flex flex-col min-h-screen">
+    
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto px-4 flex items-center justify-between h-[74px]">
+            <a href="/" class="flex items-center gap-2 hover:opacity-80 transition-opacity" style="text-decoration: none;">
+                <div class="w-8 h-8 bg-blue-600/10 rounded-lg flex items-center justify-center">
+                    <iconify-icon icon="solar:buildings-2-linear" style="color: #1D4ED8; font-size: 18px;"></iconify-icon>
+                </div>
+                <span class="font-bold text-slate-900 text-lg">DiagTertiaire</span>
+            </a>
+            <a href="/" class="text-sm font-semibold text-slate-500 hover:text-slate-900 flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 px-4 py-2 rounded-lg transition-colors" style="text-decoration: none;">
+                <iconify-icon icon="solar:arrow-left-linear" class="text-lg"></iconify-icon>
+                Retour
+            </a>
+        </div>
+    </header>
+
+    <main class="flex-1 py-12 md:py-20 px-4">
+        <div class="max-w-3xl mx-auto">
+            
+            <div class="mb-10 text-center">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-sm font-semibold mb-4 border border-blue-100">
+                    <iconify-icon icon="solar:document-text-linear"></iconify-icon>
+                    Conditions
+                </div>
+                <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 mb-4">Conditions générales d’utilisation</h1>
+                <p class="text-slate-500 text-sm font-medium">Dernière mise à jour : XX/XX/20XX</p>
+            </div>
+            
+            <div class="legal-card">
+                <h2 class="legal-section-title"><iconify-icon icon="solar:flag-linear" class="text-blue-600"></iconify-icon> Objet</h2>
+                <div class="legal-content">
+                    <p>Les présentes conditions générales d’utilisation, ci-après les « CGU », ont pour objet de définir les conditions dans lesquelles les utilisateurs peuvent accéder et utiliser le site DiagTertiaire ainsi que les fonctionnalités publiques qui y sont proposées.</p>
+                    <p>Elles encadrent notamment l’accès au site, l’utilisation du service de pré-diagnostic énergétique, la génération de rapports indicatifs, les éventuelles demandes de contact ou de mise en relation et, plus largement, l’utilisation des contenus, outils et services accessibles depuis le site public.</p>
+                </div>
+            </div>
+
+            <div class="legal-card">
+                <h2 class="legal-section-title"><iconify-icon icon="solar:buildings-linear" class="text-blue-600"></iconify-icon> Identification du service</h2>
+                <div class="legal-content">
+                    <p>Le site DiagTertiaire est exploité par :</p>
+                    <p>
+                        <strong>Dénomination sociale :</strong> XX<br>
+                        <strong>Forme juridique :</strong> XX<br>
+                        <strong>Siège social :</strong> XX<br>
+                        <strong>RCS / SIREN :</strong> XX
+                    </p>
+                    <p>
+                        <strong>Adresse e-mail :</strong> <a href="mailto:contact@diag-tertiaire.fr">contact@diag-tertiaire.fr</a><br>
+                        <strong>Téléphone :</strong> XX
+                    </p>
+                </div>
+            </div>
+
+            <div class="legal-card">
+                <h2 class="legal-section-title"><iconify-icon icon="solar:users-group-two-rounded-linear" class="text-blue-600"></iconify-icon> Champ d’application</h2>
+                <div class="legal-content">
+                    <p>Les présentes CGU s’appliquent à tout utilisateur accédant au site DiagTertiaire, qu’il soit simple visiteur, utilisateur du pré-diagnostic, demandeur d’une mise en relation ou candidat à l’utilisation d’un espace professionnel.</p>
+                    <p>Les conditions spécifiques éventuellement applicables à un espace professionnel, à une offre payante, à une version marque blanche ou à un service contractuel distinct ont vocation à compléter ou remplacer les présentes CGU pour le périmètre concerné.</p>
+                </div>
+            </div>
+
+            <div class="legal-card">
+                <h2 class="legal-section-title"><iconify-icon icon="solar:check-circle-linear" class="text-blue-600"></iconify-icon> Acceptation des CGU</h2>
+                <div class="legal-content">
+                    <p>L’accès au site et l’utilisation de ses fonctionnalités impliquent la consultation et l’acceptation des présentes CGU.</p>
+                    <p>En utilisant le site, en remplissant un formulaire, en lançant un pré-diagnostic, en générant un rapport ou en sollicitant une mise en relation, l’utilisateur reconnaît avoir pris connaissance des présentes CGU et les accepter sans réserve, sous réserve des dispositions impératives applicables.</p>
+                    <p>Si l’utilisateur n’accepte pas les présentes CGU, il doit cesser d’utiliser le site et les services associés.</p>
+                </div>
+            </div>
+
+            <div class="legal-card">
+                <h2 class="legal-section-title"><iconify-icon icon="solar:info-square-linear" class="text-blue-600"></iconify-icon> Description du service</h2>
+                <div class="legal-content">
+                    <p>DiagTertiaire est un service numérique de pré-diagnostic énergétique à destination des acteurs du tertiaire.</p>
+                    <p>Le service permet notamment de renseigner des informations relatives à un bâtiment ou à un site tertiaire, d’obtenir une estimation énergétique indicative, d’identifier des premiers leviers de réflexion, de générer un rapport synthétique de pré-analyse et de formuler, le cas échéant, une demande de contact ou de mise en relation avec un partenaire.</p>
+                    <p>DiagTertiaire constitue un outil d’aide à la décision.</p>
+                    <p>Le service ne constitue pas un audit énergétique réglementaire, une étude thermique exhaustive, une mission de maîtrise d’œuvre, un diagnostic opposable, une garantie d’économies d’énergie, ni un engagement contractuel sur un résultat, un classement, un coût, un délai ou un retour sur investissement.</p>
+                </div>
+            </div>
+
+            <div class="legal-card">
+                <h2 class="legal-section-title"><iconify-icon icon="solar:server-linear" class="text-blue-600"></iconify-icon> Accès au site</h2>
+                <div class="legal-content">
+                    <p>Le site est accessible en principe 24h/24 et 7j/7, sous réserve des interruptions volontaires ou non, des opérations de maintenance, des mises à jour, des incidents techniques, des contraintes liées aux réseaux et services tiers, ou de tout cas de force majeure ou événement échappant au contrôle raisonnable de DiagTertiaire.</p>
+                    <p>DiagTertiaire se réserve le droit de suspendre, limiter ou interrompre à tout moment l’accès à tout ou partie du site, sans préavis et sans indemnité, lorsque cela est nécessaire pour des raisons techniques, de sécurité, de maintenance, de conformité ou d’évolution du service.</p>
+                </div>
+            </div>
+
+            <div class="legal-card">
+                <h2 class="legal-section-title"><iconify-icon icon="solar:monitor-smartphone-linear" class="text-blue-600"></iconify-icon> Conditions techniques minimales</h2>
+                <div class="legal-content">
+                    <p>L’utilisateur reconnaît disposer d’un terminal compatible, d’un accès internet, d’un navigateur à jour et, de manière générale, des moyens techniques nécessaires à l’utilisation correcte du site.</p>
+                    <p>L’utilisateur demeure seul responsable du bon fonctionnement de ses équipements, de sa connexion, de la sécurité de son environnement numérique et de la sauvegarde de ses données.</p>
+                </div>
+            </div>
+
+            <div class="legal-card">
+                <h2 class="legal-section-title"><iconify-icon icon="solar:shield-check-linear" class="text-blue-600"></iconify-icon> Obligations de l’utilisateur</h2>
+                <div class="legal-content">
+                    <p>L’utilisateur s’engage à utiliser le site de manière loyale, licite et conforme à sa destination, à ne pas porter atteinte à la sécurité, à l’intégrité, à la disponibilité ou au bon fonctionnement du site, à ne pas contourner les limitations techniques ou les mécanismes de sécurité, à ne pas tenter d’accéder à des données, comptes, systèmes ou espaces non autorisés, à ne pas utiliser le site à des fins frauduleuses, illicites, trompeuses, diffamatoires ou abusives, à ne pas renseigner volontairement des données fausses, incohérentes ou manifestement fantaisistes dans le but de fausser les résultats, à ne pas transmettre de contenus illicites, de virus, de scripts malveillants ou de mécanismes automatisés non autorisés et à ne pas exploiter les résultats du service d’une manière susceptible d’induire des tiers en erreur sur leur nature, leur portée ou leur niveau de certitude.</p>
+                    <p>L’utilisateur s’engage également à ne transmettre que des informations pertinentes, nécessaires et licites au regard de l’usage du service.</p>
+                </div>
+            </div>
+
+            <div class="legal-card">
+                <h2 class="legal-section-title"><iconify-icon icon="solar:database-linear" class="text-blue-600"></iconify-icon> Données saisies par l’utilisateur</h2>
+                <div class="legal-content">
+                    <p>L’utilisateur est seul responsable des données qu’il saisit sur le site, de leur exactitude, sincérité, mise à jour et licéité, ainsi que des conséquences pouvant résulter d’une saisie inexacte, incomplète, trompeuse, obsolète ou illicite.</p>
+                    <p>DiagTertiaire n’est pas tenu de vérifier l’exactitude de l’ensemble des données renseignées par l’utilisateur et peut s’appuyer sur les déclarations de ce dernier pour générer les estimations et rapports.</p>
+                </div>
+            </div>
+
+            <div class="legal-card">
+                <h2 class="legal-section-title"><iconify-icon icon="solar:chart-square-linear" class="text-blue-600"></iconify-icon> Résultats, estimations et rapports</h2>
+                <div class="legal-content">
+                    <p>Les résultats, estimations, scores, priorisations, ratios, recommandations, ordres de grandeur et rapports générés via DiagTertiaire sont fournis à titre strictement indicatif.</p>
+                    <p>Ils sont produits à partir des informations déclarées par l’utilisateur, d’hypothèses de calcul, de ratios usuels, de références sectorielles et d’un modèle de pré-analyse automatisé.</p>
+                    <p>En conséquence, ils ne remplacent pas une étude sur site, un audit, une mission d’ingénierie ou une analyse réglementaire, ne constituent pas une promesse de résultat, ne dispensent pas l’utilisateur de procéder à ses propres vérifications et ne sauraient fonder à eux seuls une décision technique, patrimense, contractuelle, réglementaire ou financière sans validation complémentaire adaptée.</p>
+                </div>
+            </div>
+
+            <div class="legal-card">
+                <h2 class="legal-section-title"><iconify-icon icon="solar:handshake-linear" class="text-blue-600"></iconify-icon> Mise en relation avec des partenaires</h2>
+                <div class="legal-content">
+                    <p>Le site peut permettre à l’utilisateur, s’il le souhaite, de demander une mise en relation avec un ou plusieurs partenaires.</p>
+                    <p>Cette mise en relation ne constitue pas une recommandation personnalisée, une validation préalable du projet, une garantie de disponibilité, une garantie de qualité, ni une garantie de prix, de délai ou de résultat.</p>
+                    <p>DiagTertiaire intervient dans ce cadre comme intermédiaire de mise en relation.</p>
+                    <p>Toute relation précontractuelle ou contractuelle nouée ensuite entre l’utilisateur et un partenaire relève de leur seule responsabilité.</p>
+                </div>
+            </div>
+
+            <div class="legal-card">
+                <h2 class="legal-section-title"><iconify-icon icon="solar:copyright-linear" class="text-blue-600"></iconify-icon> Propriété intellectuelle</h2>
+                <div class="legal-content">
+                    <p>L’ensemble des éléments du site DiagTertiaire, notamment les textes, contenus, visuels, logos, illustrations, éléments graphiques, interfaces, bases de données, structure générale, code, arborescence et signes distinctifs, est protégé par les règles applicables en matière de propriété intellectuelle.</p>
+                    <p>Sauf autorisation écrite préalable de DiagTertiaire, toute reproduction, représentation, diffusion, adaptation, extraction, publication, exploitation ou réutilisation, totale ou partielle, sur quelque support que ce soit, est interdite.</p>
+                </div>
+            </div>
+
+            <div class="legal-card">
+                <h2 class="legal-section-title"><iconify-icon icon="solar:link-linear" class="text-blue-600"></iconify-icon> Liens hypertextes et sites tiers</h2>
+                <div class="legal-content">
+                    <p>Le site peut contenir des liens vers des sites, contenus, services ou ressources tiers.</p>
+                    <p>DiagTertiaire n’exerce aucun contrôle sur ces contenus externes et ne saurait être tenu responsable de leur disponibilité, de leur exactitude, de leur sécurité, de leur licéité, de leurs pratiques commerciales, ni de leur politique de confidentialité.</p>
+                    <p>La présence d’un lien ne vaut ni approbation ni recommandation.</p>
+                </div>
+            </div>
+
+            <div class="legal-card">
+                <h2 class="legal-section-title"><iconify-icon icon="solar:danger-triangle-linear" class="text-blue-600"></iconify-icon> Sécurité et comportement interdit</h2>
+                <div class="legal-content">
+                    <p>Sont notamment interdits : tout test d’intrusion non autorisé, toute extraction massive de données, toute tentative de reverse engineering illicite, tout scraping abusif, tout usage automatisé non autorisé susceptible de dégrader le service, tout détournement du site à des fins concurrentes, frauduleuses ou nuisibles, et toute utilisation du service contraire aux lois et règlements en vigueur.</p>
+                    <p>DiagTertiaire se réserve le droit de bloquer, suspendre ou restreindre l’accès au site à tout utilisateur dont le comportement compromet ou risque de compromettre l’intégrité, la sécurité ou la disponibilité du service, sans préjudice de toute action complémentaire.</p>
+                </div>
+            </div>
+
+            <div class="legal-card">
+                <h2 class="legal-section-title"><iconify-icon icon="solar:shield-warning-linear" class="text-blue-600"></iconify-icon> Responsabilité</h2>
+                <div class="legal-content">
+                    <p>DiagTertiaire met en œuvre des moyens raisonnables pour fournir un site et un service utiles, cohérents et fonctionnels.</p>
+                    <p>Toutefois, DiagTertiaire ne garantit pas l’absence totale d’erreur, d’anomalie ou d’indisponibilité, l’exactitude absolue de tout résultat généré, l’adéquation du service à tous les usages particuliers, ni l’absence totale d’interruption ou d’aléa technique.</p>
+                    <p>La responsabilité de DiagTertiaire ne pourra être engagée que dans les limites autorisées par le droit applicable, et ne saurait notamment être retenue en cas d’utilisation impropre du site ou du service par l’utilisateur, de données erronées, incomplètes ou illicites fournies par l’utilisateur, d’interprétation erronée des résultats, de décision prise sur le seul fondement d’un pré-diagnostic ou d’un rapport indicatif, d’indisponibilité temporaire du site, ou d’événements imputables à un tiers, à un prestataire, au réseau internet ou à un cas de force majeure.</p>
+                    <p>En tout état de cause, aucune stipulation des présentes CGU ne saurait avoir pour effet d’exclure une responsabilité qui ne pourrait être légalement exclue ou de vider de sa substance l’obligation essentielle de DiagTertiaire.</p>
+                </div>
+            </div>
+
+            <div class="legal-card">
+                <h2 class="legal-section-title"><iconify-icon icon="solar:lock-keyhole-linear" class="text-blue-600"></iconify-icon> Données personnelles</h2>
+                <div class="legal-content">
+                    <p>L’utilisation du site peut entraîner le traitement de données personnelles.</p>
+                    <p>Les modalités de collecte, d’utilisation, de conservation, de transmission et d’exercice des droits sont décrites dans la Politique de confidentialité accessible depuis le site.</p>
+                </div>
+            </div>
+
+            <div class="legal-card">
+                <h2 class="legal-section-title"><iconify-icon icon="solar:browser-linear" class="text-blue-600"></iconify-icon> Stockage local et fonctionnement technique</h2>
+                <div class="legal-content">
+                    <p>Certaines fonctionnalités du site peuvent utiliser des mécanismes techniques locaux du navigateur, notamment du stockage local ou de session, afin de maintenir un état de formulaire, restaurer un rapport, assurer la continuité d’usage ou contribuer au bon fonctionnement technique du service.</p>
+                    <p>L’utilisateur peut, selon les cas, effacer ces données depuis son navigateur ou via les fonctions proposées dans l’interface lorsqu’elles existent.</p>
+                </div>
+            </div>
+
+            <div class="legal-card">
+                <h2 class="legal-section-title"><iconify-icon icon="solar:pen-new-square-linear" class="text-blue-600"></iconify-icon> Modification du service et des CGU</h2>
+                <div class="legal-content">
+                    <p>DiagTertiaire se réserve le droit de faire évoluer, corriger, suspendre, enrichir ou retirer à tout moment tout ou partie du site ou de ses fonctionnalités.</p>
+                    <p>DiagTertiaire peut également modifier les présentes CGU à tout moment.</p>
+                    <p>La version applicable est celle publiée sur le site à la date d’utilisation par l’utilisateur.</p>
+                </div>
+            </div>
+
+            <div class="legal-card">
+                <h2 class="legal-section-title"><iconify-icon icon="solar:scissors-linear" class="text-blue-600"></iconify-icon> Nullité partielle</h2>
+                <div class="legal-content">
+                    <p>Si une ou plusieurs stipulations des présentes CGU étaient déclarées nulles, non écrites ou inapplicables, les autres stipulations conserveraient toute leur force et leur portée.</p>
+                </div>
+            </div>
+
+            <div class="legal-card">
+                <h2 class="legal-section-title"><iconify-icon icon="solar:bill-check-linear" class="text-blue-600"></iconify-icon> Droit applicable et juridiction compétente</h2>
+                <div class="legal-content">
+                    <p>Les présentes CGU sont régies par le droit français.</p>
+                    <p>En cas de litige, et à défaut de résolution amiable préalable, les juridictions françaises seront compétentes, sous réserve des règles impératives applicables.</p>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <footer class="bg-[#0F172A] py-8 border-t border-white/5 mt-auto">
+        <div class="max-w-4xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-[#475569]">
+            <p>© 2026 DiagTertiaire • Tous droits réservés.</p>
+            <div class="flex items-center gap-3">
+                <span class="bg-white/5 px-2.5 py-1.5 rounded-lg font-medium">SSL</span>
+                <span class="bg-white/5 px-2.5 py-1.5 rounded-lg font-medium">RGPD</span>
+                <span class="bg-white/5 px-2.5 py-1.5 rounded-lg font-medium">🇫🇷 FR</span>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

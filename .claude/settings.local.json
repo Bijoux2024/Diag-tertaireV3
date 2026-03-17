@@ -15,7 +15,9 @@
       "Bash(ls c:/Users/yanni/Downloads/Diag-tertaireV3/*.txt)",
       "Bash(ls c:/Users/yanni/Downloads/Diag-tertaireV3/extract*)",
       "Read(//c/Users/yanni/Downloads/**)",
-      "Bash(ls -lh /c/Users/yanni/Downloads/Diag-tertaireV3/*.html)"
+      "Bash(ls -lh /c/Users/yanni/Downloads/Diag-tertaireV3/*.html)",
+      "Bash(vercel ls)",
+      "Bash(grep -oE '\"\"solar:[a-z0-9-]+\"\"' index.saaspro.html)"
     ]
   }
 }

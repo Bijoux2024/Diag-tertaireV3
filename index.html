@@ -6449,16 +6449,16 @@
 
             const ratio = benchMedian > 0 ? siteIntensity / benchMedian : 1;
             const score = ratio < 0.6 ? 'A' : ratio < 0.9 ? 'B' : ratio < 1.2 ? 'C' : ratio < 1.7 ? 'D' : 'E';
-            const scoreColors = { A:'#16A34A', B:'#22C55E', C:'#F59E0B', D:'#F97316', E:'#EF4444' };
-            const scoreBgs = { A:'#DCFCE7', B:'#E8F5E9', C:'#FEF3C7', D:'#FFF7ED', E:'#FEE2E2' };
-            const scoreLabels = { A:'Très performant', B:'Performant', C:'Dans la médiane', D:'Surconsommation', E:'Très énergivore' };
+            const scoreColors = { A: '#16A34A', B: '#22C55E', C: '#F59E0B', D: '#F97316', E: '#EF4444' };
+            const scoreBgs = { A: '#DCFCE7', B: '#E8F5E9', C: '#FEF3C7', D: '#FFF7ED', E: '#FEE2E2' };
+            const scoreLabels = { A: 'Très performant', B: 'Performant', C: 'Dans la médiane', D: 'Surconsommation', E: 'Très énergivore' };
             const targetIntensity = Math.max(0, Math.round(siteIntensity - (surface > 0 ? annualKwh / surface : 0)));
             const tRatio = benchMedian > 0 ? targetIntensity / benchMedian : 1;
             const targetScore = tRatio < 0.6 ? 'A' : tRatio < 0.9 ? 'B' : tRatio < 1.2 ? 'C' : tRatio < 1.7 ? 'D' : 'E';
 
             const fmtEur = (v) => `${Math.round(Number(v || 0)).toLocaleString('fr-FR')} EUR`;
             const fmtInt = (v, u) => { const s = Math.round(Number(v || 0)).toLocaleString('fr-FR'); return u ? `${s} ${u}` : s; };
-            const esc = (v) => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+            const esc = (v) => String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
             const actionsRows = actions.length === 0
                 ? '<p style="font-size:13px;color:#64748b;">Aucune action prioritaire exploitable.</p>'
@@ -6470,14 +6470,14 @@
                       <th style="text-align:left;padding:10px 8px;border-bottom:1px solid #e2e8f0;font-size:11px;text-transform:uppercase;color:#64748b;">ROI</th>
                     </tr></thead>
                     <tbody>${actions.map(a => {
-                        const roi = a.roi_years && a.roi_years.value != null ? `${String(a.roi_years.value).replace('.',',')} ans` : 'À confirmer';
-                        return `<tr>
-                          <td style="padding:10px 8px;border-bottom:1px solid #e2e8f0;vertical-align:top;"><strong>${esc(a.name||'Action recommandée')}</strong><div style="font-size:12px;color:#64748b;">${esc(a.category||'')}</div></td>
-                          <td style="padding:10px 8px;border-bottom:1px solid #e2e8f0;vertical-align:top;">${esc(fmtEur(a.gain_euro_an&&a.gain_euro_an.value||0))}</td>
-                          <td style="padding:10px 8px;border-bottom:1px solid #e2e8f0;vertical-align:top;">${esc(fmtEur(a.capex&&a.capex.value||0))}</td>
+                    const roi = a.roi_years && a.roi_years.value != null ? `${String(a.roi_years.value).replace('.', ',')} ans` : 'À confirmer';
+                    return `<tr>
+                          <td style="padding:10px 8px;border-bottom:1px solid #e2e8f0;vertical-align:top;"><strong>${esc(a.name || 'Action recommandée')}</strong><div style="font-size:12px;color:#64748b;">${esc(a.category || '')}</div></td>
+                          <td style="padding:10px 8px;border-bottom:1px solid #e2e8f0;vertical-align:top;">${esc(fmtEur(a.gain_euro_an && a.gain_euro_an.value || 0))}</td>
+                          <td style="padding:10px 8px;border-bottom:1px solid #e2e8f0;vertical-align:top;">${esc(fmtEur(a.capex && a.capex.value || 0))}</td>
                           <td style="padding:10px 8px;border-bottom:1px solid #e2e8f0;vertical-align:top;">${esc(roi)}</td>
                         </tr>`;
-                    }).join('')}</tbody>
+                }).join('')}</tbody>
                   </table>`;
 
             const html = `<!DOCTYPE html>
@@ -6537,7 +6537,7 @@ body{margin:0;font-family:Arial,sans-serif;background:#f8fafc;color:#0f172a;}
     <div class="stat"><div class="stat-lbl">Coût annuel</div><div class="stat-val">${esc(fmtEur(totalCost))}</div><div class="stat-sub">Charges énergie estimées</div></div>
     <div class="stat"><div class="stat-lbl">Économie annuelle</div><div class="stat-val">${esc(fmtEur(annualEuro))}</div><div class="stat-sub">${esc(fmtInt(annualKwh, 'kWh/an'))}</div></div>
     <div class="stat"><div class="stat-lbl">Indice DiagTertiaire</div><div class="stat-val" style="color:${scoreColors[score]};">${esc(score)}</div><div class="stat-sub">${esc(scoreLabels[score])}</div></div>
-    <div class="stat"><div class="stat-lbl">Confiance calcul</div><div class="stat-val" style="font-size:16px;">${esc(confidence.label||'Moyen')}</div><div class="stat-sub">${esc(confidence.level||'medium')}</div></div>
+    <div class="stat"><div class="stat-lbl">Confiance calcul</div><div class="stat-val" style="font-size:16px;">${esc(confidence.label || 'Moyen')}</div><div class="stat-sub">${esc(confidence.level || 'medium')}</div></div>
   </div>
   <div class="section">
     <h2>Actions prioritaires</h2>

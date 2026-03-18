@@ -948,6 +948,7 @@
             {
                 id: 'ob-cases-link',
                 page: 'dashboard',
+                inSidebar: true,
                 title: "Vos dossiers clients",
                 desc: "Retrouvez ici la liste complète de vos dossiers. Filtrez par activité, statut ou recherchez un projet spécifique."
             },
@@ -972,13 +973,14 @@
             {
                 id: 'ob-config-link',
                 page: 'cases',
+                inSidebar: true,
                 title: "Personnalisez votre charte",
                 desc: "Ajoutez votre logo et définissez votre couleur principale. Tous vos rapports porteront l'identité visuelle de votre entreprise."
             }
         ];
 
         // ====== NOUVEAU COMPOSANT ONBOARDING TOUR ======
-        const OnboardingTour = ({ isActive, currentStep, onNext, onClose, onComplete }) => {
+        const OnboardingTour = ({ isActive, currentStep, onNext, onClose, onComplete, onOpenMobile }) => {
             const [popoverStyle, setPopoverStyle] = useState({});
             const [highlightStyle, setHighlightStyle] = useState({});
             const [arrowClass, setArrowClass] = useState('');
@@ -1072,6 +1074,11 @@
 
                 const step = steps[currentStep];
                 if (!step) return;
+
+                // Auto-open sidebar on mobile if this step targets a sidebar element
+                if (step.inSidebar && window.innerWidth < 1024 && typeof onOpenMobile === 'function') {
+                    onOpenMobile();
+                }
 
                 // On patiente un peu pour laisser le DOM se mettre à jour si la page change en JS
                 const timer = setTimeout(() => {
@@ -5613,15 +5620,12 @@
         const StarQualif = ({ score }) => {
             const { level } = getQualificationStars(score);
             return (
-                <div className={`inline-flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg ${level.bg}`}>
-                    <div className="flex gap-0.5">
-                        {[1, 2, 3, 4, 5].map(i => (
-                            <svg key={i} width="12" height="12" viewBox="0 0 24 24" fill={i <= score ? level.starColor : '#E2E8F0'}>
-                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                            </svg>
-                        ))}
-                    </div>
-                    <span className={`text-xs font-semibold ${level.text}`}>{level.label}</span>
+                <div className={`inline-flex items-center gap-0.5 px-2 py-1 rounded-lg ${level.bg}`}>
+                    {[1, 2, 3, 4, 5].map(i => (
+                        <svg key={i} width="12" height="12" viewBox="0 0 24 24" fill={i <= score ? level.starColor : '#E2E8F0'}>
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                        </svg>
+                    ))}
                 </div>
             );
         };
@@ -6795,14 +6799,13 @@
 
             const totalSavings = casesComputed.reduce((acc, c) => acc + (c._computed?.totalSavingsEur || c.estimatedSavingsPerYear || 0), 0);
             const avgSavingsPerCase = casesComputed.length > 0 ? Math.round(totalSavings / casesComputed.length) : 0;
-            const completedCount = casesComputed.filter(c =>
-                c.engineResult || c.id?.startsWith('case_') || c.reportGeneratedAt
-            ).length;
-            const inProgressCount = casesComputed.filter(c =>
-                !c.engineResult && !c.id?.startsWith('case_') && !c.reportGeneratedAt
-                && (c.formData?.contactName || c.formData?.company || c.clientName)
-            ).length;
-            const completionRate = casesComputed.length > 0 ? Math.round((completedCount / casesComputed.length) * 100) : 0;
+            const isFullyDone = c => !!(c.engineResult || c.reportGeneratedAt || c.id?.startsWith('case_') || c._computed?.score);
+            const hasAnyData = c => !!(c.formData?.contactName || c.formData?.company || c.formData?.buildingArea || c.clientName || c.company);
+            const completedCount = casesComputed.filter(isFullyDone).length;
+            const inProgressCount = casesComputed.filter(c => !isFullyDone(c) && hasAnyData(c)).length;
+            const completionRate = casesComputed.length > 0
+                ? Math.round(((completedCount + inProgressCount * 0.5) / casesComputed.length) * 100)
+                : 0;
             const scoreDistrib = { A: 0, B: 0, C: 0, D: 0, E: 0 };
             casesComputed.forEach(c => {
                 const s = c._computed?.score || c.score;
@@ -10524,6 +10527,7 @@
             }));
             const toggleMobile = () => setIsMobileMenuOpen(!isMobileMenuOpen);
             const closeMobile = () => setIsMobileMenuOpen(false);
+            const openMobile = () => setIsMobileMenuOpen(true);
 
             const reportsByCaseId = useMemo(() => buildReportsByCaseId(workspace.reports), [workspace.reports]);
             const onboardingChecklist = useMemo(() => resolveOnboardingChecklistState({
@@ -11439,6 +11443,7 @@
                         onNext={advanceOnboardingTour}
                         onClose={handleSkipOnboarding}
                         onComplete={handleSkipOnboarding}
+                        onOpenMobile={openMobile}
                     />
                     <DemoModal isOpen={isDemoModalOpen} onClose={closeDemoModal} />
                     <ProLegalModal modalKey={legalModalKey} onClose={() => setLegalModalKey('')} onClearPersonalData={handleClearPersonalData} />

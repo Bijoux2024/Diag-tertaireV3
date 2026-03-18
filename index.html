@@ -1375,7 +1375,7 @@
                                         }}
                                     >
                                         {/* En-tête document */}
-                                        <div style={{ background: 'linear-gradient(135deg, #0A1928 0%, #1D4ED8 50%, #0F2236 100%)', padding: '1.625rem 1.75rem' }}>
+                                        <div style={{ background: 'linear-gradient(135deg, #0A1928 0%, #1D4ED8 50%, #0F2236 100%)', padding: 'clamp(0.875rem, 4.5vw, 1.625rem) clamp(0.875rem, 5vw, 1.75rem)' }}>
                                             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem' }}>
                                                 <div>
                                                     <p
@@ -1393,7 +1393,7 @@
                                                     </p>
                                                     <p
                                                         style={{
-                                                            fontSize: '1.1875rem',
+                                                            fontSize: 'clamp(0.875rem, 3.8vw, 1.1875rem)',
                                                             fontWeight: 800,
                                                             color: 'white',
                                                             lineHeight: 1.2,
@@ -1407,19 +1407,19 @@
                                                 {/* Bloc étiquette D → C avec labels avant/après */}
                                                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '3px', flexShrink: 0 }}>
                                                     {/* Labels texte au-dessus de chaque badge */}
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
-                                                        <p style={{ width: '48px', textAlign: 'center', fontSize: '7.5px', fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', margin: 0 }}>avant travaux</p>
-                                                        <span style={{ width: '14px', display: 'inline-block' }} />
-                                                        <p style={{ width: '48px', textAlign: 'center', fontSize: '7.5px', fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', margin: 0 }}>après travaux</p>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.3rem, 1.5vw, 0.55rem)' }}>
+                                                        <p style={{ width: 'clamp(36px, 13vw, 48px)', textAlign: 'center', fontSize: '7.5px', fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', margin: 0 }}>avant travaux</p>
+                                                        <span style={{ width: '12px', display: 'inline-block' }} />
+                                                        <p style={{ width: 'clamp(36px, 13vw, 48px)', textAlign: 'center', fontSize: '7.5px', fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', margin: 0 }}>après travaux</p>
                                                     </div>
                                                     {/* Badges D → C */}
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
-                                                        <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: '#F59E0B', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 5px 16px rgba(0,0,0,0.32)' }}>
-                                                            <span style={{ fontSize: '1.4375rem', fontWeight: 900, color: '#0A1929' }}>D</span>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.3rem, 1.5vw, 0.55rem)' }}>
+                                                        <div style={{ width: 'clamp(36px, 13vw, 48px)', height: 'clamp(36px, 13vw, 48px)', borderRadius: '12px', background: '#F59E0B', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 5px 16px rgba(0,0,0,0.32)' }}>
+                                                            <span style={{ fontSize: 'clamp(1.1rem, 4.5vw, 1.4375rem)', fontWeight: 900, color: '#0A1929' }}>D</span>
                                                         </div>
-                                                        <span style={{ fontSize: '1rem', fontWeight: 900, color: 'rgba(255,255,255,0.85)', lineHeight: 1 }}>→</span>
-                                                        <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: '#22C55E', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 5px 16px rgba(0,0,0,0.22)' }}>
-                                                            <span style={{ fontSize: '1.4375rem', fontWeight: 900, color: 'white' }}>C</span>
+                                                        <span style={{ fontSize: 'clamp(0.8rem, 3vw, 1rem)', fontWeight: 900, color: 'rgba(255,255,255,0.85)', lineHeight: 1 }}>→</span>
+                                                        <div style={{ width: 'clamp(36px, 13vw, 48px)', height: 'clamp(36px, 13vw, 48px)', borderRadius: '12px', background: '#22C55E', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 5px 16px rgba(0,0,0,0.22)' }}>
+                                                            <span style={{ fontSize: 'clamp(1.1rem, 4.5vw, 1.4375rem)', fontWeight: 900, color: 'white' }}>C</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1429,7 +1429,7 @@
                                         {/* Corps du document */}
                                         <div
                                             style={{
-                                                padding: '1.5rem 1.625rem',
+                                                padding: 'clamp(1rem, 4.5vw, 1.5rem) clamp(0.875rem, 5vw, 1.625rem)',
                                                 display: 'flex',
                                                 flexDirection: 'column',
                                                 gap: '1.125rem',
@@ -1467,10 +1467,10 @@
                                                     }}
                                                 >
                                                     {/* Bloc actuel */}
-                                                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '1rem' }}>
-                                                        <span style={{ fontSize: '2.75rem', fontWeight: 900, color: '#1D4ED8', lineHeight: 1 }}>D</span>
+                                                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 'clamp(0.5rem, 2vw, 1rem)' }}>
+                                                        <span style={{ fontSize: 'clamp(2rem, 8vw, 2.75rem)', fontWeight: 900, color: '#1D4ED8', lineHeight: 1 }}>D</span>
                                                         <div>
-                                                            <span style={{ display: 'block', fontSize: '1.5rem', fontWeight: 800, color: '#1D4ED8', lineHeight: 1 }}>245</span>
+                                                            <span style={{ display: 'block', fontSize: 'clamp(1.1rem, 5vw, 1.5rem)', fontWeight: 800, color: '#1D4ED8', lineHeight: 1 }}>245</span>
                                                             <span style={{ fontSize: '11px', fontWeight: 500, color: '#64748B', marginTop: '3px', display: 'block' }}>
                                                                 kWh/m²/an
                                                             </span>
@@ -1688,8 +1688,8 @@
                         <div className="grid sm:grid-cols-3 gap-7">
                             {[
                                 { icon: 'solar:buildings-2-linear', color: '#1D4ED8', bg: '#EBF1FF', title: 'Vous situer face à votre activité', desc: 'Comparez votre niveau de consommation à des références cohérentes avec votre usage et votre typologie de local.' },
-                                { icon: 'solar:ranking-linear', color: '#1D4ED8', bg: '#EBF1FF', title: 'Identifier les priorités', desc: 'Repérez rapidement les premiers leviers de travaux à envisager en priorité selon votre situation.' },
-                                { icon: 'solar:stopwatch-linear', color: '#1D4ED8', bg: '#EBF1FF', title: 'Estimer le potentiel d\'économie', desc: 'Visualisez un premier niveau de gain énergétique et financier avant d\'aller plus loin.' }
+                                { icon: 'solar:target-bold', color: '#1D4ED8', bg: '#EBF1FF', title: 'Identifier les priorités', desc: 'Repérez rapidement les premiers leviers de travaux à envisager en priorité selon votre situation.' },
+                                { icon: 'solar:graph-new-up-bold', color: '#1D4ED8', bg: '#EBF1FF', title: 'Estimer le potentiel d\'économie', desc: 'Visualisez un premier niveau de gain énergétique et financier avant d\'aller plus loin.' }
                             ].map((item, i) => (
                                 <div key={i} style={{
                                     background: '#FCFCFF',
@@ -2980,8 +2980,16 @@
             { id: 'pv_installed',   label: 'Panneaux PV déjà installés',         category: 'production' }
         ];
 
+        const buildComputedAddress = (fd) => {
+            const parts = [fd.streetNumber, fd.streetName].filter(Boolean).join(' ').trim();
+            return parts;
+        };
+
         const NEW_DIAGNOSTIC_DEFAULT_FORM_DATA = {
             // Étape 1 : Identification
+            streetNumber: '',
+            streetName: '',
+            city: '',
             address: '',
             role: '',
             postalCode: '',
@@ -3403,8 +3411,8 @@
             const validate = () => {
                 const newErrors = {};
 
-                if (!formData.address || formData.address.length < 5) {
-                    newErrors.address = 'Adresse du bâtiment requise (min 5 caractères)';
+                if (!formData.streetName || formData.streetName.length < 3) {
+                    newErrors.streetName = 'Nom de la voie requis';
                 }
                 if (!formData.role) {
                     newErrors.role = 'Veuillez sélectionner votre rôle';
@@ -3439,16 +3447,32 @@
                     <h2 className="text-2xl font-bold text-[#102A43] mb-2">Identification</h2>
                     <p className="text-[#475569] mb-8">Commençons par quelques informations de base</p>
 
-                    <NewDiagnosticFormInput
-                        label="Adresse du bâtiment"
-                        value={formData.address}
-                        onChange={(v) => setFormData({ ...formData, address: v })}
-                        type="text"
-                        placeholder="12 rue de Rivoli, 75001 Paris"
-                        required
-                        error={errors.address}
-                        helper="Adresse complète du site diagnostiqué."
-                    />
+                    <div className="mb-6">
+                        <label className="block text-sm font-semibold text-neutral-700 mb-1">
+                            Adresse du bâtiment <span className="text-red-500">*</span>
+                        </label>
+                        <div className="grid grid-cols-[100px_1fr] gap-2 mb-2">
+                            <div>
+                                <input
+                                    type="text"
+                                    value={formData.streetNumber}
+                                    onChange={(e) => { const updated = { ...formData, streetNumber: e.target.value }; updated.address = buildComputedAddress(updated); setFormData(updated); }}
+                                    placeholder="N°"
+                                    className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                            </div>
+                            <div>
+                                <input
+                                    type="text"
+                                    value={formData.streetName}
+                                    onChange={(e) => { const updated = { ...formData, streetName: e.target.value }; updated.address = buildComputedAddress(updated); setFormData(updated); }}
+                                    placeholder="Nom de la voie (ex: rue de Rivoli)"
+                                    className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.streetName ? 'border-red-400' : 'border-neutral-300'}`}
+                                />
+                            </div>
+                        </div>
+                        {errors.streetName && <p className="text-xs text-red-500 mt-1">{errors.streetName}</p>}
+                    </div>
 
                     <div className="mb-4 mt-6">
                         <label className="block text-sm font-medium text-neutral-700 mb-2">
@@ -3462,14 +3486,21 @@
                         {errors.role && <p className="text-xs text-red-500 mt-2">{errors.role}</p>}
                     </div>
 
-                    <NewDiagnosticFormInput
-                        label="Code postal du bâtiment"
-                        value={formData.postalCode}
-                        onChange={(v) => setFormData({ ...formData, postalCode: v })}
-                        placeholder="75001"
-                        required
-                        error={errors.postalCode}
-                    />
+                    <div className="grid grid-cols-[120px_1fr] gap-2">
+                        <NewDiagnosticFormInput
+                            label="Code postal *"
+                            value={formData.postalCode}
+                            onChange={(v) => setFormData({ ...formData, postalCode: v })}
+                            placeholder="75001"
+                            error={errors.postalCode}
+                        />
+                        <NewDiagnosticFormInput
+                            label="Ville"
+                            value={formData.city}
+                            onChange={(v) => setFormData({ ...formData, city: v })}
+                            placeholder="Paris"
+                        />
+                    </div>
 
                     <NewDiagnosticFormSelect
                         label="Activité principale"
@@ -4279,6 +4310,7 @@
                                     {val:'comply_regulation', label:'Conformité réglementaire',  sub:'Décret Tertiaire, vente, bail',       color:'#1D4ED8', bg:'#EFF6FF', border:'#BFDBFE', icon:'solar:document-bold'},
                                     {val:'valorise_asset',    label:'Valoriser mon patrimoine',  sub:'DPE, cession',                        color:'#7C3AED', bg:'#F5F3FF', border:'#DDD6FE', icon:'solar:buildings-bold'},
                                     {val:'comfort',           label:'Améliorer le confort',       sub:"Température, qualité d'air",          color:'#F59E0B', bg:'#FFFBEB', border:'#FDE68A', icon:'solar:smile-circle-bold'},
+                                    {val:'csr',               label:'Décarbonation / RSE',        sub:'Trajectoire net zéro, bilan carbone',  color:'#059669', bg:'#ECFDF5', border:'#A7F3D0', icon:'solar:leaf-bold'},
                                 ].map(opt => (
                                     <button key={opt.val} type="button"
                                         onClick={() => setFormData(p => ({...p, projectObjective: opt.val}))}
@@ -4345,55 +4377,6 @@
                                 </div>
                             </div>
                         )}
-                    </div>
-
-                    {/* Objectif, horizon, role (legacy) */}
-                    <div className="mb-6 p-6 bg-white border border-[#E2E8F0] rounded-xl shadow-sm">
-                        <p className="text-sm font-semibold text-neutral-900 mb-4">Votre projet (facultatif)</p>
-                        <div className="grid md:grid-cols-3 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-neutral-700 mb-1">Votre objectif principal</label>
-                                <select
-                                    value={formData.primaryGoal}
-                                    onChange={(e) => setFormData({ ...formData, primaryGoal: e.target.value })}
-                                    className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                >
-                                    <option value="">-- Choisir --</option>
-                                    <option value="reduce_cost">Reduire mes charges</option>
-                                    <option value="comply_regulation">Mieux cadrer mes obligations</option>
-                                    <option value="improve_comfort">Ameliorer le confort</option>
-                                    <option value="csr">Decarbonation / trajectoire RSE</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-neutral-700 mb-1">Votre horizon de projet</label>
-                                <select
-                                    value={formData.projectHorizon}
-                                    onChange={(e) => setFormData({ ...formData, projectHorizon: e.target.value })}
-                                    className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                >
-                                    <option value="">-- Choisir --</option>
-                                    <option value="lt_1y">Moins d'1 an</option>
-                                    <option value="1_3y">1 a 3 ans</option>
-                                    <option value="3_5y">3 a 5 ans</option>
-                                    <option value="exploratory">Exploration seulement</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-neutral-700 mb-1">Votre role dans le projet</label>
-                                <select
-                                    value={formData.decisionRole}
-                                    onChange={(e) => setFormData({ ...formData, decisionRole: e.target.value })}
-                                    className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                >
-                                    <option value="">-- Choisir --</option>
-                                    <option value="owner">Proprietaire</option>
-                                    <option value="tenant">Locataire</option>
-                                    <option value="property_manager">Gestionnaire immobilier</option>
-                                    <option value="project_owner">Maitre d'ouvrage</option>
-                                </select>
-                            </div>
-                        </div>
                     </div>
 
                     {/* Works */}
@@ -5426,7 +5409,8 @@
                 // ACT13 — PAC
                 if (action.id === 'ACT13') {
                     if (!['gas', 'other'].includes(formData.mainHeating)) return false;
-                    if (!['over20', '10to20'].includes(formData.boilerAge)) return false;
+                    // Only exclude PAC when boiler is known to be recent; unknown/empty → allow
+                    if (formData.boilerAge === 'under10') return false;
                 }
                 // ACT14 — Ballon thermo
                 if (action.id === 'ACT14') {
@@ -5452,8 +5436,10 @@
                 // ACT18 — PV
                 if (action.id === 'ACT18') {
                     if (formData.role !== 'owner') return false;
-                    if (formData.roofAccessible !== 'yes') return false;
-                    if (!formData.elecUsed) return false;
+                    // Only exclude if roof is explicitly NOT accessible
+                    if (formData.roofAccessible === 'no') return false;
+                    // Only exclude if explicitly no electricity (and no elec consumption data)
+                    if (formData.elecUsed === false && !formData.elecKwh && !formData.elecEuro) return false;
                 }
                 // ACT19 — GTB
                 if (action.id === 'ACT19') {
@@ -5496,10 +5482,12 @@
                 for (const action of scored.filter(a => a.tier === tier)) {
                     if (count >= tierMax[tier]) break;
                     if (usedFamilies[action.category]) continue;
-                    if (totalGainPct + action.gain_pct_med > NEW_DIAGNOSTIC_MAX_TOTAL_SAVINGS_PCT) continue;
+                    // Use gain_pct_total (scope-adjusted) for cap check, not gain_pct_med
+                    const actionTotalGainPct = typeof action.gain_pct_total === 'number' ? action.gain_pct_total : action.gain_pct_med;
+                    if (totalGainPct + actionTotalGainPct > NEW_DIAGNOSTIC_MAX_TOTAL_SAVINGS_PCT) continue;
                     usedFamilies[action.category] = true;
                     selected.push(action);
-                    totalGainPct += action.gain_pct_med;
+                    totalGainPct += actionTotalGainPct;
                     count++;
                 }
             }
@@ -5807,8 +5795,9 @@
                 inputs_summary: {
                     email: formData.email,
                     address: formData.address,
+                    city: formData.city || null,
                     role: formData.role,
-                    site_name: formData.siteName || (formData.address ? formData.address.split(',')[0].trim() : 'Bâtiment tertiaire'),
+                    site_name: formData.siteName || (formData.streetName ? (formData.streetNumber ? `${formData.streetNumber} ${formData.streetName}` : formData.streetName) : (formData.address ? formData.address.split(',')[0].trim() : 'Bâtiment tertiaire')),
                     postal_code: formData.postalCode,
                     activity: activity,
                     mixedUsage1: activity === 'mixed' ? formData.mixedUsage1 : null,
@@ -6606,6 +6595,7 @@
             const [ctaMessage, setCtaMessage] = useState('');
             const [ctaSent, setCtaSent] = useState(false);
             const [brandLogoDataUrl, setBrandLogoDataUrl] = useState(null);
+            const ctaPanelRef = useRef(null);
 
             useEffect(() => {
                 let isCancelled = false;
@@ -6619,30 +6609,10 @@
                 };
             }, []);
 
-            useEffect(() => {
-                if (!showCTAModal) return undefined;
-
-                const previousBodyOverflow = document.body.style.overflow;
-                const previousHtmlOverflow = document.documentElement.style.overflow;
-                const previousBodyTouchAction = document.body.style.touchAction;
-                const handleEscape = (event) => {
-                    if (event.key === 'Escape') {
-                        setShowCTAModal(false);
-                    }
-                };
-
-                document.body.style.overflow = 'hidden';
-                document.documentElement.style.overflow = 'hidden';
-                document.body.style.touchAction = 'none';
-                window.addEventListener('keydown', handleEscape);
-
-                return () => {
-                    document.body.style.overflow = previousBodyOverflow;
-                    document.documentElement.style.overflow = previousHtmlOverflow;
-                    document.body.style.touchAction = previousBodyTouchAction;
-                    window.removeEventListener('keydown', handleEscape);
-                };
-            }, [showCTAModal]);
+            const openCtaPanel = () => {
+                setShowCTAModal(true);
+                setTimeout(() => ctaPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+            };
 
             const handleExportPDF = async () => {
                 setIsPDFGenerating(true);
@@ -6657,10 +6627,6 @@
                 } finally {
                     setIsPDFGenerating(false);
                 }
-            };
-
-            const closeCTAModal = () => {
-                setShowCTAModal(false);
             };
 
             const calc = reportPayload.calculation_results;
@@ -7113,7 +7079,7 @@
                                                 </div>
                                             </div>
                                             <div className="flex flex-col sm:flex-row gap-2">
-                                                <button onClick={() => setShowCTAModal(true)} className="flex-1 py-2.5 px-4 bg-[#1D4ED8] text-white rounded-lg text-sm font-semibold hover:bg-[#1E40AF] transition-colors">
+                                                <button onClick={openCtaPanel} className="flex-1 py-2.5 px-4 bg-[#1D4ED8] text-white rounded-lg text-sm font-semibold hover:bg-[#1E40AF] transition-colors">
                                                     Obtenir un devis gratuit d'un expert
                                                 </button>
                                                 <button className="flex-1 py-2.5 px-4 border border-[#1D4ED8] text-[#1D4ED8] rounded-lg text-sm font-semibold hover:bg-[#EFF6FF] transition-colors">
@@ -7186,7 +7152,7 @@
                                             ))}
                                         </div>
                                     </div>
-                                    <div className="w-full lg:w-[300px] flex flex-col gap-3">
+                                    <div className="w-full lg:w-[300px] flex flex-col gap-3 lg:self-start">
                                         {hasCtaConfirmation ? (
                                             <div className="rounded-2xl border border-green-200 bg-green-50 px-4 py-4">
                                                 <div className="flex items-start gap-3">
@@ -7195,13 +7161,10 @@
                                                 </div>
                                             </div>
                                         ) : (
-                                            <button onClick={() => setShowCTAModal(true)} className="px-5 py-3 bg-[#1D4ED8] text-white rounded-xl text-sm font-semibold hover:bg-[#1E40AF] transition-colors shadow-sm">
+                                            <button onClick={openCtaPanel} className="px-5 py-3 bg-[#1D4ED8] text-white rounded-xl text-sm font-semibold hover:bg-[#1E40AF] transition-colors shadow-sm">
                                                 {nextStepCopy.cta}
                                             </button>
                                         )}
-                                        <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="px-5 py-3 bg-white border border-[#DBEAFE] text-[#1D4ED8] rounded-xl text-sm font-semibold hover:bg-[#EFF6FF] transition-colors">
-                                            {nextStepCopy.secondary}
-                                        </button>
                                         <p className="text-xs text-slate-500 leading-relaxed">{nextStepCopy.proof}</p>
                                     </div>
                                 </div>
@@ -7262,7 +7225,7 @@
                                             {lead_qualification.objective === 'comply_regulation' ? 'Votre délai réglementaire approche' : 'Votre projet est prêt à démarrer'}
                                         </div>
                                         <div className="text-sm text-[#475569] mb-3">Nos experts peuvent vous accompagner gratuitement de l'audit à la mise en oeuvre.</div>
-                                        <button onClick={() => setShowCTAModal(true)} className="w-full sm:w-auto py-2.5 px-6 bg-[#1D4ED8] text-white rounded-lg text-sm font-semibold hover:bg-[#1E40AF] transition-colors">
+                                        <button onClick={openCtaPanel} className="w-full sm:w-auto py-2.5 px-6 bg-[#1D4ED8] text-white rounded-lg text-sm font-semibold hover:bg-[#1E40AF] transition-colors">
                                             Être mis en relation avec un expert gratuit
                                         </button>
                                     </div>
@@ -7304,74 +7267,61 @@
                     </div>
 
                     {showCTAModal && (
-                        <div className="fixed inset-0 z-50 bg-slate-950/55 backdrop-blur-[2px]" onClick={closeCTAModal}>
-                            <div className="h-full w-full overflow-y-auto">
-                                <div className="min-h-full flex items-start justify-center px-4 py-4 sm:items-center sm:px-6 sm:py-8">
-                                    <div
-                                        onClick={(event) => event.stopPropagation()}
-                                        className="w-full max-w-lg max-h-[calc(100vh-2rem)] sm:max-h-[calc(100vh-4rem)] overflow-y-auto rounded-[28px] border border-slate-200 bg-white shadow-2xl"
-                                    >
-                                        <div className="sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-slate-200 bg-white/95 px-6 py-5 backdrop-blur">
-                                            <div>
-                                                <p className="text-[11px] font-bold uppercase tracking-wide text-[#1D4ED8] mb-1">Mise en relation</p>
-                                                <h3 className="text-lg font-bold text-neutral-900">{nextStepCopy.cta}</h3>
-                                            </div>
-                                            <button type="button" onClick={closeCTAModal} aria-label="Fermer la fenêtre" className="text-neutral-400 hover:text-neutral-600 shrink-0">
-                                                <Icon icon="solar:close-circle-linear" className="text-2xl" />
-                                            </button>
-                                        </div>
-
-                                        <div className="px-6 py-5">
-                                            <p className="text-sm text-neutral-600 mb-5">Nous revenons vers vous pour confirmer les hypothèses, prioriser les actions et cadrer le budget de mise en œuvre.</p>
-                                            {ctaSent ? (
-                                                <div className="rounded-2xl border border-green-200 bg-green-50 px-4 py-5 text-center">
-                                                    <Icon icon="solar:check-circle-bold" className="text-green-500 text-4xl mx-auto mb-2" />
-                                                    <p className="text-green-800 font-medium">{nextStepCopy.success}</p>
-                                                </div>
-                                            ) : (
-                                                <>
-                                                    <div className="mb-4">
-                                                        <label className="block text-sm font-medium text-neutral-700 mb-1">Votre nom</label>
-                                                        <input type="text" value={ctaName} onChange={(e) => setCtaName(e.target.value)} placeholder="Prénom Nom" className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                                                    </div>
-                                                    <div className="mb-5">
-                                                        <label className="block text-sm font-medium text-neutral-700 mb-1">Message (optionnel)</label>
-                                                        <textarea value={ctaMessage} onChange={(e) => setCtaMessage(e.target.value)} placeholder="Précisions sur le site, le délai ou vos priorités..." rows={4} className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y" />
-                                                    </div>
-                                                    <div className="flex flex-col-reverse sm:flex-row gap-3">
-                                                        <button type="button" onClick={closeCTAModal} className="flex-1 px-4 py-3 border border-neutral-300 text-neutral-700 rounded-xl text-sm font-medium hover:bg-neutral-50">Annuler</button>
-                                                        <button
-                                                            type="button"
-                                                            onClick={async () => {
-                                                                const leadPayload = newDiagnosticBuildReportCtaLeadPayload(reportPayload, ctaName, ctaMessage);
-                                                                let leadSubmissionId = reportPayload && reportPayload.lead_submission_id
-                                                                    ? reportPayload.lead_submission_id
-                                                                    : null;
-
-                                                                if (!leadSubmissionId) {
-                                                                    const insertedLead = await newDiagnosticSubmitLead(leadPayload);
-                                                                    leadSubmissionId = insertedLead && insertedLead.id ? insertedLead.id : null;
-
-                                                                    if (leadSubmissionId && typeof onLeadSubmissionCreated === 'function') {
-                                                                        onLeadSubmissionCreated(leadSubmissionId);
-                                                                    }
-                                                                }
-
-                                                                await newDiagnosticSubmitPartnerLead(leadPayload, leadSubmissionId);
-                                                                setCtaSent(true);
-                                                                setTimeout(() => setShowCTAModal(false), 2000);
-                                                            }}
-                                                            className="flex-1 px-4 py-3 bg-[#1D4ED8] text-white rounded-xl text-sm font-semibold hover:bg-[#1E40AF]"
-                                                        >
-                                                            Envoyer
-                                                        </button>
-                                                    </div>
-                                                </>
-                                            )}
-                                        </div>
-                                    </div>
+                        <div ref={ctaPanelRef} className="report-card p-6 md:p-8 mb-8 scroll-mt-6">
+                            <div className="flex items-center justify-between gap-4 mb-5">
+                                <div>
+                                    <p className="text-[11px] font-bold uppercase tracking-wide text-[#1D4ED8] mb-1">Mise en relation</p>
+                                    <h3 className="text-xl font-bold text-neutral-900">{nextStepCopy.cta}</h3>
                                 </div>
+                                <button type="button" onClick={() => setShowCTAModal(false)} aria-label="Fermer" className="text-neutral-400 hover:text-neutral-600 shrink-0">
+                                    <Icon icon="solar:close-circle-linear" className="text-2xl" />
+                                </button>
                             </div>
+                            <p className="text-sm text-neutral-600 mb-5">Nous revenons vers vous pour confirmer les hypothèses, prioriser les actions et cadrer le budget de mise en œuvre.</p>
+                            {ctaSent ? (
+                                <div className="rounded-2xl border border-green-200 bg-green-50 px-4 py-5 text-center">
+                                    <Icon icon="solar:check-circle-bold" className="text-green-500 text-4xl mx-auto mb-2" />
+                                    <p className="text-green-800 font-medium">{nextStepCopy.success}</p>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="mb-4">
+                                        <label className="block text-sm font-medium text-neutral-700 mb-1">Votre nom</label>
+                                        <input type="text" value={ctaName} onChange={(e) => setCtaName(e.target.value)} placeholder="Prénom Nom" className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                                    </div>
+                                    <div className="mb-5">
+                                        <label className="block text-sm font-medium text-neutral-700 mb-1">Message (optionnel)</label>
+                                        <textarea value={ctaMessage} onChange={(e) => setCtaMessage(e.target.value)} placeholder="Précisions sur le site, le délai ou vos priorités..." rows={4} className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y" />
+                                    </div>
+                                    <div className="flex flex-col-reverse sm:flex-row gap-3">
+                                        <button type="button" onClick={() => setShowCTAModal(false)} className="flex-1 px-4 py-3 border border-neutral-300 text-neutral-700 rounded-xl text-sm font-medium hover:bg-neutral-50">Annuler</button>
+                                        <button
+                                            type="button"
+                                            onClick={async () => {
+                                                const leadPayload = newDiagnosticBuildReportCtaLeadPayload(reportPayload, ctaName, ctaMessage);
+                                                let leadSubmissionId = reportPayload && reportPayload.lead_submission_id
+                                                    ? reportPayload.lead_submission_id
+                                                    : null;
+
+                                                if (!leadSubmissionId) {
+                                                    const insertedLead = await newDiagnosticSubmitLead(leadPayload);
+                                                    leadSubmissionId = insertedLead && insertedLead.id ? insertedLead.id : null;
+
+                                                    if (leadSubmissionId && typeof onLeadSubmissionCreated === 'function') {
+                                                        onLeadSubmissionCreated(leadSubmissionId);
+                                                    }
+                                                }
+
+                                                await newDiagnosticSubmitPartnerLead(leadPayload, leadSubmissionId);
+                                                setCtaSent(true);
+                                            }}
+                                            className="flex-1 px-4 py-3 bg-[#1D4ED8] text-white rounded-xl text-sm font-semibold hover:bg-[#1E40AF]"
+                                        >
+                                            Envoyer
+                                        </button>
+                                    </div>
+                                </>
+                            )}
                         </div>
                     )}
                 </div>

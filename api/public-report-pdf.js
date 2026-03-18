@@ -323,287 +323,252 @@ const renderBulletList = (items, fallbackText) => {
   return `<ul class="bullet-list">${safeItems.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`;
 };
 
+const buildActionTierBadge = (tier) => {
+  const map = {
+    quick_win: { label: 'Action rapide', bg: '#F0FDF4', color: '#16A34A', border: '#BBF7D0' },
+    equipment: { label: 'Equipement',    bg: '#EFF6FF', color: '#1D4ED8', border: '#BFDBFE' },
+    structural: { label: 'Structurel',   bg: '#FEF3C7', color: '#B45309', border: '#FDE68A' }
+  };
+  const style = map[tier] || map.equipment;
+  return `<span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;background:${style.bg};color:${style.color};border:1px solid ${style.border}">${escapeHtml(style.label)}</span>`;
+};
+
 const buildPublicReportPdfHtml = (viewModel) => {
+  const scoreColor = viewModel.score.color;
+  const targetScoreColor = viewModel.targetScore.color;
+  const generatedDate = formatDateLabel(viewModel.generatedAt);
+
   return `<!DOCTYPE html>
-  <html lang="fr">
-    <head>
-      <meta charset="UTF-8" />
-      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <title>${escapeHtml(`DiagTertiaire - ${viewModel.siteName}`)}</title>
-      <style>
-        :root {
-          --bg: #f8fafc;
-          --card: #ffffff;
-          --text: #0f172a;
-          --muted: #64748b;
-          --border: #e2e8f0;
-          --accent: #1d4ed8;
-        }
-        * { box-sizing: border-box; }
-        body { margin: 0; font-family: Arial, sans-serif; background: var(--bg); color: var(--text); }
-        .page { padding: 28px; }
-        .hero {
-          background: linear-gradient(135deg, #102a43 0%, #1d4ed8 100%);
-          color: #ffffff;
-          border-radius: 24px;
-          padding: 28px;
-        }
-        .hero-kicker {
-          font-size: 12px;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.1em;
-          opacity: 0.82;
-        }
-        .hero-title {
-          margin: 10px 0 8px;
-          font-size: 30px;
-          line-height: 1.1;
-          font-weight: 800;
-        }
-        .hero-meta {
-          font-size: 13px;
-          line-height: 1.6;
-          color: rgba(255, 255, 255, 0.86);
-        }
-        .hero-grid, .stats-grid, .detail-grid {
-          display: grid;
-          gap: 16px;
-        }
-        .hero-grid {
-          margin-top: 22px;
-          grid-template-columns: 1.5fr 0.9fr;
-          align-items: stretch;
-        }
-        .hero-card, .section {
-          background: var(--card);
-          border: 1px solid var(--border);
-          border-radius: 20px;
-          padding: 22px;
-          page-break-inside: avoid;
-        }
-        .hero-score {
-          text-align: center;
-          background: ${viewModel.score.background};
-          color: ${viewModel.score.color};
-          border: 1px solid rgba(15, 23, 42, 0.06);
-        }
-        .hero-score-value {
-          font-size: 54px;
-          line-height: 1;
-          font-weight: 900;
-          margin: 8px 0;
-        }
-        .hero-score-label {
-          font-size: 15px;
-          font-weight: 700;
-          color: #0f172a;
-        }
-        .stats-grid {
-          margin-top: 18px;
-          grid-template-columns: repeat(4, minmax(0, 1fr));
-        }
-        .stat-card {
-          background: var(--card);
-          border: 1px solid var(--border);
-          border-radius: 18px;
-          padding: 18px;
-        }
-        .stat-label {
-          font-size: 11px;
-          font-weight: 800;
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-          color: var(--muted);
-        }
-        .stat-value {
-          margin-top: 10px;
-          font-size: 26px;
-          line-height: 1.1;
-          font-weight: 900;
-        }
-        .stat-sub {
-          margin-top: 8px;
-          font-size: 12px;
-          line-height: 1.5;
-          color: var(--muted);
-        }
-        .section {
-          margin-top: 18px;
-        }
-        .section h2 {
-          margin: 0 0 12px;
-          font-size: 18px;
-          line-height: 1.2;
-        }
-        .section p {
-          margin: 0;
-          font-size: 14px;
-          line-height: 1.7;
-          color: var(--muted);
-        }
-        .detail-grid {
-          grid-template-columns: 1fr 1fr;
-          margin-top: 16px;
-        }
-        .detail-card {
-          border: 1px solid var(--border);
-          border-radius: 18px;
-          padding: 16px;
-          background: #f8fafc;
-        }
-        .detail-card strong {
-          display: block;
-          font-size: 12px;
-          color: var(--muted);
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-          margin-bottom: 8px;
-        }
-        .detail-card span {
-          font-size: 22px;
-          font-weight: 800;
-          color: var(--text);
-        }
-        .actions-table {
-          width: 100%;
-          border-collapse: collapse;
-          font-size: 13px;
-        }
-        .actions-table th,
-        .actions-table td {
-          text-align: left;
-          padding: 12px 10px;
-          border-bottom: 1px solid var(--border);
-          vertical-align: top;
-        }
-        .actions-table th {
-          font-size: 11px;
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-          color: var(--muted);
-        }
-        .muted {
-          margin-top: 4px;
-          font-size: 12px;
-          color: var(--muted);
-        }
-        .bullet-list {
-          margin: 0;
-          padding-left: 18px;
-        }
-        .bullet-list li {
-          margin: 0 0 8px;
-          font-size: 13px;
-          line-height: 1.6;
-          color: var(--muted);
-        }
-        .empty-state {
-          font-size: 13px;
-          line-height: 1.6;
-          color: var(--muted);
-        }
-        .footer-note {
-          margin-top: 20px;
-          font-size: 11px;
-          line-height: 1.6;
-          color: #94a3b8;
-          text-align: center;
-        }
-      </style>
-    </head>
-    <body>
-      <div class="page">
-        <div class="hero">
-          <div class="hero-kicker">DiagTertiaire - rapport public archive</div>
-          <div class="hero-title">${escapeHtml(viewModel.siteName)}</div>
-          <div class="hero-meta">
-            ${escapeHtml(viewModel.activity)} | ${escapeHtml(formatInteger(viewModel.surface, 'm2'))} | ${escapeHtml(viewModel.role)}<br />
-            ${escapeHtml(viewModel.address || 'Adresse a confirmer')}<br />
-            Rapport ${escapeHtml(viewModel.reportId || 'N/A')} | Lead ${escapeHtml(viewModel.leadSubmissionId || 'N/A')} | Genere le ${escapeHtml(formatDateLabel(viewModel.generatedAt))}
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>${escapeHtml(`Pre-diagnostic - ${viewModel.siteName}`)}</title>
+    <style>
+      @page { size: A4; margin: 18mm 16mm 16mm 16mm; }
+      * { box-sizing: border-box; }
+      body { margin: 0; font-family: 'Helvetica Neue', Arial, sans-serif; background: #F8FAFC; color: #0F172A; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .report-wrap { max-width: 780px; margin: 0 auto; padding: 0 0 32px; }
+
+      /* HERO */
+      .hero { background: linear-gradient(135deg, #0A1928 0%, #1D4ED8 55%, #0F2236 100%); color: #fff; border-radius: 20px; padding: 28px 32px; break-inside: avoid; margin-bottom: 20px; }
+      .hero-kicker { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; opacity: 0.6; margin-bottom: 6px; }
+      .hero-title { font-size: 26px; font-weight: 900; line-height: 1.1; letter-spacing: -0.5px; margin-bottom: 4px; }
+      .hero-meta { font-size: 12px; color: rgba(255,255,255,0.7); line-height: 1.6; margin-bottom: 18px; }
+      .hero-body { display: flex; gap: 18px; align-items: stretch; }
+      .hero-left { flex: 1; background: rgba(255,255,255,0.09); border-radius: 14px; padding: 18px 20px; border: 1px solid rgba(255,255,255,0.12); }
+      .hero-right { width: 140px; flex-shrink: 0; background: ${viewModel.score.background}; border-radius: 14px; padding: 18px 14px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+      .hero-intensity-row { display: flex; gap: 12px; margin-top: 14px; }
+      .hero-intensity-card { flex: 1; background: rgba(255,255,255,0.08); border-radius: 10px; padding: 10px 12px; border: 1px solid rgba(255,255,255,0.1); }
+      .hi-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(255,255,255,0.55); margin-bottom: 4px; }
+      .hi-val { font-size: 16px; font-weight: 800; color: #fff; line-height: 1; }
+      .hi-unit { font-size: 10px; color: rgba(255,255,255,0.6); }
+      .score-letter { font-size: 60px; font-weight: 900; color: ${scoreColor}; line-height: 1; margin: 4px 0; }
+      .score-label { font-size: 12px; font-weight: 700; color: #0F172A; }
+      .score-after { font-size: 10px; color: #64748B; margin-top: 6px; }
+      .score-after strong { color: ${targetScoreColor}; font-weight: 800; }
+
+      /* KPI GRID */
+      .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; break-inside: avoid; }
+      .kpi-card { background: #fff; border: 1px solid #E2E8F0; border-radius: 14px; padding: 16px; }
+      .kpi-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: #64748B; margin-bottom: 8px; }
+      .kpi-val { font-size: 20px; font-weight: 900; color: #0F172A; line-height: 1.1; }
+      .kpi-sub { font-size: 11px; color: #94A3B8; margin-top: 4px; }
+      .kpi-card.kpi-cost .kpi-label { color: #2563EB; }
+      .kpi-card.kpi-savings .kpi-label { color: #16A34A; }
+      .kpi-card.kpi-co2 .kpi-label { color: #7C3AED; }
+
+      /* SECTION CARD */
+      .section { background: #fff; border: 1px solid #E2E8F0; border-radius: 16px; padding: 22px 24px; margin-bottom: 16px; break-inside: avoid; }
+      .section-title { font-size: 15px; font-weight: 800; color: #0F172A; margin: 0 0 4px; letter-spacing: -0.2px; }
+      .section-sub { font-size: 12px; color: #64748B; margin: 0 0 16px; line-height: 1.5; }
+
+      /* SCORE SECTION */
+      .score-bar-wrap { margin: 12px 0; }
+      .score-bar { display: flex; gap: 4px; height: 10px; border-radius: 6px; overflow: hidden; }
+      .bar-seg { flex: 1; }
+
+      /* ACTIONS */
+      .actions-grid { display: flex; flex-direction: column; gap: 10px; }
+      .action-row { display: flex; align-items: flex-start; gap: 14px; padding: 12px 14px; background: #F8FAFC; border-radius: 12px; border: 1px solid #E2E8F0; break-inside: avoid; }
+      .action-num { width: 24px; height: 24px; border-radius: 50%; background: #1D4ED8; color: #fff; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+      .action-main { flex: 1; min-width: 0; }
+      .action-name { font-size: 13px; font-weight: 700; color: #0F172A; margin-bottom: 4px; }
+      .action-stats { display: flex; gap: 16px; font-size: 11px; color: #64748B; flex-wrap: wrap; }
+      .action-stat strong { color: #0F172A; font-weight: 700; }
+
+      /* BUDGET */
+      .budget-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 14px; }
+      .budget-card { border-radius: 10px; padding: 12px 14px; border: 1px solid; }
+      .budget-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+      .budget-val { font-size: 18px; font-weight: 900; }
+
+      /* BULLET LIST */
+      .bullet-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
+      .bullet-list li { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: #475569; line-height: 1.5; }
+      .bullet-dot { width: 6px; height: 6px; border-radius: 50%; background: #93C5FD; flex-shrink: 0; margin-top: 5px; }
+      .bullet-dot.warn { background: #FCA5A5; }
+
+      /* GRID 2COL */
+      .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+      /* FOOTER */
+      .footer { text-align: center; font-size: 10px; color: #94A3B8; margin-top: 24px; padding-top: 16px; border-top: 1px solid #E2E8F0; }
+
+      @media print {
+        body { background: white; }
+        .section, .kpi-card, .action-row { break-inside: avoid; }
+        .hero { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="report-wrap">
+
+      <!-- HERO -->
+      <div class="hero">
+        <div class="hero-kicker">Pre-diagnostic energetique tertiaire · DiagTertiaire</div>
+        <div class="hero-title">${escapeHtml(viewModel.siteName)}</div>
+        <div class="hero-meta">
+          ${escapeHtml(viewModel.activity)}${viewModel.surface > 0 ? ` · ${escapeHtml(formatInteger(viewModel.surface, 'm²'))}` : ''} · ${escapeHtml(viewModel.address || 'Adresse non renseignee')} · Genere le ${escapeHtml(generatedDate)}
+        </div>
+        <div class="hero-body">
+          <div class="hero-left">
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:rgba(255,255,255,0.55);margin-bottom:6px">Positionnement</div>
+            <div style="font-size:14px;color:rgba(255,255,255,0.9);line-height:1.6">
+              Intensite energetique <strong style="color:#fff">${escapeHtml(formatInteger(viewModel.siteIntensity))} kWh/m²/an</strong> pour une mediane sectorielle de <strong style="color:#fff">${escapeHtml(formatInteger(viewModel.benchmarkMedian))} kWh/m²/an</strong>.
+              Potentiel d'economie estime a <strong style="color:#6EE7B7">${escapeHtml(formatCurrency(viewModel.annualSavingsEuro))}/an</strong>.
+            </div>
+            <div class="hero-intensity-row">
+              <div class="hero-intensity-card">
+                <div class="hi-label">Conso actuelle</div>
+                <div class="hi-val">${escapeHtml(formatInteger(viewModel.siteIntensity))}</div>
+                <div class="hi-unit">kWh/m²/an</div>
+              </div>
+              <div class="hero-intensity-card">
+                <div class="hi-label">Mediane secteur</div>
+                <div class="hi-val">${escapeHtml(formatInteger(viewModel.benchmarkMedian))}</div>
+                <div class="hi-unit">kWh/m²/an</div>
+              </div>
+              <div class="hero-intensity-card">
+                <div class="hi-label">Cible estimee</div>
+                <div class="hi-val">${escapeHtml(formatInteger(viewModel.targetIntensity))}</div>
+                <div class="hi-unit">kWh/m²/an</div>
+              </div>
+              <div class="hero-intensity-card">
+                <div class="hi-label">Precision</div>
+                <div class="hi-val" style="font-size:13px">${escapeHtml(viewModel.confidenceLabel)}</div>
+                <div class="hi-unit">&nbsp;</div>
+              </div>
+            </div>
           </div>
-          <div class="hero-grid">
-            <div class="hero-card">
-              <strong style="display:block;font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:0.08em;">Lecture rapide</strong>
-              <p style="margin:10px 0 0;font-size:16px;line-height:1.7;color:#0f172a;">
-                Le site se positionne en <strong>${escapeHtml(viewModel.score.label)}</strong>, avec un potentiel estime a
-                <strong>${escapeHtml(formatCurrency(viewModel.annualSavingsEuro))}</strong> d'economies par an et
-                <strong>${escapeHtml(String(viewModel.totalSavingsPct))}%</strong> de reduction ciblee.
-              </p>
-              <div class="detail-grid">
-                <div class="detail-card">
-                  <strong>Intensite actuelle</strong>
-                  <span>${escapeHtml(formatInteger(viewModel.siteIntensity, 'kWh/m2/an'))}</span>
-                </div>
-                <div class="detail-card">
-                  <strong>Mediane secteur</strong>
-                  <span>${escapeHtml(formatInteger(viewModel.benchmarkMedian, 'kWh/m2/an'))}</span>
-                </div>
-                <div class="detail-card">
-                  <strong>Cible estimee</strong>
-                  <span>${escapeHtml(formatInteger(viewModel.targetIntensity, 'kWh/m2/an'))}</span>
-                </div>
-                <div class="detail-card">
-                  <strong>Confiance</strong>
-                  <span>${escapeHtml(viewModel.confidenceLabel)}</span>
+          <div class="hero-right">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:${scoreColor};margin-bottom:2px">Indice</div>
+            <div class="score-letter">${escapeHtml(viewModel.score.score)}</div>
+            <div class="score-label">${escapeHtml(viewModel.score.label)}</div>
+            <div class="score-after">Apres travaux : <strong>${escapeHtml(viewModel.targetScore.score)}</strong></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- KPI GRID -->
+      <div class="kpi-grid">
+        <div class="kpi-card kpi-cost">
+          <div class="kpi-label">Facture estimee</div>
+          <div class="kpi-val">${escapeHtml(formatCurrency(viewModel.totalCostEuro))}</div>
+          <div class="kpi-sub">Charges energie / an</div>
+        </div>
+        <div class="kpi-card kpi-savings">
+          <div class="kpi-label">Economies potentielles</div>
+          <div class="kpi-val">${escapeHtml(formatCurrency(viewModel.annualSavingsEuro))}</div>
+          <div class="kpi-sub">${escapeHtml(formatInteger(viewModel.annualSavingsKwh, 'kWh'))} evites/an</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Budget net indicatif</div>
+          <div class="kpi-val">${escapeHtml(formatCurrency(viewModel.budget.capexNet))}</div>
+          <div class="kpi-sub">Aides deduites : ${escapeHtml(formatCurrency(viewModel.budget.aides))}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Retour sur invest.</div>
+          <div class="kpi-val">${viewModel.budget.roiYears !== null ? escapeHtml(`${String(viewModel.budget.roiYears).replace('.', ',')} ans`) : 'A confirmer'}</div>
+          <div class="kpi-sub">${escapeHtml(String(viewModel.actions.length))} action(s) consideree(s)</div>
+        </div>
+      </div>
+
+      <!-- ACTIONS -->
+      <div class="section">
+        <div class="section-title">Actions prioritaires recommandees</div>
+        <div class="section-sub">Classement par gain economique rapporte au cout. Ordre de grandeur avant audit approfondi.</div>
+        <div class="actions-grid">
+          ${viewModel.actions.length === 0
+            ? '<p style="font-size:13px;color:#64748B">Aucune action prioritaire exploitable avec ce niveau de donnees.</p>'
+            : viewModel.actions.map((action, i) => `
+            <div class="action-row">
+              <div class="action-num">${i + 1}</div>
+              <div class="action-main">
+                <div class="action-name">${escapeHtml(action.name || 'Action recommandee')}</div>
+                <div style="margin-bottom:6px">${buildActionTierBadge(action.tier)}</div>
+                <div class="action-stats">
+                  <span>Gain : <strong>${escapeHtml(formatCurrency(action.gain_euro_an?.value || 0))}/an</strong></span>
+                  <span>Budget : <strong>${escapeHtml(formatCurrency(action.capex?.value || 0))}</strong></span>
+                  <span>ROI : <strong>${action.roi_years?.value != null ? escapeHtml(`${String(action.roi_years.value).replace('.', ',')} ans`) : 'A confirmer'}</strong></span>
                 </div>
               </div>
             </div>
-            <div class="hero-card hero-score">
-              <div class="hero-kicker" style="color:${viewModel.score.color};opacity:1;">Score energie</div>
-              <div class="hero-score-value">${escapeHtml(viewModel.score.score)}</div>
-              <div class="hero-score-label">${escapeHtml(viewModel.score.label)}</div>
-              <div class="muted" style="color:#334155;">Apres travaux estimes : ${escapeHtml(viewModel.targetScore.score)}</div>
-            </div>
-          </div>
+          `).join('')}
         </div>
 
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-label">Cout annuel</div>
-            <div class="stat-value">${escapeHtml(formatCurrency(viewModel.totalCostEuro))}</div>
-            <div class="stat-sub">Charges energie estimees</div>
+        <!-- BUDGET SUMMARY -->
+        <div class="budget-grid" style="margin-top:18px">
+          <div class="budget-card" style="background:#F8FAFC;border-color:#E2E8F0">
+            <div class="budget-label" style="color:#64748B">Travaux bruts</div>
+            <div class="budget-val" style="color:#0F172A">${escapeHtml(formatCurrency(viewModel.budget.capexBrut))}</div>
           </div>
-          <div class="stat-card">
-            <div class="stat-label">Economie annuelle</div>
-            <div class="stat-value">${escapeHtml(formatCurrency(viewModel.annualSavingsEuro))}</div>
-            <div class="stat-sub">${escapeHtml(formatInteger(viewModel.annualSavingsKwh, 'kWh/an'))}</div>
+          <div class="budget-card" style="background:#EFF6FF;border-color:#BFDBFE">
+            <div class="budget-label" style="color:#1D4ED8">Aides CEE/MaPrimeRenov</div>
+            <div class="budget-val" style="color:#1D4ED8">- ${escapeHtml(formatCurrency(viewModel.budget.aides))}</div>
           </div>
-          <div class="stat-card">
-            <div class="stat-label">Budget net indicatif</div>
-            <div class="stat-value">${escapeHtml(formatCurrency(viewModel.budget.capexNet))}</div>
-            <div class="stat-sub">Aides deduites : ${escapeHtml(formatCurrency(viewModel.budget.aides))}</div>
+          <div class="budget-card" style="background:#EEF2FF;border-color:#C7D2FE">
+            <div class="budget-label" style="color:#4338CA">Reste a charge</div>
+            <div class="budget-val" style="color:#4338CA">${escapeHtml(formatCurrency(viewModel.budget.capexNet))}</div>
           </div>
-          <div class="stat-card">
-            <div class="stat-label">ROI indicatif</div>
-            <div class="stat-value">${viewModel.budget.roiYears !== null ? escapeHtml(`${String(viewModel.budget.roiYears).replace('.', ',')} ans`) : 'A confirmer'}</div>
-            <div class="stat-sub">Perimetre : ${escapeHtml(String(viewModel.actions.length))} action(s)</div>
+          <div class="budget-card" style="background:#F0FDF4;border-color:#BBF7D0">
+            <div class="budget-label" style="color:#16A34A">Economies / an</div>
+            <div class="budget-val" style="color:#16A34A">${escapeHtml(formatCurrency(viewModel.budget.annualSavings))}</div>
           </div>
         </div>
-
-        <div class="section">
-          <h2>Actions prioritaires</h2>
-          <p style="margin-bottom:14px;">Ordre de grandeur pour engager une discussion technique et prioriser les premiers leviers sans attendre un audit complet.</p>
-          ${buildActionsRowsHtml(viewModel.actions)}
-        </div>
-
-        <div class="detail-grid">
-          <div class="section">
-            <h2>Hypotheses de calcul</h2>
-            ${renderBulletList(viewModel.assumptions, 'Hypotheses a confirmer sur site.')}
-          </div>
-          <div class="section">
-            <h2>Limites de lecture</h2>
-            ${renderBulletList(viewModel.limits, 'Limites a confirmer avec un expert.')}
-          </div>
-        </div>
-
-        <p class="footer-note">
-          PDF public genere cote serveur via Chromium, archive dans un bucket prive puis diffuse par URL signee.
-        </p>
       </div>
-    </body>
-  </html>`;
+
+      <!-- ASSUMPTIONS + LIMITS -->
+      <div class="grid-2col">
+        <div class="section">
+          <div class="section-title">Hypotheses de calcul</div>
+          <div class="section-sub" style="margin-bottom:12px">Ces hypotheses peuvent etre ajustees lors d'un audit sur site.</div>
+          <ul class="bullet-list">
+            ${asArray(viewModel.assumptions).filter(s => typeof s === 'string' && s.trim()).slice(0, 8).map(item => `
+            <li><span class="bullet-dot"></span><span>${escapeHtml(item)}</span></li>
+            `).join('') || '<li><span class="bullet-dot"></span><span>Hypotheses a confirmer sur site.</span></li>'}
+          </ul>
+        </div>
+        <div class="section">
+          <div class="section-title">Limites de lecture</div>
+          <div class="section-sub" style="margin-bottom:12px">Ce pre-diagnostic est indicatif et non opposable.</div>
+          <ul class="bullet-list">
+            ${asArray(viewModel.limits).filter(s => typeof s === 'string' && s.trim()).slice(0, 8).map(item => `
+            <li><span class="bullet-dot warn"></span><span>${escapeHtml(item)}</span></li>
+            `).join('') || '<li><span class="bullet-dot warn"></span><span>Limites a confirmer avec un expert.</span></li>'}
+          </ul>
+        </div>
+      </div>
+
+      <!-- FOOTER -->
+      <div class="footer">
+        DiagTertiaire — Pre-diagnostic energetique indicatif non opposable | Rapport ${escapeHtml(viewModel.reportId || 'N/A')} | ${escapeHtml(generatedDate)}<br />
+        Ce document est a usage informatif uniquement. Pour un audit certifie, contactez un bureau d'etudes RGE agree.
+      </div>
+
+    </div>
+  </body>
+</html>`;
 };
 
 module.exports = async function handler(req, res) {

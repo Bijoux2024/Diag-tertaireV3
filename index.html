@@ -2048,41 +2048,46 @@
             if (flatPayload && newDiagnosticIsFlatExampleReportPayload(flatPayload)) {
                 return newDiagnosticBuildReportData(flatPayload);
             }
-            // Sinon, on génère un exemple fictif réaliste (bureaux 450m², mix élec+gaz)
+            // Sinon, on génère un exemple fictif réaliste (épicerie bio 290m², Lyon)
             const exampleFormData = {
-                address: 'Immeuble Tertiaire - Exemple',
-                role: 'owner',
-                postalCode: '33000',
-                activity: 'offices',
-                mixedUsage1: '',
-                mixedUsage2: '',
-                mixOfficesPct: 50,
-                mixRetailPct: 50,
-                surface: '450',
-                mainHeating: 'gas',
+                ...NEW_DIAGNOSTIC_DEFAULT_FORM_DATA,
+                address: '22 avenue Gambetta, 69003 Lyon',
+                email: 'contact@epicerie-gambetta.fr',
+                role: 'owner', postalCode: '69003',
+                activity: 'commerce_alim',
+
+                surface: '290',
+                buildingAge: '1975_1988',
+                roofInsulation: 'none',
+                wallInsulation: 'partial',
+                mainHeating: 'electric',
                 hasCooling: true,
-                usageIntensity: 'standard',
                 ecsSameSystem: false,
                 ecsSystem: 'electric_boiler',
+                hasVmc: true,
+                vmcType: 'simple_flux',
+                roofAccessible: 'yes',
+                usageIntensity: 'high',
+
+                coldEquipmentType: 'open_shelves',
+                coldEquipmentAge: 'over15',
+                coldMaintenanceStatus: 'occasional',
+
+                hasGtb: false,
+                hasExteriorLighting: true,
+
                 elecUsed: true,
-                elecKwh: '',
-                elecEuro: '3200',
-                elecPriceKwh: '',
-                elecIncludesSubscription: false,
-                elecSubscriptionYearly: '',
-                gasUsed: true,
-                gasKwh: '',
-                gasEuro: '4900',
-                gasPriceKwh: '',
-                gasIncludesSubscription: false,
-                gasSubscriptionYearly: '',
-                email: 'demo@diag-tertiaire.fr',
-                phone: '',
-                worksDone: ['lighting'],
-                primaryGoal: 'reduce_cost',
-                projectHorizon: '1_3y',
-                decisionRole: 'owner',
-                contactOptIn: false
+                elecKwh: '189000', elecEuro: '37044',
+                gasUsed: false,
+
+                projectObjective: 'reduce_costs',
+                decisionHorizon: '3to6months',
+                budgetRange: '20to80k',
+                isDecisionMaker: 'yes',
+
+                worksDone: [],
+                phone: '06 78 23 45 10',
+                contactOptIn: true
             };
             const payload = newDiagnosticBuildReportData(exampleFormData);
             return { ...payload, source: NEW_DIAGNOSTIC_PUBLIC_EXAMPLE_SOURCE };
@@ -2119,7 +2124,7 @@
                                 {NEW_DIAGNOSTIC_REPORT_COPY.example.title}
                             </h1>
                             <p className="text-[#475569] text-sm md:text-base">
-                                {NEW_DIAGNOSTIC_REPORT_COPY.example.subtitle}
+                                Exemple simulé pour une épicerie bio de 290 m² à Lyon — meubles froids ouverts, toiture non isolée, ballon électrique, propriétaire décideur. Illustre les 3 niveaux d'actions, du quick-win froid commercial au chantier d'isolation.
                             </p>
                         </div>
                     </section>
@@ -2932,6 +2937,15 @@
                 source_note: 'Inclut cuisson process, valeur à confirmer'
             },
             {
+                id: 'commerce_alim',
+                label: 'Commerce alimentaire',
+                icon: 'solar:shop-minimalistic-linear',
+                refKwh: 650,
+                source_level: 'source_partial',
+                source_ref: 'CEREN 2019 — Commerce alimentaire',
+                source_note: 'Épicerie, supérette, supermarché avec froid intégré'
+            },
+            {
                 id: 'health_local',
                 label: 'Santé (cabinet, local)',
                 icon: 'solar:heart-pulse-linear',
@@ -2979,7 +2993,10 @@
             { id: 'regulation', label: 'Régulation / Pilotage chauffage', category: 'heating' },
             { id: 'hvac_new', label: 'Chauffage/CVC rénové récemment', category: 'heating' },
             { id: 'envelope', label: 'Enveloppe rénovée (isolation)', category: 'envelope' },
-            { id: 'dhw', label: 'ECS traitée (calorifugeage, etc.)', category: 'dhw' }
+            { id: 'dhw', label: 'ECS traitée (calorifugeage, etc.)', category: 'dhw' },
+            { id: 'gtb',            label: 'GTB / Domotique déjà installé',     category: 'automation' },
+            { id: 'cold_renovated', label: 'Froid commercial rénové (< 5 ans)',  category: 'cold'       },
+            { id: 'pv_installed',   label: 'Panneaux PV déjà installés',         category: 'production' }
         ];
 
         const NEW_DIAGNOSTIC_DEFAULT_FORM_DATA = {
@@ -3015,6 +3032,34 @@
             gasPriceKwh: '',
             gasIncludesSubscription: false,
             gasSubscriptionYearly: '',
+
+            // ── Enveloppe bâtiment ──────────────────────────────────────────────────────
+            buildingAge: '',         // 'pre1948'|'1948_1974'|'1975_1988'|'1989_2005'|'2006_2012'|'post2012'|'unknown'
+            roofInsulation: '',      // 'none'|'partial'|'done'
+            wallInsulation: '',      // 'none'|'partial'|'done'
+
+            // ── Systèmes techniques ─────────────────────────────────────────────────────
+            boilerAge: '',           // 'under10'|'10to20'|'over20'
+            hasVmc: false,
+            vmcType: '',             // 'simple_flux'|'double_flux'
+            roofAccessible: '',      // 'yes'|'no'|'unknown'
+
+            // ── Équipements activité-spécifiques ────────────────────────────────────────
+            coldEquipmentType: '',        // 'open_shelves'|'closed_doors'|'mixed'|'none'
+            coldEquipmentAge: '',         // 'under5'|'5to15'|'over15'
+            coldMaintenanceStatus: '',    // 'contract'|'occasional'|'none'
+            kitchenType: '',              // 'gas_intensive'|'electric'|'mixed'
+            hasLaundry: false,
+
+            // ── Automatisation ──────────────────────────────────────────────────────────
+            hasGtb: false,
+            hasExteriorLighting: false,
+
+            // ── Qualification prospect (Step4) ──────────────────────────────────────────
+            projectObjective: '',    // 'reduce_costs'|'comply_regulation'|'valorise_asset'|'comfort'
+            decisionHorizon: '',     // 'immediate'|'3to6months'|'6to12months'|'over1year'|'exploring'
+            budgetRange: '',         // 'under5k'|'5to20k'|'20to80k'|'over80k'|'unknown'
+            isDecisionMaker: '',     // 'yes'|'need_approval'|'no'
 
             // Étape 4 : Contact + Travaux
             email: '',
@@ -3562,6 +3607,12 @@
                 if (!formData.ecsSameSystem && !formData.ecsSystem) {
                     newErrors.ecsSystem = 'Veuillez sélectionner le système ECS';
                 }
+                if (!formData.buildingAge) newErrors.buildingAge = 'Requis';
+                if (!formData.roofInsulation) newErrors.roofInsulation = 'Requis';
+                if (!formData.wallInsulation) newErrors.wallInsulation = 'Requis';
+                if ((formData.mainHeating === 'gas' || formData.mainHeating === 'other') && !formData.boilerAge) {
+                    newErrors.boilerAge = 'Requis pour ce type de chauffage';
+                }
 
                 setErrors(newErrors);
                 return Object.keys(newErrors).length === 0;
@@ -3711,6 +3762,264 @@
                             ]}
                         />
                     </div>
+
+                    {/* ── BLOC A — Enveloppe ────────────────────────────────────────────── */}
+                    <div className="p-5 bg-white border border-[#E2E8F0] rounded-xl shadow-sm mb-6">
+                        <div className="flex items-center gap-2 mb-4">
+                            <Icon icon="solar:home-angle-bold" className="text-[#1D4ED8] text-xl" />
+                            <h3 className="font-semibold text-[#102A43]">Enveloppe du bâtiment</h3>
+                        </div>
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-[#475569] mb-1">Période de construction <span className="text-red-500">*</span></label>
+                            <select
+                                value={formData.buildingAge}
+                                onChange={e => setFormData(p => ({...p, buildingAge: e.target.value}))}
+                                className="w-full border border-[#E2E8F0] rounded-lg p-2.5 text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]"
+                            >
+                                <option value="">-- Sélectionner --</option>
+                                <option value="pre1948">Avant 1948 — isolation absente</option>
+                                <option value="1948_1974">1948–1974 — sans isolation</option>
+                                <option value="1975_1988">1975–1988 — RT1974 (premières réglementations)</option>
+                                <option value="1989_2005">1989–2005 — isolation partielle</option>
+                                <option value="2006_2012">2006–2012 — RT2005</option>
+                                <option value="post2012">Après 2012 — BBC / RT2012 / RE2020</option>
+                                <option value="unknown">Je ne sais pas</option>
+                            </select>
+                            {errors.buildingAge && <p className="text-red-500 text-xs mt-1">{errors.buildingAge}</p>}
+                        </div>
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-[#475569] mb-2">Isolation toiture <span className="text-red-500">*</span></label>
+                            <div className="grid grid-cols-3 gap-2">
+                                {[
+                                    {val:'none',   label:'Aucune',    color:'#EF4444', bg:'#FEF2F2', border:'#FECACA'},
+                                    {val:'partial',label:'Partielle',  color:'#F59E0B', bg:'#FFFBEB', border:'#FDE68A'},
+                                    {val:'done',   label:'Réalisée',  color:'#16A34A', bg:'#F0FDF4', border:'#BBF7D0'},
+                                ].map(opt => (
+                                    <button key={opt.val} type="button"
+                                        onClick={() => setFormData(p => ({...p, roofInsulation: opt.val}))}
+                                        style={formData.roofInsulation === opt.val ? {borderColor: opt.border, backgroundColor: opt.bg, color: opt.color} : {}}
+                                        className={`py-2 px-3 rounded-lg border text-sm font-medium transition-all ${formData.roofInsulation === opt.val ? 'border-2' : 'border-[#E2E8F0] text-[#475569] hover:border-[#1D4ED8]'}`}
+                                    >{opt.label}</button>
+                                ))}
+                            </div>
+                            {errors.roofInsulation && <p className="text-red-500 text-xs mt-1">{errors.roofInsulation}</p>}
+                        </div>
+                        <div className="mb-2">
+                            <label className="block text-sm font-medium text-[#475569] mb-2">Isolation murs extérieurs <span className="text-red-500">*</span></label>
+                            <div className="grid grid-cols-3 gap-2">
+                                {[
+                                    {val:'none',   label:'Aucune',    color:'#EF4444', bg:'#FEF2F2', border:'#FECACA'},
+                                    {val:'partial',label:'Partielle',  color:'#F59E0B', bg:'#FFFBEB', border:'#FDE68A'},
+                                    {val:'done',   label:'Réalisée',  color:'#16A34A', bg:'#F0FDF4', border:'#BBF7D0'},
+                                ].map(opt => (
+                                    <button key={opt.val} type="button"
+                                        onClick={() => setFormData(p => ({...p, wallInsulation: opt.val}))}
+                                        style={formData.wallInsulation === opt.val ? {borderColor: opt.border, backgroundColor: opt.bg, color: opt.color} : {}}
+                                        className={`py-2 px-3 rounded-lg border text-sm font-medium transition-all ${formData.wallInsulation === opt.val ? 'border-2' : 'border-[#E2E8F0] text-[#475569] hover:border-[#1D4ED8]'}`}
+                                    >{opt.label}</button>
+                                ))}
+                            </div>
+                            {errors.wallInsulation && <p className="text-red-500 text-xs mt-1">{errors.wallInsulation}</p>}
+                        </div>
+                    </div>
+
+                    {/* ── BLOC B — Systèmes techniques ──────────────────────────────────── */}
+                    <div className="p-5 bg-white border border-[#E2E8F0] rounded-xl shadow-sm mb-6">
+                        <div className="flex items-center gap-2 mb-4">
+                            <Icon icon="solar:settings-bold" className="text-[#1D4ED8] text-xl" />
+                            <h3 className="font-semibold text-[#102A43]">Systèmes techniques</h3>
+                        </div>
+                        {(formData.mainHeating === 'gas' || formData.mainHeating === 'other') && (
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-[#475569] mb-2">Âge de la chaudière <span className="text-red-500">*</span></label>
+                                <div className="grid grid-cols-3 gap-2">
+                                    {[
+                                        {val:'under10', label:'< 10 ans',  color:'#16A34A', bg:'#F0FDF4', border:'#BBF7D0'},
+                                        {val:'10to20',  label:'10–20 ans', color:'#F59E0B', bg:'#FFFBEB', border:'#FDE68A'},
+                                        {val:'over20',  label:'> 20 ans',  color:'#EF4444', bg:'#FEF2F2', border:'#FECACA'},
+                                    ].map(opt => (
+                                        <button key={opt.val} type="button"
+                                            onClick={() => setFormData(p => ({...p, boilerAge: opt.val}))}
+                                            style={formData.boilerAge === opt.val ? {borderColor: opt.border, backgroundColor: opt.bg, color: opt.color} : {}}
+                                            className={`py-2 px-3 rounded-lg border text-sm font-medium transition-all ${formData.boilerAge === opt.val ? 'border-2' : 'border-[#E2E8F0] text-[#475569] hover:border-[#1D4ED8]'}`}
+                                        >{opt.label}</button>
+                                    ))}
+                                </div>
+                                {errors.boilerAge && <p className="text-red-500 text-xs mt-1">{errors.boilerAge}</p>}
+                            </div>
+                        )}
+                        <div className="mb-4">
+                            <label className="flex items-center gap-3 cursor-pointer">
+                                <div
+                                    onClick={() => setFormData(p => ({...p, hasVmc: !p.hasVmc, vmcType: !p.hasVmc ? p.vmcType : ''}))}
+                                    className={`relative w-10 h-6 rounded-full transition-colors flex-shrink-0 ${formData.hasVmc ? 'bg-[#1D4ED8]' : 'bg-gray-300'}`}
+                                >
+                                    <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${formData.hasVmc ? 'left-5' : 'left-1'}`}></span>
+                                </div>
+                                <span className="text-sm font-medium text-[#475569]">Le bâtiment dispose d'une VMC</span>
+                            </label>
+                            {formData.hasVmc && (
+                                <select
+                                    value={formData.vmcType}
+                                    onChange={e => setFormData(p => ({...p, vmcType: e.target.value}))}
+                                    className="mt-2 w-full border border-[#E2E8F0] rounded-lg p-2.5 text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]"
+                                >
+                                    <option value="">-- Type de VMC --</option>
+                                    <option value="simple_flux">Simple flux</option>
+                                    <option value="double_flux">Double flux</option>
+                                </select>
+                            )}
+                        </div>
+                        {formData.role === 'owner' && (
+                            <div className="mb-2">
+                                <label className="block text-sm font-medium text-[#475569] mb-1">Accès et orientation de la toiture</label>
+                                <p className="text-xs text-[#475569] mb-2">Potentiel solaire (PV ou thermique)</p>
+                                <div className="grid grid-cols-3 gap-2">
+                                    {[
+                                        {val:'yes',     label:'Accessible'},
+                                        {val:'no',      label:'Non accessible'},
+                                        {val:'unknown', label:'Je ne sais pas'},
+                                    ].map(opt => (
+                                        <button key={opt.val} type="button"
+                                            onClick={() => setFormData(p => ({...p, roofAccessible: opt.val}))}
+                                            className={`py-2 px-3 rounded-lg border text-sm font-medium transition-all ${formData.roofAccessible === opt.val ? 'bg-[#EFF6FF] border-[#1D4ED8] text-[#1D4ED8] border-2' : 'border-[#E2E8F0] text-[#475569] hover:border-[#1D4ED8]'}`}
+                                        >{opt.label}</button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* ── BLOC C — Équipements spécifiques ─────────────────────────────── */}
+                    {(['commerce_alim','restaurant','hotel','offices','light_warehouse','education'].includes(formData.activity) || Number(formData.surface) > 300) && (
+                        <div className="p-5 bg-white border border-[#E2E8F0] rounded-xl shadow-sm mb-6">
+                            <div className="flex items-center gap-2 mb-4">
+                                <Icon icon="solar:widget-bold" className="text-[#1D4ED8] text-xl" />
+                                <h3 className="font-semibold text-[#102A43]">Équipements spécifiques à l'activité</h3>
+                            </div>
+                            {formData.activity === 'commerce_alim' && (
+                                <div className="pb-4 mb-4 border-b border-[#E2E8F0]">
+                                    <p className="text-xs font-semibold text-[#475569] uppercase tracking-wide mb-3">Froid commercial</p>
+                                    <div className="mb-3">
+                                        <label className="block text-sm font-medium text-[#475569] mb-2">Type de meubles frigorifiques</label>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            {[
+                                                {val:'open_shelves', label:'Ouverts',  color:'#EF4444', bg:'#FEF2F2', border:'#FECACA'},
+                                                {val:'closed_doors', label:'Fermés',   color:'#16A34A', bg:'#F0FDF4', border:'#BBF7D0'},
+                                                {val:'mixed',        label:'Mixte',    color:'#F59E0B', bg:'#FFFBEB', border:'#FDE68A'},
+                                                {val:'none',         label:'Aucun',    color:'#6B7280', bg:'#F9FAFB', border:'#D1D5DB'},
+                                            ].map(opt => (
+                                                <button key={opt.val} type="button"
+                                                    onClick={() => setFormData(p => ({...p, coldEquipmentType: opt.val}))}
+                                                    style={formData.coldEquipmentType === opt.val ? {borderColor: opt.border, backgroundColor: opt.bg, color: opt.color} : {}}
+                                                    className={`py-2 px-3 rounded-lg border text-sm font-medium transition-all ${formData.coldEquipmentType === opt.val ? 'border-2' : 'border-[#E2E8F0] text-[#475569] hover:border-[#1D4ED8]'}`}
+                                                >{opt.label}</button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <div className="mb-3">
+                                        <label className="block text-sm font-medium text-[#475569] mb-2">Âge des groupes froids</label>
+                                        <div className="grid grid-cols-3 gap-2">
+                                            {[
+                                                {val:'under5', label:'< 5 ans',  color:'#16A34A', bg:'#F0FDF4', border:'#BBF7D0'},
+                                                {val:'5to15',  label:'5–15 ans', color:'#F59E0B', bg:'#FFFBEB', border:'#FDE68A'},
+                                                {val:'over15', label:'> 15 ans', color:'#EF4444', bg:'#FEF2F2', border:'#FECACA'},
+                                            ].map(opt => (
+                                                <button key={opt.val} type="button"
+                                                    onClick={() => setFormData(p => ({...p, coldEquipmentAge: opt.val}))}
+                                                    style={formData.coldEquipmentAge === opt.val ? {borderColor: opt.border, backgroundColor: opt.bg, color: opt.color} : {}}
+                                                    className={`py-2 px-3 rounded-lg border text-sm font-medium transition-all ${formData.coldEquipmentAge === opt.val ? 'border-2' : 'border-[#E2E8F0] text-[#475569] hover:border-[#1D4ED8]'}`}
+                                                >{opt.label}</button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-[#475569] mb-1">Maintenance groupes froids</label>
+                                        <select
+                                            value={formData.coldMaintenanceStatus}
+                                            onChange={e => setFormData(p => ({...p, coldMaintenanceStatus: e.target.value}))}
+                                            className="w-full border border-[#E2E8F0] rounded-lg p-2.5 text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]"
+                                        >
+                                            <option value="">-- Sélectionner --</option>
+                                            <option value="contract">Contrat de maintenance</option>
+                                            <option value="occasional">Occasionnelle</option>
+                                            <option value="none">Aucune</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            )}
+                            {formData.activity === 'restaurant' && (
+                                <div className="pb-4 mb-4 border-b border-[#E2E8F0]">
+                                    <p className="text-xs font-semibold text-[#475569] uppercase tracking-wide mb-3">Cuisine</p>
+                                    <div className="mb-3">
+                                        <label className="block text-sm font-medium text-[#475569] mb-2">Type de cuisson</label>
+                                        <div className="grid grid-cols-3 gap-2">
+                                            {[
+                                                {val:'gas_intensive', label:'Gaz dominant'},
+                                                {val:'electric',      label:'Électrique'},
+                                                {val:'mixed',         label:'Mixte'},
+                                            ].map(opt => (
+                                                <button key={opt.val} type="button"
+                                                    onClick={() => setFormData(p => ({...p, kitchenType: opt.val}))}
+                                                    className={`py-2 px-3 rounded-lg border text-sm font-medium transition-all ${formData.kitchenType === opt.val ? 'bg-[#EFF6FF] border-[#1D4ED8] text-[#1D4ED8] border-2' : 'border-[#E2E8F0] text-[#475569] hover:border-[#1D4ED8]'}`}
+                                                >{opt.label}</button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-[#475569] mb-1">Maintenance froid cuisine</label>
+                                        <select
+                                            value={formData.coldMaintenanceStatus}
+                                            onChange={e => setFormData(p => ({...p, coldMaintenanceStatus: e.target.value}))}
+                                            className="w-full border border-[#E2E8F0] rounded-lg p-2.5 text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]"
+                                        >
+                                            <option value="">-- Sélectionner --</option>
+                                            <option value="contract">Contrat de maintenance</option>
+                                            <option value="occasional">Occasionnelle</option>
+                                            <option value="none">Aucune</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            )}
+                            {formData.activity === 'hotel' && (
+                                <div className="pb-4 mb-4 border-b border-[#E2E8F0]">
+                                    <p className="text-xs font-semibold text-[#475569] uppercase tracking-wide mb-3">Hôtel</p>
+                                    <label className="flex items-center gap-3 cursor-pointer">
+                                        <div
+                                            onClick={() => setFormData(p => ({...p, hasLaundry: !p.hasLaundry}))}
+                                            className={`relative w-10 h-6 rounded-full transition-colors flex-shrink-0 ${formData.hasLaundry ? 'bg-[#1D4ED8]' : 'bg-gray-300'}`}
+                                        >
+                                            <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${formData.hasLaundry ? 'left-5' : 'left-1'}`}></span>
+                                        </div>
+                                        <span className="text-sm font-medium text-[#475569]">Blanchisserie sur site</span>
+                                    </label>
+                                </div>
+                            )}
+                            {(['offices','light_warehouse','education','hotel'].includes(formData.activity) || Number(formData.surface) > 300) && (
+                                <div>
+                                    <p className="text-xs font-semibold text-[#475569] uppercase tracking-wide mb-3">Automatisation</p>
+                                    <label className="flex items-center gap-3 cursor-pointer mb-3">
+                                        <div
+                                            onClick={() => setFormData(p => ({...p, hasGtb: !p.hasGtb}))}
+                                            className={`relative w-10 h-6 rounded-full transition-colors flex-shrink-0 ${formData.hasGtb ? 'bg-[#1D4ED8]' : 'bg-gray-300'}`}
+                                        >
+                                            <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${formData.hasGtb ? 'left-5' : 'left-1'}`}></span>
+                                        </div>
+                                        <span className="text-sm font-medium text-[#475569]">GTB / Domotique en place</span>
+                                    </label>
+                                    <label className="flex items-center gap-3 cursor-pointer">
+                                        <div
+                                            onClick={() => setFormData(p => ({...p, hasExteriorLighting: !p.hasExteriorLighting}))}
+                                            className={`relative w-10 h-6 rounded-full transition-colors flex-shrink-0 ${formData.hasExteriorLighting ? 'bg-[#1D4ED8]' : 'bg-gray-300'}`}
+                                        >
+                                            <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${formData.hasExteriorLighting ? 'left-5' : 'left-1'}`}></span>
+                                        </div>
+                                        <span className="text-sm font-medium text-[#475569]">Éclairage extérieur / parking présent</span>
+                                    </label>
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     <div className="flex justify-between mt-8">
                         <button
@@ -3947,7 +4256,7 @@
 
             return (
                 <div className="max-w-2xl mx-auto">
-                    <h2 className="text-2xl font-bold text-[#102A43] mb-2">Contact et travaux réalisés</h2>
+                    <h2 className="text-2xl font-bold text-[#102A43] mb-2">Votre projet et vos coordonnées</h2>
                     <p className="text-[#475569] mb-8">
                         Indiquez votre email pour recevoir votre rapport
                     </p>
@@ -3974,7 +4283,89 @@
                         />
                     </div>
 
-                    {/* Objectif, horizon, role */}
+                    {/* ── Qualification prospect ────────────────────────────────── */}
+                    <div className="mb-6 p-5 bg-white border border-[#E2E8F0] rounded-xl shadow-sm">
+                        <div className="flex items-center gap-2 mb-4">
+                            <Icon icon="solar:target-bold" className="text-[#1D4ED8] text-xl" />
+                            <h3 className="font-semibold text-[#102A43]">Votre projet</h3>
+                        </div>
+                        <div className="mb-5">
+                            <label className="block text-sm font-medium text-[#475569] mb-3">Objectif principal</label>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                {[
+                                    {val:'reduce_costs',      label:'Réduire mes charges',       sub:'Factures trop élevées',              color:'#16A34A', bg:'#F0FDF4', border:'#BBF7D0', icon:'solar:dollar-minimalistic-bold'},
+                                    {val:'comply_regulation', label:'Conformité réglementaire',  sub:'Décret Tertiaire, vente, bail',       color:'#1D4ED8', bg:'#EFF6FF', border:'#BFDBFE', icon:'solar:document-bold'},
+                                    {val:'valorise_asset',    label:'Valoriser mon patrimoine',  sub:'DPE, cession',                        color:'#7C3AED', bg:'#F5F3FF', border:'#DDD6FE', icon:'solar:buildings-bold'},
+                                    {val:'comfort',           label:'Améliorer le confort',       sub:"Température, qualité d'air",          color:'#F59E0B', bg:'#FFFBEB', border:'#FDE68A', icon:'solar:smile-circle-bold'},
+                                ].map(opt => (
+                                    <button key={opt.val} type="button"
+                                        onClick={() => setFormData(p => ({...p, projectObjective: opt.val}))}
+                                        style={formData.projectObjective === opt.val ? {borderColor: opt.border, backgroundColor: opt.bg} : {}}
+                                        className={`flex items-start gap-3 p-3 rounded-xl border text-left transition-all ${formData.projectObjective === opt.val ? 'border-2' : 'border-[#E2E8F0] hover:border-[#1D4ED8]'}`}
+                                    >
+                                        <Icon icon={opt.icon} style={{color: opt.color, fontSize:'22px', flexShrink:0, marginTop:'2px'}} />
+                                        <div>
+                                            <div className="text-sm font-semibold text-[#102A43]">{opt.label}</div>
+                                            <div className="text-xs text-[#475569] mt-0.5">{opt.sub}</div>
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="mb-5">
+                            <label className="block text-sm font-medium text-[#475569] mb-2">Horizon de décision</label>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                {[
+                                    {val:'immediate',   label:'Immédiat'},
+                                    {val:'3to6months',  label:'3–6 mois'},
+                                    {val:'6to12months', label:'6–12 mois'},
+                                    {val:'over1year',   label:'> 1 an'},
+                                    {val:'exploring',   label:'En exploration'},
+                                ].map(opt => (
+                                    <button key={opt.val} type="button"
+                                        onClick={() => setFormData(p => ({...p, decisionHorizon: opt.val}))}
+                                        className={`py-2 px-3 rounded-lg border text-sm font-medium transition-all ${formData.decisionHorizon === opt.val ? 'bg-[#EFF6FF] border-[#1D4ED8] text-[#1D4ED8] border-2' : 'border-[#E2E8F0] text-[#475569] hover:border-[#1D4ED8]'}`}
+                                    >{opt.label}</button>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="mb-5">
+                            <label className="block text-sm font-medium text-[#475569] mb-2">Budget envisagé</label>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                {[
+                                    {val:'under5k', label:'< 5 000 €'},
+                                    {val:'5to20k',  label:'5–20 k€'},
+                                    {val:'20to80k', label:'20–80 k€'},
+                                    {val:'over80k', label:'> 80 000 €'},
+                                    {val:'unknown', label:'Non défini'},
+                                ].map(opt => (
+                                    <button key={opt.val} type="button"
+                                        onClick={() => setFormData(p => ({...p, budgetRange: opt.val}))}
+                                        className={`py-2 px-3 rounded-lg border text-sm font-medium transition-all ${formData.budgetRange === opt.val ? 'bg-[#EFF6FF] border-[#1D4ED8] text-[#1D4ED8] border-2' : 'border-[#E2E8F0] text-[#475569] hover:border-[#1D4ED8]'}`}
+                                    >{opt.label}</button>
+                                ))}
+                            </div>
+                        </div>
+                        {formData.role !== 'owner' && (
+                            <div>
+                                <label className="block text-sm font-medium text-[#475569] mb-2">Pouvoir de décision</label>
+                                <div className="grid grid-cols-3 gap-2">
+                                    {[
+                                        {val:'yes',          label:'Décideur direct'},
+                                        {val:'need_approval',label:'Accord requis'},
+                                        {val:'no',           label:'Pas décideur'},
+                                    ].map(opt => (
+                                        <button key={opt.val} type="button"
+                                            onClick={() => setFormData(p => ({...p, isDecisionMaker: opt.val}))}
+                                            className={`py-2 px-3 rounded-lg border text-sm font-medium transition-all ${formData.isDecisionMaker === opt.val ? 'bg-[#EFF6FF] border-[#1D4ED8] text-[#1D4ED8] border-2' : 'border-[#E2E8F0] text-[#475569] hover:border-[#1D4ED8]'}`}
+                                        >{opt.label}</button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Objectif, horizon, role (legacy) */}
                     <div className="mb-6 p-6 bg-white border border-[#E2E8F0] rounded-xl shadow-sm">
                         <p className="text-sm font-semibold text-neutral-900 mb-4">Votre projet (facultatif)</p>
                         <div className="grid md:grid-cols-3 gap-4">
@@ -4072,6 +4463,27 @@
 
 
         const NEW_DIAGNOSTIC_MAX_TOTAL_SAVINGS_PCT = 0.65;
+
+        const NEW_DIAGNOSTIC_TIER_LABELS = {
+            quick_win: {
+                label: 'Actions rapides',
+                subtitle: 'Sans travaux ou faible investissement — ROI court',
+                color: '#16A34A', bg: '#F0FDF4', border: '#BBF7D0',
+                icon: 'solar:bolt-bold'
+            },
+            equipment: {
+                label: 'Équipements & pilotage',
+                subtitle: 'Investissements ciblés à rentabilité confirmée',
+                color: '#1D4ED8', bg: '#EFF6FF', border: '#BFDBFE',
+                icon: 'solar:settings-bold'
+            },
+            structural: {
+                label: 'Rénovation structurante',
+                subtitle: 'Travaux de fond — gains durables sur 15–20 ans',
+                color: '#7C3AED', bg: '#F5F3FF', border: '#DDD6FE',
+                icon: 'solar:buildings-bold'
+            }
+        };
 
         const NewDiagnosticAccordion = ({ title, children, defaultOpen = false }) => {
             const [isOpen, setIsOpen] = useState(defaultOpen);
@@ -4369,6 +4781,7 @@
                     id: 'ACT01',
                     name: 'Réglage horaires et abaissement chauffage',
                     category: 'heating',
+                    tier: 'quick_win',
                     trigger_rules: ['heating_post > 30%', 'no_regulation_done'],
                     gain_scope: 'heating_post',
                     gain_pct_low: 0.08,
@@ -4391,6 +4804,7 @@
                     id: 'ACT02',
                     name: 'Régulation centrale chauffage (sonde + programmation)',
                     category: 'heating',
+                    tier: 'equipment',
                     trigger_rules: ['heating_post > 30%', 'no_regulation_done'],
                     gain_scope: 'heating_post',
                     gain_pct_low: 0.10,
@@ -4413,6 +4827,7 @@
                     id: 'ACT03',
                     name: 'Robinets thermostatiques (zonage)',
                     category: 'heating',
+                    tier: 'equipment',
                     trigger_rules: ['heating_post > 25%', 'surface > 200'],
                     gain_scope: 'heating_post',
                     gain_pct_low: 0.05,
@@ -4435,6 +4850,7 @@
                     id: 'ACT04',
                     name: 'Désembouage et équilibrage réseau chauffage',
                     category: 'heating',
+                    tier: 'equipment',
                     trigger_rules: ['heating_post > 30%', 'age_building > 15'],
                     gain_scope: 'heating_post',
                     gain_pct_low: 0.05,
@@ -4457,6 +4873,7 @@
                     id: 'ACT05',
                     name: 'Pilotage ventilation / extraction hors service',
                     category: 'ventilation',
+                    tier: 'quick_win',
                     trigger_rules: ['vent_aux_post > 8%', 'no_regulation_done'],
                     gain_scope: 'vent_aux_post',
                     gain_pct_low: 0.15,
@@ -4479,6 +4896,7 @@
                     id: 'ACT06',
                     name: 'Ventilation asservie présence',
                     category: 'ventilation',
+                    tier: 'equipment',
                     trigger_rules: ['vent_aux_post > 8%', 'offices or education'],
                     gain_scope: 'vent_aux_post',
                     gain_pct_low: 0.20,
@@ -4501,6 +4919,7 @@
                     id: 'ACT07',
                     name: 'Ventilation asservie CO2 / humidité',
                     category: 'ventilation',
+                    tier: 'equipment',
                     trigger_rules: ['vent_aux_post > 10%', 'high_occupancy'],
                     gain_scope: 'vent_aux_post',
                     gain_pct_low: 0.15,
@@ -4523,6 +4942,7 @@
                     id: 'ACT08',
                     name: 'Relamping LED complet',
                     category: 'lighting',
+                    tier: 'equipment',
                     trigger_rules: ['lighting_post > 15%', 'no_led_done'],
                     gain_scope: 'lighting_post',
                     gain_pct_low: 0.40,
@@ -4545,6 +4965,7 @@
                     id: 'ACT09',
                     name: 'Éclairage détection présence et zonage',
                     category: 'lighting',
+                    tier: 'equipment',
                     trigger_rules: ['lighting_post > 15%', 'offices or education'],
                     gain_scope: 'lighting_post',
                     gain_pct_low: 0.15,
@@ -4567,6 +4988,7 @@
                     id: 'ACT10',
                     name: 'Calorifugeage conduites ECS',
                     category: 'dhw',
+                    tier: 'equipment',
                     trigger_rules: ['dhw_post > 8%', 'no_dhw_done'],
                     gain_scope: 'dhw_post',
                     gain_pct_low: 0.10,
@@ -4589,6 +5011,7 @@
                     id: 'ACT11',
                     name: 'Isolation ballon ECS',
                     category: 'dhw',
+                    tier: 'equipment',
                     trigger_rules: ['dhw_post > 8%', 'no_dhw_done'],
                     gain_scope: 'dhw_post',
                     gain_pct_low: 0.08,
@@ -4611,6 +5034,7 @@
                     id: 'ACT12',
                     name: 'Isolation toiture (si travaux prévus)',
                     category: 'envelope',
+                    tier: 'structural',
                     trigger_rules: ['heating_post > 35%', 'no_envelope_done', 'age_building > 15'],
                     gain_scope: 'heating_post',
                     gain_pct_low: 0.15,
@@ -4626,6 +5050,157 @@
                     source_ref_gain: 'ADEME - Isolation toiture tertiaire',
                     source_level_capex: 'source_partial',
                     source_ref_capex: 'Prix marché isolation + MO',
+                    source_level_roi: 'hypothesis'
+                },
+
+                // ─── ACT13 — PAC air/eau ────────────────────────────────────────────────────
+                {
+                    id: 'ACT13',
+                    name: 'Remplacement chaudière → Pompe à chaleur air/eau',
+                    category: 'heating_structural',
+                    tier: 'structural',
+                    gain_scope: 'heating_post',
+                    gain_pct_low: 0.35, gain_pct_med: 0.50, gain_pct_high: 0.65,
+                    energy_switch: true,
+                    energy_switch_note: 'Consommation gaz réduite, consommation électrique augmentée. Gain net estimé à 50% du poste chauffage gaz. COP moyen 3.2.',
+                    capex_low: 12000, capex_med: 22000, capex_high: 40000, capex_unit: '€',
+                    roi_method: 'simple_payback',
+                    aid_tags: ['CEE', 'MaPrimeRenov'], fiche_cee: 'BAT-TH-113',
+                    intervenants: 'Installateur RGE — qualification PACPro / QualiPAC',
+                    source_level_gain: 'source_strong', source_ref_gain: 'ADEME — PAC tertiaire, COP 3.2 air/eau',
+                    source_level_capex: 'source_partial', source_ref_capex: 'Retours installateurs RGE 2024-2025',
+                    source_level_roi: 'hypothesis'
+                },
+                // ─── ACT14 — Ballon thermodynamique ─────────────────────────────────────────
+                {
+                    id: 'ACT14',
+                    name: 'Ballon thermodynamique (ECS)',
+                    category: 'dhw_structural',
+                    tier: 'equipment',
+                    gain_scope: 'dhw_post',
+                    gain_pct_low: 0.55, gain_pct_med: 0.65, gain_pct_high: 0.75,
+                    capex_low: 2800, capex_med: 4000, capex_high: 6500, capex_unit: '€',
+                    roi_method: 'simple_payback',
+                    aid_tags: ['CEE', 'TVA5.5'], fiche_cee: 'BAT-TH-148',
+                    intervenants: 'Plombier-chauffagiste RGE',
+                    source_level_gain: 'source_strong', source_ref_gain: 'ADEME — Ballon thermodynamique COP 2.8-3.5',
+                    source_level_capex: 'source_strong', source_ref_capex: 'Prix marché 2024-2025',
+                    source_level_roi: 'hypothesis'
+                },
+                // ─── ACT15 — Isolation toiture ────────────────────────────────────────────────
+                {
+                    id: 'ACT15',
+                    name: 'Isolation thermique de la toiture',
+                    category: 'envelope',
+                    tier: 'structural',
+                    gain_scope: 'heating_post',
+                    gain_pct_low: 0.14, gain_pct_med: 0.22, gain_pct_high: 0.32,
+                    capex_low: 40, capex_med: 70, capex_high: 120, capex_unit: '€/m²',
+                    roi_method: 'simple_payback',
+                    aid_tags: ['CEE', 'MaPrimeRenov'], fiche_cee: 'BAT-EN-102',
+                    intervenants: 'Entreprise isolation RGE — qualif. Qualibat 71x ou 73x',
+                    source_level_gain: 'source_strong', source_ref_gain: 'ADEME — Isolation toiture tertiaire',
+                    source_level_capex: 'source_partial', source_ref_capex: 'Prix marché isolation + MO 2024',
+                    source_level_roi: 'hypothesis'
+                },
+                // ─── ACT16 — ITE murs extérieurs ─────────────────────────────────────────────
+                {
+                    id: 'ACT16',
+                    name: 'Isolation thermique des murs extérieurs (ITE)',
+                    category: 'envelope',
+                    tier: 'structural',
+                    gain_scope: 'heating_post',
+                    gain_pct_low: 0.10, gain_pct_med: 0.18, gain_pct_high: 0.28,
+                    capex_low: 80, capex_med: 130, capex_high: 200, capex_unit: '€/m² de façade',
+                    capex_note: 'Surface façade estimée = surface bâtiment × 0.6',
+                    roi_method: 'simple_payback',
+                    aid_tags: ['CEE', 'MaPrimeRenov'], fiche_cee: 'BAT-EN-101',
+                    intervenants: 'Entreprise isolation RGE — ITE qualifiée',
+                    source_level_gain: 'source_partial', source_ref_gain: 'ADEME — Isolation murs tertiaire',
+                    source_level_capex: 'source_partial', source_ref_capex: 'Prix marché ITE 2024',
+                    source_level_roi: 'hypothesis'
+                },
+                // ─── ACT17 — VMC double flux ─────────────────────────────────────────────────
+                {
+                    id: 'ACT17',
+                    name: 'VMC double flux avec récupérateur de chaleur',
+                    category: 'ventilation_structural',
+                    tier: 'structural',
+                    gain_scope: 'vent_aux_post',
+                    gain_pct_low: 0.30, gain_pct_med: 0.50, gain_pct_high: 0.65,
+                    capex_low: 6000, capex_med: 15000, capex_high: 30000, capex_unit: '€',
+                    roi_method: 'simple_payback',
+                    aid_tags: ['CEE'], fiche_cee: 'BAT-TH-125',
+                    intervenants: 'Entreprise ventilation RGE — qualification QualiAir',
+                    source_level_gain: 'source_partial', source_ref_gain: 'ADEME — VMC DF HR tertiaire',
+                    source_level_capex: 'source_partial', source_ref_capex: 'Devis moyens installateurs 2024',
+                    source_level_roi: 'hypothesis'
+                },
+                // ─── ACT18 — Panneaux PV ─────────────────────────────────────────────────────
+                {
+                    id: 'ACT18',
+                    name: 'Panneaux photovoltaïques (autoconsommation)',
+                    category: 'production',
+                    tier: 'structural',
+                    gain_scope: 'elec_post',
+                    gain_pct_low: 0.08, gain_pct_med: 0.15, gain_pct_high: 0.25,
+                    capex_low: 6000, capex_med: 15000, capex_high: 35000, capex_unit: '€',
+                    capex_note: 'Estimé sur 6–10 kWc. À dimensionner selon surface disponible.',
+                    roi_method: 'simple_payback',
+                    aid_tags: ['TVA5.5', 'PrimeAutoconsommation'],
+                    intervenants: 'Installateur photovoltaïque RGE — IRCVE ou QualiPV',
+                    source_level_gain: 'source_partial', source_ref_gain: 'ADEME — Solaire PV tertiaire autoconsommation',
+                    source_level_capex: 'source_partial', source_ref_capex: 'Prix marché PV 2024-2025',
+                    source_level_roi: 'hypothesis'
+                },
+                // ─── ACT19 — GTB ─────────────────────────────────────────────────────────────
+                {
+                    id: 'ACT19',
+                    name: 'GTB — Gestion Technique du Bâtiment',
+                    category: 'automation',
+                    tier: 'equipment',
+                    gain_scope: 'total',
+                    gain_pct_low: 0.10, gain_pct_med: 0.15, gain_pct_high: 0.22,
+                    capex_low: 6000, capex_med: 18000, capex_high: 45000, capex_unit: '€',
+                    capex_note: 'CAPEX dépend de la surface et du niveau de supervision.',
+                    roi_method: 'simple_payback',
+                    aid_tags: ['CEE'], fiche_cee: 'BAT-TH-116',
+                    intervenants: "Intégrateur GTB / Bureau d'études CVC spécialisé",
+                    source_level_gain: 'source_partial', source_ref_gain: 'ADEME — GTB tertiaire, retours terrain',
+                    source_level_capex: 'source_partial', source_ref_capex: 'Devis moyens intégrateurs GTB 2024',
+                    source_level_roi: 'hypothesis'
+                },
+                // ─── ACT20 — Portes vitrées frigos ───────────────────────────────────────────
+                {
+                    id: 'ACT20',
+                    name: 'Portes vitrées sur meubles frigorifiques ouverts',
+                    category: 'cold_commercial',
+                    tier: 'equipment',
+                    gain_scope: 'cooling_post',
+                    gain_pct_low: 0.22, gain_pct_med: 0.30, gain_pct_high: 0.38,
+                    capex_low: 800, capex_med: 1800, capex_high: 3500, capex_unit: '€/ml',
+                    capex_note: 'Estimé sur 6 ml de linéaire standard. À dimensionner selon linéaire réel.',
+                    roi_method: 'simple_payback',
+                    aid_tags: ['CEE', 'TVA5.5'], fiche_cee: 'BAT-EQ-133',
+                    intervenants: 'Frigoriste RGE — spécialiste froid commercial',
+                    source_level_gain: 'source_strong', source_ref_gain: 'ADEME — Portes sur meubles positifs',
+                    source_level_capex: 'source_partial', source_ref_capex: 'Prix marché pose portes frigo 2024',
+                    source_level_roi: 'hypothesis'
+                },
+                // ─── ACT21 — Maintenance groupes froids ──────────────────────────────────────
+                {
+                    id: 'ACT21',
+                    name: 'Optimisation & maintenance groupes froids',
+                    category: 'cold_commercial',
+                    tier: 'quick_win',
+                    gain_scope: 'cooling_post',
+                    gain_pct_low: 0.10, gain_pct_med: 0.18, gain_pct_high: 0.25,
+                    capex_low: 400, capex_med: 1200, capex_high: 3000, capex_unit: '€',
+                    roi_method: 'simple_payback',
+                    aid_tags: [],
+                    intervenants: 'Frigoriste certifié fluides frigorigènes (attestation F-gaz)',
+                    source_level_gain: 'source_partial', source_ref_gain: 'Retours terrain frigoristes',
+                    source_level_capex: 'hypothesis', source_ref_capex: 'Estimation prestation maintenance froid',
                     source_level_roi: 'hypothesis'
                 }
             ]
@@ -4792,7 +5367,7 @@
            HELPERS : ACTIONS & GAINS
            ───────────────────────────────────────────────────────────────────────── */
 
-        const newDiagnosticCalculateActionGain = (action, totalKwh, breakdown, avgPrice, surface) => {
+        const newDiagnosticCalculateActionGain = (action, totalKwh, breakdown, avgPrice, surface, formData) => {
             let baseKwh = totalKwh;
 
             // Si gain sur poste spécifique
@@ -4818,6 +5393,22 @@
                 capex = action.capex_med * estimatedRadiators;
             }
 
+            // CAPEX façade (ACT16)
+            if (action.capex_unit === '€/m² de façade') {
+                const safeSurface = Math.max(1, Number(surface || 100));
+                capex = action.capex_med * safeSurface * 0.6;
+            }
+            // CAPEX €/ml (ACT20 — portes frigo sur 6 ml standard)
+            if (action.capex_unit === '€/ml') {
+                capex = action.capex_med * 6;
+            }
+            // Gain PV sur conso électrique seulement (ACT18)
+            if (action.id === 'ACT18' && action.gain_scope === 'elec_post') {
+                const elecConvValue = (formData && formData.elecUsed) ? (parseFloat((formData && formData.elecKwh) || 0) || 0) : 0;
+                const elecPct = totalKwh > 0 ? Math.max(0.3, Math.min(1.0, elecConvValue / totalKwh)) : 0.5;
+                baseKwh = totalKwh * elecPct;
+            }
+
             // ROI
             const roi_years = gainEuro > 0 ? Math.round((capex / gainEuro) * 10) / 10 : null;
 
@@ -4834,61 +5425,104 @@
             const worksDone = formData.worksDone || [];
             const surface = Math.max(1, Number(formData.surface || 100));
 
-            // Filtrer actions déjà réalisées et inapplicables (Gate questions)
-            let eligibleActions = NEW_DIAGNOSTIC_ACTIONS_LIBRARY.actions.filter(action => {
-                // Exclusion travaux réalisés
-                if (worksDone.includes('led') && action.category === 'lighting') return false;
-                if (worksDone.includes('regulation') && (action.id === 'ACT01' || action.id === 'ACT02')) return false;
-                if (worksDone.includes('hvac_new') && action.category === 'heating') return false;
-                if (worksDone.includes('envelope') && action.category === 'envelope') return false;
-                if (worksDone.includes('dhw') && action.category === 'dhw') return false;
+            // ── Filtrage éligibilité ────────────────────────────────────────────────────
+            const eligible = NEW_DIAGNOSTIC_ACTIONS_LIBRARY.actions.filter(action => {
+                // Exclusions travaux réalisés
+                if (worksDone.includes('led')        && action.category === 'lighting')   return false;
+                if (worksDone.includes('regulation') && ['ACT01','ACT02'].includes(action.id)) return false;
+                if (worksDone.includes('hvac_new')   && action.category === 'heating')    return false;
+                if (worksDone.includes('envelope')   && action.category === 'envelope')   return false;
+                if (worksDone.includes('dhw')        && action.category === 'dhw')        return false;
+                if (worksDone.includes('gtb')          && action.id === 'ACT19') return false;
+                if (worksDone.includes('cold_renovated') && ['ACT20','ACT21'].includes(action.id)) return false;
+                if (worksDone.includes('pv_installed') && action.id === 'ACT18') return false;
 
-                // Gate questions : exclusion logique
+                // Gate questions
                 if (!formData.hasCooling && action.category === 'cooling') return false;
-                if (formData.mainHeating === 'electric' && action.id === 'ACT04') return false; // Pas de désembouage sur chauffage électrique direct
+                if (formData.mainHeating === 'electric' && action.id === 'ACT04') return false;
+
+                // ACT13 — PAC
+                if (action.id === 'ACT13') {
+                    if (!['gas', 'other'].includes(formData.mainHeating)) return false;
+                    if (!['over20', '10to20'].includes(formData.boilerAge)) return false;
+                }
+                // ACT14 — Ballon thermo
+                if (action.id === 'ACT14') {
+                    const hasElecBoiler = (!formData.ecsSameSystem && formData.ecsSystem === 'electric_boiler')
+                        || (formData.ecsSameSystem && formData.mainHeating === 'electric');
+                    if (!hasElecBoiler) return false;
+                    if (['heat_pump', 'solar'].includes(formData.ecsSystem)) return false;
+                }
+                // ACT15 — Isolation toiture
+                if (action.id === 'ACT15') {
+                    if (!['none', 'partial'].includes(formData.roofInsulation)) return false;
+                    if (formData.buildingAge === 'post2012') return false;
+                }
+                // ACT16 — ITE murs
+                if (action.id === 'ACT16') {
+                    if (!['none', 'partial'].includes(formData.wallInsulation)) return false;
+                    if (!['pre1948', '1948_1974', '1975_1988'].includes(formData.buildingAge)) return false;
+                }
+                // ACT17 — VMC DF
+                if (action.id === 'ACT17') {
+                    if (formData.vmcType === 'double_flux') return false;
+                }
+                // ACT18 — PV
+                if (action.id === 'ACT18') {
+                    if (formData.role !== 'owner') return false;
+                    if (formData.roofAccessible !== 'yes') return false;
+                    if (!formData.elecUsed) return false;
+                }
+                // ACT19 — GTB
+                if (action.id === 'ACT19') {
+                    if (surface < 300) return false;
+                    if (formData.hasGtb) return false;
+                    if (['post2012', '2006_2012'].includes(formData.buildingAge)) return false;
+                }
+                // ACT20 — Portes frigo
+                if (action.id === 'ACT20') {
+                    if (formData.activity !== 'commerce_alim') return false;
+                    if (!['open_shelves', 'mixed'].includes(formData.coldEquipmentType)) return false;
+                }
+                // ACT21 — Maintenance froid
+                if (action.id === 'ACT21') {
+                    const isCold = formData.activity === 'commerce_alim' || formData.activity === 'restaurant';
+                    if (!isCold) return false;
+                    if (!['occasional', 'none'].includes(formData.coldMaintenanceStatus)) return false;
+                }
 
                 return true;
             });
 
-            // Calculer gains + score pour chaque action (SCORE V1)
-            const scoredActions = eligibleActions.map(action => {
-                const calc = newDiagnosticCalculateActionGain(action, totalKwh, breakdown, avgPrice, surface);
-
-                // SCORE V1 : (annual_savings * feasibility) / CAPEX
-                // feasibility : arbitraire léger pour V1 (1.0 = facile, 0.8 = moyen, 0.5 = lourd)
-                let feasibility = 1.0;
-                if (action.category === 'envelope') feasibility = 0.5; // Isolation = lourd
-                if (action.category === 'heating' && action.capex_med > 5000) feasibility = 0.7; // Gros CVC = moyen-lourd
-                if (action.category === 'lighting') feasibility = 1.2; // LED = très facile
-
-                // Division par zéro protection
-                const safeCapex = Math.max(1, calc.capex);
-
-                let priorityScore = (calc.gainEuro * feasibility) / safeCapex;
-
-                return {
-                    ...action,
-                    ...calc,
-                    priorityScore
-                };
+            // ── Score de priorité ──────────────────────────────────────────────────────
+            const scored = eligible.map(action => {
+                const calc = newDiagnosticCalculateActionGain(action, totalKwh, breakdown, avgPrice, surface, formData);
+                const feasibility = action.tier === 'quick_win' ? 1.2 : action.tier === 'equipment' ? 0.85 : 0.6;
+                const priorityScore = (calc.gainEuro * feasibility) / Math.max(1, calc.capex);
+                return { ...action, ...calc, priorityScore };
             });
+            scored.sort((a, b) => b.priorityScore - a.priorityScore);
 
-            // Tri par priorité V1 décroissante
-            scoredActions.sort((a, b) => b.priorityScore - a.priorityScore);
+            // ── Sélection par tier ─────────────────────────────────────────────────────
+            const tierMax = { quick_win: 2, equipment: 3, structural: 3 };
+            const usedFamilies = {};
+            let totalGainPct = 0;
+            const selected = [];
 
-            // Ne garder qu'1 action par famille
-            const families = {};
-            const topActions = [];
-
-            for (const action of scoredActions) {
-                if (!families[action.category]) {
-                    families[action.category] = true;
-                    topActions.push(action);
-                    if (topActions.length >= 3) break;
+            for (const tier of ['quick_win', 'equipment', 'structural']) {
+                let count = 0;
+                for (const action of scored.filter(a => a.tier === tier)) {
+                    if (count >= tierMax[tier]) break;
+                    if (usedFamilies[action.category]) continue;
+                    if (totalGainPct + action.gain_pct_med > NEW_DIAGNOSTIC_MAX_TOTAL_SAVINGS_PCT) continue;
+                    usedFamilies[action.category] = true;
+                    selected.push(action);
+                    totalGainPct += action.gain_pct_med;
+                    count++;
                 }
             }
 
-            return topActions;
+            return selected;
         };
 
         /* ─────────────────────────────────────────────────────────────────────────
@@ -4996,6 +5630,50 @@
             };
         };
 
+        const newDiagnosticCalculateLeadScore = (formData, compositeSavingsPct) => {
+            let score = 0;
+            const reasons = [];
+
+            // Urgence (0–30)
+            const hScore = { immediate:30, '3to6months':24, '6to12months':16, over1year:8, exploring:4 };
+            score += hScore[formData.decisionHorizon] || 8;
+            if (formData.decisionHorizon === 'immediate') reasons.push('Décision imminente');
+
+            // Budget (0–25)
+            const bScore = { over80k:25, '20to80k':20, '5to20k':14, under5k:6, unknown:10 };
+            score += bScore[formData.budgetRange] || 10;
+            if (['over80k', '20to80k'].includes(formData.budgetRange)) reasons.push('Budget significatif');
+
+            // Potentiel économies (0–20)
+            const pct = typeof compositeSavingsPct === 'number' ? compositeSavingsPct * 100 : 0;
+            if (pct >= 30)      { score += 20; reasons.push("Fort potentiel d'économies"); }
+            else if (pct >= 20) score += 14;
+            else if (pct >= 10) score += 8;
+            else                score += 3;
+
+            // Pouvoir décision (0–15)
+            if (formData.role === 'owner')                         { score += 15; reasons.push('Propriétaire décideur'); }
+            else if (formData.isDecisionMaker === 'yes')           { score += 12; reasons.push('Décideur direct'); }
+            else if (formData.isDecisionMaker === 'need_approval')   score += 7;
+            else                                                     score += 3;
+
+            // Objectif (0–10)
+            const oScore = { reduce_costs:10, comply_regulation:9, valorise_asset:7, comfort:5 };
+            score += oScore[formData.projectObjective] || 5;
+
+            const s = Math.min(100, score);
+            const level = s >= 80 ? 5 : s >= 65 ? 4 : s >= 48 ? 3 : s >= 30 ? 2 : 1;
+
+            return {
+                score: s,
+                level,
+                label: ['','Découverte','Tiède','Chaud','Très chaud','Urgent'][level],
+                reasons: reasons.slice(0, 3),
+                hasPhone: !!(formData.phone && formData.phone.trim()),
+                canContact: !!formData.contactOptIn
+            };
+        };
+
         /* ─────────────────────────────────────────────────────────────────────────
            FONCTION PRINCIPALE : newDiagnosticBuildReportData()
            ───────────────────────────────────────────────────────────────────────── */
@@ -5046,7 +5724,31 @@
             // ──────────────────────────────────────────────────────────────────────
             // 5. RÉPARTITION POSTES
             // ──────────────────────────────────────────────────────────────────────
-            const breakdown = newDiagnosticGetUsageBreakdown(activity, formData);
+            let breakdown = newDiagnosticGetUsageBreakdown(activity, formData);
+
+            // Correctif âge bâtiment sur le poste chauffage
+            const AGE_HEATING_COEFF = {
+                pre1948: 1.45, '1948_1974': 1.32, '1975_1988': 1.18,
+                '1989_2005': 1.08, '2006_2012': 1.00, post2012: 0.80, unknown: 1.00
+            };
+            const ageCoeff = AGE_HEATING_COEFF[formData.buildingAge] || 1.0;
+            if (formData.buildingAge && formData.buildingAge !== 'unknown' && ageCoeff !== 1.0) {
+                const origHeating = breakdown.heating_pct;
+                const adjHeating = Math.min(75, Math.round(origHeating * ageCoeff));
+                const delta = adjHeating - origHeating;
+                breakdown = {
+                    ...breakdown,
+                    heating_pct: adjHeating,
+                    other_specific_pct: Math.max(0, breakdown.other_specific_pct - delta),
+                    _age_coeff_applied: ageCoeff
+                };
+                const total = Object.keys(breakdown)
+                    .filter(k => k.endsWith('_pct') && !k.startsWith('_'))
+                    .reduce((s, k) => s + breakdown[k], 0);
+                if (total > 100) {
+                    breakdown = { ...breakdown, other_specific_pct: Math.max(0, breakdown.other_specific_pct - (total - 100)) };
+                }
+            }
 
             const breakdownKwh = {
                 heating: Math.round(totalKwh * breakdown.heating_pct / 100),
@@ -5109,6 +5811,7 @@
             // ──────────────────────────────────────────────────────────────────────
             const warnings = newDiagnosticGenerateWarnings(formData, { elec: elecConversion, gas: gasConversion });
             const confidence = newDiagnosticCalculateConfidenceScore(formData, { elec: elecConversion, gas: gasConversion });
+            const leadScore = newDiagnosticCalculateLeadScore(formData, compositeSavingsPct);
 
             // ──────────────────────────────────────────────────────────────────────
             // PAYLOAD STANDARDISÉ AVEC UNITÉS PARTOUT
@@ -5174,13 +5877,17 @@
                     id: a.id,
                     name: a.name,
                     category: a.category,
+                    tier: a.tier || 'equipment',
                     gain_kwh_an: { value: a.gainKwh, unit: 'kWh/an' },
                     gain_euro_an: { value: a.gainEuro, unit: '€/an' },
                     capex: { value: a.capex, unit: '€' },
                     roi_years: { value: a.roi_years, unit: 'ans' },
                     source_level_gain: a.source_level_gain,
                     source_level_capex: a.source_level_capex,
-                    aid_tags: a.aid_tags
+                    aid_tags: a.aid_tags || [],
+                    fiche_cee: a.fiche_cee || null,
+                    intervenants: a.intervenants || null,
+                    energy_switch_note: a.energy_switch_note || null
                 })),
 
                 // Projections
@@ -5191,6 +5898,20 @@
                     total_pct: { value: Math.round(compositeSavingsPct * 100), unit: '%' },
                     annual_kwh: { value: annualSavingsKwh, unit: 'kWh/an' },
                     annual_euro: { value: annualSavingsEuro, unit: '€/an' }
+                },
+
+                // Qualification prospect
+                lead_qualification: {
+                    score:          leadScore.score,
+                    level:          leadScore.level,
+                    label:          leadScore.label,
+                    reasons:        leadScore.reasons,
+                    objective:      formData.projectObjective   || null,
+                    horizon:        formData.decisionHorizon    || null,
+                    budget:         formData.budgetRange        || null,
+                    is_decision_maker: formData.isDecisionMaker || (formData.role === 'owner' ? 'yes' : null),
+                    has_phone:      leadScore.hasPhone,
+                    can_contact:    leadScore.canContact
                 },
 
                 // Metadata
@@ -5315,7 +6036,7 @@
             );
         };
 
-        const NewDiagnosticInactionGraph = ({ annualSavingsEuro, totalCostEuroAn, elecKwh = 0, gasKwh = 0, actions = [] }) => {
+        const NewDiagnosticInactionGraph = ({ annualSavingsEuro, totalCostEuroAn, elecKwh = 0, gasKwh = 0, actions = [], totalCapex = 0 }) => {
             const { ComposedChart, Line, XAxis, YAxis, CartesianGrid, Tooltip: GrTooltip, ReferenceLine, ResponsiveContainer: GrResponsive, Area } = window.Recharts;
             const projection = newDiagnosticBuildProjectionData({ annualSavingsEuro, totalCostEuroAn, elecKwh, gasKwh, actions });
 
@@ -5813,6 +6534,89 @@
             };
         }
 
+        const ActionCard = ({ action, index }) => {
+            const [expanded, setExpanded] = React.useState(false);
+            const tier = NEW_DIAGNOSTIC_TIER_LABELS[action.tier] || NEW_DIAGNOSTIC_TIER_LABELS.equipment;
+            const roi = action.roi_years?.value || 0;
+            const roiColor = roi <= 3 ? '#16A34A' : roi <= 8 ? '#1D4ED8' : '#7C3AED';
+
+            return (
+                <div className="bg-white border border-[#E2E8F0] rounded-xl shadow-sm overflow-hidden mb-3">
+                    <div className="p-4">
+                        <div className="flex items-start gap-3 mb-3">
+                            <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0 mt-0.5"
+                                style={{backgroundColor: tier.color}}>
+                                {index + 1}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <div className="text-xs font-semibold mb-1" style={{color: tier.color}}>{tier.label}</div>
+                                <div className="font-semibold text-[#102A43] text-sm leading-tight">{action.name}</div>
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2 mb-3">
+                            <div className="text-center p-2 bg-[#F8FAFC] rounded-lg">
+                                <div className="text-sm font-bold text-[#16A34A]">
+                                    {action.gain_euro_an?.value ? Math.round(action.gain_euro_an.value).toLocaleString('fr-FR') : '—'} €
+                                </div>
+                                <div className="text-xs text-[#475569]">/ an</div>
+                            </div>
+                            <div className="text-center p-2 bg-[#F8FAFC] rounded-lg">
+                                <div className="text-sm font-bold text-[#1D4ED8]">
+                                    {action.capex?.value ? Math.round(action.capex.value).toLocaleString('fr-FR') : '—'} €
+                                </div>
+                                <div className="text-xs text-[#475569]">investissement</div>
+                            </div>
+                            <div className="text-center p-2 bg-[#F8FAFC] rounded-lg">
+                                <div className="text-sm font-bold" style={{color: roiColor}}>
+                                    {roi > 0 ? roi + ' ans' : '—'}
+                                </div>
+                                <div className="text-xs text-[#475569]">retour</div>
+                            </div>
+                        </div>
+                        {action.aid_tags && action.aid_tags.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mb-2">
+                                {action.aid_tags.map(tag => (
+                                    <span key={tag} className="text-xs bg-[#EFF6FF] text-[#1D4ED8] border border-[#BFDBFE] rounded-full px-2 py-0.5 font-medium">{tag}</span>
+                                ))}
+                                {action.fiche_cee && (
+                                    <span className="text-xs bg-[#F0FDF4] text-[#16A34A] border border-[#BBF7D0] rounded-full px-2 py-0.5 font-medium">{action.fiche_cee}</span>
+                                )}
+                            </div>
+                        )}
+                        <button
+                            onClick={() => setExpanded(!expanded)}
+                            className="flex items-center gap-1 text-xs text-[#1D4ED8] font-medium hover:underline"
+                        >
+                            <Icon icon={expanded ? 'solar:alt-arrow-up-linear' : 'solar:alt-arrow-down-linear'} className="text-sm" />
+                            {expanded ? 'Réduire' : 'Voir les détails'}
+                        </button>
+                    </div>
+                    {expanded && (
+                        <div className="px-4 pb-4 border-t border-[#E2E8F0] pt-3 space-y-2">
+                            {action.energy_switch_note && (
+                                <div className="flex gap-2 p-2 bg-[#FFFBEB] border border-[#FDE68A] rounded-lg">
+                                    <Icon icon="solar:info-circle-bold" className="text-[#F59E0B] text-base flex-shrink-0 mt-0.5" />
+                                    <p className="text-xs text-[#475569]">{action.energy_switch_note}</p>
+                                </div>
+                            )}
+                            {action.intervenants && (
+                                <div className="flex gap-2">
+                                    <Icon icon="solar:user-bold" className="text-[#475569] text-sm flex-shrink-0 mt-0.5" />
+                                    <p className="text-xs text-[#475569]">{action.intervenants}</p>
+                                </div>
+                            )}
+                            {action.gain_kwh_an?.value && (
+                                <div className="flex gap-2">
+                                    <Icon icon="solar:flash-bold" className="text-[#16A34A] text-sm flex-shrink-0 mt-0.5" />
+                                    <p className="text-xs text-[#475569]">Économie : {Math.round(action.gain_kwh_an.value).toLocaleString('fr-FR')} kWh/an</p>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
         const NewDiagnosticReportScreen = ({ reportPayload, userEmail, onLeadSubmissionCreated }) => {
             const [isPDFGenerating, setIsPDFGenerating] = useState(false);
             const [showCTAModal, setShowCTAModal] = useState(false);
@@ -5880,6 +6684,7 @@
             const calc = reportPayload.calculation_results;
             const benchmark = reportPayload.benchmark_result;
             const actions = reportPayload.top_actions || [];
+            const lead_qualification = reportPayload.lead_qualification || null;
             const composite = reportPayload.composite_savings;
             const confidence = reportPayload.confidence;
             const inputRole = reportPayload.inputs_summary.role || reportPayload.inputs_summary.decision_role || '';
@@ -6281,18 +7086,60 @@
                         </div>
 
                         <div className="report-card p-6 md:p-8 mb-8">
-                            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-5">
-                                <div>
-                                    <h2 className="report-section-title">
-                                        <Icon icon="solar:magic-stick-3-bold" className="text-[#1D4ED8]" />
-                                        {actionCopy.title}
-                                    </h2>
-                                    <p className="text-sm text-slate-500 mt-2">{actionCopy.subtitle}</p>
-                                </div>
-                            </div>
-                            {shortActions.length > 0 ? (
+                            <h2 className="text-xl font-bold text-[#102A43] mb-2">Plan d'action par niveau</h2>
+                            <p className="text-sm text-[#475569] mb-6">Actions sélectionnées selon votre situation, classées par niveau d'investissement et de complexité.</p>
+
+                            {actions.length > 0 ? (
                                 <>
-                                    <ActionPriorityTable items={shortActions} />
+                                    {['quick_win', 'equipment', 'structural'].map(tierKey => {
+                                        const tierActions = actions.filter(a => a.tier === tierKey);
+                                        if (tierActions.length === 0) return null;
+                                        const tierCfg = NEW_DIAGNOSTIC_TIER_LABELS[tierKey];
+                                        const tierSavings = tierActions.reduce((s,a) => s + (a.gain_euro_an?.value || 0), 0);
+                                        return (
+                                            <div key={tierKey} className="mb-6">
+                                                <div className="flex items-center justify-between p-3 rounded-xl mb-3 border"
+                                                    style={{backgroundColor: tierCfg.bg, borderColor: tierCfg.border}}>
+                                                    <div className="flex items-center gap-2">
+                                                        <Icon icon={tierCfg.icon} style={{color: tierCfg.color, fontSize:'20px'}} />
+                                                        <div>
+                                                            <div className="font-bold text-sm" style={{color: tierCfg.color}}>{tierCfg.label}</div>
+                                                            <div className="text-xs text-[#475569]">{tierCfg.subtitle}</div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="hidden sm:block text-right">
+                                                        <div className="font-bold text-sm" style={{color: tierCfg.color}}>
+                                                            {Math.round(tierSavings).toLocaleString('fr-FR')} € / an
+                                                        </div>
+                                                        <div className="text-xs text-[#475569]">Économies estimées</div>
+                                                    </div>
+                                                </div>
+                                                {tierActions.map((action, idx) => (
+                                                    <ActionCard key={action.id} action={action} index={idx} />
+                                                ))}
+                                            </div>
+                                        );
+                                    })}
+                                    {actions.some(a => a.tier === 'structural') && (
+                                        <div id="cta-expert" className="mt-4 p-5 rounded-xl border"
+                                            style={{background: 'linear-gradient(135deg, #EFF6FF 0%, #F5F3FF 100%)', borderColor: '#BFDBFE'}}>
+                                            <div className="flex items-start gap-3 mb-4">
+                                                <Icon icon="solar:star-bold" className="text-[#1D4ED8] text-2xl flex-shrink-0" />
+                                                <div>
+                                                    <div className="font-bold text-[#102A43] mb-1">Des travaux structurants ont été identifiés</div>
+                                                    <div className="text-sm text-[#475569]">Ces travaux nécessitent une étude personnalisée et peuvent bénéficier d'aides importantes.</div>
+                                                </div>
+                                            </div>
+                                            <div className="flex flex-col sm:flex-row gap-2">
+                                                <button onClick={() => setShowCTAModal(true)} className="flex-1 py-2.5 px-4 bg-[#1D4ED8] text-white rounded-lg text-sm font-semibold hover:bg-[#1E40AF] transition-colors">
+                                                    Obtenir un devis gratuit d'un expert
+                                                </button>
+                                                <button className="flex-1 py-2.5 px-4 border border-[#1D4ED8] text-[#1D4ED8] rounded-lg text-sm font-semibold hover:bg-[#EFF6FF] transition-colors">
+                                                    En savoir plus sur les aides
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
                                     <div className="mt-4 pt-4 border-t border-slate-200">
                                         <p className="text-xs font-bold uppercase tracking-wide text-slate-500 mb-3">Synthèse budgétaire du plan</p>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3">
@@ -6378,6 +7225,68 @@
                                 </div>
                             </div>
                         </div>
+
+                        {(lead_qualification?.objective || lead_qualification?.horizon) && (
+                            <div className="report-card p-6 md:p-8 mb-8">
+                                <h2 className="text-xl font-bold text-[#102A43] mb-6">Votre profil de projet</h2>
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+                                    {lead_qualification?.objective && (() => {
+                                        const objMap = {
+                                            reduce_costs:      {icon:'solar:dollar-minimalistic-bold', color:'#16A34A', label:'Réduire mes charges'},
+                                            comply_regulation: {icon:'solar:document-bold',            color:'#1D4ED8', label:'Conformité réglementaire'},
+                                            valorise_asset:    {icon:'solar:buildings-bold',           color:'#7C3AED', label:'Valoriser le patrimoine'},
+                                            comfort:           {icon:'solar:smile-circle-bold',        color:'#F59E0B', label:'Améliorer le confort'},
+                                        };
+                                        const obj = objMap[lead_qualification.objective] || {icon:'solar:target-bold',color:'#475569',label:lead_qualification.objective};
+                                        return (
+                                            <div className="report-card p-3 text-center">
+                                                <Icon icon={obj.icon} style={{color:obj.color,fontSize:'24px'}} />
+                                                <div className="text-xs text-[#475569] mt-1">Objectif</div>
+                                                <div className="text-xs font-semibold text-[#102A43] mt-0.5">{obj.label}</div>
+                                            </div>
+                                        );
+                                    })()}
+                                    {lead_qualification?.horizon && (
+                                        <div className="report-card p-3 text-center">
+                                            <Icon icon="solar:calendar-bold" className="text-[#1D4ED8] text-2xl" />
+                                            <div className="text-xs text-[#475569] mt-1">Horizon</div>
+                                            <div className="text-xs font-semibold text-[#102A43] mt-0.5">
+                                                {({'immediate':'Immédiat','3to6months':'3–6 mois','6to12months':'6–12 mois','over1year':'> 1 an','exploring':'Exploration'})[lead_qualification.horizon] || lead_qualification.horizon}
+                                            </div>
+                                        </div>
+                                    )}
+                                    {lead_qualification?.budget && (
+                                        <div className="report-card p-3 text-center">
+                                            <Icon icon="solar:wallet-bold" className="text-[#16A34A] text-2xl" />
+                                            <div className="text-xs text-[#475569] mt-1">Budget</div>
+                                            <div className="text-xs font-semibold text-[#102A43] mt-0.5">
+                                                {({'under5k':'< 5 k€','5to20k':'5–20 k€','20to80k':'20–80 k€','over80k':'> 80 k€','unknown':'Non défini'})[lead_qualification.budget] || lead_qualification.budget}
+                                            </div>
+                                        </div>
+                                    )}
+                                    {composite?.annual_euro?.value && (
+                                        <div className="report-card p-3 text-center">
+                                            <Icon icon="solar:graph-up-bold" className="text-[#16A34A] text-2xl" />
+                                            <div className="text-xs text-[#475569] mt-1">Potentiel</div>
+                                            <div className="text-xs font-semibold text-[#16A34A] mt-0.5">
+                                                {Math.round(composite.annual_euro.value).toLocaleString('fr-FR')} € / an
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                                {(['reduce_costs','comply_regulation'].includes(lead_qualification?.objective) && ['immediate','3to6months'].includes(lead_qualification?.horizon)) && (
+                                    <div id="cta-expert" className="p-5 rounded-xl" style={{background:'linear-gradient(135deg,#EFF6FF 0%,#F5F3FF 100%)',border:'1px solid #BFDBFE'}}>
+                                        <div className="font-bold text-[#102A43] mb-1">
+                                            {lead_qualification.objective === 'comply_regulation' ? 'Votre délai réglementaire approche' : 'Votre projet est prêt à démarrer'}
+                                        </div>
+                                        <div className="text-sm text-[#475569] mb-3">Nos experts peuvent vous accompagner gratuitement de l'audit à la mise en oeuvre.</div>
+                                        <button onClick={() => setShowCTAModal(true)} className="w-full sm:w-auto py-2.5 px-6 bg-[#1D4ED8] text-white rounded-lg text-sm font-semibold hover:bg-[#1E40AF] transition-colors">
+                                            Être mis en relation avec un expert gratuit
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        )}
 
                         <div className="report-card p-6 md:p-8 mb-8">
                             <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-5">

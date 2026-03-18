@@ -28,3 +28,7 @@
 - PDFShift
 - fusion `pro.html -> index.saaspro.html`
 - suppression critique pilotee uniquement par le front
+
+## Consignes Globales IA
+
+- **RÈGLE ABSOLUE POUR TOUTES LES IA** : Il est strictement interdit d'utiliser le caractère « — » (tiret long / cadratin) dans la rédaction ou le code.

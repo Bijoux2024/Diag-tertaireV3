@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(node -e \":*)",
-      "Bash(grep -n \"const NEW_DIAGNOSTIC_ACTIVITIES\\\\|const NEW_DIAGNOSTIC_DEFAULT_FORM_DATA\\\\|const NEW_DIAGNOSTIC_WORKS_DONE\\\\|const NEW_DIAGNOSTIC_MAX_TOTAL_SAVINGS_PCT\\\\|const NEW_DIAGNOSTIC_ACTIONS_LIBRARY\\\\|newDiagnosticFilterAndScoreActions\\\\|newDiagnosticCalculateActionGain\\\\|newDiagnosticCalculateConfidenceScore\\\\|newDiagnosticBuildReportData\\\\|const NewDiagnosticInactionGraph\\\\|const NewDiagnosticReportScreen\\\\|const NewDiagnosticStep2Building\\\\|const NewDiagnosticStep4Works\\\\|const PageExample\\\\|id: ''ACT01''\\\\|id: ''ACT12''\" \"c:/Users/yanni/Downloads/Diag-tertaireV3/index.html\")"
+      "Bash(grep -n \"const NEW_DIAGNOSTIC_ACTIVITIES\\\\|const NEW_DIAGNOSTIC_DEFAULT_FORM_DATA\\\\|const NEW_DIAGNOSTIC_WORKS_DONE\\\\|const NEW_DIAGNOSTIC_MAX_TOTAL_SAVINGS_PCT\\\\|const NEW_DIAGNOSTIC_ACTIONS_LIBRARY\\\\|newDiagnosticFilterAndScoreActions\\\\|newDiagnosticCalculateActionGain\\\\|newDiagnosticCalculateConfidenceScore\\\\|newDiagnosticBuildReportData\\\\|const NewDiagnosticInactionGraph\\\\|const NewDiagnosticReportScreen\\\\|const NewDiagnosticStep2Building\\\\|const NewDiagnosticStep4Works\\\\|const PageExample\\\\|id: ''ACT01''\\\\|id: ''ACT12''\" \"c:/Users/yanni/Downloads/Diag-tertaireV3/index.html\")",
+      "Bash(ls \"c:\\\\Users\\\\yanni\\\\Downloads\\\\Diag-tertaireV3\"/*.md)",
+      "Bash(ls \"c:\\\\Users\\\\yanni\\\\Downloads\\\\Diag-tertaireV3\"/note*)"
     ]
   }
 }

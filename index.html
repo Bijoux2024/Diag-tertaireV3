@@ -1300,7 +1300,7 @@
         const PageHome = ({ navigate }) => (
             <div className="fade-in">
                 {/* HERO — VERROUILLAGE FINAL */}
-                <section className="relative w-full overflow-hidden" style={{ paddingTop: 'clamp(4.75rem, 10vw, 8rem)', paddingBottom: 'clamp(4.25rem, 9vw, 8rem)', background: '#FFFFFF' }}>
+                <section className="relative w-full overflow-hidden" style={{ paddingTop: 'clamp(3rem, 8vw, 8rem)', paddingBottom: 'clamp(3rem, 7vw, 8rem)', background: '#FFFFFF' }}>
                     {/* GLOW — halos structurés */}
                     <div className="absolute inset-0 pointer-events-none z-0" aria-hidden="true">
                         <div className="absolute top-0 left-0"
@@ -7949,11 +7949,11 @@ body{margin:0;font-family:Arial,sans-serif;background:#f8fafc;color:#0f172a;}
 
                                 <button
                                     type="button"
-                                    className="md:hidden text-[#102A43] hover:text-[#1D4ED8] transition-colors"
+                                    className="md:hidden flex items-center justify-center w-10 h-10 rounded-xl border border-[#E2E8F0] bg-white text-[#102A43] hover:text-[#1D4ED8] hover:border-[#1D4ED8] transition-colors shadow-sm"
                                     onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                                     aria-label={isMobileMenuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
                                 >
-                                    <Icon icon={isMobileMenuOpen ? "solar:close-square-linear" : "solar:hamburger-menu-linear"} className="text-2xl" />
+                                    <Icon icon={isMobileMenuOpen ? "solar:close-square-linear" : "solar:hamburger-menu-linear"} className="text-xl" />
                                 </button>
                             </div>
                         </div>

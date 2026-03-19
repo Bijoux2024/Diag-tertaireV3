@@ -6599,8 +6599,14 @@
             );
         };
 
-        const NewDiagnosticReportScreen = ({ reportPayload, userEmail, onLeadSubmissionCreated }) => {
+        const NewDiagnosticReportScreen = ({
+            reportPayload,
+            userEmail,
+            onLeadSubmissionCreated,
+            setReportPayload = null
+        }) => {
             const [isPDFGenerating, setIsPDFGenerating] = useState(false);
+            const [serverPdfUrl, setServerPdfUrl] = useState((reportPayload && reportPayload.pdf_url) ? reportPayload.pdf_url : '');
             const [showCTAModal, setShowCTAModal] = useState(false);
             const [ctaName, setCtaName] = useState('');
             const [ctaMessage, setCtaMessage] = useState('');
@@ -6643,11 +6649,13 @@
                     const result = await response.json();
                     const pdfUrl = result && (result.report_url || result.pdf_url);
                     if (pdfUrl) {
-                        setReportPayload(prev => {
-                            const next = prev ? { ...prev, pdf_url: pdfUrl } : prev;
-                            try { if (next) window.localStorage.setItem('newDiagnosticLatestReport', JSON.stringify(next)); } catch (_) { }
-                            return next;
-                        });
+                        if (typeof setReportPayload === 'function') {
+                            setReportPayload(prev => {
+                                const next = prev ? { ...prev, pdf_url: pdfUrl } : prev;
+                                try { if (next) window.localStorage.setItem('newDiagnosticLatestReport', JSON.stringify(next)); } catch (_) { }
+                                return next;
+                            });
+                        }
                         window.open(pdfUrl, '_blank', 'noopener,noreferrer');
                         newDiagnosticTrack('pdf_downloaded');
                     }
@@ -7627,6 +7635,7 @@ body{margin:0;font-family:Arial,sans-serif;background:#f8fafc;color:#0f172a;}
                         <NewDiagnosticReportScreen
                             reportPayload={reportPayload}
                             userEmail={formData.email}
+                            setReportPayload={setReportPayload}
                             onLeadSubmissionCreated={(leadSubmissionId) => {
                                 setReportPayload((prev) => {
                                     if (!prev || prev.lead_submission_id === leadSubmissionId) {

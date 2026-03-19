@@ -1,21 +1,34 @@
+'use strict';
+
+/**
+ * api/public-report-pdf.js — Route canonique du rapport public PDF
+ *
+ * Reçoit { lead_submission_id, report_payload } depuis le front.
+ * Génère le HTML server-side, produit le PDF via Puppeteer,
+ * stocke dans public-report-assets, trace le statut dans public_reports,
+ * met à jour lead_submissions.pdf_url, envoie l'email Resend.
+ *
+ * pdf_status : pending → generating → ready | failed
+ * Bucket     : public-report-assets (privé)
+ * Path       : reports/{year}/{month}/{public_report_id}/official.pdf
+ * Table      : public.public_reports
+ */
+
 const { DEFAULT_MAX_HTML_LENGTH, renderPdfFromHtml } = require('./_lib/pdf-renderer');
 const { getRequiredServerSupabaseConfig } = require('./_lib/supabase-server');
 
-const PUBLIC_DIAGNOSTIC_ASSETS_BUCKET = 'public-diagnostic-assets';
-const SIGNED_URL_TTL_SECONDS = 60 * 60 * 24 * 30;
+const PUBLIC_REPORT_ASSETS_BUCKET = 'public-report-assets';
+const SIGNED_URL_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const safeJsonParse = (value) => {
   if (typeof value !== 'string') return value;
-  try {
-    return JSON.parse(value);
-  } catch {
-    return null;
-  }
+  try { return JSON.parse(value); } catch { return null; }
 };
 
-const asPlainObject = (value) => {
-  return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
-};
+const asPlainObject = (value) =>
+  value && typeof value === 'object' && !Array.isArray(value) ? value : {};
 
 const asArray = (value) => Array.isArray(value) ? value : [];
 
@@ -24,19 +37,20 @@ const toNumber = (value, fallback = 0) => {
   return Number.isFinite(numeric) ? numeric : fallback;
 };
 
+const readEnv = (key) => String(process.env[key] || '').trim();
+
 const encodeQueryValue = (value) => encodeURIComponent(String(value ?? ''));
 
-const encodeStoragePath = (value) => String(value || '')
-  .split('/')
-  .map((segment) => encodeURIComponent(segment))
-  .join('/');
+const encodeStoragePath = (value) =>
+  String(value || '').split('/').map((s) => encodeURIComponent(s)).join('/');
 
-const escapeHtml = (value) => String(value ?? '')
-  .replace(/&/g, '&amp;')
-  .replace(/</g, '&lt;')
-  .replace(/>/g, '&gt;')
-  .replace(/"/g, '&quot;')
-  .replace(/'/g, '&#39;');
+const escapeHtml = (value) =>
+  String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 
 const sanitizeFileSegment = (value, fallback = 'rapport') => {
   const normalized = String(value || '')
@@ -45,13 +59,7 @@ const sanitizeFileSegment = (value, fallback = 'rapport') => {
     .replace(/[^\w.-]+/g, '-')
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '');
-
   return normalized || fallback;
-};
-
-const sanitizeDownloadFilename = (value) => {
-  const safeStem = sanitizeFileSegment(value, 'rapport-diagnostic');
-  return safeStem.endsWith('.pdf') ? safeStem : `${safeStem}.pdf`;
 };
 
 const createHttpError = (statusCode, message) => {
@@ -60,9 +68,8 @@ const createHttpError = (statusCode, message) => {
   return error;
 };
 
-const formatCurrency = (value) => {
-  return `${Math.round(toNumber(value, 0)).toLocaleString('fr-FR')} EUR`;
-};
+const formatCurrency = (value) =>
+  `${Math.round(toNumber(value, 0)).toLocaleString('fr-FR')} EUR`;
 
 const formatInteger = (value, suffix = '') => {
   const formatted = Math.round(toNumber(value, 0)).toLocaleString('fr-FR');
@@ -71,42 +78,11 @@ const formatInteger = (value, suffix = '') => {
 
 const formatDateLabel = (value) => {
   const date = value ? new Date(value) : new Date();
-  if (Number.isNaN(date.getTime())) {
-    return String(value || '');
-  }
-
+  if (Number.isNaN(date.getTime())) return String(value || '');
   return date.toLocaleString('fr-FR', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit'
   });
-};
-
-const getScoreConfig = (score) => {
-  const normalized = String(score || 'C').trim().toUpperCase();
-  const map = {
-    A: { score: 'A', label: 'Tres performant', color: '#16A34A', background: '#DCFCE7' },
-    B: { score: 'B', label: 'Performant', color: '#22C55E', background: '#E8F5E9' },
-    C: { score: 'C', label: 'Dans la mediane', color: '#F59E0B', background: '#FEF3C7' },
-    D: { score: 'D', label: 'Surconsommation', color: '#F97316', background: '#FFF7ED' },
-    E: { score: 'E', label: 'Tres energivore', color: '#EF4444', background: '#FEE2E2' }
-  };
-
-  return map[normalized] || map.C;
-};
-
-const computeScoreFromIntensity = (siteIntensity, benchmarkMedian) => {
-  const intensity = toNumber(siteIntensity, 0);
-  const median = Math.max(1, toNumber(benchmarkMedian, 0));
-  const ratio = intensity / median;
-
-  if (ratio < 0.6) return 'A';
-  if (ratio < 0.9) return 'B';
-  if (ratio < 1.2) return 'C';
-  if (ratio < 1.7) return 'D';
-  return 'E';
 };
 
 const createRestHeaders = (serviceKey, extraHeaders = {}) => ({
@@ -115,27 +91,46 @@ const createRestHeaders = (serviceKey, extraHeaders = {}) => ({
   ...extraHeaders
 });
 
-const supabaseRestFetch = async (supabaseUrl, serviceKey, path, options = {}) => {
-  const response = await fetch(`${supabaseUrl}/rest/v1/${path}`, {
-    method: options.method || 'GET',
-    headers: createRestHeaders(serviceKey, options.headers || {}),
-    body: options.body
-  });
+// ─── Score helpers ─────────────────────────────────────────────────────────────
 
-  const rawText = await response.text();
-  const data = rawText ? safeJsonParse(rawText) : null;
-
-  if (!response.ok) {
-    const message = data?.message || data?.error_description || rawText || `HTTP ${response.status}`;
-    throw createHttpError(response.status, message);
-  }
-
-  return data;
+const getScoreConfig = (score) => {
+  const normalized = String(score || 'C').trim().toUpperCase();
+  const map = {
+    A: { score: 'A', label: 'Tres performant',  color: '#16A34A', background: '#DCFCE7' },
+    B: { score: 'B', label: 'Performant',        color: '#22C55E', background: '#E8F5E9' },
+    C: { score: 'C', label: 'Dans la mediane',   color: '#F59E0B', background: '#FEF3C7' },
+    D: { score: 'D', label: 'Surconsommation',   color: '#F97316', background: '#FFF7ED' },
+    E: { score: 'E', label: 'Tres energivore',   color: '#EF4444', background: '#FEE2E2' }
+  };
+  return map[normalized] || map.C;
 };
+
+const computeScoreFromIntensity = (siteIntensity, benchmarkMedian) => {
+  const intensity = toNumber(siteIntensity, 0);
+  const median = Math.max(1, toNumber(benchmarkMedian, 0));
+  const ratio = intensity / median;
+  if (ratio < 0.6) return 'A';
+  if (ratio < 0.9) return 'B';
+  if (ratio < 1.2) return 'C';
+  if (ratio < 1.7) return 'D';
+  return 'E';
+};
+
+// ─── Storage path ──────────────────────────────────────────────────────────────
+
+const buildStoragePath = (publicReportId) => {
+  const now = new Date();
+  const year = now.getUTCFullYear();
+  const month = String(now.getUTCMonth() + 1).padStart(2, '0');
+  const safeId = sanitizeFileSegment(String(publicReportId || 'report'), 'report');
+  return `reports/${year}/${month}/${safeId}/official.pdf`;
+};
+
+// ─── Storage operations ────────────────────────────────────────────────────────
 
 const uploadPdfToStorage = async ({ supabaseUrl, serviceKey, storagePath, pdfBuffer }) => {
   const response = await fetch(
-    `${supabaseUrl}/storage/v1/object/${PUBLIC_DIAGNOSTIC_ASSETS_BUCKET}/${encodeStoragePath(storagePath)}`,
+    `${supabaseUrl}/storage/v1/object/${PUBLIC_REPORT_ASSETS_BUCKET}/${encodeStoragePath(storagePath)}`,
     {
       method: 'POST',
       headers: createRestHeaders(serviceKey, {
@@ -145,71 +140,171 @@ const uploadPdfToStorage = async ({ supabaseUrl, serviceKey, storagePath, pdfBuf
       body: pdfBuffer
     }
   );
-
   const rawText = await response.text();
   const data = rawText ? safeJsonParse(rawText) : null;
-
   if (!response.ok) {
-    const message = data?.message || data?.error || rawText || 'Storage upload failed';
-    throw createHttpError(response.status, message);
+    throw createHttpError(response.status, data?.message || data?.error || rawText || 'Storage upload failed');
   }
-
   return data;
 };
 
-const createSignedStorageUrl = async ({
-  supabaseUrl,
-  serviceKey,
-  storagePath,
-  expiresIn = SIGNED_URL_TTL_SECONDS
-}) => {
+const createSignedUrl = async ({ supabaseUrl, serviceKey, storagePath, expiresIn = SIGNED_URL_TTL_SECONDS }) => {
   const response = await fetch(
-    `${supabaseUrl}/storage/v1/object/sign/${PUBLIC_DIAGNOSTIC_ASSETS_BUCKET}/${encodeStoragePath(storagePath)}`,
+    `${supabaseUrl}/storage/v1/object/sign/${PUBLIC_REPORT_ASSETS_BUCKET}/${encodeStoragePath(storagePath)}`,
     {
       method: 'POST',
-      headers: createRestHeaders(serviceKey, {
-        'Content-Type': 'application/json'
-      }),
+      headers: createRestHeaders(serviceKey, { 'Content-Type': 'application/json' }),
       body: JSON.stringify({ expiresIn })
     }
   );
-
   const rawText = await response.text();
   const data = rawText ? safeJsonParse(rawText) : null;
-
   if (!response.ok) {
-    const message = data?.message || data?.error || rawText || 'Signed URL creation failed';
-    throw createHttpError(response.status, message);
+    throw createHttpError(response.status, data?.message || data?.error || rawText || 'Signed URL creation failed');
   }
-
   const signedPath = data?.signedURL || data?.signedUrl || data?.signed_url || data?.path || '';
-  if (!signedPath) {
-    throw createHttpError(500, 'Signed URL response missing path');
-  }
-
+  if (!signedPath) throw createHttpError(500, 'Signed URL response missing path');
   const reportUrl = /^https?:\/\//i.test(signedPath)
     ? signedPath
     : `${supabaseUrl}${signedPath.startsWith('/') ? '' : '/'}${signedPath}`;
-
   return {
     reportUrl,
-    expiresAt: new Date(Date.now() + (expiresIn * 1000)).toISOString()
+    expiresAt: new Date(Date.now() + expiresIn * 1000).toISOString()
   };
 };
 
-const buildPublicReportStoragePath = (leadSubmissionId, reportId) => {
-  const safeLeadId = sanitizeFileSegment(leadSubmissionId, 'lead');
-  const safeReportId = sanitizeFileSegment(reportId, 'rapport');
-  return `lead-submissions/${safeLeadId}/reports/${safeReportId}/rapport-diagnostic-public.pdf`;
+// ─── Database ──────────────────────────────────────────────────────────────────
+
+const supabaseRestFetch = async (supabaseUrl, serviceKey, path, options = {}) => {
+  const response = await fetch(`${supabaseUrl}/rest/v1/${path}`, {
+    method: options.method || 'GET',
+    headers: createRestHeaders(serviceKey, options.headers || {}),
+    body: options.body
+  });
+  const rawText = await response.text();
+  const data = rawText ? safeJsonParse(rawText) : null;
+  if (!response.ok) {
+    const message = data?.message || data?.error_description || rawText || `HTTP ${response.status}`;
+    throw createHttpError(response.status, message);
+  }
+  return data;
 };
 
+const insertPublicReport = async ({ supabaseUrl, serviceKey, payload }) => {
+  const response = await fetch(`${supabaseUrl}/rest/v1/public_reports`, {
+    method: 'POST',
+    headers: createRestHeaders(serviceKey, {
+      'Content-Type': 'application/json',
+      Prefer: 'return=representation'
+    }),
+    body: JSON.stringify(payload)
+  });
+  const rawText = await response.text();
+  const data = rawText ? safeJsonParse(rawText) : null;
+  if (!response.ok) {
+    throw createHttpError(response.status, data?.message || data?.error || rawText || 'Insert public_reports failed');
+  }
+  return Array.isArray(data) ? data[0] : data;
+};
+
+const updatePublicReport = async ({ supabaseUrl, serviceKey, publicReportId, patch }) => {
+  try {
+    await supabaseRestFetch(
+      supabaseUrl, serviceKey,
+      `public_reports?id=eq.${encodeQueryValue(publicReportId)}`,
+      {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify({ ...patch, updated_at: new Date().toISOString() })
+      }
+    );
+  } catch (err) {
+    console.warn('[public-report-pdf] updatePublicReport failed:', err.message);
+  }
+};
+
+const updateLeadSubmissionPdfUrl = async ({ supabaseUrl, serviceKey, leadSubmissionId, pdfUrl, expiresAt }) => {
+  if (!leadSubmissionId) return;
+  try {
+    await supabaseRestFetch(
+      supabaseUrl, serviceKey,
+      `lead_submissions?id=eq.${encodeQueryValue(leadSubmissionId)}`,
+      {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify({ pdf_url: pdfUrl, pdf_expires_at: expiresAt })
+      }
+    );
+  } catch (err) {
+    console.warn('[public-report-pdf] updateLeadSubmissionPdfUrl failed:', err.message);
+  }
+};
+
+// ─── Email ────────────────────────────────────────────────────────────────────
+
+const sendPdfReadyEmail = async ({
+  email, siteName, activity, surface, scoreLettre, economiesTotalesAnnuelles, pdfUrl
+}) => {
+  const resendApiKey = readEnv('RESEND_API_KEY');
+  const resendFrom = readEnv('RESEND_FROM');
+  if (!resendApiKey || !resendFrom) {
+    console.warn('[public-report-pdf] Missing Resend config — email skipped');
+    return;
+  }
+
+  const buildingName = siteName || 'Votre bâtiment';
+  const scoreLabel = scoreLettre ? `Indice ${scoreLettre}` : 'Indice en cours de calcul';
+  const activityLabel = activity || 'Activité à confirmer';
+  const surfaceLabel = surface ? `${surface} m²` : 'Surface non renseignée';
+  const savingsLabel = formatCurrency(economiesTotalesAnnuelles || 0);
+  const safePdfUrl = escapeHtml(pdfUrl || '#');
+
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${resendApiKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      from: resendFrom,
+      to: [email],
+      subject: 'Votre rapport DiagTertiaire est disponible',
+      html: `
+        <div style="font-family:Arial,sans-serif;background:#F8FAFC;padding:24px;color:#0F172A;">
+          <div style="max-width:640px;margin:0 auto;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:20px;overflow:hidden;">
+            <div style="padding:24px 28px;background:linear-gradient(135deg,#102A43 0%,#1D4ED8 100%);color:#FFFFFF;">
+              <div style="font-size:12px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;opacity:0.8;">DiagTertiaire</div>
+              <h1 style="margin:10px 0 0;font-size:28px;line-height:1.1;">Votre rapport est disponible</h1>
+            </div>
+            <div style="padding:28px;">
+              <p style="margin:0 0 8px;font-size:15px;line-height:1.7;">📄 Votre rapport PDF est prêt.</p>
+              <div style="display:grid;gap:12px;margin-bottom:24px;">
+                <div style="padding:14px 16px;border:1px solid #E2E8F0;border-radius:14px;background:#F8FAFC;"><strong>Bâtiment</strong><br>${escapeHtml(buildingName)}</div>
+                <div style="padding:14px 16px;border:1px solid #E2E8F0;border-radius:14px;background:#F8FAFC;"><strong>Activité</strong><br>${escapeHtml(activityLabel)}</div>
+                <div style="padding:14px 16px;border:1px solid #E2E8F0;border-radius:14px;background:#F8FAFC;"><strong>Surface</strong><br>${escapeHtml(surfaceLabel)}</div>
+                <div style="padding:14px 16px;border:1px solid #E2E8F0;border-radius:14px;background:#F8FAFC;"><strong>Indice DiagTertiaire</strong><br>${escapeHtml(scoreLabel)}</div>
+                <div style="padding:14px 16px;border:1px solid #E2E8F0;border-radius:14px;background:#F8FAFC;"><strong>Économies annuelles estimées</strong><br>${escapeHtml(savingsLabel)}</div>
+              </div>
+              <a href="${safePdfUrl}" style="display:inline-block;padding:14px 20px;border-radius:12px;background:#1D4ED8;color:#FFFFFF;text-decoration:none;font-weight:700;">Télécharger mon rapport PDF</a>
+              <p style="margin:16px 0 0;font-size:12px;color:#94A3B8;">Ce lien est valable 30 jours.</p>
+            </div>
+          </div>
+        </div>`,
+      text: `Bonjour,\n\nVotre rapport DiagTertiaire est disponible.\nBâtiment : ${buildingName}\nActivité : ${activityLabel}\nSurface : ${surfaceLabel}\nIndice : ${scoreLabel}\nÉconomies : ${savingsLabel}\n\nTélécharger : ${pdfUrl || ''}\n\nCe lien est valable 30 jours.`
+    })
+  });
+
+  if (!response.ok) {
+    const rawText = await response.text();
+    console.warn('[public-report-pdf] Email delivery failed:', response.status, rawText.slice(0, 300));
+  }
+};
+
+// ─── View model ────────────────────────────────────────────────────────────────
+
 const buildBudgetSummary = (actions = [], annualSavingsEuro = 0) => {
-  const capexBrut = asArray(actions).reduce((sum, action) => sum + toNumber(action?.capex?.value, 0), 0);
+  const capexBrut = asArray(actions).reduce((sum, a) => sum + toNumber(a?.capex?.value, 0), 0);
   const annualSavings = Math.max(0, Math.round(toNumber(annualSavingsEuro, 0)));
   const aides = Math.round(capexBrut * 0.12);
   const capexNet = Math.max(0, Math.round(capexBrut - aides));
   const roi = annualSavings > 0 ? capexNet / annualSavings : null;
-
   return {
     capexBrut: Math.round(capexBrut),
     aides,
@@ -242,7 +337,7 @@ const buildPublicReportViewModel = (reportPayload, leadSubmissionId) => {
   const annualSavingsEuro = toNumber(composite.annual_euro?.value, 0);
   const totalCostEuro = toNumber(calc.total_cost_euro_an?.value, 0);
   const score = computeScoreFromIntensity(siteIntensity, benchmarkMedian);
-  const targetIntensity = Math.max(0, Math.round(siteIntensity - (surface > 0 ? (annualSavingsKwh / surface) : 0)));
+  const targetIntensity = Math.max(0, Math.round(siteIntensity - (surface > 0 ? annualSavingsKwh / surface : 0)));
   const targetScore = computeScoreFromIntensity(targetIntensity, benchmarkMedian);
   const budget = buildBudgetSummary(actions, annualSavingsEuro);
 
@@ -270,64 +365,17 @@ const buildPublicReportViewModel = (reportPayload, leadSubmissionId) => {
     actions,
     assumptions,
     limits,
-    budget,
-    emailData: {
-      email,
-      nomBatiment: siteName,
-      activite: activity,
-      surface: surface > 0 ? Math.round(surface) : null,
-      scoreLettre: score,
-      economiesTotalesAnnuelles: annualSavingsEuro
-    }
+    budget
   };
 };
 
-const buildActionsRowsHtml = (actions) => {
-  if (!actions.length) {
-    return '<p class="empty-state">Aucune action prioritaire exploitable avec ce niveau de donnees.</p>';
-  }
-
-  return `
-    <table class="actions-table">
-      <thead>
-        <tr>
-          <th>Action</th>
-          <th>Gain annuel</th>
-          <th>Budget</th>
-          <th>ROI</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${actions.map((action) => `
-          <tr>
-            <td>
-              <strong>${escapeHtml(action.name || 'Action recommandee')}</strong>
-              <div class="muted">${escapeHtml(action.category || 'Usage principal')}</div>
-            </td>
-            <td>${escapeHtml(formatCurrency(action.gain_euro_an?.value || 0))}</td>
-            <td>${escapeHtml(formatCurrency(action.capex?.value || 0))}</td>
-            <td>${action.roi_years?.value !== null && action.roi_years?.value !== undefined ? escapeHtml(`${String(action.roi_years.value).replace('.', ',')} ans`) : 'A confirmer'}</td>
-          </tr>
-        `).join('')}
-      </tbody>
-    </table>
-  `;
-};
-
-const renderBulletList = (items, fallbackText) => {
-  const safeItems = asArray(items).filter((item) => typeof item === 'string' && item.trim());
-  if (!safeItems.length) {
-    return `<p class="empty-state">${escapeHtml(fallbackText)}</p>`;
-  }
-
-  return `<ul class="bullet-list">${safeItems.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`;
-};
+// ─── HTML builder ─────────────────────────────────────────────────────────────
 
 const buildActionTierBadge = (tier) => {
   const map = {
-    quick_win: { label: 'Action rapide', bg: '#F0FDF4', color: '#16A34A', border: '#BBF7D0' },
-    equipment: { label: 'Equipement',    bg: '#EFF6FF', color: '#1D4ED8', border: '#BFDBFE' },
-    structural: { label: 'Structurel',   bg: '#FEF3C7', color: '#B45309', border: '#FDE68A' }
+    quick_win:  { label: 'Action rapide', bg: '#F0FDF4', color: '#16A34A', border: '#BBF7D0' },
+    equipment:  { label: 'Equipement',    bg: '#EFF6FF', color: '#1D4ED8', border: '#BFDBFE' },
+    structural: { label: 'Structurel',    bg: '#FEF3C7', color: '#B45309', border: '#FDE68A' }
   };
   const style = map[tier] || map.equipment;
   return `<span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;background:${style.bg};color:${style.color};border:1px solid ${style.border}">${escapeHtml(style.label)}</span>`;
@@ -349,7 +397,6 @@ const buildPublicReportPdfHtml = (viewModel) => {
       body { margin: 0; font-family: 'Helvetica Neue', Arial, sans-serif; background: #F8FAFC; color: #0F172A; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
       .report-wrap { max-width: 780px; margin: 0 auto; padding: 0 0 32px; }
 
-      /* HERO */
       .hero { background: linear-gradient(135deg, #0A1928 0%, #1D4ED8 55%, #0F2236 100%); color: #fff; border-radius: 20px; padding: 28px 32px; break-inside: avoid; margin-bottom: 20px; }
       .hero-kicker { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; opacity: 0.6; margin-bottom: 6px; }
       .hero-title { font-size: 26px; font-weight: 900; line-height: 1.1; letter-spacing: -0.5px; margin-bottom: 4px; }
@@ -367,7 +414,6 @@ const buildPublicReportPdfHtml = (viewModel) => {
       .score-after { font-size: 10px; color: #64748B; margin-top: 6px; }
       .score-after strong { color: ${targetScoreColor}; font-weight: 800; }
 
-      /* KPI GRID */
       .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; break-inside: avoid; }
       .kpi-card { background: #fff; border: 1px solid #E2E8F0; border-radius: 14px; padding: 16px; }
       .kpi-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: #64748B; margin-bottom: 8px; }
@@ -375,19 +421,11 @@ const buildPublicReportPdfHtml = (viewModel) => {
       .kpi-sub { font-size: 11px; color: #94A3B8; margin-top: 4px; }
       .kpi-card.kpi-cost .kpi-label { color: #2563EB; }
       .kpi-card.kpi-savings .kpi-label { color: #16A34A; }
-      .kpi-card.kpi-co2 .kpi-label { color: #7C3AED; }
 
-      /* SECTION CARD */
       .section { background: #fff; border: 1px solid #E2E8F0; border-radius: 16px; padding: 22px 24px; margin-bottom: 16px; break-inside: avoid; }
       .section-title { font-size: 15px; font-weight: 800; color: #0F172A; margin: 0 0 4px; letter-spacing: -0.2px; }
       .section-sub { font-size: 12px; color: #64748B; margin: 0 0 16px; line-height: 1.5; }
 
-      /* SCORE SECTION */
-      .score-bar-wrap { margin: 12px 0; }
-      .score-bar { display: flex; gap: 4px; height: 10px; border-radius: 6px; overflow: hidden; }
-      .bar-seg { flex: 1; }
-
-      /* ACTIONS */
       .actions-grid { display: flex; flex-direction: column; gap: 10px; }
       .action-row { display: flex; align-items: flex-start; gap: 14px; padding: 12px 14px; background: #F8FAFC; border-radius: 12px; border: 1px solid #E2E8F0; break-inside: avoid; }
       .action-num { width: 24px; height: 24px; border-radius: 50%; background: #1D4ED8; color: #fff; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
@@ -396,22 +434,18 @@ const buildPublicReportPdfHtml = (viewModel) => {
       .action-stats { display: flex; gap: 16px; font-size: 11px; color: #64748B; flex-wrap: wrap; }
       .action-stat strong { color: #0F172A; font-weight: 700; }
 
-      /* BUDGET */
       .budget-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 14px; }
       .budget-card { border-radius: 10px; padding: 12px 14px; border: 1px solid; }
       .budget-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
       .budget-val { font-size: 18px; font-weight: 900; }
 
-      /* BULLET LIST */
       .bullet-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
       .bullet-list li { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: #475569; line-height: 1.5; }
       .bullet-dot { width: 6px; height: 6px; border-radius: 50%; background: #93C5FD; flex-shrink: 0; margin-top: 5px; }
       .bullet-dot.warn { background: #FCA5A5; }
 
-      /* GRID 2COL */
       .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 
-      /* FOOTER */
       .footer { text-align: center; font-size: 10px; color: #94A3B8; margin-top: 24px; padding-top: 16px; border-top: 1px solid #E2E8F0; }
 
       @media print {
@@ -424,7 +458,6 @@ const buildPublicReportPdfHtml = (viewModel) => {
   <body>
     <div class="report-wrap">
 
-      <!-- HERO -->
       <div class="hero">
         <div class="hero-kicker">Pre-diagnostic energetique tertiaire · DiagTertiaire</div>
         <div class="hero-title">${escapeHtml(viewModel.siteName)}</div>
@@ -470,7 +503,6 @@ const buildPublicReportPdfHtml = (viewModel) => {
         </div>
       </div>
 
-      <!-- KPI GRID -->
       <div class="kpi-grid">
         <div class="kpi-card kpi-cost">
           <div class="kpi-label">Facture estimee</div>
@@ -494,7 +526,6 @@ const buildPublicReportPdfHtml = (viewModel) => {
         </div>
       </div>
 
-      <!-- ACTIONS -->
       <div class="section">
         <div class="section-title">Actions prioritaires recommandees</div>
         <div class="section-sub">Classement par gain economique rapporte au cout. Ordre de grandeur avant audit approfondi.</div>
@@ -517,7 +548,6 @@ const buildPublicReportPdfHtml = (viewModel) => {
           `).join('')}
         </div>
 
-        <!-- BUDGET SUMMARY -->
         <div class="budget-grid" style="margin-top:18px">
           <div class="budget-card" style="background:#F8FAFC;border-color:#E2E8F0">
             <div class="budget-label" style="color:#64748B">Travaux bruts</div>
@@ -538,13 +568,12 @@ const buildPublicReportPdfHtml = (viewModel) => {
         </div>
       </div>
 
-      <!-- ASSUMPTIONS + LIMITS -->
       <div class="grid-2col">
         <div class="section">
           <div class="section-title">Hypotheses de calcul</div>
           <div class="section-sub" style="margin-bottom:12px">Ces hypotheses peuvent etre ajustees lors d'un audit sur site.</div>
           <ul class="bullet-list">
-            ${asArray(viewModel.assumptions).filter(s => typeof s === 'string' && s.trim()).slice(0, 8).map(item => `
+            ${asArray(viewModel.assumptions).filter((s) => typeof s === 'string' && s.trim()).slice(0, 8).map((item) => `
             <li><span class="bullet-dot"></span><span>${escapeHtml(item)}</span></li>
             `).join('') || '<li><span class="bullet-dot"></span><span>Hypotheses a confirmer sur site.</span></li>'}
           </ul>
@@ -553,14 +582,13 @@ const buildPublicReportPdfHtml = (viewModel) => {
           <div class="section-title">Limites de lecture</div>
           <div class="section-sub" style="margin-bottom:12px">Ce pre-diagnostic est indicatif et non opposable.</div>
           <ul class="bullet-list">
-            ${asArray(viewModel.limits).filter(s => typeof s === 'string' && s.trim()).slice(0, 8).map(item => `
+            ${asArray(viewModel.limits).filter((s) => typeof s === 'string' && s.trim()).slice(0, 8).map((item) => `
             <li><span class="bullet-dot warn"></span><span>${escapeHtml(item)}</span></li>
             `).join('') || '<li><span class="bullet-dot warn"></span><span>Limites a confirmer avec un expert.</span></li>'}
           </ul>
         </div>
       </div>
 
-      <!-- FOOTER -->
       <div class="footer">
         DiagTertiaire — Pre-diagnostic energetique indicatif non opposable | Rapport ${escapeHtml(viewModel.reportId || 'N/A')} | ${escapeHtml(generatedDate)}<br />
         Ce document est a usage informatif uniquement. Pour un audit certifie, contactez un bureau d'etudes RGE agree.
@@ -571,123 +599,141 @@ const buildPublicReportPdfHtml = (viewModel) => {
 </html>`;
 };
 
+// ─── Handler ───────────────────────────────────────────────────────────────────
+
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  let publicReportId = null;
+  let supabaseCtx = null;
+
   try {
     const body = safeJsonParse(req.body);
     const payload = asPlainObject(body);
-    const leadSubmissionId = String(payload.lead_submission_id || '').trim();
+    const leadSubmissionId = String(payload.lead_submission_id || '').trim() || null;
     const reportPayload = asPlainObject(payload.report_payload);
-
-    if (!leadSubmissionId) {
-      throw createHttpError(400, 'Missing lead_submission_id');
-    }
 
     if (!reportPayload.report_id) {
       throw createHttpError(400, 'Missing report_payload.report_id');
     }
 
-    const serverSupabaseConfig = getRequiredServerSupabaseConfig();
-    const supabaseUrl = serverSupabaseConfig.supabaseUrl;
-    const serviceKey = serverSupabaseConfig.serviceKey;
+    supabaseCtx = getRequiredServerSupabaseConfig();
+    const { supabaseUrl, serviceKey } = supabaseCtx;
 
-    const leadRows = await supabaseRestFetch(
-      supabaseUrl,
-      serviceKey,
-      `lead_submissions?id=eq.${encodeQueryValue(leadSubmissionId)}&select=id,email,raw_payload,report_id&limit=1`
-    );
-    const leadRecord = asArray(leadRows)[0] || null;
-
-    if (!leadRecord?.id) {
-      throw createHttpError(404, 'Lead submission not found');
+    // 1. Fetch lead record for email fallback
+    let leadRecord = null;
+    if (leadSubmissionId) {
+      try {
+        const leadRows = await supabaseRestFetch(
+          supabaseUrl, serviceKey,
+          `lead_submissions?id=eq.${encodeQueryValue(leadSubmissionId)}&select=id,email&limit=1`
+        );
+        leadRecord = asArray(leadRows)[0] || null;
+      } catch (err) {
+        console.warn('[public-report-pdf] Lead fetch failed (non-fatal):', err.message);
+      }
     }
 
     const viewModel = buildPublicReportViewModel(reportPayload, leadSubmissionId);
-    if (!viewModel.email) {
-      const fallbackEmail = String(leadRecord.email || '').trim();
-      if (!fallbackEmail) {
-        throw createHttpError(400, 'Missing report email');
-      }
-      viewModel.emailData.email = fallbackEmail;
-      viewModel.email = fallbackEmail;
+    // Fallback to lead record email if not in report payload
+    if (!viewModel.email && leadRecord?.email) {
+      viewModel.email = String(leadRecord.email).trim();
     }
 
+    // 2. Insert public_reports row — get id for storage path
+    const publicReportRow = await insertPublicReport({
+      supabaseUrl,
+      serviceKey,
+      payload: {
+        lead_submission_id: leadSubmissionId || null,
+        email: viewModel.email || null,
+        site_name: viewModel.siteName || null,
+        input_payload: asPlainObject(reportPayload.inputs_summary),
+        report_payload: reportPayload,
+        pdf_status: 'generating',
+        updated_at: new Date().toISOString()
+      }
+    });
+    publicReportId = publicReportRow?.id || null;
+
+    // 3. Determine storage path
+    const storagePath = buildStoragePath(publicReportId || viewModel.reportId);
+
+    // 4. Generate HTML then PDF
     const html = buildPublicReportPdfHtml(viewModel);
     const pdfBuffer = await renderPdfFromHtml(html, {
       maxHtmlLength: DEFAULT_MAX_HTML_LENGTH,
       timeoutMs: 45_000
     });
 
-    const storagePath = buildPublicReportStoragePath(leadSubmissionId, viewModel.reportId);
-    const downloadFilename = sanitizeDownloadFilename(`rapport-${viewModel.siteName}`);
+    // 5. Upload to public-report-assets
+    await uploadPdfToStorage({ supabaseUrl, serviceKey, storagePath, pdfBuffer });
 
-    await uploadPdfToStorage({
-      supabaseUrl,
-      serviceKey,
-      storagePath,
-      pdfBuffer
-    });
+    // 6. Create signed URL (30 days)
+    const { reportUrl, expiresAt } = await createSignedUrl({ supabaseUrl, serviceKey, storagePath });
 
-    const signedUrlData = await createSignedStorageUrl({
-      supabaseUrl,
-      serviceKey,
-      storagePath
-    });
-
-    const existingRawPayload = asPlainObject(leadRecord.raw_payload);
-    const mergedRawPayload = {
-      ...existingRawPayload,
-      public_report_pdf: {
-        bucket_name: PUBLIC_DIAGNOSTIC_ASSETS_BUCKET,
-        storage_path: storagePath,
-        file_name: downloadFilename,
-        generated_at: new Date().toISOString(),
-        expires_at: signedUrlData.expiresAt,
-        report_id: viewModel.reportId
-      }
-    };
-
-    try {
-      await supabaseRestFetch(
-        supabaseUrl,
-        serviceKey,
-        `lead_submissions?id=eq.${encodeQueryValue(leadSubmissionId)}`,
-        {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            Prefer: 'return=minimal'
-          },
-          body: JSON.stringify({
-            raw_payload: mergedRawPayload,
-            report_id: leadRecord.report_id || viewModel.reportId
-          })
+    // 7. Update public_reports: pdf_status = ready
+    if (publicReportId) {
+      await updatePublicReport({
+        supabaseUrl, serviceKey, publicReportId,
+        patch: {
+          pdf_status: 'ready',
+          pdf_error: null,
+          latest_pdf_bucket: PUBLIC_REPORT_ASSETS_BUCKET,
+          latest_pdf_path: storagePath,
+          latest_pdf_generated_at: new Date().toISOString()
         }
-      );
-    } catch (metadataError) {
-      console.warn('[public-report-pdf] Unable to persist PDF metadata on lead_submissions:', metadataError);
+      });
+    }
+
+    // 8. Update lead_submissions.pdf_url (best-effort)
+    await updateLeadSubmissionPdfUrl({
+      supabaseUrl, serviceKey, leadSubmissionId, pdfUrl: reportUrl, expiresAt
+    });
+
+    // 9. Send email (fire and forget)
+    if (viewModel.email) {
+      sendPdfReadyEmail({
+        email: viewModel.email,
+        siteName: viewModel.siteName,
+        activity: viewModel.activity,
+        surface: viewModel.surface > 0 ? Math.round(viewModel.surface) : null,
+        scoreLettre: viewModel.score.score,
+        economiesTotalesAnnuelles: viewModel.annualSavingsEuro,
+        pdfUrl: reportUrl
+      }).catch((err) => console.warn('[public-report-pdf] Email error:', err.message));
     }
 
     return res.status(200).json({
       ok: true,
-      lead_submission_id: leadSubmissionId,
-      report_id: viewModel.reportId,
-      bucket_name: PUBLIC_DIAGNOSTIC_ASSETS_BUCKET,
+      public_report_id: publicReportId,
+      lead_submission_id: leadSubmissionId || null,
+      report_url: reportUrl,
+      pdf_url: reportUrl, // backwards-compat alias
+      expires_at: expiresAt,
       storage_path: storagePath,
-      file_name: downloadFilename,
-      report_url: signedUrlData.reportUrl,
-      expires_at: signedUrlData.expiresAt,
-      email_data: {
-        ...viewModel.emailData,
-        reportUrl: signedUrlData.reportUrl
-      }
+      bucket: PUBLIC_REPORT_ASSETS_BUCKET
     });
+
   } catch (error) {
+    // Mark public_reports row as failed if it was created
+    if (publicReportId && supabaseCtx) {
+      updatePublicReport({
+        supabaseUrl: supabaseCtx.supabaseUrl,
+        serviceKey: supabaseCtx.serviceKey,
+        publicReportId,
+        patch: {
+          pdf_status: 'failed',
+          pdf_error: String(error?.message || 'Unknown error').slice(0, 500)
+        }
+      }).catch(() => {});
+    }
+
     const statusCode = Number.isInteger(error?.statusCode) ? error.statusCode : 500;
+    console.error('[public-report-pdf] Error:', error?.message || error);
     return res.status(statusCode).json({
       ok: false,
       error: error?.message || 'Public report PDF generation failed'

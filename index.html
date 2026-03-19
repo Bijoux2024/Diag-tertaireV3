@@ -7720,41 +7720,20 @@ body{margin:0;font-family:Arial,sans-serif;background:#f8fafc;color:#0f172a;}
                     // Appel silencieux — ne jamais bloquer l'affichage du rapport
                     const notifyAndSavePdf = async (rp, fd, lsId) => {
                         try {
-                            const reportNode = document.querySelector('.new-diagnostic-report');
-                            if (!reportNode) return;
-
-                            const { html, fileName } = newDiagnosticBuildPdfExportPayload(rp);
-                            if (!html) return;
-
-                            const siteName = (rp.inputs_summary && rp.inputs_summary.site_name) || 'rapport';
-                            const filename = newDiagnosticBuildDownloadFileName(siteName, 'pdf');
-
-                            const response = await fetch('/api/save-public-report', {
+                            if (!rp || !lsId) return;
+                            const response = await fetch('/api/public-report-pdf', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({
-                                    html,
-                                    filename,
-                                    email: fd.email,
-                                    reportMeta: {
-                                        reportId: rp.report_id,
-                                        siteName: (rp.inputs_summary && rp.inputs_summary.site_name) || 'Bâtiment diagnostiqué',
-                                        activity: (rp.inputs_summary && rp.inputs_summary.activity) || '',
-                                        surface: (rp.inputs_summary && rp.inputs_summary.surface && rp.inputs_summary.surface.value) || 0,
-                                        scoreLettre: (rp.benchmark_result && rp.benchmark_result.score_letter) || newDiagnosticComputeSectorLabel(
-                                            rp.benchmark_result && rp.benchmark_result.site_intensity && rp.benchmark_result.site_intensity.value,
-                                            rp.benchmark_result && rp.benchmark_result.benchmark_median && rp.benchmark_result.benchmark_median.value
-                                        ).label || '',
-                                        economiesTotalesAnnuelles: (rp.composite_savings && rp.composite_savings.annual_euro && rp.composite_savings.annual_euro.value) || 0,
-                                        leadSubmissionId: lsId || null
-                                    }
+                                    lead_submission_id: lsId,
+                                    report_payload: rp
                                 })
                             });
-
                             if (!response.ok) return;
                             const result = await response.json();
-                            if (result && result.pdf_url) {
-                                setReportPayload((prev) => prev ? { ...prev, pdf_url: result.pdf_url } : prev);
+                            const pdfUrl = result && (result.report_url || result.pdf_url);
+                            if (pdfUrl) {
+                                setReportPayload((prev) => prev ? { ...prev, pdf_url: pdfUrl } : prev);
                             }
                         } catch (_) {
                             // Silencieux — le fallback local reste disponible

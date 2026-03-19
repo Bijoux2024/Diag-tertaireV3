@@ -6670,17 +6670,24 @@
                         setServerPdfUrl(pdfUrl);
                     }
 
+                    const isExample = reportPayload && reportPayload.source === NEW_DIAGNOSTIC_PUBLIC_EXAMPLE_SOURCE;
+
                     if (typeof setReportPayload === 'function') {
                         setReportPayload(prev => {
                             const next = prev ? { ...prev, pdf_url: pdfUrl } : prev;
                             try {
-                                if (next) {
+                                // Never persist pdf_url for an example report: the signed URL
+                                // would be reused on the next visit and may be invalid.
+                                if (next && !isExample) {
                                     window.localStorage.setItem('newDiagnosticLatestReport', JSON.stringify(next));
                                 }
                             } catch (_) { }
                             return next;
                         });
-                    } else {
+                    } else if (!isExample) {
+                        // Real report without a setReportPayload callback: persist pdf_url.
+                        // (Example page never reaches this branch after the isExample guard above,
+                        //  but the check is kept here for defence in depth.)
                         try {
                             const fallbackReport = reportPayload ? { ...reportPayload, pdf_url: pdfUrl } : null;
                             if (fallbackReport) {
@@ -6974,6 +6981,7 @@
                                         </div>
                                         <p className="text-xs text-slate-300 lg:text-right">{new Date(reportPayload.generated_at).toLocaleDateString('fr-FR')} - {horizonLabel}</p>
                                         {serverPdfUrl ? (
+                                            /* ── PDF prêt : lien de téléchargement direct ── */
                                             <div className="flex flex-col items-end gap-1">
                                                 <a
                                                     href={serverPdfUrl}
@@ -6982,26 +6990,29 @@
                                                     className="inline-flex items-center justify-center gap-2 rounded-xl bg-white text-[#102A43] px-5 py-3 text-sm font-bold shadow-sm hover:bg-slate-100 transition-colors"
                                                 >
                                                     <Icon icon="solar:download-linear" className="text-lg" />
-                                                    Télécharger PDF
+                                                    Télécharger le PDF
                                                 </a>
                                                 <span className="text-xs text-slate-400">Lien valable 30 jours · envoyé par email</span>
                                                 <button
                                                     type="button"
                                                     onClick={handleExportPDF}
                                                     disabled={isPDFGenerating}
-                                                    className="text-xs text-slate-300 underline hover:text-white transition-colors"
+                                                    className="text-xs text-slate-300 underline hover:text-white transition-colors disabled:opacity-50"
                                                 >
-                                                    {isPDFGenerating ? 'Génération...' : 'Générer un nouveau PDF'}
+                                                    {isPDFGenerating ? 'Génération en cours…' : 'Regénérer le rapport'}
                                                 </button>
                                             </div>
                                         ) : (
+                                            /* ── Aucun PDF : action de génération serveur ── */
                                             <button
                                                 onClick={handleExportPDF}
                                                 disabled={isPDFGenerating}
                                                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-white text-[#102A43] px-5 py-3 text-sm font-bold shadow-sm hover:bg-slate-100 disabled:bg-slate-300 disabled:text-slate-500 transition-colors"
                                             >
-                                                {isPDFGenerating ? <Icon icon="solar:refresh-linear" className="text-lg animate-spin" /> : <Icon icon="solar:download-linear" className="text-lg" />}
-                                                {isPDFGenerating ? 'Génération PDF...' : 'Télécharger PDF'}
+                                                {isPDFGenerating
+                                                    ? <Icon icon="solar:refresh-linear" className="text-lg animate-spin" />
+                                                    : <Icon icon="solar:file-text-linear" className="text-lg" />}
+                                                {isPDFGenerating ? 'Génération en cours…' : 'Générer le rapport PDF'}
                                             </button>
                                         )}
                                     </div>

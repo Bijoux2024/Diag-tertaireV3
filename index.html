@@ -6613,6 +6613,9 @@
             const [ctaSent, setCtaSent] = useState(false);
             const [brandLogoDataUrl, setBrandLogoDataUrl] = useState(null);
             const ctaPanelRef = useRef(null);
+            useEffect(() => {
+                setServerPdfUrl((reportPayload && reportPayload.pdf_url) ? reportPayload.pdf_url : '');
+            }, [reportPayload ? reportPayload.pdf_url : '']);
 
             useEffect(() => {
                 let isCancelled = false;
@@ -6637,36 +6640,60 @@
 
                 try {
                     const lsId = (reportPayload && reportPayload.lead_submission_id) || null;
+
                     const response = await fetch('/api/public-report-pdf', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ lead_submission_id: lsId, report_payload: reportPayload })
+                        body: JSON.stringify({
+                            lead_submission_id: lsId,
+                            report_payload: reportPayload
+                        })
                     });
+
                     if (!response.ok) {
                         const errData = await response.json().catch(() => ({}));
                         throw new Error(errData.error || `Erreur serveur (${response.status})`);
                     }
+
                     const result = await response.json();
                     const pdfUrl = result && (result.report_url || result.pdf_url);
-                    if (pdfUrl) {
-                        if (typeof setReportPayload === 'function') {
-                            setReportPayload(prev => {
-                                const next = prev ? { ...prev, pdf_url: pdfUrl } : prev;
-                                try { if (next) window.localStorage.setItem('newDiagnosticLatestReport', JSON.stringify(next)); } catch (_) { }
-                                return next;
-                            });
-                        }
-                        window.open(pdfUrl, '_blank', 'noopener,noreferrer');
-                        newDiagnosticTrack('pdf_downloaded');
+
+                    if (!pdfUrl) {
+                        throw new Error('URL PDF manquante dans la réponse serveur');
                     }
+
+                    if (typeof setServerPdfUrl === 'function') {
+                        setServerPdfUrl(pdfUrl);
+                    }
+
+                    if (typeof setReportPayload === 'function') {
+                        setReportPayload(prev => {
+                            const next = prev ? { ...prev, pdf_url: pdfUrl } : prev;
+                            try {
+                                if (next) {
+                                    window.localStorage.setItem('newDiagnosticLatestReport', JSON.stringify(next));
+                                }
+                            } catch (_) { }
+                            return next;
+                        });
+                    } else {
+                        try {
+                            const fallbackReport = reportPayload ? { ...reportPayload, pdf_url: pdfUrl } : null;
+                            if (fallbackReport) {
+                                window.localStorage.setItem('newDiagnosticLatestReport', JSON.stringify(fallbackReport));
+                            }
+                        } catch (_) { }
+                    }
+
+                    window.open(pdfUrl, '_blank', 'noopener,noreferrer');
+                    newDiagnosticTrack('pdf_downloaded');
                 } catch (error) {
                     console.error('Erreur génération PDF:', error);
-                    alert('Erreur lors de la génération du PDF\u00a0: ' + (error.message || 'Erreur inconnue'));
+                    alert('Erreur lors de la génération du PDF : ' + (error.message || 'Erreur inconnue'));
                 } finally {
                     setIsPDFGenerating(false);
                 }
             };
-
             const calc = reportPayload.calculation_results;
             const benchmark = reportPayload.benchmark_result;
             const actions = reportPayload.top_actions || [];

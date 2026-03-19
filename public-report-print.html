@@ -11,6 +11,9 @@
   <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
 
   <style>
+    /* ═══════════════════════════════════════════════════════════════
+       PAGE SETUP
+    ═══════════════════════════════════════════════════════════════ */
     @page {
       size: A4;
       margin: 16mm 14mm 14mm 14mm;
@@ -27,17 +30,89 @@
       line-height: 1.5;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
+      /* Prevent lone lines at top/bottom of pages */
+      orphans: 3;
+      widows: 3;
     }
-
-    /* Avoid cutting inside a card or action block */
-    .pba { break-inside: avoid; page-break-inside: avoid; }
-
-    /* Titles must not be left alone at bottom of page */
-    .section-title { break-after: avoid; page-break-after: avoid; }
 
     @media print {
       body { background: white; }
     }
+
+    /* ═══════════════════════════════════════════════════════════════
+       PAGINATION — BREAK CONTROL
+       These are the canonical pagination rules.
+       Only edit here — never inline in JSX styles.
+    ═══════════════════════════════════════════════════════════════ */
+
+    /*
+     * .pba — "Page Break Avoid"
+     * Applied to: KPI cards, action rows, budget recap items,
+     *             hero block, chart section, hypotheses/limits rows.
+     */
+    .pba {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    /*
+     * .section-title — section heading
+     * Must NOT be left alone at the bottom of a page (orphan heading).
+     * break-after:avoid keeps it attached to the first child that follows.
+     */
+    .section-title {
+      break-after: avoid;
+      page-break-after: avoid;
+    }
+
+    /*
+     * .section-block — top-level white card sections
+     * Prevents the header row from being stranded if the card is small.
+     * Large sections (>½ page) will still split — that's intentional.
+     */
+    .section-block {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    /*
+     * .recharts-wrapper — Recharts injects this class itself.
+     * Keeps the chart SVG on a single page when possible.
+     */
+    .recharts-wrapper {
+      break-inside: avoid !important;
+      page-break-inside: avoid !important;
+    }
+
+    /*
+     * .bottom-grid — the 2-column Hypothèses/Limites row.
+     * Avoid splitting the two columns across pages.
+     */
+    .bottom-grid {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    /*
+     * .kpi-row — 4-card KPI grid.
+     * Must not be split across pages.
+     */
+    .kpi-row {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    /*
+     * .budget-recap — 4-cell budget summary inside the actions section.
+     */
+    .budget-recap {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    /* Orphan/widow control for list items */
+    li { orphans: 2; widows: 2; }
+    p  { orphans: 3; widows: 3; }
   </style>
 </head>
 <body>
@@ -53,7 +128,13 @@
       Tooltip, Legend, ResponsiveContainer
     } = RC;
 
-    /* ─── Helpers ──────────────────────────────────────────────────── */
+    /* ═══════════════════════════════════════════════════════════════════════
+       DATA HELPERS
+       @sync — these formulas are the canonical source of truth for the
+       print layer. If the on-screen engine (index.html ENGINE_PUBLIC) is
+       updated (score thresholds, aides ratio, inflation rate), update these
+       functions to match.
+    ═══════════════════════════════════════════════════════════════════════ */
 
     const obj  = v => (v && typeof v === 'object' && !Array.isArray(v)) ? v : {};
     const arr  = v => Array.isArray(v) ? v : [];
@@ -72,6 +153,7 @@
       return isNaN(d.getTime()) ? '' : d.toLocaleDateString('fr-FR');
     };
 
+    // @sync with ENGINE_PUBLIC score thresholds
     const SCORE_MAP = {
       A: { color: '#16A34A', bg: '#DCFCE7', label: 'Très performant' },
       B: { color: '#22C55E', bg: '#E8F5E9', label: 'Performant' },
@@ -82,11 +164,13 @@
 
     const scoreConf = letter => SCORE_MAP[String(letter || 'C').toUpperCase()] || SCORE_MAP['C'];
 
+    // @sync — thresholds: A<0.6, B<0.9, C<1.2, D<1.7, E≥1.7
     const computeScore = (intensity, median) => {
       const r = num(intensity, 0) / Math.max(1, num(median, 1));
       return r < 0.6 ? 'A' : r < 0.9 ? 'B' : r < 1.2 ? 'C' : r < 1.7 ? 'D' : 'E';
     };
 
+    // @sync — aides: 12% of gross capex (CEE / MaPrimeRénov indicatif)
     const buildBudget = (actions, annualEuro) => {
       const capexBrut = arr(actions).reduce((s, a) => s + num(a?.capex?.value, 0), 0);
       const aides     = Math.round(capexBrut * 0.12);
@@ -102,13 +186,14 @@
       };
     };
 
+    // @sync — energy inflation: 4%/year
     const buildProjection = ({ totalCostEuroAn, annualEuro, actions }) => {
-      const taux     = 0.04;
+      const taux      = 0.04;
       const capexBrut = arr(actions).reduce((s, a) => s + num(a?.capex?.value, 0), 0);
-      const aides    = Math.round(capexBrut * 0.12);
-      const capexNet = Math.max(0, Math.round(capexBrut - aides));
-      const base     = num(totalCostEuroAn, 0);
-      const savings  = num(annualEuro, 0);
+      const aides     = Math.round(capexBrut * 0.12);
+      const capexNet  = Math.max(0, Math.round(capexBrut - aides));
+      const base      = num(totalCostEuroAn, 0);
+      const savings   = num(annualEuro, 0);
       const data = [];
       for (let i = 0; i <= 10; i++) {
         data.push({
@@ -129,12 +214,14 @@
       structural: { label: 'Structurel',    bg: '#FEF3C7', color: '#B45309', border: '#FDE68A' }
     };
 
-    /* ─── Components ────────────────────────────────────────────────── */
+    /* ═══════════════════════════════════════════════════════════════════════
+       COMPONENTS
+    ═══════════════════════════════════════════════════════════════════════ */
 
     const KpiCard = ({ label, value, sub, accentColor }) => (
-      <div style={{
+      <div className="pba" style={{
         background: '#fff', border: '1px solid #E2E8F0', borderRadius: 14,
-        padding: '13px 15px', breakInside: 'avoid'
+        padding: '13px 15px'
       }}>
         <div style={{
           fontSize: 9, fontWeight: 800, textTransform: 'uppercase',
@@ -145,11 +232,19 @@
       </div>
     );
 
-    const Section = ({ title, sub, children, style }) => (
-      <div style={{
-        background: '#fff', border: '1px solid #E2E8F0', borderRadius: 16,
-        padding: '18px 20px', marginBottom: 12, ...style
-      }}>
+    /**
+     * Section — white card container.
+     * `avoidBreak` (default false): set to true for sections that should
+     * never be split (only use for short sections — < half a page).
+     */
+    const Section = ({ title, sub, children, style, avoidBreak }) => (
+      <div
+        className={avoidBreak ? 'pba' : ''}
+        style={{
+          background: '#fff', border: '1px solid #E2E8F0', borderRadius: 16,
+          padding: '18px 20px', marginBottom: 12, ...style
+        }}
+      >
         <div className="section-title" style={{
           fontSize: 14, fontWeight: 800, color: '#0F172A',
           marginBottom: sub ? 2 : 10, letterSpacing: '-0.2px'
@@ -196,11 +291,17 @@
       );
     };
 
+    /**
+     * ProjectionChart — Recharts AreaChart.
+     * isAnimationActive={false} is mandatory for print:
+     *  - animations run on a timer and may not complete before Puppeteer captures the PDF
+     *  - static SVG paths are fully drawn immediately, making the ready-signal reliable
+     */
     const ProjectionChart = ({ data }) => {
       if (!AreaChart || !data || data.length === 0) return null;
       const fmtTick = v => `${Math.round(v / 1000)}k€`;
       return (
-        <div style={{ width: '100%', height: 190 }}>
+        <div className="pba" style={{ width: '100%', height: 190 }}>
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={data} margin={{ top: 4, right: 8, left: 4, bottom: 4 }}>
               <defs>
@@ -218,13 +319,16 @@
               <YAxis tickFormatter={fmtTick} tick={{ fontSize: 9, fill: '#64748B' }} width={38} />
               <Tooltip formatter={v => fmtEur(v)} />
               <Legend wrapperStyle={{ fontSize: 10 }} />
+              {/* isAnimationActive={false}: required for print — see component JSDoc */}
               <Area
                 type="monotone" dataKey="sans_travaux" name="Sans travaux"
                 stroke="#F97316" strokeWidth={2} fill="url(#gSans)"
+                isAnimationActive={false}
               />
               <Area
                 type="monotone" dataKey="avec_travaux" name="Avec travaux"
                 stroke="#1D4ED8" strokeWidth={2} fill="url(#gAvec)"
+                isAnimationActive={false}
               />
             </AreaChart>
           </ResponsiveContainer>
@@ -232,7 +336,9 @@
       );
     };
 
-    /* ─── Main render ────────────────────────────────────────────────── */
+    /* ═══════════════════════════════════════════════════════════════════════
+       MAIN RENDER
+    ═══════════════════════════════════════════════════════════════════════ */
 
     const ReportPrint = ({ reportPayload: rp }) => {
       const inputs    = obj(rp.inputs_summary);
@@ -267,13 +373,13 @@
         { label: 'Conso actuelle',  val: fmtInt(siteI,    'kWh/m²/an') },
         { label: 'Médiane secteur', val: fmtInt(benchMed, 'kWh/m²/an') },
         { label: 'Cible estimée',   val: fmtInt(targetI,  'kWh/m²/an') },
-        { label: 'Précision',       val: confidence.label || 'Moyen',   unit: '' },
+        { label: 'Précision',       val: confidence.label || 'Moyen',   },
       ];
 
       return (
         <div style={{ maxWidth: 780, margin: '0 auto', padding: '0 0 20px' }}>
 
-          {/* ══ HERO ══ */}
+          {/* ══ HERO — never split ══ */}
           <div className="pba" style={{
             background: 'linear-gradient(135deg, #0A1928 0%, #1D4ED8 55%, #0F2236 100%)',
             color: '#fff', borderRadius: 20, padding: '22px 26px', marginBottom: 14
@@ -330,8 +436,8 @@
             </div>
           </div>
 
-          {/* ══ KPI GRID ══ */}
-          <div className="pba" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 10, marginBottom: 12 }}>
+          {/* ══ KPI GRID — never split ══ */}
+          <div className="kpi-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 10, marginBottom: 12 }}>
             <KpiCard label="Facture estimée"       value={fmtEur(totalCost)}   sub="Charges énergie / an" accentColor="#2563EB" />
             <KpiCard label="Économies potentielles" value={fmtEur(annualEuro)}  sub={`${fmtInt(annualKwh, 'kWh')} évités/an`} accentColor="#16A34A" />
             <KpiCard label="Budget net indicatif"   value={fmtEur(budget.capexNet)} sub={`Aides déduit. : ${fmtEur(budget.aides)}`} />
@@ -342,7 +448,7 @@
             />
           </div>
 
-          {/* ══ ACTIONS ══ */}
+          {/* ══ ACTIONS — large section, may span pages ══ */}
           <Section
             title="Actions prioritaires recommandées"
             sub="Classement par gain économique rapporté au coût. Ordre de grandeur avant audit approfondi."
@@ -352,15 +458,15 @@
               : actions.map((a, i) => <ActionRow key={i} action={a} index={i} />)
             }
 
-            {/* Budget recap */}
-            <div className="pba" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 9, marginTop: 12 }}>
+            {/* Budget recap — never split */}
+            <div className="budget-recap" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 9, marginTop: 12 }}>
               {[
                 { label: 'Travaux bruts',     value: fmtEur(budget.capexBrut),      bg: '#F8FAFC', bd: '#E2E8F0', c: '#0F172A' },
                 { label: 'Aides CEE / MPR',   value: `– ${fmtEur(budget.aides)}`,   bg: '#EFF6FF', bd: '#BFDBFE', c: '#1D4ED8' },
                 { label: 'Reste à charge',    value: fmtEur(budget.capexNet),        bg: '#EEF2FF', bd: '#C7D2FE', c: '#4338CA' },
                 { label: 'Économies / an',    value: fmtEur(budget.savings),         bg: '#F0FDF4', bd: '#BBF7D0', c: '#16A34A' },
               ].map(item => (
-                <div key={item.label} style={{ borderRadius: 9, padding: '9px 11px', background: item.bg, border: `1px solid ${item.bd}` }}>
+                <div key={item.label} className="pba" style={{ borderRadius: 9, padding: '9px 11px', background: item.bg, border: `1px solid ${item.bd}` }}>
                   <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', color: item.c, marginBottom: 3 }}>{item.label}</div>
                   <div style={{ fontSize: 16, fontWeight: 900, color: item.c }}>{item.value}</div>
                 </div>
@@ -368,7 +474,7 @@
             </div>
           </Section>
 
-          {/* ══ PROJECTION ══ */}
+          {/* ══ PROJECTION — chart must stay whole ══ */}
           <Section
             title="Projection financière 10 ans"
             sub={`Inflation énergie estimée ${projection.taux}%/an · Point de rentabilité estimé : ${projection.roiAnnee ? `A+${projection.roiAnnee}` : 'À confirmer'}`}
@@ -376,9 +482,9 @@
             <ProjectionChart data={projection.data} />
           </Section>
 
-          {/* ══ HYPOTHESES + LIMITES ══ */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <Section title="Hypothèses de calcul" sub="À ajuster lors d'un audit sur site." style={{ marginBottom: 0 }}>
+          {/* ══ HYPOTHESES + LIMITES — 2-col grid, avoid split ══ */}
+          <div className="bottom-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <Section title="Hypothèses de calcul" sub="À ajuster lors d'un audit sur site." style={{ marginBottom: 0 }} avoidBreak>
               <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 5 }}>
                 {(assumptions.length ? assumptions : ['Hypothèses à confirmer sur site.']).map((item, i) => (
                   <li key={i} className="pba" style={{ display: 'flex', gap: 7, fontSize: 11, color: '#475569', lineHeight: 1.5 }}>
@@ -388,7 +494,7 @@
                 ))}
               </ul>
             </Section>
-            <Section title="Limites de lecture" sub="Ce pré-diagnostic est indicatif et non opposable." style={{ marginBottom: 0 }}>
+            <Section title="Limites de lecture" sub="Ce pré-diagnostic est indicatif et non opposable." style={{ marginBottom: 0 }} avoidBreak>
               <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 5 }}>
                 {(limits.length ? limits : ['Limites à confirmer avec un expert.']).map((item, i) => (
                   <li key={i} className="pba" style={{ display: 'flex', gap: 7, fontSize: 11, color: '#475569', lineHeight: 1.5 }}>
@@ -414,7 +520,22 @@
       );
     };
 
-    /* ─── App (fetch + ready signal) ───────────────────────────────────── */
+    /* ═══════════════════════════════════════════════════════════════════════
+       APP — FETCH + READY SIGNAL
+
+       Ready signal — multi-step protocol:
+         1. document.fonts.ready   → all web fonts loaded (no FOUT in PDF)
+         2. Poll SVG paths         → Recharts has drawn its path elements
+                                     (not just the wrapper — actual data lines)
+         3. Double rAF             → layout engine has stabilized post-paint
+         4. Hard ceiling (4 s)     → fallback if chart never appears (e.g. no data)
+
+       Why isAnimationActive={false} is also required:
+         Without it, Recharts transitions path `d` attributes via JS timers.
+         The final `d` value only exists after the animation completes (~300ms).
+         Puppeteer might capture mid-animation, yielding empty or partial paths.
+         Disabling animation ensures the final path is drawn on the first frame.
+    ═══════════════════════════════════════════════════════════════════════ */
 
     const App = () => {
       const [reportPayload, setReportPayload] = useState(null);
@@ -441,36 +562,69 @@
           .catch(err => { setError(err.message || 'Erreur de chargement'); });
       }, []);
 
-      /* Signal Puppeteer once charts have had time to render */
+      /* Multi-step ready signal */
       useEffect(() => {
         if (!reportPayload || readyFired.current) return;
 
-        let maxTimer;
-        let pollTimer;
+        let cancelled = false;
 
-        const fire = () => {
-          if (readyFired.current) return;
+        const doFire = () => {
+          if (cancelled || readyFired.current) return;
           readyFired.current = true;
           window.__REPORT_READY__ = true;
         };
 
-        // Poll for Recharts SVG presence (max 3 s)
-        const poll = () => {
-          if (readyFired.current) return;
-          if (document.querySelector('.recharts-wrapper svg')) {
+        // Hard ceiling: 4 s — fires even if chart is absent (no data case)
+        const maxTimer = setTimeout(doFire, 4000);
+
+        const run = async () => {
+          try {
+            // Step 1: wait for all fonts (avoids FOUT-based layout shifts)
+            if (document.fonts && document.fonts.ready) {
+              await document.fonts.ready;
+            }
+            if (cancelled || readyFired.current) return;
+
+            // Step 2: poll for drawn SVG path elements inside Recharts wrapper
+            // (not just the wrapper div — actual data line paths)
+            let found = false;
+            for (let i = 0; i < 20 && !cancelled && !readyFired.current; i++) {
+              if (document.querySelectorAll('.recharts-wrapper svg path[d]').length > 0) {
+                found = true;
+                break;
+              }
+              await new Promise(r => setTimeout(r, 150));
+            }
+
+            if (cancelled || readyFired.current) return;
+
+            // Log if chart was not detected (still fires — no data is valid)
+            if (!found) {
+              console.warn('[print] Recharts SVG paths not found — firing ready anyway');
+            }
+
+            // Step 3: double rAF to ensure layout engine has settled after paint
+            await new Promise(r => requestAnimationFrame(r));
+            await new Promise(r => requestAnimationFrame(r));
+
             clearTimeout(maxTimer);
-            fire();
-          } else {
-            pollTimer = setTimeout(poll, 100);
+            doFire();
+          } catch (e) {
+            console.warn('[print] Ready signal error:', e && e.message);
+            clearTimeout(maxTimer);
+            if (!cancelled) doFire();
           }
         };
-        pollTimer = setTimeout(poll, 400);
-        maxTimer  = setTimeout(fire, 3200); // hard ceiling
 
-        return () => { clearTimeout(maxTimer); clearTimeout(pollTimer); };
+        run();
+
+        return () => {
+          cancelled = true;
+          clearTimeout(maxTimer);
+        };
       }, [reportPayload]);
 
-      /* Signal Puppeteer on error so it doesn't hang */
+      /* Signal Puppeteer on error — prevents indefinite hang */
       useEffect(() => {
         if (!error || readyFired.current) return;
         readyFired.current = true;

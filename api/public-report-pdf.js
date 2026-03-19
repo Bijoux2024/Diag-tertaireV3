@@ -206,6 +206,11 @@ const uploadPdfToStorage = async ({ supabaseUrl, serviceKey, storagePath, pdfBuf
 };
 
 const createSignedUrl = async ({ supabaseUrl, serviceKey, storagePath, expiresIn = SIGNED_URL_TTL_SECONDS }) => {
+  // POST /storage/v1/object/sign/{bucket}/{path}
+  // Supabase returns { signedURL: "/storage/v1/object/sign/bucket/path?token=..." }
+  // which is a root-relative path, NOT a full URL.
+  // Fix for "requested path is invalid": we prepend supabaseUrl to the relative path.
+  // Never double-encode: encodeStoragePath splits on "/" and encodes each segment once.
   const res = await fetch(
     `${supabaseUrl}/storage/v1/object/sign/${PUBLIC_REPORT_ASSETS_BUCKET}/${encodeStoragePath(storagePath)}`,
     {
@@ -221,6 +226,7 @@ const createSignedUrl = async ({ supabaseUrl, serviceKey, storagePath, expiresIn
   }
   const signedPath = data?.signedURL || data?.signedUrl || data?.signed_url || data?.path || '';
   if (!signedPath) throw createHttpError(500, 'Signed URL response missing path');
+  // If Supabase ever returns a full URL (future API change), pass it through as-is.
   const reportUrl = /^https?:\/\//i.test(signedPath)
     ? signedPath
     : `${supabaseUrl}${signedPath.startsWith('/') ? '' : '/'}${signedPath}`;

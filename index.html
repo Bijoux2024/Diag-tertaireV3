@@ -26,10 +26,6 @@
     <!-- ⚠️ NOTE PERFORMANCE : Babel Standalone est utilisé pour éviter un build step.
          En production à fort trafic, envisager une pré-compilation (Vite, esbuild). -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- jsPDF : génération de PDF client-side (utilisé en fallback local si l'API /api/pdf est indisponible) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <!-- html2canvas : capture d'un noeud DOM en image (utilisé par jsPDF pour les graphiques) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         /* Global & Reset */
         :root {
@@ -6634,11 +6630,30 @@
                 newDiagnosticTrack('pdf_export_started');
 
                 try {
-                    await newDiagnosticExportPDF(reportPayload, userEmail);
-                    newDiagnosticTrack('pdf_downloaded');
+                    const lsId = (reportPayload && reportPayload.lead_submission_id) || null;
+                    const response = await fetch('/api/public-report-pdf', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ lead_submission_id: lsId, report_payload: reportPayload })
+                    });
+                    if (!response.ok) {
+                        const errData = await response.json().catch(() => ({}));
+                        throw new Error(errData.error || `Erreur serveur (${response.status})`);
+                    }
+                    const result = await response.json();
+                    const pdfUrl = result && (result.report_url || result.pdf_url);
+                    if (pdfUrl) {
+                        setReportPayload(prev => {
+                            const next = prev ? { ...prev, pdf_url: pdfUrl } : prev;
+                            try { if (next) window.localStorage.setItem('newDiagnosticLatestReport', JSON.stringify(next)); } catch (_) {}
+                            return next;
+                        });
+                        window.open(pdfUrl, '_blank', 'noopener,noreferrer');
+                        newDiagnosticTrack('pdf_downloaded');
+                    }
                 } catch (error) {
-                    console.error('Erreur export PDF:', error);
-                    alert('Erreur lors de la génération du PDF');
+                    console.error('Erreur génération PDF:', error);
+                    alert('Erreur lors de la génération du PDF\u00a0: ' + (error.message || 'Erreur inconnue'));
                 } finally {
                     setIsPDFGenerating(false);
                 }
@@ -6930,7 +6945,7 @@
                                                     <Icon icon="solar:download-linear" className="text-lg" />
                                                     Télécharger PDF
                                                 </a>
-                                                <span className="text-xs text-slate-400">Lien valable 15 jours · envoyé par email</span>
+                                                <span className="text-xs text-slate-400">Lien valable 30 jours · envoyé par email</span>
                                                 <button
                                                     type="button"
                                                     onClick={handleExportPDF}

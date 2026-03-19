@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DiagTertiaire — Rapport PDF</title>
+
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
+
+  <style>
+    @page {
+      size: A4;
+      margin: 16mm 14mm 14mm 14mm;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: #F8FAFC;
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      color: #0F172A;
+      font-size: 13px;
+      line-height: 1.5;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    /* Avoid cutting inside a card or action block */
+    .pba { break-inside: avoid; page-break-inside: avoid; }
+
+    /* Titles must not be left alone at bottom of page */
+    .section-title { break-after: avoid; page-break-after: avoid; }
+
+    @media print {
+      body { background: white; }
+    }
+  </style>
+</head>
+<body>
+  <div id="root" style="padding:32px;text-align:center;font-family:Arial,sans-serif;color:#64748B;">
+    Chargement…
+  </div>
+
+  <script type="text/babel" data-presets="react">
+    const { useState, useEffect, useRef } = React;
+    const RC = window.Recharts || {};
+    const {
+      AreaChart, Area, XAxis, YAxis, CartesianGrid,
+      Tooltip, Legend, ResponsiveContainer
+    } = RC;
+
+    /* ─── Helpers ──────────────────────────────────────────────────── */
+
+    const obj  = v => (v && typeof v === 'object' && !Array.isArray(v)) ? v : {};
+    const arr  = v => Array.isArray(v) ? v : [];
+    const num  = (v, fb = 0) => { const n = Number(v); return isFinite(n) ? n : fb; };
+
+    const fmtEur = v =>
+      `${Math.round(num(v, 0)).toLocaleString('fr-FR')} €`;
+
+    const fmtInt = (v, u) => {
+      const s = Math.round(num(v, 0)).toLocaleString('fr-FR');
+      return u ? `${s}\u00a0${u}` : s;
+    };
+
+    const fmtDate = v => {
+      const d = v ? new Date(v) : new Date();
+      return isNaN(d.getTime()) ? '' : d.toLocaleDateString('fr-FR');
+    };
+
+    const SCORE_MAP = {
+      A: { color: '#16A34A', bg: '#DCFCE7', label: 'Très performant' },
+      B: { color: '#22C55E', bg: '#E8F5E9', label: 'Performant' },
+      C: { color: '#F59E0B', bg: '#FEF3C7', label: 'Dans la médiane' },
+      D: { color: '#F97316', bg: '#FFF7ED', label: 'Surconsommation' },
+      E: { color: '#EF4444', bg: '#FEE2E2', label: 'Très énergivore' },
+    };
+
+    const scoreConf = letter => SCORE_MAP[String(letter || 'C').toUpperCase()] || SCORE_MAP['C'];
+
+    const computeScore = (intensity, median) => {
+      const r = num(intensity, 0) / Math.max(1, num(median, 1));
+      return r < 0.6 ? 'A' : r < 0.9 ? 'B' : r < 1.2 ? 'C' : r < 1.7 ? 'D' : 'E';
+    };
+
+    const buildBudget = (actions, annualEuro) => {
+      const capexBrut = arr(actions).reduce((s, a) => s + num(a?.capex?.value, 0), 0);
+      const aides     = Math.round(capexBrut * 0.12);
+      const capexNet  = Math.max(0, Math.round(capexBrut - aides));
+      const savings   = Math.max(0, Math.round(num(annualEuro, 0)));
+      const roi       = savings > 0 ? capexNet / savings : null;
+      return {
+        capexBrut: Math.round(capexBrut),
+        aides,
+        capexNet,
+        savings,
+        roiYears: roi !== null ? Math.round(roi * 10) / 10 : null
+      };
+    };
+
+    const buildProjection = ({ totalCostEuroAn, annualEuro, actions }) => {
+      const taux     = 0.04;
+      const capexBrut = arr(actions).reduce((s, a) => s + num(a?.capex?.value, 0), 0);
+      const aides    = Math.round(capexBrut * 0.12);
+      const capexNet = Math.max(0, Math.round(capexBrut - aides));
+      const base     = num(totalCostEuroAn, 0);
+      const savings  = num(annualEuro, 0);
+      const data = [];
+      for (let i = 0; i <= 10; i++) {
+        data.push({
+          annee: `A+${i}`,
+          sans_travaux: Math.round(base * Math.pow(1 + taux, i)),
+          avec_travaux: i === 0
+            ? Math.round(base + capexNet)
+            : Math.round(Math.max(0, base - savings) * Math.pow(1 + taux, i))
+        });
+      }
+      const roiIdx = data.findIndex((d, i) => i > 0 && d.avec_travaux <= d.sans_travaux);
+      return { data, taux: taux * 100, roiAnnee: roiIdx > 0 ? roiIdx : null };
+    };
+
+    const TIER = {
+      quick_win:  { label: 'Action rapide', bg: '#F0FDF4', color: '#16A34A', border: '#BBF7D0' },
+      equipment:  { label: 'Équipement',    bg: '#EFF6FF', color: '#1D4ED8', border: '#BFDBFE' },
+      structural: { label: 'Structurel',    bg: '#FEF3C7', color: '#B45309', border: '#FDE68A' }
+    };
+
+    /* ─── Components ────────────────────────────────────────────────── */
+
+    const KpiCard = ({ label, value, sub, accentColor }) => (
+      <div style={{
+        background: '#fff', border: '1px solid #E2E8F0', borderRadius: 14,
+        padding: '13px 15px', breakInside: 'avoid'
+      }}>
+        <div style={{
+          fontSize: 9, fontWeight: 800, textTransform: 'uppercase',
+          letterSpacing: '0.08em', color: accentColor || '#64748B', marginBottom: 5
+        }}>{label}</div>
+        <div style={{ fontSize: 19, fontWeight: 900, color: '#0F172A', lineHeight: 1.1 }}>{value}</div>
+        {sub && <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 3 }}>{sub}</div>}
+      </div>
+    );
+
+    const Section = ({ title, sub, children, style }) => (
+      <div style={{
+        background: '#fff', border: '1px solid #E2E8F0', borderRadius: 16,
+        padding: '18px 20px', marginBottom: 12, ...style
+      }}>
+        <div className="section-title" style={{
+          fontSize: 14, fontWeight: 800, color: '#0F172A',
+          marginBottom: sub ? 2 : 10, letterSpacing: '-0.2px'
+        }}>{title}</div>
+        {sub && <div style={{ fontSize: 11, color: '#64748B', marginBottom: 12, lineHeight: 1.5 }}>{sub}</div>}
+        {children}
+      </div>
+    );
+
+    const ActionRow = ({ action, index }) => {
+      const tier = TIER[action.tier] || TIER.equipment;
+      const roi  = action.roi_years?.value != null
+        ? `${String(action.roi_years.value).replace('.', ',')} ans`
+        : 'À confirmer';
+      return (
+        <div className="pba" style={{
+          display: 'flex', gap: 11, padding: '9px 11px', background: '#F8FAFC',
+          borderRadius: 11, border: '1px solid #E2E8F0', marginBottom: 7
+        }}>
+          <div style={{
+            width: 22, height: 22, borderRadius: '50%', background: '#1D4ED8',
+            color: '#fff', fontSize: 10, fontWeight: 800,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0, marginTop: 1
+          }}>{index + 1}</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: '#0F172A', marginBottom: 3 }}>
+              {action.name || 'Action recommandée'}
+            </div>
+            <div style={{ marginBottom: 4 }}>
+              <span style={{
+                display: 'inline-block', padding: '2px 7px', borderRadius: 20,
+                fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em',
+                background: tier.bg, color: tier.color, border: `1px solid ${tier.border}`
+              }}>{tier.label}</span>
+            </div>
+            <div style={{ display: 'flex', gap: 14, fontSize: 10, color: '#64748B', flexWrap: 'wrap' }}>
+              <span>Gain&nbsp;: <strong style={{ color: '#0F172A' }}>{fmtEur(action.gain_euro_an?.value || 0)}/an</strong></span>
+              <span>Budget&nbsp;: <strong style={{ color: '#0F172A' }}>{fmtEur(action.capex?.value || 0)}</strong></span>
+              <span>ROI&nbsp;: <strong style={{ color: '#0F172A' }}>{roi}</strong></span>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    const ProjectionChart = ({ data }) => {
+      if (!AreaChart || !data || data.length === 0) return null;
+      const fmtTick = v => `${Math.round(v / 1000)}k€`;
+      return (
+        <div style={{ width: '100%', height: 190 }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={data} margin={{ top: 4, right: 8, left: 4, bottom: 4 }}>
+              <defs>
+                <linearGradient id="gSans" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%"  stopColor="#F97316" stopOpacity={0.25} />
+                  <stop offset="95%" stopColor="#F97316" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="gAvec" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%"  stopColor="#1D4ED8" stopOpacity={0.2} />
+                  <stop offset="95%" stopColor="#1D4ED8" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
+              <XAxis dataKey="annee" tick={{ fontSize: 9, fill: '#64748B' }} />
+              <YAxis tickFormatter={fmtTick} tick={{ fontSize: 9, fill: '#64748B' }} width={38} />
+              <Tooltip formatter={v => fmtEur(v)} />
+              <Legend wrapperStyle={{ fontSize: 10 }} />
+              <Area
+                type="monotone" dataKey="sans_travaux" name="Sans travaux"
+                stroke="#F97316" strokeWidth={2} fill="url(#gSans)"
+              />
+              <Area
+                type="monotone" dataKey="avec_travaux" name="Avec travaux"
+                stroke="#1D4ED8" strokeWidth={2} fill="url(#gAvec)"
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      );
+    };
+
+    /* ─── Main render ────────────────────────────────────────────────── */
+
+    const ReportPrint = ({ reportPayload: rp }) => {
+      const inputs    = obj(rp.inputs_summary);
+      const bench     = obj(rp.benchmark_result);
+      const composite = obj(rp.composite_savings);
+      const calc      = obj(rp.calculation_results);
+      const actions   = arr(rp.top_actions).slice(0, 6);
+      const confidence = obj(rp.confidence);
+      const assumptions = arr(rp.assumptions).slice(0, 7);
+      const limits      = arr(rp.limits).slice(0, 7);
+
+      const siteName  = String(inputs.site_name  || 'Bâtiment diagnostiqué');
+      const activity  = String(inputs.activity   || 'Activité à confirmer');
+      const address   = String(inputs.address    || '');
+      const surface   = num(inputs.surface?.value || inputs.surface, 0);
+      const siteI     = num(bench.site_intensity?.value, 0);
+      const benchMed  = num(bench.benchmark_median?.value, 0);
+      const annualEuro = num(composite.annual_euro?.value, 0);
+      const annualKwh  = num(composite.annual_kwh?.value, 0);
+      const totalCost  = num(calc.total_cost_euro_an?.value, 0);
+
+      const score       = computeScore(siteI, benchMed);
+      const targetI     = Math.max(0, Math.round(siteI - (surface > 0 ? annualKwh / surface : 0)));
+      const targetScore = computeScore(targetI, benchMed);
+      const sCfg        = scoreConf(score);
+      const tCfg        = scoreConf(targetScore);
+
+      const budget     = buildBudget(actions, annualEuro);
+      const projection = buildProjection({ totalCostEuroAn: totalCost, annualEuro, actions });
+
+      const intensityCards = [
+        { label: 'Conso actuelle',  val: fmtInt(siteI,    'kWh/m²/an') },
+        { label: 'Médiane secteur', val: fmtInt(benchMed, 'kWh/m²/an') },
+        { label: 'Cible estimée',   val: fmtInt(targetI,  'kWh/m²/an') },
+        { label: 'Précision',       val: confidence.label || 'Moyen',   unit: '' },
+      ];
+
+      return (
+        <div style={{ maxWidth: 780, margin: '0 auto', padding: '0 0 20px' }}>
+
+          {/* ══ HERO ══ */}
+          <div className="pba" style={{
+            background: 'linear-gradient(135deg, #0A1928 0%, #1D4ED8 55%, #0F2236 100%)',
+            color: '#fff', borderRadius: 20, padding: '22px 26px', marginBottom: 14
+          }}>
+            <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', opacity: 0.6, marginBottom: 4 }}>
+              Pré-diagnostic énergétique tertiaire · DiagTertiaire
+            </div>
+            <div style={{ fontSize: 22, fontWeight: 900, lineHeight: 1.1, letterSpacing: '-0.5px', marginBottom: 3 }}>{siteName}</div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.72)', lineHeight: 1.6, marginBottom: 14 }}>
+              {activity}{surface > 0 ? ` · ${fmtInt(surface, 'm²')}` : ''}
+              {address ? ` · ${address}` : ''} · Généré le {fmtDate(rp.generated_at)}
+            </div>
+
+            <div style={{ display: 'flex', gap: 13, alignItems: 'stretch' }}>
+              {/* Left panel */}
+              <div style={{
+                flex: 1, background: 'rgba(255,255,255,0.09)', borderRadius: 13,
+                padding: '14px 16px', border: '1px solid rgba(255,255,255,0.12)'
+              }}>
+                <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', marginBottom: 5 }}>
+                  Positionnement
+                </div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.9)', lineHeight: 1.6, marginBottom: 10 }}>
+                  Intensité <strong>{fmtInt(siteI, 'kWh/m²/an')}</strong> · médiane&nbsp;
+                  <strong>{fmtInt(benchMed, 'kWh/m²/an')}</strong> · potentiel&nbsp;
+                  <strong style={{ color: '#6EE7B7' }}>{fmtEur(annualEuro)}/an</strong>
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {intensityCards.map(ic => (
+                    <div key={ic.label} style={{
+                      flex: 1, background: 'rgba(255,255,255,0.08)', borderRadius: 9,
+                      padding: '7px 9px', border: '1px solid rgba(255,255,255,0.1)'
+                    }}>
+                      <div style={{ fontSize: 8, fontWeight: 700, textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)', marginBottom: 3 }}>{ic.label}</div>
+                      <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', lineHeight: 1 }}>{ic.val}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Score badge */}
+              <div style={{
+                width: 120, flexShrink: 0, background: sCfg.bg, borderRadius: 13,
+                padding: '14px 10px', textAlign: 'center',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
+              }}>
+                <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', color: sCfg.color, marginBottom: 2 }}>Indice</div>
+                <div style={{ fontSize: 52, fontWeight: 900, color: sCfg.color, lineHeight: 1, margin: '2px 0' }}>{score}</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: '#0F172A' }}>{sCfg.label}</div>
+                <div style={{ fontSize: 10, color: '#475569', marginTop: 4 }}>
+                  Après travaux&nbsp;: <strong style={{ color: tCfg.color }}>{targetScore}</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ══ KPI GRID ══ */}
+          <div className="pba" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 10, marginBottom: 12 }}>
+            <KpiCard label="Facture estimée"       value={fmtEur(totalCost)}   sub="Charges énergie / an" accentColor="#2563EB" />
+            <KpiCard label="Économies potentielles" value={fmtEur(annualEuro)}  sub={`${fmtInt(annualKwh, 'kWh')} évités/an`} accentColor="#16A34A" />
+            <KpiCard label="Budget net indicatif"   value={fmtEur(budget.capexNet)} sub={`Aides déduit. : ${fmtEur(budget.aides)}`} />
+            <KpiCard
+              label="Retour sur invest."
+              value={budget.roiYears !== null ? `${String(budget.roiYears).replace('.', ',')} ans` : 'À confirmer'}
+              sub={`${actions.length} action(s) analysée(s)`}
+            />
+          </div>
+
+          {/* ══ ACTIONS ══ */}
+          <Section
+            title="Actions prioritaires recommandées"
+            sub="Classement par gain économique rapporté au coût. Ordre de grandeur avant audit approfondi."
+          >
+            {actions.length === 0
+              ? <p style={{ fontSize: 12, color: '#64748B' }}>Aucune action exploitable avec ce niveau de données.</p>
+              : actions.map((a, i) => <ActionRow key={i} action={a} index={i} />)
+            }
+
+            {/* Budget recap */}
+            <div className="pba" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 9, marginTop: 12 }}>
+              {[
+                { label: 'Travaux bruts',     value: fmtEur(budget.capexBrut),      bg: '#F8FAFC', bd: '#E2E8F0', c: '#0F172A' },
+                { label: 'Aides CEE / MPR',   value: `– ${fmtEur(budget.aides)}`,   bg: '#EFF6FF', bd: '#BFDBFE', c: '#1D4ED8' },
+                { label: 'Reste à charge',    value: fmtEur(budget.capexNet),        bg: '#EEF2FF', bd: '#C7D2FE', c: '#4338CA' },
+                { label: 'Économies / an',    value: fmtEur(budget.savings),         bg: '#F0FDF4', bd: '#BBF7D0', c: '#16A34A' },
+              ].map(item => (
+                <div key={item.label} style={{ borderRadius: 9, padding: '9px 11px', background: item.bg, border: `1px solid ${item.bd}` }}>
+                  <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', color: item.c, marginBottom: 3 }}>{item.label}</div>
+                  <div style={{ fontSize: 16, fontWeight: 900, color: item.c }}>{item.value}</div>
+                </div>
+              ))}
+            </div>
+          </Section>
+
+          {/* ══ PROJECTION ══ */}
+          <Section
+            title="Projection financière 10 ans"
+            sub={`Inflation énergie estimée ${projection.taux}%/an · Point de rentabilité estimé : ${projection.roiAnnee ? `A+${projection.roiAnnee}` : 'À confirmer'}`}
+          >
+            <ProjectionChart data={projection.data} />
+          </Section>
+
+          {/* ══ HYPOTHESES + LIMITES ══ */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <Section title="Hypothèses de calcul" sub="À ajuster lors d'un audit sur site." style={{ marginBottom: 0 }}>
+              <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 5 }}>
+                {(assumptions.length ? assumptions : ['Hypothèses à confirmer sur site.']).map((item, i) => (
+                  <li key={i} className="pba" style={{ display: 'flex', gap: 7, fontSize: 11, color: '#475569', lineHeight: 1.5 }}>
+                    <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#93C5FD', flexShrink: 0, marginTop: 5 }} />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </Section>
+            <Section title="Limites de lecture" sub="Ce pré-diagnostic est indicatif et non opposable." style={{ marginBottom: 0 }}>
+              <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 5 }}>
+                {(limits.length ? limits : ['Limites à confirmer avec un expert.']).map((item, i) => (
+                  <li key={i} className="pba" style={{ display: 'flex', gap: 7, fontSize: 11, color: '#475569', lineHeight: 1.5 }}>
+                    <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#FCA5A5', flexShrink: 0, marginTop: 5 }} />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </Section>
+          </div>
+
+          {/* ══ FOOTER ══ */}
+          <div style={{
+            textAlign: 'center', fontSize: 10, color: '#94A3B8',
+            marginTop: 18, paddingTop: 12, borderTop: '1px solid #E2E8F0'
+          }}>
+            DiagTertiaire — Pré-diagnostic énergétique indicatif non opposable
+            {rp.report_id ? ` · Rapport ${rp.report_id}` : ''} · {fmtDate(rp.generated_at)}<br />
+            Ce document est à usage informatif uniquement. Pour un audit certifié, contactez un bureau d'études RGE agréé.
+          </div>
+
+        </div>
+      );
+    };
+
+    /* ─── App (fetch + ready signal) ───────────────────────────────────── */
+
+    const App = () => {
+      const [reportPayload, setReportPayload] = useState(null);
+      const [error, setError]                 = useState(null);
+      const readyFired = useRef(false);
+
+      /* Fetch report data */
+      useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const id    = params.get('public_report_id') || '';
+        const token = params.get('token') || '';
+
+        if (!id || !token) {
+          setError('Paramètres URL manquants (public_report_id, token)');
+          return;
+        }
+
+        fetch(`/api/public-report-view?public_report_id=${encodeURIComponent(id)}&token=${encodeURIComponent(token)}`)
+          .then(r => {
+            if (!r.ok) return r.json().then(d => { throw new Error(d.error || `HTTP ${r.status}`); });
+            return r.json();
+          })
+          .then(data => { setReportPayload(data.report_payload || {}); })
+          .catch(err => { setError(err.message || 'Erreur de chargement'); });
+      }, []);
+
+      /* Signal Puppeteer once charts have had time to render */
+      useEffect(() => {
+        if (!reportPayload || readyFired.current) return;
+
+        let maxTimer;
+        let pollTimer;
+
+        const fire = () => {
+          if (readyFired.current) return;
+          readyFired.current = true;
+          window.__REPORT_READY__ = true;
+        };
+
+        // Poll for Recharts SVG presence (max 3 s)
+        const poll = () => {
+          if (readyFired.current) return;
+          if (document.querySelector('.recharts-wrapper svg')) {
+            clearTimeout(maxTimer);
+            fire();
+          } else {
+            pollTimer = setTimeout(poll, 100);
+          }
+        };
+        pollTimer = setTimeout(poll, 400);
+        maxTimer  = setTimeout(fire, 3200); // hard ceiling
+
+        return () => { clearTimeout(maxTimer); clearTimeout(pollTimer); };
+      }, [reportPayload]);
+
+      /* Signal Puppeteer on error so it doesn't hang */
+      useEffect(() => {
+        if (!error || readyFired.current) return;
+        readyFired.current = true;
+        window.__REPORT_ERROR__ = error;
+        window.__REPORT_READY__ = true;
+      }, [error]);
+
+      if (error) {
+        return (
+          <div style={{ padding: 40, textAlign: 'center', fontFamily: 'Arial,sans-serif' }}>
+            <div style={{ color: '#EF4444', fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Erreur de chargement</div>
+            <div style={{ color: '#64748B', fontSize: 14 }}>{error}</div>
+          </div>
+        );
+      }
+
+      if (!reportPayload) {
+        return (
+          <div style={{ padding: 40, textAlign: 'center', fontFamily: 'Arial,sans-serif', color: '#64748B' }}>
+            Chargement du rapport…
+          </div>
+        );
+      }
+
+      return <ReportPrint reportPayload={reportPayload} />;
+    };
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

@@ -29,8 +29,8 @@ const { renderPdfFromUrl } = require('./_lib/pdf-renderer');
 const { getRequiredServerSupabaseConfig } = require('./_lib/supabase-server');
 
 const PUBLIC_REPORT_ASSETS_BUCKET = 'public-report-assets';
-const SIGNED_URL_TTL_SECONDS      = 60 * 60 * 24 * 30; // 30 days
-const TOKEN_TTL_SECONDS           = 60 * 60 * 2;        // 2 h (print session)
+const SIGNED_URL_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
+const TOKEN_TTL_SECONDS = 60 * 60 * 2;        // 2 h (print session)
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
 
@@ -92,7 +92,7 @@ const getBaseUrl = () => {
 /* ─── Token ──────────────────────────────────────────────────────────────── */
 
 const generateToken = () => {
-  const raw  = crypto.randomBytes(32).toString('hex');
+  const raw = crypto.randomBytes(32).toString('hex');
   const hash = crypto.createHash('sha256').update(raw).digest('hex');
   const expiresAt = new Date(Date.now() + TOKEN_TTL_SECONDS * 1000).toISOString();
   return { raw, hash, expiresAt };
@@ -101,9 +101,9 @@ const generateToken = () => {
 /* ─── Storage path ───────────────────────────────────────────────────────── */
 
 const buildStoragePath = (publicReportId) => {
-  const now    = new Date();
-  const year   = now.getUTCFullYear();
-  const month  = String(now.getUTCMonth() + 1).padStart(2, '0');
+  const now = new Date();
+  const year = now.getUTCFullYear();
+  const month = String(now.getUTCMonth() + 1).padStart(2, '0');
   const safeId = sanitizeFileSegment(String(publicReportId || 'report'), 'report');
   return `reports/${year}/${month}/${safeId}/official.pdf`;
 };
@@ -122,7 +122,7 @@ const supabaseRest = async (supabaseUrl, serviceKey, path, options = {}) => {
     headers: createRestHeaders(serviceKey, options.headers || {}),
     body: options.body
   });
-  const raw  = await res.text();
+  const raw = await res.text();
   const data = raw ? safeJsonParse(raw) : null;
   if (!res.ok) {
     const msg = data?.message || data?.error_description || raw || `HTTP ${res.status}`;
@@ -142,7 +142,7 @@ const insertPublicReport = async ({ supabaseUrl, serviceKey, payload }) => {
     }),
     body: JSON.stringify(payload)
   });
-  const raw  = await res.text();
+  const raw = await res.text();
   const data = raw ? safeJsonParse(raw) : null;
   if (!res.ok) {
     throw createHttpError(res.status, data?.message || data?.error || raw || 'Insert public_reports failed');
@@ -197,7 +197,7 @@ const uploadPdfToStorage = async ({ supabaseUrl, serviceKey, storagePath, pdfBuf
       body: pdfBuffer
     }
   );
-  const raw  = await res.text();
+  const raw = await res.text();
   const data = raw ? safeJsonParse(raw) : null;
   if (!res.ok) {
     throw createHttpError(res.status, data?.message || data?.error || raw || 'Storage upload failed');
@@ -206,11 +206,6 @@ const uploadPdfToStorage = async ({ supabaseUrl, serviceKey, storagePath, pdfBuf
 };
 
 const createSignedUrl = async ({ supabaseUrl, serviceKey, storagePath, expiresIn = SIGNED_URL_TTL_SECONDS }) => {
-  // POST /storage/v1/object/sign/{bucket}/{path}
-  // Supabase returns { signedURL: "/storage/v1/object/sign/bucket/path?token=..." }
-  // which is a root-relative path, NOT a full URL.
-  // Fix for "requested path is invalid": we prepend supabaseUrl to the relative path.
-  // Never double-encode: encodeStoragePath splits on "/" and encodes each segment once.
   const res = await fetch(
     `${supabaseUrl}/storage/v1/object/sign/${PUBLIC_REPORT_ASSETS_BUCKET}/${encodeStoragePath(storagePath)}`,
     {
@@ -219,36 +214,53 @@ const createSignedUrl = async ({ supabaseUrl, serviceKey, storagePath, expiresIn
       body: JSON.stringify({ expiresIn })
     }
   );
-  const raw  = await res.text();
+
+  const raw = await res.text();
   const data = raw ? safeJsonParse(raw) : null;
+
   if (!res.ok) {
     throw createHttpError(res.status, data?.message || data?.error || raw || 'Signed URL creation failed');
   }
-  const signedPath = data?.signedURL || data?.signedUrl || data?.signed_url || data?.path || '';
-  if (!signedPath) throw createHttpError(500, 'Signed URL response missing path');
-  // If Supabase ever returns a full URL (future API change), pass it through as-is.
+
+  const signedPath = String(
+    data?.signedURL || data?.signedUrl || data?.signed_url || data?.path || ''
+  ).trim();
+
+  if (!signedPath) {
+    throw createHttpError(500, 'Signed URL response missing path');
+  }
+
   const reportUrl = /^https?:\/\//i.test(signedPath)
     ? signedPath
-    : `${supabaseUrl}${signedPath.startsWith('/') ? '' : '/'}${signedPath}`;
+    : `${supabaseUrl}${signedPath.startsWith('/storage/v1/')
+      ? signedPath
+      : signedPath.startsWith('/object/')
+        ? `/storage/v1${signedPath}`
+        : `/storage/v1/${signedPath.replace(/^\/+/, '')}`
+    }`;
+  console.log('[public-report-pdf] signedPath:', signedPath);
+  console.log('[public-report-pdf] reportUrl:', reportUrl);
+
   return {
     reportUrl,
     expiresAt: new Date(Date.now() + expiresIn * 1000).toISOString()
   };
+
 };
 
 /* ─── Email ──────────────────────────────────────────────────────────────── */
 
 const sendPdfReadyEmail = async ({ email, siteName, scoreLettre, annualEuro, pdfUrl }) => {
   const resendApiKey = readEnv('RESEND_API_KEY');
-  const resendFrom   = readEnv('RESEND_FROM');
+  const resendFrom = readEnv('RESEND_FROM');
   if (!resendApiKey || !resendFrom) {
     console.warn('[public-report-pdf] Missing Resend config — email skipped');
     return;
   }
 
-  const safe    = (v) => escapeHtml(String(v ?? ''));
-  const name    = siteName    || 'Votre bâtiment';
-  const score   = scoreLettre ? `Indice ${scoreLettre}` : 'Indice calculé';
+  const safe = (v) => escapeHtml(String(v ?? ''));
+  const name = siteName || 'Votre bâtiment';
+  const score = scoreLettre ? `Indice ${scoreLettre}` : 'Indice calculé';
   const savings = formatCurrency(annualEuro || 0);
   const safeUrl = safe(pdfUrl || '#');
 
@@ -288,18 +300,18 @@ const sendPdfReadyEmail = async ({ email, siteName, scoreLettre, annualEuro, pdf
 /* ─── Email meta helper ──────────────────────────────────────────────────── */
 
 const extractEmailMeta = (reportPayload) => {
-  const inputs    = asPlainObject(reportPayload.inputs_summary);
-  const bench     = asPlainObject(reportPayload.benchmark_result);
+  const inputs = asPlainObject(reportPayload.inputs_summary);
+  const bench = asPlainObject(reportPayload.benchmark_result);
   const composite = asPlainObject(reportPayload.composite_savings);
-  const siteI     = toNumber(bench.site_intensity?.value, 0);
-  const benchMed  = toNumber(bench.benchmark_median?.value, 1);
-  const ratio     = siteI / Math.max(1, benchMed);
-  const score     = ratio < 0.6 ? 'A' : ratio < 0.9 ? 'B' : ratio < 1.2 ? 'C' : ratio < 1.7 ? 'D' : 'E';
+  const siteI = toNumber(bench.site_intensity?.value, 0);
+  const benchMed = toNumber(bench.benchmark_median?.value, 1);
+  const ratio = siteI / Math.max(1, benchMed);
+  const score = ratio < 0.6 ? 'A' : ratio < 0.9 ? 'B' : ratio < 1.2 ? 'C' : ratio < 1.7 ? 'D' : 'E';
   return {
-    email:       String(inputs.email || '').trim(),
-    siteName:    String(inputs.site_name || '').trim(),
+    email: String(inputs.email || '').trim(),
+    siteName: String(inputs.site_name || '').trim(),
     scoreLettre: score,
-    annualEuro:  toNumber(composite.annual_euro?.value, 0)
+    annualEuro: toNumber(composite.annual_euro?.value, 0)
   };
 };
 
@@ -312,13 +324,13 @@ module.exports = async function handler(req, res) {
   }
 
   let publicReportId = null;
-  let supabaseCtx    = null;
+  let supabaseCtx = null;
 
   try {
-    const body            = safeJsonParse(req.body);
-    const payload         = asPlainObject(body);
+    const body = safeJsonParse(req.body);
+    const payload = asPlainObject(body);
     const leadSubmissionId = String(payload.lead_submission_id || '').trim() || null;
-    const reportPayload   = asPlainObject(payload.report_payload);
+    const reportPayload = asPlainObject(payload.report_payload);
 
     if (!reportPayload.report_id) {
       throw createHttpError(400, 'Missing report_payload.report_id');
@@ -341,7 +353,7 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    const emailMeta  = extractEmailMeta(reportPayload);
+    const emailMeta = extractEmailMeta(reportPayload);
     const finalEmail = emailMeta.email || String(leadEmail || '').trim() || null;
 
     // 2. Generate short-lived print token
@@ -352,15 +364,15 @@ module.exports = async function handler(req, res) {
       supabaseUrl,
       serviceKey,
       payload: {
-        lead_submission_id:  leadSubmissionId || null,
-        email:               finalEmail || null,
-        site_name:           emailMeta.siteName || null,
-        input_payload:       asPlainObject(reportPayload.inputs_summary),
-        report_payload:      reportPayload,
-        pdf_status:          'generating',
-        access_token_hash:   token.hash,
-        access_expires_at:   token.expiresAt,
-        updated_at:          new Date().toISOString()
+        lead_submission_id: leadSubmissionId || null,
+        email: finalEmail || null,
+        site_name: emailMeta.siteName || null,
+        input_payload: asPlainObject(reportPayload.inputs_summary),
+        report_payload: reportPayload,
+        pdf_status: 'generating',
+        access_token_hash: token.hash,
+        access_expires_at: token.expiresAt,
+        updated_at: new Date().toISOString()
       }
     });
     publicReportId = publicReportRow?.id || null;
@@ -370,20 +382,20 @@ module.exports = async function handler(req, res) {
     }
 
     // 4. Build print URL and storage path
-    const baseUrl     = getBaseUrl();
-    const printUrl    = `${baseUrl}/public-report-print.html?public_report_id=${encodeQ(publicReportId)}&token=${encodeQ(token.raw)}`;
+    const baseUrl = getBaseUrl();
+    const printUrl = `${baseUrl}/public-report-print.html?public_report_id=${encodeQ(publicReportId)}&token=${encodeQ(token.raw)}`;
     const storagePath = buildStoragePath(publicReportId);
     console.log('[public-report-pdf] Print URL:', printUrl);
 
     // 5. Render PDF via Puppeteer + dedicated print page
     const pdfBuffer = await renderPdfFromUrl(printUrl, {
-      timeoutMs:    45_000,
-      readySignal:  'window.__REPORT_READY__ === true',
-      errorSignal:  'window.__REPORT_ERROR__',
-      mediaType:    'print',
+      timeoutMs: 45_000,
+      readySignal: 'window.__REPORT_READY__ === true',
+      errorSignal: 'window.__REPORT_ERROR__',
+      mediaType: 'print',
       pdfOptions: {
-        format:            'A4',
-        printBackground:   true,
+        format: 'A4',
+        printBackground: true,
         preferCSSPageSize: true,
         margin: { top: '16mm', right: '14mm', bottom: '14mm', left: '14mm' }
       }
@@ -401,13 +413,13 @@ module.exports = async function handler(req, res) {
     await updatePublicReport({
       supabaseUrl, serviceKey, publicReportId,
       patch: {
-        pdf_status:              'ready',
-        pdf_error:               null,
-        latest_pdf_bucket:       PUBLIC_REPORT_ASSETS_BUCKET,
-        latest_pdf_path:         storagePath,
+        pdf_status: 'ready',
+        pdf_error: null,
+        latest_pdf_bucket: PUBLIC_REPORT_ASSETS_BUCKET,
+        latest_pdf_path: storagePath,
         latest_pdf_generated_at: new Date().toISOString(),
-        access_token_hash:       null,
-        access_expires_at:       null
+        access_token_hash: null,
+        access_expires_at: null
       }
     });
 
@@ -419,40 +431,40 @@ module.exports = async function handler(req, res) {
     // 10. Send email (fire-and-forget)
     if (finalEmail) {
       sendPdfReadyEmail({
-        email:       finalEmail,
-        siteName:    emailMeta.siteName,
+        email: finalEmail,
+        siteName: emailMeta.siteName,
         scoreLettre: emailMeta.scoreLettre,
-        annualEuro:  emailMeta.annualEuro,
-        pdfUrl:      reportUrl
+        annualEuro: emailMeta.annualEuro,
+        pdfUrl: reportUrl
       }).catch(err => console.warn('[public-report-pdf] Email error:', err.message));
     }
 
     console.log('[public-report-pdf] status: ready —', publicReportId);
 
     return res.status(200).json({
-      ok:                true,
-      public_report_id:  publicReportId,
+      ok: true,
+      public_report_id: publicReportId,
       lead_submission_id: leadSubmissionId || null,
-      report_url:        reportUrl,
-      pdf_url:           reportUrl, // backwards-compat alias
-      expires_at:        expiresAt,
-      storage_path:      storagePath,
-      bucket:            PUBLIC_REPORT_ASSETS_BUCKET
+      report_url: reportUrl,
+      pdf_url: reportUrl, // backwards-compat alias
+      expires_at: expiresAt,
+      storage_path: storagePath,
+      bucket: PUBLIC_REPORT_ASSETS_BUCKET
     });
 
   } catch (error) {
     if (publicReportId && supabaseCtx) {
       updatePublicReport({
-        supabaseUrl:    supabaseCtx.supabaseUrl,
-        serviceKey:     supabaseCtx.serviceKey,
+        supabaseUrl: supabaseCtx.supabaseUrl,
+        serviceKey: supabaseCtx.serviceKey,
         publicReportId,
         patch: {
-          pdf_status:        'failed',
-          pdf_error:         String(error?.message || 'Unknown error').slice(0, 500),
+          pdf_status: 'failed',
+          pdf_error: String(error?.message || 'Unknown error').slice(0, 500),
           access_token_hash: null,
           access_expires_at: null
         }
-      }).catch(() => {});
+      }).catch(() => { });
     }
 
     console.error('[public-report-pdf] status: failed —', error?.message || error);

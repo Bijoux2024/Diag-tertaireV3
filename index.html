@@ -2089,7 +2089,11 @@
             const [exampleReport] = useState(() => {
                 const storedReport = newDiagnosticReadStoredReportPayload();
                 if (storedReport && storedReport.source === NEW_DIAGNOSTIC_PUBLIC_EXAMPLE_SOURCE) {
-                    return storedReport;
+                    // Strip stale pdf_url: the signed URL stored by a previous session may be
+                    // expired, generated with a buggy path, or point to a deleted object.
+                    // The user can regenerate a fresh PDF via the button when needed.
+                    const { pdf_url: _stale, ...cleanPayload } = storedReport;
+                    return cleanPayload;
                 }
 
                 if (newDiagnosticIsFlatExampleReportPayload(storedReport)) {
@@ -6969,10 +6973,10 @@
                                             <span className={`report-chip ${confidenceTone}`}>Confiance : {confidence.label}</span>
                                         </div>
                                         <p className="text-xs text-slate-300 lg:text-right">{new Date(reportPayload.generated_at).toLocaleDateString('fr-FR')} - {horizonLabel}</p>
-                                        {reportPayload.pdf_url ? (
+                                        {serverPdfUrl ? (
                                             <div className="flex flex-col items-end gap-1">
                                                 <a
-                                                    href={reportPayload.pdf_url}
+                                                    href={serverPdfUrl}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     className="inline-flex items-center justify-center gap-2 rounded-xl bg-white text-[#102A43] px-5 py-3 text-sm font-bold shadow-sm hover:bg-slate-100 transition-colors"

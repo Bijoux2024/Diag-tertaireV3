@@ -1,14 +1,14 @@
 'use strict';
 
 /**
- * api/public-report-pdf.js — Route canonique du rapport public PDF
+ * api/public-report-pdf.js - Route canonique du rapport public PDF
  *
  * Reçoit { lead_submission_id, report_payload } depuis le front.
  * Génère le HTML server-side, produit le PDF via Puppeteer,
  * stocke dans public-report-assets, trace le statut dans public_reports,
  * met à jour lead_submissions.pdf_url, envoie l'email Resend.
  *
- * pdf_status : pending → generating → ready | failed
+ * pdf_status : pending -> generating -> ready | failed
  * Bucket     : public-report-assets (privé)
  * Path       : reports/{year}/{month}/{public_report_id}/official.pdf
  * Table      : public.public_reports
@@ -20,7 +20,7 @@ const { getRequiredServerSupabaseConfig } = require('./_lib/supabase-server');
 const PUBLIC_REPORT_ASSETS_BUCKET = 'public-report-assets';
 const SIGNED_URL_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// Helpers
 
 const safeJsonParse = (value) => {
   if (typeof value !== 'string') return value;
@@ -91,16 +91,16 @@ const createRestHeaders = (serviceKey, extraHeaders = {}) => ({
   ...extraHeaders
 });
 
-// ─── Score helpers ─────────────────────────────────────────────────────────────
+// Score helpers
 
 const getScoreConfig = (score) => {
   const normalized = String(score || 'C').trim().toUpperCase();
   const map = {
-    A: { score: 'A', label: 'Tres performant',  color: '#16A34A', background: '#DCFCE7' },
-    B: { score: 'B', label: 'Performant',        color: '#22C55E', background: '#E8F5E9' },
-    C: { score: 'C', label: 'Dans la mediane',   color: '#F59E0B', background: '#FEF3C7' },
-    D: { score: 'D', label: 'Surconsommation',   color: '#F97316', background: '#FFF7ED' },
-    E: { score: 'E', label: 'Tres energivore',   color: '#EF4444', background: '#FEE2E2' }
+    A: { score: 'A', label: 'Tres performant', color: '#16A34A', background: '#DCFCE7' },
+    B: { score: 'B', label: 'Performant', color: '#22C55E', background: '#E8F5E9' },
+    C: { score: 'C', label: 'Dans la mediane', color: '#F59E0B', background: '#FEF3C7' },
+    D: { score: 'D', label: 'Surconsommation', color: '#F97316', background: '#FFF7ED' },
+    E: { score: 'E', label: 'Tres energivore', color: '#EF4444', background: '#FEE2E2' }
   };
   return map[normalized] || map.C;
 };
@@ -116,7 +116,7 @@ const computeScoreFromIntensity = (siteIntensity, benchmarkMedian) => {
   return 'E';
 };
 
-// ─── Storage path ──────────────────────────────────────────────────────────────
+// Storage path
 
 const buildStoragePath = (publicReportId) => {
   const now = new Date();
@@ -126,7 +126,7 @@ const buildStoragePath = (publicReportId) => {
   return `reports/${year}/${month}/${safeId}/official.pdf`;
 };
 
-// ─── Storage operations ────────────────────────────────────────────────────────
+// Storage operations
 
 const uploadPdfToStorage = async ({ supabaseUrl, serviceKey, storagePath, pdfBuffer }) => {
   const response = await fetch(
@@ -157,23 +157,38 @@ const createSignedUrl = async ({ supabaseUrl, serviceKey, storagePath, expiresIn
       body: JSON.stringify({ expiresIn })
     }
   );
+
   const rawText = await response.text();
   const data = rawText ? safeJsonParse(rawText) : null;
+
   if (!response.ok) {
     throw createHttpError(response.status, data?.message || data?.error || rawText || 'Signed URL creation failed');
   }
-  const signedPath = data?.signedURL || data?.signedUrl || data?.signed_url || data?.path || '';
-  if (!signedPath) throw createHttpError(500, 'Signed URL response missing path');
+
+  const signedPath = String(
+    data?.signedURL || data?.signedUrl || data?.signed_url || data?.path || ''
+  ).trim();
+
+  if (!signedPath) {
+    throw createHttpError(500, 'Signed URL response missing path');
+  }
+
   const reportUrl = /^https?:\/\//i.test(signedPath)
     ? signedPath
-    : `${supabaseUrl}${signedPath.startsWith('/') ? '' : '/'}${signedPath}`;
+    : `${supabaseUrl}${signedPath.startsWith('/storage/v1/')
+      ? signedPath
+      : signedPath.startsWith('/object/')
+        ? `/storage/v1${signedPath}`
+        : `/storage/v1/${signedPath.replace(/^\/+/, '')}`
+    }`;
+
   return {
     reportUrl,
     expiresAt: new Date(Date.now() + expiresIn * 1000).toISOString()
   };
 };
 
-// ─── Database ──────────────────────────────────────────────────────────────────
+// Database
 
 const supabaseRestFetch = async (supabaseUrl, serviceKey, path, options = {}) => {
   const response = await fetch(`${supabaseUrl}/rest/v1/${path}`, {
@@ -210,7 +225,8 @@ const insertPublicReport = async ({ supabaseUrl, serviceKey, payload }) => {
 const updatePublicReport = async ({ supabaseUrl, serviceKey, publicReportId, patch }) => {
   try {
     await supabaseRestFetch(
-      supabaseUrl, serviceKey,
+      supabaseUrl,
+      serviceKey,
       `public_reports?id=eq.${encodeQueryValue(publicReportId)}`,
       {
         method: 'PATCH',
@@ -227,7 +243,8 @@ const updateLeadSubmissionPdfUrl = async ({ supabaseUrl, serviceKey, leadSubmiss
   if (!leadSubmissionId) return;
   try {
     await supabaseRestFetch(
-      supabaseUrl, serviceKey,
+      supabaseUrl,
+      serviceKey,
       `lead_submissions?id=eq.${encodeQueryValue(leadSubmissionId)}`,
       {
         method: 'PATCH',
@@ -240,7 +257,7 @@ const updateLeadSubmissionPdfUrl = async ({ supabaseUrl, serviceKey, leadSubmiss
   }
 };
 
-// ─── Email ────────────────────────────────────────────────────────────────────
+// Email
 
 const sendPdfReadyEmail = async ({
   email, siteName, activity, surface, scoreLettre, economiesTotalesAnnuelles, pdfUrl
@@ -248,7 +265,7 @@ const sendPdfReadyEmail = async ({
   const resendApiKey = readEnv('RESEND_API_KEY');
   const resendFrom = readEnv('RESEND_FROM');
   if (!resendApiKey || !resendFrom) {
-    console.warn('[public-report-pdf] Missing Resend config — email skipped');
+    console.warn('[public-report-pdf] Missing Resend config - email skipped');
     return;
   }
 
@@ -261,7 +278,10 @@ const sendPdfReadyEmail = async ({
 
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',
-    headers: { Authorization: `Bearer ${resendApiKey}`, 'Content-Type': 'application/json' },
+    headers: {
+      Authorization: `Bearer ${resendApiKey}`,
+      'Content-Type': 'application/json'
+    },
     body: JSON.stringify({
       from: resendFrom,
       to: [email],
@@ -297,7 +317,7 @@ const sendPdfReadyEmail = async ({
   }
 };
 
-// ─── View model ────────────────────────────────────────────────────────────────
+// View model
 
 const buildBudgetSummary = (actions = [], annualSavingsEuro = 0) => {
   const capexBrut = asArray(actions).reduce((sum, a) => sum + toNumber(a?.capex?.value, 0), 0);
@@ -369,13 +389,13 @@ const buildPublicReportViewModel = (reportPayload, leadSubmissionId) => {
   };
 };
 
-// ─── HTML builder ─────────────────────────────────────────────────────────────
+// HTML builder
 
 const buildActionTierBadge = (tier) => {
   const map = {
-    quick_win:  { label: 'Action rapide', bg: '#F0FDF4', color: '#16A34A', border: '#BBF7D0' },
-    equipment:  { label: 'Equipement',    bg: '#EFF6FF', color: '#1D4ED8', border: '#BFDBFE' },
-    structural: { label: 'Structurel',    bg: '#FEF3C7', color: '#B45309', border: '#FDE68A' }
+    quick_win: { label: 'Action rapide', bg: '#F0FDF4', color: '#16A34A', border: '#BBF7D0' },
+    equipment: { label: 'Equipement', bg: '#EFF6FF', color: '#1D4ED8', border: '#BFDBFE' },
+    structural: { label: 'Structurel', bg: '#FEF3C7', color: '#B45309', border: '#FDE68A' }
   };
   const style = map[tier] || map.equipment;
   return `<span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;background:${style.bg};color:${style.color};border:1px solid ${style.border}">${escapeHtml(style.label)}</span>`;
@@ -531,8 +551,8 @@ const buildPublicReportPdfHtml = (viewModel) => {
         <div class="section-sub">Classement par gain economique rapporte au cout. Ordre de grandeur avant audit approfondi.</div>
         <div class="actions-grid">
           ${viewModel.actions.length === 0
-            ? '<p style="font-size:13px;color:#64748B">Aucune action prioritaire exploitable avec ce niveau de donnees.</p>'
-            : viewModel.actions.map((action, i) => `
+      ? '<p style="font-size:13px;color:#64748B">Aucune action prioritaire exploitable avec ce niveau de donnees.</p>'
+      : viewModel.actions.map((action, i) => `
             <div class="action-row">
               <div class="action-num">${i + 1}</div>
               <div class="action-main">
@@ -590,7 +610,7 @@ const buildPublicReportPdfHtml = (viewModel) => {
       </div>
 
       <div class="footer">
-        DiagTertiaire — Pre-diagnostic energetique indicatif non opposable | Rapport ${escapeHtml(viewModel.reportId || 'N/A')} | ${escapeHtml(generatedDate)}<br />
+        DiagTertiaire - Pre-diagnostic energetique indicatif non opposable | Rapport ${escapeHtml(viewModel.reportId || 'N/A')} | ${escapeHtml(generatedDate)}<br />
         Ce document est a usage informatif uniquement. Pour un audit certifie, contactez un bureau d'etudes RGE agree.
       </div>
 
@@ -599,7 +619,7 @@ const buildPublicReportPdfHtml = (viewModel) => {
 </html>`;
 };
 
-// ─── Handler ───────────────────────────────────────────────────────────────────
+// Handler
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -628,7 +648,8 @@ module.exports = async function handler(req, res) {
     if (leadSubmissionId) {
       try {
         const leadRows = await supabaseRestFetch(
-          supabaseUrl, serviceKey,
+          supabaseUrl,
+          serviceKey,
           `lead_submissions?id=eq.${encodeQueryValue(leadSubmissionId)}&select=id,email&limit=1`
         );
         leadRecord = asArray(leadRows)[0] || null;
@@ -638,12 +659,13 @@ module.exports = async function handler(req, res) {
     }
 
     const viewModel = buildPublicReportViewModel(reportPayload, leadSubmissionId);
+
     // Fallback to lead record email if not in report payload
     if (!viewModel.email && leadRecord?.email) {
       viewModel.email = String(leadRecord.email).trim();
     }
 
-    // 2. Insert public_reports row — get id for storage path
+    // 2. Insert public_reports row - get id for storage path
     const publicReportRow = await insertPublicReport({
       supabaseUrl,
       serviceKey,
@@ -678,7 +700,9 @@ module.exports = async function handler(req, res) {
     // 7. Update public_reports: pdf_status = ready
     if (publicReportId) {
       await updatePublicReport({
-        supabaseUrl, serviceKey, publicReportId,
+        supabaseUrl,
+        serviceKey,
+        publicReportId,
         patch: {
           pdf_status: 'ready',
           pdf_error: null,
@@ -691,7 +715,11 @@ module.exports = async function handler(req, res) {
 
     // 8. Update lead_submissions.pdf_url (best-effort)
     await updateLeadSubmissionPdfUrl({
-      supabaseUrl, serviceKey, leadSubmissionId, pdfUrl: reportUrl, expiresAt
+      supabaseUrl,
+      serviceKey,
+      leadSubmissionId,
+      pdfUrl: reportUrl,
+      expiresAt
     });
 
     // 9. Send email (fire and forget)
@@ -712,7 +740,7 @@ module.exports = async function handler(req, res) {
       public_report_id: publicReportId,
       lead_submission_id: leadSubmissionId || null,
       report_url: reportUrl,
-      pdf_url: reportUrl, // backwards-compat alias
+      pdf_url: reportUrl,
       expires_at: expiresAt,
       storage_path: storagePath,
       bucket: PUBLIC_REPORT_ASSETS_BUCKET
@@ -729,11 +757,12 @@ module.exports = async function handler(req, res) {
           pdf_status: 'failed',
           pdf_error: String(error?.message || 'Unknown error').slice(0, 500)
         }
-      }).catch(() => {});
+      }).catch(() => { });
     }
 
     const statusCode = Number.isInteger(error?.statusCode) ? error.statusCode : 500;
     console.error('[public-report-pdf] Error:', error?.message || error);
+
     return res.status(statusCode).json({
       ok: false,
       error: error?.message || 'Public report PDF generation failed'

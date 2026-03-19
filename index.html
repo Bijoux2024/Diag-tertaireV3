@@ -7732,8 +7732,21 @@ body{margin:0;font-family:Arial,sans-serif;background:#f8fafc;color:#0f172a;}
                             if (!response.ok) return;
                             const result = await response.json();
                             const pdfUrl = result && (result.report_url || result.pdf_url);
+
                             if (pdfUrl) {
-                                setReportPayload((prev) => prev ? { ...prev, pdf_url: pdfUrl } : prev);
+                                setReportPayload((prev) => {
+                                    const next = prev ? { ...prev, pdf_url: pdfUrl } : prev;
+
+                                    try {
+                                        if (next) {
+                                            window.localStorage.setItem('newDiagnosticLatestReport', JSON.stringify(next));
+                                        }
+                                    } catch (_) {
+                                        // no-op
+                                    }
+
+                                    return next;
+                                });
                             }
                         } catch (_) {
                             // Silencieux — le fallback local reste disponible

@@ -775,12 +775,37 @@
                 report_id: reportPayload && reportPayload.report_id ? reportPayload.report_id : null,
                 partnerConsent: !!formData.contactOptIn,
                 trigger_type: 'form_partner_checkbox',
+
+                // Champs d'adresse canoniques pour extraction directe
+                address: formData.address || null,
+                postal_code: formData.postalCode || null,
+                city: formData.city || null,
+                lat: formData.lat || null,
+                lon: formData.lon || null,
+                addressSource: formData.addressSource || null,
+                addressScore: formData.addressScore || null,
+                addressIsValid: formData.addressIsValid || false,
+
                 raw_payload: {
                     form: 'diagnostic_report',
                     email: formData.email || null,
                     phone: formData.phone || null,
                     address: formData.address || null,
+                    address_obj: formData.addressObj || null,
                     postal_code: formData.postalCode || inputsSummary.postal_code || null,
+                    city: formData.city || null,
+                    lat: formData.lat || null,
+                    lon: formData.lon || null,
+                    address_source: formData.addressSource || null,
+                    address_score: formData.addressScore || null,
+                    address_type: formData.addressType || null,
+                    address_precision: formData.addressPrecision || null,
+                    street_number: formData.streetNumber || null,
+                    street_label: formData.streetLabel || null,
+                    address_is_valid: formData.addressIsValid || false,
+                    cover_image_source: formData.coverImageSource || null,
+                    cover_image_path: formData.coverImagePath || null,
+                    cover_image_selected: formData.coverImageSelected || false,
                     activity: formData.activity || inputsSummary.activity || null,
                     surface: surfaceValue || null,
                     role: formData.decisionRole || formData.role || inputsSummary.decision_role || inputsSummary.role || null,
@@ -808,6 +833,17 @@
                 report_id: reportPayload && reportPayload.report_id ? reportPayload.report_id : null,
                 partnerConsent: true,
                 trigger_type: 'report_partner_accept',
+
+                // Champs d'adresse canoniques pour extraction directe
+                address: inputsSummary.address || null,
+                postal_code: inputsSummary.postal_code || null,
+                city: inputsSummary.city || null,
+                lat: inputsSummary.lat || null,
+                lon: inputsSummary.lon || null,
+                addressSource: inputsSummary.address_source || null,
+                addressScore: inputsSummary.address_score || null,
+                addressIsValid: inputsSummary.address_is_valid || false,
+
                 raw_payload: {
                     form: 'cta_rapport',
                     cta_name: ctaName || null,
@@ -817,6 +853,12 @@
                     company: inputsSummary.site_name || null,
                     address: inputsSummary.address || null,
                     postal_code: inputsSummary.postal_code || null,
+                    city: inputsSummary.city || null,
+                    lat: inputsSummary.lat || null,
+                    lon: inputsSummary.lon || null,
+                    address_source: inputsSummary.address_source || null,
+                    address_score: inputsSummary.address_score || null,
+                    address_is_valid: inputsSummary.address_is_valid || false,
                     activity: inputsSummary.activity || null,
                     surface: inputsSummary.surface && typeof inputsSummary.surface === 'object' ? inputsSummary.surface.value : null,
                     role: inputsSummary.decision_role || inputsSummary.role || null,
@@ -1075,6 +1117,17 @@
                 phone: leadData.phone || null,
                 message: leadData.message || null,
                 report_id: leadData.report_id || null,
+
+                // Données d'adresse canoniques (pour stockage en colonnes si elles existent)
+                address: leadData.address || null,
+                postal_code: leadData.postal_code || leadData.postalCode || null,
+                city: leadData.city || null,
+                latitude: leadData.lat || null,
+                longitude: leadData.lon || null,
+                address_source: leadData.addressSource || null,
+                address_score: leadData.addressScore || null,
+                address_is_valid: leadData.addressIsValid || false,
+
                 raw_payload: leadData
             };
 
@@ -3024,16 +3077,31 @@
             { id: 'later', label: 'Plus tard / en veille' }
         ];
 
-        const buildComputedAddress = (fd) => {
-            const parts = [fd.streetNumber, fd.streetName].filter(Boolean).join(' ').trim();
-            return parts;
-        };
-
         const NEW_DIAGNOSTIC_DEFAULT_FORM_DATA = {
             // === ÉTAPE 1 : Identification ===
             address: '',
-            role: '',
+            addressObj: null,
             postalCode: '',
+            city: '',
+            lat: null,
+            lon: null,
+            addressSource: '',
+            addressScore: null,
+            addressType: '',
+            addressPrecision: '',
+            streetNumber: '',
+            streetLabel: '',
+            addressIsValid: false,
+
+            // === VISUEL BÂTIMENT ===
+            coverImageStatus: 'initial', // 'initial' | 'loading' | 'ready' | 'error'
+            coverImageSource: '',
+            coverImagePath: '',
+            coverImageSignedUrl: '',
+            coverImageSelected: false,
+            coverImageError: null,
+            coverStepDismissed: false,
+            role: '',
             activity: '',
             mixedUsage1: '',
             mixedUsage2: '',
@@ -3269,7 +3337,8 @@
             required = false,
             error = null,
             suffix = null,
-            helper = null
+            helper = null,
+            disabled = false
         }) => (
             <div className="mb-4">
                 <label className="block text-sm font-medium text-neutral-700 mb-2">
@@ -3281,10 +3350,11 @@
                         value={value}
                         onChange={(e) => onChange(e.target.value)}
                         placeholder={placeholder}
+                        disabled={disabled}
                         className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-colors ${error
                             ? 'border-red-300 focus:ring-red-500'
                             : 'border-[#E2E8F0] focus:ring-[#1D4ED8] focus:border-[#1D4ED8]'
-                            }`}
+                            } ${disabled ? 'bg-neutral-100 text-neutral-500 cursor-not-allowed' : ''}`}
                     />
                     {suffix && (
                         <span className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-500 text-sm">
@@ -3455,10 +3525,394 @@
            ÉTAPES FORMULAIRE
            ───────────────────────────────────────────────────────────────────────── */
 
+        // Composant facultatif Visuel du Bâtiment
+        const NewDiagnosticCoverPreview = ({ formData, setFormData }) => {
+            const handleGenerate = async () => {
+                setFormData(prev => ({ ...prev, coverImageStatus: 'loading', coverImageError: null, coverImageSelected: false }));
+                try {
+                    const res = await fetch('/api/public-report-cover', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ address: formData.fullAddress || formData.address })
+                    });
+                    const data = await res.json();
+
+                    if (res.ok && data.ok) {
+                        setFormData(prev => ({
+                            ...prev,
+                            coverImageStatus: 'ready',
+                            coverImageSource: data.cover_image_source,
+                            coverImagePath: data.cover_image_path,
+                            coverImageSignedUrl: data.cover_image_signed_url,
+                            coverImageError: null
+                        }));
+                    } else {
+                        throw new Error(data.error || 'Erreur lors de la génération du visuel');
+                    }
+                } catch (err) {
+                    setFormData(prev => ({
+                        ...prev,
+                        coverImageStatus: 'error',
+                        coverImageError: err.message || 'Impossible de générer le visuel du bâtiment.'
+                    }));
+                }
+            };
+
+            const sourceLabels = {
+                'panoramax': 'Panoramax (Vue au sol)',
+                'ign_ortho': 'IGN (Vue aérienne)',
+                'ign_plan': 'IGN (Plan interactif)'
+            };
+
+            if (formData.coverStepDismissed || formData.coverImageSelected) return null;
+
+            return (
+                <div className="mt-8 mb-6 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-6 shadow-sm overflow-hidden relative fade-in">
+                    <div className="flex items-start gap-4 mb-4">
+                        <div className="w-10 h-10 rounded-full bg-blue-100 text-[#1D4ED8] flex items-center justify-center shrink-0">
+                            <Icon icon="solar:camera-linear" className="text-xl" />
+                        </div>
+                        <div className="flex-1">
+                            <h3 className="text-lg font-bold text-neutral-800">Visuel du bâtiment pour le rapport</h3>
+                            <p className="text-sm text-neutral-500 mt-1">Vous pouvez ajouter une photo du bâtiment qui apparaîtra en couverture de votre rapport. Cette étape est facultative.</p>
+                        </div>
+                    </div>
+
+                    {formData.coverImageStatus === 'initial' && (
+                        <div className="flex gap-3 mt-6">
+                            <button
+                                type="button"
+                                onClick={handleGenerate}
+                                className="flex items-center gap-2 bg-white text-[#1D4ED8] px-4 py-2 rounded-lg font-semibold border border-[#DBEAFE] hover:bg-[#EFF6FF] transition-colors"
+                            >
+                                <Icon icon="solar:magic-stick-3-linear" className="text-lg" />
+                                Générer un visuel
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setFormData(prev => ({ ...prev, coverStepDismissed: true }))}
+                                className="flex items-center gap-2 text-neutral-500 px-4 py-2 hover:text-neutral-700 transition-colors text-sm font-medium"
+                            >
+                                Passer cette étape
+                            </button>
+                        </div>
+                    )}
+
+                    {formData.coverImageStatus === 'loading' && (
+                        <div className="flex items-center gap-3 mt-6 text-[#1D4ED8] bg-blue-50/50 p-4 rounded-lg border border-blue-100">
+                            <Icon icon="solar:spinner-linear" className="animate-spin text-xl" />
+                            <span className="text-sm font-medium">Recherche d'un visuel (Panoramax / IGN)...</span>
+                        </div>
+                    )}
+
+                    {formData.coverImageStatus === 'error' && (
+                        <div className="mt-6">
+                            <div className="flex items-center gap-2 text-amber-600 bg-amber-50 p-3 rounded-lg text-sm border border-amber-100 mb-3">
+                                <Icon icon="solar:danger-triangle-linear" className="text-lg" />
+                                {formData.coverImageError}
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleGenerate}
+                                className="text-sm font-semibold text-[#1D4ED8] hover:underline"
+                            >
+                                Réessayer
+                            </button>
+                        </div>
+                    )}
+
+                    {formData.coverImageStatus === 'ready' && formData.coverImageSignedUrl && (
+                        <div className="mt-5 animate-fade-in">
+                            <div className="relative rounded-lg overflow-hidden border border-neutral-200 bg-neutral-100 aspect-video max-h-64 object-cover">
+                                <img src={formData.coverImageSignedUrl} alt="Aperçu du bâtiment" className="w-full h-full object-cover" />
+                                <div className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-sm text-white text-[10px] font-semibold px-2 py-1 rounded">
+                                    Source : {sourceLabels[formData.coverImageSource] || 'IGN'}
+                                </div>
+                            </div>
+                            <div className="flex flex-wrap gap-3 mt-4">
+                                <button
+                                    type="button"
+                                    onClick={() => setFormData(prev => ({ ...prev, coverImageSelected: true }))}
+                                    className="flex items-center gap-2 bg-[#1D4ED8] text-white px-5 py-2.5 rounded-lg font-semibold shadow-sm hover:bg-blue-800 transition-colors"
+                                >
+                                    <Icon icon="solar:check-circle-linear" className="text-lg" />
+                                    Utiliser ce visuel
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleGenerate}
+                                    className="flex items-center gap-2 bg-white text-neutral-600 border border-neutral-200 px-4 py-2.5 rounded-lg font-medium hover:bg-neutral-50 transition-colors text-sm"
+                                >
+                                    <Icon icon="solar:refresh-linear" />
+                                    Actualiser
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setFormData(prev => ({ ...prev, coverStepDismissed: true }))}
+                                    className="flex items-center gap-2 text-neutral-500 px-3 py-2.5 hover:text-neutral-700 transition-colors text-sm font-medium ml-auto"
+                                >
+                                    Ne pas utiliser
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
         // Étape 1 : Identification
         const NewDiagnosticStep1Identification = ({ formData, setFormData, onNext }) => {
             const [errors, setErrors] = useState({});
             const [mixedTab, setMixedTab] = useState(0); // 0 = Usage 1, 1 = Usage 2
+
+            // AUTOCOMPLETION IGN
+            const [query, setQuery] = useState(formData.address || '');
+            const [suggestions, setSuggestions] = useState([]);
+            const [showSuggestions, setShowSuggestions] = useState(false);
+            const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+            const [highlightedIndex, setHighlightedIndex] = useState(-1);
+            const autocompleteRef = React.useRef(null);
+
+            // Clic en dehors des suggestions
+            React.useEffect(() => {
+                const handleClickOutside = (event) => {
+                    if (autocompleteRef.current && !autocompleteRef.current.contains(event.target)) {
+                        setShowSuggestions(false);
+                        setHighlightedIndex(-1);
+                    }
+                };
+                document.addEventListener('mousedown', handleClickOutside);
+                return () => document.removeEventListener('mousedown', handleClickOutside);
+            }, []);
+
+            // Debouncer pour l'API
+            React.useEffect(() => {
+                const fetchSuggestions = async () => {
+                    if (query.length < 3) {
+                        setSuggestions([]);
+                        setShowSuggestions(false);
+                        return;
+                    }
+                    if (formData.addressIsValid && query === formData.address) {
+                        return;
+                    }
+
+                    setIsLoadingSuggestions(true);
+                    try {
+                        const baseUrl = 'https://data.geopf.fr/geocodage/completion';
+                        const url = `${baseUrl}?text=${encodeURIComponent(query)}&type=StreetAddress,PositionOfInterest&maximumResponses=5`;
+                        const response = await fetch(url);
+                        if (response.ok) {
+                            const data = await response.json();
+                            if (data && data.results) {
+                                setSuggestions(data.results);
+                                setShowSuggestions(true);
+                                setHighlightedIndex(-1);
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Erreur autocomplétion:', error);
+                    } finally {
+                        setIsLoadingSuggestions(false);
+                    }
+                };
+
+                const timeoutId = setTimeout(fetchSuggestions, 350);
+                return () => clearTimeout(timeoutId);
+            }, [query, formData.addressIsValid, formData.address]);
+
+            const verifyAddressPrecisionWithSearch = async (searchText) => {
+                try {
+                    const url = `https://data.geopf.fr/geocodage/search?q=${encodeURIComponent(searchText)}&limit=3`;
+                    const res = await fetch(url);
+                    if (!res.ok) return null;
+                    const data = await res.json();
+                    
+                    if (data && data.features && data.features.length > 0) {
+                        const preciseMatch = data.features.find(f => f.properties && f.properties.type === 'housenumber');
+                        if (preciseMatch) {
+                            return {
+                                fulltext: preciseMatch.properties.label,
+                                zipcode: preciseMatch.properties.postcode,
+                                city: preciseMatch.properties.city,
+                                y: preciseMatch.geometry.coordinates[1],
+                                x: preciseMatch.geometry.coordinates[0],
+                                classification: preciseMatch.properties.score,
+                                type: 'StreetAddress',
+                                number: preciseMatch.properties.housenumber,
+                                street: preciseMatch.properties.street
+                            };
+                        }
+                    }
+                } catch (err) {
+                    console.error('Erreur geocoding search additionnel:', err);
+                }
+                return null;
+            };
+
+            const handleAddressSelect = async (suggestion) => {
+                let fullAddress = suggestion.fulltext;
+                let finalSuggestion = suggestion;
+                setQuery(fullAddress);
+
+                // Analyse métier de la précision
+                let isStreetMatch = finalSuggestion.type === 'StreetAddress';
+                let hasNumber = !!finalSuggestion.number;
+                const isPoi = finalSuggestion.type === 'PositionOfInterest';
+
+                let precision = 'unknown';
+                let isValid = false;
+
+                if (isStreetMatch && hasNumber) {
+                    precision = 'housenumber';
+                    isValid = true;
+                } else if (isStreetMatch && !hasNumber) {
+                    setIsLoadingSuggestions(true);
+                    const preciseSuggestion = await verifyAddressPrecisionWithSearch(query);
+                    setIsLoadingSuggestions(false);
+                    
+                    if (preciseSuggestion) {
+                        finalSuggestion = preciseSuggestion;
+                        fullAddress = preciseSuggestion.fulltext;
+                        setQuery(fullAddress);
+                        precision = 'housenumber';
+                        isValid = true;
+                    } else {
+                        precision = 'street';
+                        isValid = false; // Bloquant : rue sans numéro
+                    }
+                } else if (isPoi) {
+                    precision = 'poi';
+                    isValid = true; // Toléré pour les lieux-dits/POI
+                } else if (finalSuggestion.type === 'Municipality') {
+                    precision = 'municipality';
+                    isValid = false;
+                }
+
+                setFormData({
+                    ...formData,
+                    address: fullAddress,
+                    addressObj: finalSuggestion,
+                    postalCode: finalSuggestion.zipcode || '',
+                    city: finalSuggestion.city || '',
+                    lat: finalSuggestion.y || null,
+                    lon: finalSuggestion.x || null,
+                    addressSource: 'IGN_Geoplateforme',
+                    addressScore: finalSuggestion.classification || null,
+                    addressType: finalSuggestion.type || '',
+                    addressPrecision: precision,
+                    streetNumber: finalSuggestion.number || '',
+                    streetLabel: finalSuggestion.street || '',
+                    addressIsValid: isValid,
+
+                    // Reset du visuel
+                    coverImageStatus: 'initial',
+                    coverImageSource: '',
+                    coverImagePath: '',
+                    coverImageSignedUrl: '',
+                    coverImageSelected: false,
+                    coverImageError: null,
+                    coverStepDismissed: false
+                });
+
+                setShowSuggestions(false);
+                setHighlightedIndex(-1);
+
+                if (isValid) {
+                    setErrors(prev => ({ ...prev, address: null, postalCode: null, city: null }));
+                } else {
+                    setErrors(prev => ({ ...prev, address: 'Adresse trop imprécise — précisez le numéro de voie' }));
+                }
+            };
+
+            const handleAddressChange = (e) => {
+                const val = e.target.value;
+                setQuery(val);
+                if (formData.addressIsValid && val !== formData.address) {
+                    setFormData({
+                        ...formData,
+                        address: val,
+                        addressObj: null,
+                        postalCode: '',
+                        city: '',
+                        lat: null,
+                        lon: null,
+                        addressSource: '',
+                        addressScore: null,
+                        addressType: '',
+                        addressPrecision: '',
+                        streetNumber: '',
+                        streetLabel: '',
+                        addressIsValid: false,
+
+                        // Reset du visuel
+                        coverImageStatus: 'initial',
+                        coverImageSource: '',
+                        coverImagePath: '',
+                        coverImageSignedUrl: '',
+                        coverImageSelected: false,
+                        coverImageError: null,
+                        coverStepDismissed: false
+                    });
+                } else if (!formData.addressIsValid) {
+                    setFormData({ ...formData, address: val });
+                }
+            };
+
+            const handleAddressKeyDown = (e) => {
+                if (!showSuggestions || suggestions.length === 0) return;
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    setHighlightedIndex(prev => (prev < suggestions.length - 1 ? prev + 1 : 0));
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    setHighlightedIndex(prev => (prev > 0 ? prev - 1 : suggestions.length - 1));
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (highlightedIndex >= 0 && highlightedIndex < suggestions.length) {
+                        handleAddressSelect(suggestions[highlightedIndex]);
+                    } else if (suggestions.length > 0) {
+                        handleAddressSelect(suggestions[0]);
+                    }
+                } else if (e.key === 'Escape') {
+                    setShowSuggestions(false);
+                    setHighlightedIndex(-1);
+                }
+            };
+
+            const handleAddressBlur = async () => {
+                if (!showSuggestions || suggestions.length === 0 || formData.addressIsValid) {
+                    setShowSuggestions(false);
+                    return;
+                }
+
+                const normalize = str => str ? str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim() : '';
+                const q = normalize(query);
+
+                const exactMatch = suggestions.find(s => {
+                    const full = normalize(s.fulltext);
+                    const streetOnly = s.street ? normalize(`${s.number ? s.number + ' ' : ''}${s.street}`) : null;
+                    return full === q || streetOnly === q;
+                });
+
+                if (exactMatch) {
+                    await handleAddressSelect(exactMatch);
+                } else if (suggestions.length === 1 && query.length >= 5) {
+                    await handleAddressSelect(suggestions[0]);
+                } else {
+                    // Si on soupçonne une adresse complète (débute par un chiffre), on tente direct un search
+                    if (/^\d+/.test(query.trim())) {
+                        setIsLoadingSuggestions(true);
+                        const preciseSuggestion = await verifyAddressPrecisionWithSearch(query);
+                        setIsLoadingSuggestions(false);
+                        if (preciseSuggestion) {
+                            await handleAddressSelect(preciseSuggestion);
+                            return;
+                        }
+                    }
+                    setShowSuggestions(false);
+                }
+            };
 
             const isMixed = formData.activity === 'mixed';
 
@@ -3468,8 +3922,10 @@
             const validate = () => {
                 const newErrors = {};
 
-                if (!formData.streetName || formData.streetName.length < 3) {
-                    newErrors.streetName = 'Nom de la voie requis';
+                if (!formData.addressIsValid || !formData.address) {
+                    newErrors.address = 'Veuillez sélectionner une adresse valide dans la liste proposée';
+                } else if (formData.addressPrecision === 'street') {
+                    newErrors.address = 'Adresse trop imprécise — veuillez préciser le numéro de voie';
                 }
                 if (!formData.role) {
                     newErrors.role = 'Veuillez sélectionner votre rôle';
@@ -3504,31 +3960,66 @@
                     <h2 className="text-2xl font-bold text-[#102A43] mb-2">Identification</h2>
                     <p className="text-[#475569] mb-8">Commençons par quelques informations de base</p>
 
-                    <div className="mb-6">
+                    <div className="mb-6 relative" ref={autocompleteRef}>
                         <label className="block text-sm font-semibold text-neutral-700 mb-1">
                             Adresse du bâtiment <span className="text-red-500">*</span>
                         </label>
-                        <div className="grid grid-cols-[100px_1fr] gap-2 mb-2">
-                            <div>
-                                <input
-                                    type="text"
-                                    value={formData.streetNumber}
-                                    onChange={(e) => { const updated = { ...formData, streetNumber: e.target.value }; updated.address = buildComputedAddress(updated); setFormData(updated); }}
-                                    placeholder="N°"
-                                    className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                />
-                            </div>
-                            <div>
-                                <input
-                                    type="text"
-                                    value={formData.streetName}
-                                    onChange={(e) => { const updated = { ...formData, streetName: e.target.value }; updated.address = buildComputedAddress(updated); setFormData(updated); }}
-                                    placeholder="Nom de la voie (ex: rue de Rivoli)"
-                                    className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.streetName ? 'border-red-400' : 'border-neutral-300'}`}
-                                />
-                            </div>
+                        <div className="relative">
+                            <input
+                                type="text"
+                                value={query}
+                                onChange={handleAddressChange}
+                                onKeyDown={handleAddressKeyDown}
+                                onBlur={handleAddressBlur}
+                                onFocus={() => { if (!formData.addressIsValid && query.length >= 3) setShowSuggestions(true); }}
+                                placeholder="Commencez à saisir l'adresse..."
+                                autoComplete="off"
+                                role="combobox"
+                                aria-expanded={showSuggestions && suggestions.length > 0}
+                                aria-autocomplete="list"
+                                aria-activedescendant={highlightedIndex >= 0 ? `address-suggestion-${highlightedIndex}` : undefined}
+                                className={`w-full px-4 py-3 border rounded-xl bg-white text-sm shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.address ? 'border-red-400' : formData.addressIsValid ? 'border-green-400 bg-green-50/30' : 'border-neutral-300'}`}
+                            />
+                            {isLoadingSuggestions && (
+                                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                    <Icon icon="solar:spinner-linear" className="animate-spin text-neutral-400 text-lg" />
+                                </div>
+                            )}
+                            {formData.addressIsValid && !isLoadingSuggestions && (
+                                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                    <Icon icon="solar:check-circle-bold" className="text-green-500 text-lg" />
+                                </div>
+                            )}
                         </div>
-                        {errors.streetName && <p className="text-xs text-red-500 mt-1">{errors.streetName}</p>}
+                        {errors.address && <p className="text-xs text-red-500 mt-1">{errors.address}</p>}
+
+                        {/* Liste de suggestions */}
+                        {showSuggestions && suggestions.length > 0 && (
+                            <ul role="listbox" className="absolute z-50 w-full mt-1 bg-white border border-neutral-200 rounded-xl shadow-lg max-h-60 overflow-auto divide-y divide-neutral-100">
+                                {suggestions.map((s, index) => (
+                                    <li
+                                        key={index}
+                                        id={`address-suggestion-${index}`}
+                                        role="option"
+                                        aria-selected={highlightedIndex === index}
+                                        onMouseDown={(e) => {
+                                            e.preventDefault(); // Empêche le onBlur de l'input
+                                            handleAddressSelect(s);
+                                        }}
+                                        className={`px-4 py-2.5 text-sm cursor-pointer flex flex-col transition-colors ${highlightedIndex === index ? 'bg-blue-100' : 'hover:bg-blue-50'}`}
+                                    >
+                                        <span className="font-semibold text-neutral-800">{s.street ? `${s.number ? s.number + ' ' : ''}${s.street}` : s.fulltext}</span>
+                                        <span className="text-xs text-neutral-500">{s.zipcode} {s.city}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                        {!formData.addressIsValid && query.length >= 3 && !showSuggestions && !isLoadingSuggestions && suggestions.length === 0 && (
+                            <div className="text-xs text-amber-600 mt-2 flex items-center gap-1">
+                                <Icon icon="solar:info-circle-linear" />
+                                Veuillez sélectionner une adresse valide dans la liste qui s'affiche.
+                            </div>
+                        )}
                     </div>
 
                     <div className="mb-4 mt-6">
@@ -3547,15 +4038,17 @@
                         <NewDiagnosticFormInput
                             label="Code postal *"
                             value={formData.postalCode}
-                            onChange={(v) => setFormData({ ...formData, postalCode: v })}
+                            onChange={(v) => { if (!formData.addressIsValid) setFormData({ ...formData, postalCode: v }); }}
                             placeholder="75001"
                             error={errors.postalCode}
+                            disabled={formData.addressIsValid}
                         />
                         <NewDiagnosticFormInput
                             label="Ville"
                             value={formData.city}
-                            onChange={(v) => setFormData({ ...formData, city: v })}
+                            onChange={(v) => { if (!formData.addressIsValid) setFormData({ ...formData, city: v }); }}
                             placeholder="Paris"
+                            disabled={formData.addressIsValid}
                         />
                     </div>
 
@@ -3844,17 +4337,15 @@
                                         key={age.id}
                                         type="button"
                                         onClick={() => setFormData({ ...formData, buildingAge: age.id })}
-                                        className={`p-4 rounded-xl border-2 text-center transition-all ${
-                                            formData.buildingAge === age.id
-                                                ? 'border-[#1D4ED8] bg-[#EFF6FF]'
-                                                : 'border-[#E2E8F0] hover:border-[#1D4ED8]/40'
-                                        }`}
+                                        className={`p-4 rounded-xl border-2 text-center transition-all ${formData.buildingAge === age.id
+                                            ? 'border-[#1D4ED8] bg-[#EFF6FF]'
+                                            : 'border-[#E2E8F0] hover:border-[#1D4ED8]/40'
+                                            }`}
                                     >
                                         <iconify-icon
                                             icon={age.icon}
-                                            class={`text-2xl mb-2 block mx-auto ${
-                                                formData.buildingAge === age.id ? 'text-[#1D4ED8]' : 'text-neutral-500'
-                                            }`}
+                                            class={`text-2xl mb-2 block mx-auto ${formData.buildingAge === age.id ? 'text-[#1D4ED8]' : 'text-neutral-500'
+                                                }`}
                                         />
                                         <span className="text-sm font-semibold">{age.label}</span>
                                     </button>
@@ -3872,11 +4363,10 @@
                                 ].map(opt => (
                                     <button key={opt.id} type="button"
                                         onClick={() => setFormData({ ...formData, roofInsulation: opt.id })}
-                                        className={`p-3 rounded-lg border-2 text-sm font-medium transition-all ${
-                                            formData.roofInsulation === opt.id
-                                                ? 'border-[#1D4ED8] bg-[#EFF6FF] text-[#1D4ED8]'
-                                                : 'border-[#E2E8F0] hover:border-[#1D4ED8]/40'
-                                        }`}
+                                        className={`p-3 rounded-lg border-2 text-sm font-medium transition-all ${formData.roofInsulation === opt.id
+                                            ? 'border-[#1D4ED8] bg-[#EFF6FF] text-[#1D4ED8]'
+                                            : 'border-[#E2E8F0] hover:border-[#1D4ED8]/40'
+                                            }`}
                                     >{opt.label}</button>
                                 ))}
                             </div>
@@ -3892,11 +4382,10 @@
                                 ].map(opt => (
                                     <button key={opt.id} type="button"
                                         onClick={() => setFormData({ ...formData, wallInsulation: opt.id })}
-                                        className={`p-3 rounded-lg border-2 text-sm font-medium transition-all ${
-                                            formData.wallInsulation === opt.id
-                                                ? 'border-[#1D4ED8] bg-[#EFF6FF] text-[#1D4ED8]'
-                                                : 'border-[#E2E8F0] hover:border-[#1D4ED8]/40'
-                                        }`}
+                                        className={`p-3 rounded-lg border-2 text-sm font-medium transition-all ${formData.wallInsulation === opt.id
+                                            ? 'border-[#1D4ED8] bg-[#EFF6FF] text-[#1D4ED8]'
+                                            : 'border-[#E2E8F0] hover:border-[#1D4ED8]/40'
+                                            }`}
                                     >{opt.label}</button>
                                 ))}
                             </div>
@@ -4440,11 +4929,10 @@
                                         key={obj.id}
                                         type="button"
                                         onClick={() => setFormData({ ...formData, projectObjective: obj.id })}
-                                        className={`p-4 rounded-xl border-2 text-left flex items-center gap-4 transition-all ${
-                                            formData.projectObjective === obj.id
-                                                ? 'border-[#1D4ED8] bg-[#EFF6FF]'
-                                                : 'border-[#E2E8F0] hover:border-[#1D4ED8]/40'
-                                        }`}
+                                        className={`p-4 rounded-xl border-2 text-left flex items-center gap-4 transition-all ${formData.projectObjective === obj.id
+                                            ? 'border-[#1D4ED8] bg-[#EFF6FF]'
+                                            : 'border-[#E2E8F0] hover:border-[#1D4ED8]/40'
+                                            }`}
                                     >
                                         <iconify-icon icon={obj.icon} class={`text-2xl ${formData.projectObjective === obj.id ? 'text-[#1D4ED8]' : 'text-neutral-500'}`} />
                                         <span className="font-medium">{obj.label}</span>
@@ -4484,11 +4972,10 @@
                             {NEW_DIAGNOSTIC_WORKS_DONE.map(work => (
                                 <label
                                     key={work.id}
-                                    className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
-                                        formData.worksDone.includes(work.id)
-                                            ? 'border-[#1D4ED8] bg-[#EFF6FF]'
-                                            : 'border-[#E2E8F0] hover:border-[#1D4ED8]/40'
-                                    }`}
+                                    className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${formData.worksDone.includes(work.id)
+                                        ? 'border-[#1D4ED8] bg-[#EFF6FF]'
+                                        : 'border-[#E2E8F0] hover:border-[#1D4ED8]/40'
+                                        }`}
                                 >
                                     <input
                                         type="checkbox"
@@ -4549,11 +5036,10 @@
                         <button
                             onClick={handleNext}
                             disabled={!formData.opt_in_politique}
-                            className={`px-8 py-3 font-semibold rounded-lg transition-colors shadow-sm ${
-                                formData.opt_in_politique
-                                    ? 'bg-[#1D4ED8] text-white hover:bg-[#1E40AF]'
-                                    : 'bg-neutral-200 text-neutral-400 cursor-not-allowed'
-                            }`}
+                            className={`px-8 py-3 font-semibold rounded-lg transition-colors shadow-sm ${formData.opt_in_politique
+                                ? 'bg-[#1D4ED8] text-white hover:bg-[#1E40AF]'
+                                : 'bg-neutral-200 text-neutral-400 cursor-not-allowed'
+                                }`}
                         >
                             Voir mon rapport →
                         </button>
@@ -5938,9 +6424,22 @@
                 inputs_summary: {
                     email: formData.email,
                     address: formData.address,
+                    address_obj: formData.addressObj || null,
+                    lat: formData.lat || null,
+                    lon: formData.lon || null,
+                    address_source: formData.addressSource || null,
+                    address_score: formData.addressScore || null,
+                    address_type: formData.addressType || null,
+                    address_precision: formData.addressPrecision || null,
+                    street_number: formData.streetNumber || null,
+                    street_label: formData.streetLabel || null,
+                    address_is_valid: formData.addressIsValid || false,
+                    cover_image_source: formData.coverImageSource || null,
+                    cover_image_path: formData.coverImagePath || null,
+                    cover_image_selected: formData.coverImageSelected || false,
                     city: formData.city || null,
                     role: formData.role,
-                    site_name: formData.siteName || (formData.streetName ? (formData.streetNumber ? `${formData.streetNumber} ${formData.streetName}` : formData.streetName) : (formData.address ? formData.address.split(',')[0].trim() : 'Bâtiment tertiaire')),
+                    site_name: formData.siteName || (formData.address ? formData.address.split(',')[0].trim() : 'Bâtiment tertiaire'),
                     postal_code: formData.postalCode,
                     activity: activity,
                     mixedUsage1: activity === 'mixed' ? formData.mixedUsage1 : null,

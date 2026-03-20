@@ -2988,11 +2988,14 @@
             { id: 'led', label: 'LED (relamping complet)', category: 'lighting' },
             { id: 'regulation', label: 'Régulation / Pilotage chauffage', category: 'heating' },
             { id: 'hvac_new', label: 'Chauffage/CVC rénové récemment', category: 'heating' },
-            { id: 'envelope', label: 'Enveloppe rénovée (isolation)', category: 'envelope' },
+            { id: 'pac_done', label: 'PAC installée récemment', category: 'heating' },
+            { id: 'roof_done', label: 'Toiture isolée récemment (< 10 ans)', category: 'envelope_roof' },
+            { id: 'walls_done', label: 'Murs extérieurs isolés (ITE/ITI récente)', category: 'envelope_walls' },
+            { id: 'envelope', label: 'Isolation globale rénovée (toiture + murs)', category: 'envelope' },
             { id: 'dhw', label: 'ECS traitée (calorifugeage, etc.)', category: 'dhw' },
-            { id: 'gtb', label: 'GTB / Domotique déjà installé', category: 'automation' },
+            { id: 'gtb_done', label: 'GTB / Domotique installé récemment', category: 'automation' },
             { id: 'cold_renovated', label: 'Froid commercial rénové (< 5 ans)', category: 'cold' },
-            { id: 'pv_installed', label: 'Panneaux PV déjà installés', category: 'production' }
+            { id: 'pv_installed', label: 'Panneaux solaires déjà installés', category: 'production' }
         ];
 
         const buildComputedAddress = (fd) => {
@@ -3075,6 +3078,42 @@
 
             // Méta
             contactOptIn: false
+        };
+
+        const FAKE_FORM_DATA = {
+            ...NEW_DIAGNOSTIC_DEFAULT_FORM_DATA,
+            address: '47 cours de l\'Intendance, 33000 Bordeaux',
+            email: 'contact@cabinet-bordeaux.fr',
+            role: 'owner',
+            postalCode: '33000',
+            activity: 'offices',
+            surface: '420',
+            buildingAge: '1989_2005',
+            roofInsulation: 'unknown',
+            wallInsulation: 'unknown',
+            mainHeating: 'gas',
+            boilerAge: 'over20',
+            hasCooling: true,
+            ecsSameSystem: false,
+            ecsSystem: 'electric_boiler',
+            hasVmc: true,
+            vmcType: 'simple_flux',
+            roofAccessible: 'yes',
+            usageIntensity: 'standard',
+            hasGtb: false,
+            elecUsed: true,
+            elecKwh: '31500',
+            elecEuro: '6174',
+            gasUsed: true,
+            gasKwh: '54600',
+            gasEuro: '5733',
+            projectObjective: 'reduce_costs',
+            decisionHorizon: 'immediate',
+            budgetRange: '20to80k',
+            isDecisionMaker: 'yes',
+            worksDone: [],
+            phone: '05 56 12 34 78',
+            contactOptIn: true
         };
 
         /* ─────────────────────────────────────────────────────────────────────────
@@ -5071,7 +5110,7 @@
                 {
                     id: 'ACT15',
                     name: 'Isolation thermique de la toiture',
-                    category: 'envelope',
+                    category: 'envelope_roof',
                     tier: 'structural',
                     gain_scope: 'heating_post',
                     gain_pct_low: 0.14, gain_pct_med: 0.22, gain_pct_high: 0.32,
@@ -5087,7 +5126,7 @@
                 {
                     id: 'ACT16',
                     name: 'Isolation thermique des murs extérieurs (ITE)',
-                    category: 'envelope',
+                    category: 'envelope_walls',
                     tier: 'structural',
                     gain_scope: 'heating_post',
                     gain_pct_low: 0.10, gain_pct_med: 0.18, gain_pct_high: 0.28,
@@ -5347,8 +5386,27 @@
            HELPERS : ACTIONS & GAINS
            ───────────────────────────────────────────────────────────────────────── */
 
-        const newDiagnosticCalculateActionGain = (action, totalKwh, breakdown, avgPrice, surface, formData) => {
+        const NEW_DIAGNOSTIC_ACTION_ENERGY_MAP = {
+            heating: 'heating_energy',
+            heating_structural: 'heating_energy',
+            dhw: 'heating_energy',
+            dhw_structural: 'heating_energy',
+            envelope: 'heating_energy',
+            envelope_roof: 'heating_energy',
+            envelope_walls: 'heating_energy',
+            lighting: 'elec',
+            ventilation: 'elec',
+            ventilation_structural: 'elec',
+            cooling: 'elec',
+            cold_commercial: 'elec',
+            cold_maintenance: 'elec',
+            production: 'elec',
+            automation: 'elec',
+        };
+
+        const newDiagnosticCalculateActionGain = (action, totalKwh, breakdown, avgPrice, surface, formData, energyPrices) => {
             let baseKwh = totalKwh;
+            const ePrices = energyPrices || { elec: 0.196, gas: 0.105 };
 
             // Si gain sur poste spécifique
             if (action.gain_scope !== 'total' && action.gain_scope.endsWith('_post')) {
@@ -5359,7 +5417,14 @@
 
             // Calcul gain (médian)
             const gainKwh = Math.round(baseKwh * action.gain_pct_med);
-            const gainEuro = Math.round(gainKwh * avgPrice);
+
+            // Prix par type d'énergie
+            const energyType = NEW_DIAGNOSTIC_ACTION_ENERGY_MAP[action.category] || 'avg';
+            const actionPrice = energyType === 'elec' ? ePrices.elec
+                : energyType === 'heating_energy'
+                    ? (['gas', 'other'].includes(formData && formData.mainHeating) ? ePrices.gas : ePrices.elec)
+                    : avgPrice;
+            const gainEuro = Math.round(gainKwh * actionPrice);
 
             // CAPEX (médian)
             let capex = action.capex_med;
@@ -5404,18 +5469,23 @@
         const newDiagnosticFilterAndScoreActions = (formData, totalKwh, breakdown, avgPrice) => {
             const worksDone = formData.worksDone || [];
             const surface = Math.max(1, Number(formData.surface || 100));
+            const energyPrices = { elec: 0.196, gas: 0.105 };
 
             // ── Filtrage éligibilité ────────────────────────────────────────────────────
             const eligible = NEW_DIAGNOSTIC_ACTIONS_LIBRARY.actions.filter(action => {
                 // Exclusions travaux réalisés
                 if (worksDone.includes('led') && action.category === 'lighting') return false;
                 if (worksDone.includes('regulation') && ['ACT01', 'ACT02'].includes(action.id)) return false;
-                if (worksDone.includes('hvac_new') && action.category === 'heating') return false;
-                if (worksDone.includes('envelope') && action.category === 'envelope') return false;
-                if (worksDone.includes('dhw') && action.category === 'dhw') return false;
-                if (worksDone.includes('gtb') && action.id === 'ACT19') return false;
-                if (worksDone.includes('cold_renovated') && ['ACT20', 'ACT21'].includes(action.id)) return false;
-                if (worksDone.includes('pv_installed') && action.id === 'ACT18') return false;
+                if ((worksDone.includes('hvac_new') || worksDone.includes('pac_done'))
+                    && ['heating', 'heating_structural'].includes(action.category)) return false;
+                if ((worksDone.includes('roof_done') || worksDone.includes('envelope'))
+                    && ['envelope', 'envelope_roof'].includes(action.category)) return false;
+                if ((worksDone.includes('walls_done') || worksDone.includes('envelope'))
+                    && action.category === 'envelope_walls') return false;
+                if (worksDone.includes('dhw') && ['dhw', 'dhw_structural'].includes(action.category)) return false;
+                if ((worksDone.includes('gtb_done') || worksDone.includes('gtb')) && action.id === 'ACT19') return false;
+                if (worksDone.includes('cold_renovated') && ['cold_commercial', 'cold_maintenance'].includes(action.category)) return false;
+                if (worksDone.includes('pv_installed') && action.category === 'production') return false;
 
                 // Gate questions
                 if (!formData.hasCooling && action.category === 'cooling') return false;
@@ -5436,12 +5506,12 @@
                 }
                 // ACT15 — Isolation toiture
                 if (action.id === 'ACT15') {
-                    if (!['none', 'partial'].includes(formData.roofInsulation)) return false;
-                    if (formData.buildingAge === 'post2012') return false;
+                    if (formData.roofInsulation === 'done') return false;
+                    if (['post2012', '2006_2012'].includes(formData.buildingAge)) return false;
                 }
                 // ACT16 — ITE murs
                 if (action.id === 'ACT16') {
-                    if (!['none', 'partial'].includes(formData.wallInsulation)) return false;
+                    if (formData.wallInsulation === 'done') return false;
                     if (!['pre1948', '1948_1974', '1975_1988'].includes(formData.buildingAge)) return false;
                 }
                 // ACT17 — VMC DF
@@ -5479,7 +5549,7 @@
 
             // ── Score de priorité ──────────────────────────────────────────────────────
             const scored = eligible.map(action => {
-                const calc = newDiagnosticCalculateActionGain(action, totalKwh, breakdown, avgPrice, surface, formData);
+                const calc = newDiagnosticCalculateActionGain(action, totalKwh, breakdown, avgPrice, surface, formData, energyPrices);
                 const feasibility = action.tier === 'quick_win' ? 1.2 : action.tier === 'equipment' ? 0.85 : 0.6;
                 const priorityScore = (calc.gainEuro * feasibility) / Math.max(1, calc.capex);
                 return { ...action, ...calc, priorityScore };

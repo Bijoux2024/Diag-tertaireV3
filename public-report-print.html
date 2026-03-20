@@ -13,10 +13,15 @@
   <style>
     /* ═══════════════════════════════════════
        PAGE SETUP — A4 PRINT
+       Puppeteer pdfOptions margins take precedence over @page margins.
+       Reference: top 16mm / right 14mm / bottom 14mm / left 14mm
+         → A4 usable width = 210mm – 14mm – 14mm = 182mm ≈ 688 CSS px
+         → Section padding 22px × 2 → content area ≈ 644 CSS px
+         → CHART_W = 636 fits safely within content area
     ═══════════════════════════════════════ */
     @page {
       size: A4 portrait;
-      margin: 14mm 12mm 14mm 12mm;
+      margin: 16mm 14mm 14mm 14mm;
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -55,8 +60,13 @@
       page-break-after: avoid;
     }
 
-    /* Recharts injects .recharts-wrapper itself — force no page break inside */
+    /*
+      Recharts injects .recharts-wrapper itself.
+      overflow: visible prevents any parent clip from hiding SVG content.
+      break-inside: avoid keeps the chart on one page.
+    */
     .recharts-wrapper {
+      overflow: visible !important;
       break-inside: avoid !important;
       page-break-inside: avoid !important;
     }
@@ -68,6 +78,12 @@
 
     /* Orphan / widow control */
     p, li { orphans: 2; widows: 2; }
+
+    /* Chart host: ensure no clip and sufficient space */
+    .chart-host {
+      width: 100%;
+      overflow: visible;
+    }
   </style>
 </head>
 <body>
@@ -76,8 +92,13 @@
   <script type="text/babel" data-presets="react">
     const { useState, useEffect, useRef } = React;
     const RC = window.Recharts || {};
-    const { AreaChart, Area, XAxis, YAxis, CartesianGrid,
-            Tooltip, Legend, ResponsiveContainer } = RC;
+    const { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend } = RC;
+    // NOTE: ResponsiveContainer is intentionally NOT used in the print page.
+    // It depends on ResizeObserver which does not fire reliably in Puppeteer
+    // print-media mode → charts render with width=0 → empty SVG paths.
+    // Fixed dimensions guarantee a fully rendered chart on the first paint.
+    const CHART_W = 636; // calibrated: 688px usable - 2×22px section padding = 644 → 636 safe
+    const CHART_H = 280;
 
     /* ═══════════════════════════════════════════════════════
        DATA HELPERS
@@ -149,6 +170,9 @@
         });
       }
       const roiIdx = data.findIndex((d, i) => i > 0 && d.avec_travaux <= d.sans_travaux);
+      console.log('[print] projection points:', data.length,
+        '| A+0:', JSON.stringify(data[0]),
+        '| A+5:', JSON.stringify(data[5]));
       return { data, taux: taux * 100, roiAnnee: roiIdx > 0 ? roiIdx : null };
     };
 
@@ -176,7 +200,7 @@
     /* ═══════════════════════════════════════════════════════
        SECTION WRAPPER
     ═══════════════════════════════════════════════════════ */
-    const Section = ({ title, sub, children, mb = 16, avoidBreak = false }) => (
+    const Section = ({ title, sub, children, mb = 18, avoidBreak = false }) => (
       <div
         className={avoidBreak ? 'pba' : ''}
         style={{
@@ -189,13 +213,13 @@
       >
         {/* Coloured top bar */}
         <div style={{ height: 3, background: `linear-gradient(90deg, ${T.blue} 0%, #6366F1 100%)` }} />
-        <div style={{ padding: '18px 22px 20px' }}>
+        <div style={{ padding: '20px 24px 22px' }}>
           <div className="section-title" style={{
             fontSize: 16, fontWeight: 800, color: T.navy,
-            letterSpacing: '-0.3px', marginBottom: sub ? 4 : 14,
+            letterSpacing: '-0.3px', marginBottom: sub ? 4 : 16,
           }}>{title}</div>
           {sub && (
-            <div style={{ fontSize: 11, color: T.slate600, marginBottom: 14, lineHeight: 1.6 }}>
+            <div style={{ fontSize: 11, color: T.slate600, marginBottom: 16, lineHeight: 1.6 }}>
               {sub}
             </div>
           )}
@@ -212,14 +236,14 @@
         background: '#fff',
         border: `1px solid ${T.slate200}`,
         borderRadius: T.radius,
-        padding: '18px 20px',
+        padding: '20px 22px',
         borderTop: `3px solid ${accent}`,
       }}>
         <div style={{
           fontSize: 9, fontWeight: 800, textTransform: 'uppercase',
           letterSpacing: '0.1em', color: accent, marginBottom: 8,
         }}>{label}</div>
-        <div style={{ fontSize: 26, fontWeight: 900, color: T.navy, lineHeight: 1, marginBottom: 4 }}>
+        <div style={{ fontSize: 28, fontWeight: 900, color: T.navy, lineHeight: 1, marginBottom: 5 }}>
           {value}
         </div>
         {sub && <div style={{ fontSize: 11, color: T.slate400, lineHeight: 1.4 }}>{sub}</div>}
@@ -240,17 +264,17 @@
       return (
         <div className="pba" style={{
           display: 'flex', gap: 14,
-          padding: '13px 16px',
+          padding: '14px 16px',
           background: T.slate50,
           borderRadius: 12,
           border: `1px solid ${T.slate200}`,
-          marginBottom: 9,
+          marginBottom: 10,
         }}>
           {/* Number badge */}
           <div style={{
-            width: 28, height: 28, borderRadius: '50%',
+            width: 30, height: 30, borderRadius: '50%',
             background: T.blue, color: '#fff',
-            fontSize: 12, fontWeight: 800,
+            fontSize: 13, fontWeight: 800,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             flexShrink: 0, marginTop: 1,
           }}>{index + 1}</div>
@@ -269,7 +293,7 @@
               }}>{tier.label}</span>
             </div>
             {/* Metrics row */}
-            <div style={{ display: 'flex', gap: 20, fontSize: 11, color: T.slate600, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: 22, fontSize: 11, color: T.slate600, flexWrap: 'wrap' }}>
               <span>
                 Gain annuel&nbsp;
                 <strong style={{ color: '#15803D', fontWeight: 800 }}>{fmtEur(gainEuro)}/an</strong>
@@ -290,40 +314,59 @@
 
     /* ═══════════════════════════════════════════════════════
        PROJECTION CHART
-       isAnimationActive={false} is mandatory for print:
-       Recharts animations run asynchronously; without this,
-       Puppeteer may capture mid-animation, yielding empty SVG paths.
+       ─────────────────────────────────────────────────────
+       WHY FIXED DIMENSIONS (no ResponsiveContainer):
+         ResponsiveContainer uses ResizeObserver to measure its
+         parent. In Puppeteer with mediaType='print', ResizeObserver
+         callbacks do not fire — the chart receives width=0 and renders
+         an empty SVG. Fixed dimensions bypass ResizeObserver entirely
+         and guarantee a fully painted chart on the first render pass.
+
+       CHART_W = 636 is calibrated for A4 with Puppeteer margins
+       (top:16mm right:14mm bottom:14mm left:14mm):
+         182mm usable × (96px/25.4mm) ≈ 688px
+         − 2 × 24px section padding = 640px → 636 adds 4px safety margin.
+
+       isAnimationActive={false} on both Areas:
+         Recharts animations are async; without this Puppeteer may
+         snapshot mid-animation yielding paths with no 'd' attribute.
     ═══════════════════════════════════════════════════════ */
     const ProjectionChart = ({ data }) => {
-      if (!AreaChart || !data || data.length === 0) return null;
+      if (!AreaChart || !data || data.length === 0) {
+        console.warn('[print] ProjectionChart: AreaChart unavailable or no data');
+        return null;
+      }
       const fmtTick = v => `${Math.round(v / 1000)}k€`;
       return (
-        <div className="pba" style={{ width: '100%', height: 260 }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={data} margin={{ top: 6, right: 12, left: 0, bottom: 4 }}>
-              <defs>
-                <linearGradient id="gSans" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%"  stopColor="#EA580C" stopOpacity={0.22} />
-                  <stop offset="95%" stopColor="#EA580C" stopOpacity={0} />
-                </linearGradient>
-                <linearGradient id="gAvec" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%"  stopColor={T.blue} stopOpacity={0.18} />
-                  <stop offset="95%" stopColor={T.blue} stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke={T.slate200} />
-              <XAxis dataKey="annee" tick={{ fontSize: 10, fill: T.slate600 }} />
-              <YAxis tickFormatter={fmtTick} tick={{ fontSize: 10, fill: T.slate600 }} width={44} />
-              <Tooltip formatter={v => fmtEur(v)} />
-              <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
-              <Area type="monotone" dataKey="sans_travaux" name="Sans travaux"
-                    stroke="#EA580C" strokeWidth={2.5} fill="url(#gSans)"
-                    isAnimationActive={false} />
-              <Area type="monotone" dataKey="avec_travaux" name="Avec travaux"
-                    stroke={T.blue} strokeWidth={2.5} fill="url(#gAvec)"
-                    isAnimationActive={false} />
-            </AreaChart>
-          </ResponsiveContainer>
+        <div className="chart-host pba">
+          <AreaChart
+            width={CHART_W}
+            height={CHART_H}
+            data={data}
+            margin={{ top: 8, right: 16, left: 0, bottom: 4 }}
+          >
+            <defs>
+              <linearGradient id="gSans" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%"  stopColor="#EA580C" stopOpacity={0.22} />
+                <stop offset="95%" stopColor="#EA580C" stopOpacity={0} />
+              </linearGradient>
+              <linearGradient id="gAvec" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%"  stopColor={T.blue} stopOpacity={0.18} />
+                <stop offset="95%" stopColor={T.blue} stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke={T.slate200} />
+            <XAxis dataKey="annee" tick={{ fontSize: 10, fill: T.slate600 }} />
+            <YAxis tickFormatter={fmtTick} tick={{ fontSize: 10, fill: T.slate600 }} width={48} />
+            <Tooltip formatter={v => fmtEur(v)} />
+            <Legend wrapperStyle={{ fontSize: 11, paddingTop: 10 }} />
+            <Area type="monotone" dataKey="sans_travaux" name="Sans travaux"
+                  stroke="#EA580C" strokeWidth={2.5} fill="url(#gSans)"
+                  isAnimationActive={false} />
+            <Area type="monotone" dataKey="avec_travaux" name="Avec travaux"
+                  stroke={T.blue} strokeWidth={2.5} fill="url(#gAvec)"
+                  isAnimationActive={false} />
+          </AreaChart>
         </div>
       );
     };
@@ -404,7 +447,7 @@
       ];
 
       return (
-        <div style={{ width: '100%', paddingBottom: 20 }}>
+        <div style={{ width: '100%', paddingBottom: 24 }}>
 
           {/* ══════════════════════════════════════════════════
               HERO — dark gradient, never split
@@ -413,8 +456,8 @@
             background: `linear-gradient(135deg, ${T.navy} 0%, #1D4ED8 60%, #0F2236 100%)`,
             color: '#fff',
             borderRadius: 20,
-            padding: '26px 28px',
-            marginBottom: 16,
+            padding: '28px 30px',
+            marginBottom: 18,
           }}>
             {/* Top label */}
             <div style={{
@@ -425,18 +468,18 @@
             </div>
 
             {/* Two-column layout: info left / score badge right */}
-            <div style={{ display: 'flex', gap: 16, alignItems: 'stretch' }}>
+            <div style={{ display: 'flex', gap: 18, alignItems: 'stretch' }}>
 
               {/* Left: site info + intensity mini-cards */}
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{
-                  fontSize: 24, fontWeight: 900, lineHeight: 1.1,
-                  letterSpacing: '-0.6px', marginBottom: 5,
+                  fontSize: 26, fontWeight: 900, lineHeight: 1.1,
+                  letterSpacing: '-0.6px', marginBottom: 6,
                 }}>{siteName}</div>
 
                 <div style={{
                   fontSize: 12, color: 'rgba(255,255,255,0.70)',
-                  lineHeight: 1.7, marginBottom: 16,
+                  lineHeight: 1.7, marginBottom: 18,
                 }}>
                   {location}{location ? ' · ' : ''}Généré le {fmtDate(rp.generated_at)}
                 </div>
@@ -446,13 +489,13 @@
                   background: 'rgba(255,255,255,0.09)',
                   border: '1px solid rgba(255,255,255,0.12)',
                   borderRadius: 12,
-                  padding: '12px 16px',
+                  padding: '14px 18px',
                 }}>
                   <div style={{
                     fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
-                    letterSpacing: '0.08em', color: 'rgba(255,255,255,0.5)', marginBottom: 10,
+                    letterSpacing: '0.08em', color: 'rgba(255,255,255,0.5)', marginBottom: 12,
                   }}>Positionnement énergétique</div>
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                     {[
                       { label: 'Conso actuelle',  value: fmtInt(siteI,    'kWh/m²/an') },
                       { label: 'Médiane secteur', value: fmtInt(benchMed, 'kWh/m²/an') },
@@ -463,11 +506,11 @@
                         flex: '1 1 90px',
                         background: 'rgba(255,255,255,0.08)',
                         border: '1px solid rgba(255,255,255,0.1)',
-                        borderRadius: 9, padding: '8px 10px',
+                        borderRadius: 9, padding: '9px 12px',
                       }}>
                         <div style={{
                           fontSize: 8, fontWeight: 700, textTransform: 'uppercase',
-                          color: 'rgba(255,255,255,0.45)', marginBottom: 4,
+                          color: 'rgba(255,255,255,0.45)', marginBottom: 5,
                         }}>{ic.label}</div>
                         <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', lineHeight: 1 }}>
                           {ic.value}
@@ -480,21 +523,21 @@
 
               {/* Right: score badge */}
               <div style={{
-                width: 130, flexShrink: 0,
+                width: 136, flexShrink: 0,
                 background: sCfg.bg,
                 border: `2px solid ${sCfg.border}`,
                 borderRadius: 16,
                 display: 'flex', flexDirection: 'column',
                 alignItems: 'center', justifyContent: 'center',
-                padding: '16px 12px', textAlign: 'center',
+                padding: '18px 14px', textAlign: 'center',
               }}>
                 <div style={{
                   fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
                   letterSpacing: '0.08em', color: sCfg.color, marginBottom: 4,
                 }}>Indice</div>
                 <div style={{
-                  fontSize: 68, fontWeight: 900, color: sCfg.color,
-                  lineHeight: 1, margin: '2px 0 6px',
+                  fontSize: 72, fontWeight: 900, color: sCfg.color,
+                  lineHeight: 1, margin: '2px 0 8px',
                 }}>{score}</div>
                 <div style={{
                   fontSize: 11, fontWeight: 700, color: '#0F172A',
@@ -503,7 +546,7 @@
                 <div style={{
                   fontSize: 10, color: '#475569',
                   background: 'rgba(255,255,255,0.6)',
-                  padding: '3px 8px', borderRadius: 20,
+                  padding: '4px 10px', borderRadius: 20,
                   border: '1px solid rgba(0,0,0,0.06)',
                 }}>
                   Après travaux&nbsp;
@@ -514,12 +557,12 @@
 
             {/* Potential highlight bar */}
             <div style={{
-              marginTop: 16,
+              marginTop: 18,
               background: 'rgba(255,255,255,0.10)',
               border: '1px solid rgba(255,255,255,0.14)',
               borderRadius: 10,
-              padding: '10px 16px',
-              display: 'flex', alignItems: 'center', gap: 8,
+              padding: '11px 18px',
+              display: 'flex', alignItems: 'center', gap: 10,
             }}>
               <div style={{
                 width: 8, height: 8, borderRadius: '50%', background: '#6EE7B7', flexShrink: 0,
@@ -543,8 +586,8 @@
           <div className="kpi-row" style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(2, 1fr)',
-            gap: 12,
-            marginBottom: 16,
+            gap: 14,
+            marginBottom: 18,
           }}>
             {kpis.map(k => (
               <KpiCard key={k.label} label={k.label} value={k.value} sub={k.sub} accent={k.accent} />
@@ -569,18 +612,18 @@
             {/* Budget recap */}
             <div className="budget-row" style={{
               display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)',
-              gap: 10, marginTop: 16,
+              gap: 10, marginTop: 18,
             }}>
               {budgetCells.map(cell => (
                 <div key={cell.label} className="pba" style={{
-                  borderRadius: 10, padding: '12px 14px',
+                  borderRadius: 10, padding: '14px 16px',
                   background: cell.bg, border: `1px solid ${cell.bd}`,
                 }}>
                   <div style={{
                     fontSize: 9, fontWeight: 700, textTransform: 'uppercase',
-                    letterSpacing: '0.06em', color: cell.c, marginBottom: 5,
+                    letterSpacing: '0.06em', color: cell.c, marginBottom: 6,
                   }}>{cell.label}</div>
-                  <div style={{ fontSize: 17, fontWeight: 900, color: cell.c }}>
+                  <div style={{ fontSize: 18, fontWeight: 900, color: cell.c }}>
                     {cell.value}
                   </div>
                 </div>
@@ -589,7 +632,9 @@
           </Section>
 
           {/* ══════════════════════════════════════════════════
-              PROJECTION — chart must stay whole
+              PROJECTION — chart must stay whole on one page.
+              Section overflow:hidden clips the chart if CHART_W
+              exceeds content area; CHART_W=636 fits within ~644px.
           ═════════════════════════════════════════════════ */}
           <Section
             title="Projection financière — 10 ans"
@@ -606,7 +651,7 @@
           {/* ══════════════════════════════════════════════════
               HYPOTHESES + LIMITES — 2-col, avoid split
           ═════════════════════════════════════════════════ */}
-          <div className="cols-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+          <div className="cols-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 18 }}>
 
             {/* Hypothèses */}
             <div className="pba" style={{
@@ -616,7 +661,7 @@
               overflow: 'hidden',
             }}>
               <div style={{ height: 3, background: '#6366F1' }} />
-              <div style={{ padding: '16px 18px 18px' }}>
+              <div style={{ padding: '18px 20px 20px' }}>
                 <div className="section-title" style={{
                   fontSize: 14, fontWeight: 800, color: T.navy, marginBottom: 4,
                 }}>Hypothèses de calcul</div>
@@ -626,8 +671,8 @@
                 <ul style={{ listStyle: 'none' }}>
                   {(assumes.length ? assumes : ['Hypothèses à confirmer sur site.']).map((item, i) => (
                     <li key={i} className="pba" style={{
-                      display: 'flex', gap: 8, fontSize: 11, color: '#475569',
-                      lineHeight: 1.55, marginBottom: 6,
+                      display: 'flex', gap: 9, fontSize: 11, color: '#475569',
+                      lineHeight: 1.55, marginBottom: 7,
                     }}>
                       <span style={{
                         width: 6, height: 6, borderRadius: '50%',
@@ -648,7 +693,7 @@
               overflow: 'hidden',
             }}>
               <div style={{ height: 3, background: '#F97316' }} />
-              <div style={{ padding: '16px 18px 18px' }}>
+              <div style={{ padding: '18px 20px 20px' }}>
                 <div className="section-title" style={{
                   fontSize: 14, fontWeight: 800, color: T.navy, marginBottom: 4,
                 }}>Limites de lecture</div>
@@ -658,8 +703,8 @@
                 <ul style={{ listStyle: 'none' }}>
                   {(limits.length ? limits : ['Limites à confirmer avec un expert.']).map((item, i) => (
                     <li key={i} className="pba" style={{
-                      display: 'flex', gap: 8, fontSize: 11, color: '#475569',
-                      lineHeight: 1.55, marginBottom: 6,
+                      display: 'flex', gap: 9, fontSize: 11, color: '#475569',
+                      lineHeight: 1.55, marginBottom: 7,
                     }}>
                       <span style={{
                         width: 6, height: 6, borderRadius: '50%',
@@ -678,7 +723,7 @@
           ═════════════════════════════════════════════════ */}
           <div style={{
             textAlign: 'center', fontSize: 10, color: T.slate400,
-            paddingTop: 14, borderTop: `1px solid ${T.slate200}`,
+            paddingTop: 16, borderTop: `1px solid ${T.slate200}`,
           }}>
             <strong style={{ color: T.slate600 }}>DiagTertiaire</strong>
             {' '}— Pré-diagnostic énergétique indicatif, non opposable
@@ -693,12 +738,15 @@
     /* ═══════════════════════════════════════════════════════
        APP — FETCH + MULTI-STEP READY SIGNAL
 
-       Protocol:
+       Protocol (all steps run only if chart data present):
          1. document.fonts.ready    → polices chargées (no FOUT)
-         2. Poll svg path[d]        → Recharts a tracé les données
-                                      (pas juste le wrapper — les vraies lignes)
-         3. Double rAF              → layout stabilisé après le dernier paint
-         4. Hard ceiling 4 s        → fallback si pas de graphique
+         2. Poll .recharts-wrapper  → Recharts wrapper exists in DOM
+         3. getBoundingClientRect   → wrapper has positive dimensions
+                                      (w ≥ 100, h ≥ 100)
+         4. Poll svg path[d]        → AreaChart data lines are drawn
+         5. 80ms stabilization      → final repaint has settled
+         6. Double rAF              → layout engine settled
+         7. Hard ceiling 4 s        → fallback if something hangs
     ═══════════════════════════════════════════════════════ */
     const App = () => {
       const [reportPayload, setReportPayload] = useState(null);
@@ -723,7 +771,11 @@
             if (!r.ok) return r.json().then(d => { throw new Error(d.error || `HTTP ${r.status}`); });
             return r.json();
           })
-          .then(data => setReportPayload(data.report_payload || {}))
+          .then(data => {
+            const rp = data.report_payload || {};
+            console.log('[print] report_payload keys:', Object.keys(rp).join(', '));
+            setReportPayload(rp);
+          })
           .catch(err  => setError(err.message || 'Erreur de chargement'));
       }, []);
 
@@ -737,31 +789,60 @@
           if (cancelled || readyFired.current) return;
           readyFired.current = true;
           window.__REPORT_READY__ = true;
+          console.log('[print] __REPORT_READY__ fired');
         };
 
-        const maxTimer = setTimeout(doFire, 4000);
+        const maxTimer = setTimeout(() => {
+          console.warn('[print] hard ceiling reached — firing ready');
+          doFire();
+        }, 4000);
 
         const run = async () => {
           try {
-            // 1. Web fonts
+            // Step 1: Web fonts
             if (document.fonts?.ready) await document.fonts.ready;
             if (cancelled || readyFired.current) return;
 
-            // 2. Poll for drawn Recharts SVG path elements (not just wrapper)
-            let found = false;
-            for (let i = 0; i < 20 && !cancelled && !readyFired.current; i++) {
-              if (document.querySelectorAll('.recharts-wrapper svg path[d]').length > 0) {
-                found = true;
-                break;
+            // Step 2+3: Poll for .recharts-wrapper with positive dimensions
+            // With fixed-width AreaChart, this should succeed on the first poll.
+            let wrapperReady = false;
+            for (let i = 0; i < 30 && !cancelled && !readyFired.current; i++) {
+              const wrapper = document.querySelector('.recharts-wrapper');
+              if (wrapper) {
+                const rect = wrapper.getBoundingClientRect();
+                if (rect.width >= 100 && rect.height >= 100) {
+                  wrapperReady = true;
+                  console.log('[print] recharts-wrapper ready:', Math.round(rect.width), '×', Math.round(rect.height));
+                  break;
+                }
               }
-              await new Promise(r => setTimeout(r, 150));
+              await new Promise(r => setTimeout(r, 80));
             }
-            if (!found) {
-              console.warn('[print] Recharts SVG paths not found — firing ready anyway');
+            if (!wrapperReady) {
+              console.warn('[print] recharts-wrapper not visible — proceeding anyway');
             }
             if (cancelled || readyFired.current) return;
 
-            // 3. Double rAF — layout engine settled
+            // Step 4: Poll for drawn SVG path elements (data lines)
+            let pathsFound = false;
+            for (let i = 0; i < 15 && !cancelled && !readyFired.current; i++) {
+              const paths = document.querySelectorAll('.recharts-wrapper svg path[d]');
+              if (paths.length > 0) {
+                pathsFound = true;
+                console.log('[print] SVG paths found:', paths.length);
+                break;
+              }
+              await new Promise(r => setTimeout(r, 80));
+            }
+            if (!pathsFound) {
+              console.warn('[print] SVG paths not found — firing ready anyway');
+            }
+            if (cancelled || readyFired.current) return;
+
+            // Step 5: Short stabilization wait
+            await new Promise(r => setTimeout(r, 80));
+
+            // Step 6: Double rAF — layout engine settled
             await new Promise(r => requestAnimationFrame(r));
             await new Promise(r => requestAnimationFrame(r));
 
@@ -784,6 +865,7 @@
         readyFired.current = true;
         window.__REPORT_ERROR__ = error;
         window.__REPORT_READY__ = true;
+        console.error('[print] __REPORT_ERROR__:', error);
       }, [error]);
 
       if (error) {

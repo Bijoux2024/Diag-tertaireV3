@@ -67,6 +67,9 @@ const createPdfRenderError = (message, statusCode = 500) => {
 let cachedPuppeteerCore = null;
 let cachedChromiumRuntime = null;
 
+let cachedExecutablePathPromise = null;
+let cachedExecutablePath = null;
+
 // Keep literal requires so Vercel's runtime tracing includes these modules.
 const getPuppeteerCore = () => {
   if (cachedPuppeteerCore) {
@@ -101,34 +104,60 @@ const getChromiumRuntime = () => {
 };
 
 const resolveChromiumExecutablePath = async (chromium) => {
-  try {
-    const runtimePath = await chromium.executablePath();
-    if (runtimePath) {
-      return runtimePath;
-    }
-  } catch (error) {
-    // Fall through to the explicit error below.
+  if (cachedExecutablePath) {
+    return cachedExecutablePath;
   }
 
-  throw createPdfRenderError(
-    'Chromium executable unavailable. On Vercel, use @sparticuz/chromium. For local API execution, set PUPPETEER_EXECUTABLE_PATH.',
-    500
-  );
+  if (cachedExecutablePathPromise) {
+    return cachedExecutablePathPromise;
+  }
+
+  cachedExecutablePathPromise = (async () => {
+    try {
+      const runtimePath = await chromium.executablePath();
+      if (!runtimePath) {
+        throw new Error('Chromium executable unavailable');
+      }
+      cachedExecutablePath = runtimePath;
+      return runtimePath;
+    } finally {
+      cachedExecutablePathPromise = null;
+    }
+  })();
+
+  return cachedExecutablePathPromise;
+
 };
 
 const launchChromiumBrowser = async () => {
   const puppeteer = getPuppeteerCore();
   const explicitPath = String(process.env.PUPPETEER_EXECUTABLE_PATH || '').trim();
   const chromium = explicitPath ? null : getChromiumRuntime();
+
+  if (chromium && typeof chromium.setGraphicsMode !== 'undefined') {
+    chromium.setGraphicsMode = false;
+  }
+
   const executablePath = explicitPath || await resolveChromiumExecutablePath(chromium);
   const args = chromium && Array.isArray(chromium.args) ? chromium.args.slice() : [];
 
-  return puppeteer.launch({
-    args: [...args, '--hide-scrollbars', '--font-render-hinting=medium'],
-    executablePath,
-    headless: chromium ? chromium.headless !== false : true,
-    defaultViewport: chromium?.defaultViewport || DEFAULT_VIEWPORT
-  });
+  try {
+    return await puppeteer.launch({
+      args: [...args, '--hide-scrollbars', '--font-render-hinting=medium'],
+      executablePath,
+      headless: chromium ? chromium.headless !== false : true,
+      defaultViewport: chromium?.defaultViewport || DEFAULT_VIEWPORT
+    });
+  } catch (error) {
+    const message = String(error?.message || '');
+
+    if (/ETXTBSY/i.test(message) && chromium) {
+      cachedExecutablePath = null;
+      cachedExecutablePathPromise = null;
+    }
+
+    throw error;
+  }
 };
 
 const renderPdfFromUrl = async (url, {

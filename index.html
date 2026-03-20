@@ -2985,17 +2985,43 @@
         ];
 
         const NEW_DIAGNOSTIC_WORKS_DONE = [
-            { id: 'led', label: 'LED (relamping complet)', category: 'lighting' },
-            { id: 'regulation', label: 'Régulation / Pilotage chauffage', category: 'heating' },
-            { id: 'hvac_new', label: 'Chauffage/CVC rénové récemment', category: 'heating' },
-            { id: 'pac_done', label: 'PAC installée récemment', category: 'heating' },
-            { id: 'roof_done', label: 'Toiture isolée récemment (< 10 ans)', category: 'envelope_roof' },
-            { id: 'walls_done', label: 'Murs extérieurs isolés (ITE/ITI récente)', category: 'envelope_walls' },
-            { id: 'envelope', label: 'Isolation globale rénovée (toiture + murs)', category: 'envelope' },
-            { id: 'dhw', label: 'ECS traitée (calorifugeage, etc.)', category: 'dhw' },
-            { id: 'gtb_done', label: 'GTB / Domotique installé récemment', category: 'automation' },
-            { id: 'cold_renovated', label: 'Froid commercial rénové (< 5 ans)', category: 'cold' },
-            { id: 'pv_installed', label: 'Panneaux solaires déjà installés', category: 'production' }
+            { id: 'led_done', label: 'Éclairage LED (relamping complet)', category: 'lighting' },
+            { id: 'regulation_done', label: 'Régulation / Pilotage chauffage', category: 'heating' },
+            { id: 'pac_done', label: 'Pompe à chaleur installée', category: 'heating' },
+            { id: 'boiler_recent', label: 'Chaudière récente (< 5 ans)', category: 'heating' },
+            { id: 'roof_done', label: 'Isolation toiture rénovée', category: 'envelope' },
+            { id: 'walls_done', label: 'Isolation murs rénovée', category: 'envelope' },
+            { id: 'windows_done', label: 'Fenêtres remplacées (double/triple vitrage)', category: 'envelope' },
+            { id: 'gtb_done', label: 'GTB / Supervision installée', category: 'pilotage' },
+            { id: 'dhw_done', label: 'ECS optimisée (calorifugeage, ballon thermo)', category: 'dhw' },
+            { id: 'vmc_df_done', label: 'VMC double flux installée', category: 'ventilation' }
+        ];
+
+        const NEW_DIAGNOSTIC_BUILDING_AGES = [
+            { id: 'before_1975', label: 'Avant 1975', coef: 1.35, icon: 'solar:home-angle-linear' },
+            { id: '1975_1988', label: '1975 - 1988', coef: 1.20, icon: 'solar:home-2-linear' },
+            { id: '1989_2005', label: '1989 - 2005', coef: 1.05, icon: 'solar:buildings-linear' },
+            { id: 'after_2005', label: 'Après 2005', coef: 0.90, icon: 'solar:buildings-2-linear' }
+        ];
+
+        const NEW_DIAGNOSTIC_BOILER_AGES = [
+            { id: 'under5', label: 'Moins de 5 ans', pacPriority: 0 },
+            { id: '5to15', label: '5 à 15 ans', pacPriority: 1 },
+            { id: '15to20', label: '15 à 20 ans', pacPriority: 2 },
+            { id: 'over20', label: 'Plus de 20 ans', pacPriority: 3 }
+        ];
+
+        const NEW_DIAGNOSTIC_PROJECT_OBJECTIVES = [
+            { id: 'reduce_costs', label: 'Réduire mes charges énergétiques', icon: 'solar:wallet-money-linear' },
+            { id: 'compliance', label: 'Me mettre en conformité (Décret Tertiaire)', icon: 'solar:document-text-linear' },
+            { id: 'valorization', label: 'Valoriser mon patrimoine', icon: 'solar:chart-2-linear' }
+        ];
+
+        const NEW_DIAGNOSTIC_DECISION_HORIZONS = [
+            { id: 'immediate', label: 'Immédiat (< 3 mois)' },
+            { id: '6months', label: "D'ici 6 mois" },
+            { id: '1year', label: "D'ici 1 an" },
+            { id: 'later', label: 'Plus tard / en veille' }
         ];
 
         const buildComputedAddress = (fd) => {
@@ -3004,10 +3030,7 @@
         };
 
         const NEW_DIAGNOSTIC_DEFAULT_FORM_DATA = {
-            // Étape 1 : Identification
-            streetNumber: '',
-            streetName: '',
-            city: '',
+            // === ÉTAPE 1 : Identification ===
             address: '',
             role: '',
             postalCode: '',
@@ -3017,66 +3040,46 @@
             mixOfficesPct: 50,
             mixRetailPct: 50,
 
-            // Gate questions & Bâtiment
+            // === ÉTAPE 2 : Bâtiment ===
             surface: '',
-            mainHeating: '', // 'electric', 'gas', 'network', 'other'
+            buildingAge: '',       // 'before_1975' | '1975_1988' | '1989_2005' | 'after_2005'
+            roofInsulation: '',    // 'yes' | 'no' | 'unknown'
+            wallInsulation: '',    // 'yes' | 'no' | 'unknown'
+            mainHeating: '',
+            boilerAge: '',         // 'under5' | '5to15' | '15to20' | 'over20'
             hasCooling: false,
-            usageIntensity: 'standard', // 'low', 'standard', 'high'
             ecsSameSystem: true,
             ecsSystem: '',
+            hasVmc: false,
+            vmcType: '',           // 'natural' | 'simple_flux' | 'double_flux'
+            roofAccessible: '',    // 'yes' | 'no' | 'unknown'
+            usageIntensity: 'standard',
+            hasGtb: false,
 
-            // Étape 3 : Énergies
+            // === ÉTAPE 3 : Énergies ===
             elecUsed: false,
             elecKwh: '',
             elecEuro: '',
-            elecPriceKwh: '',
             elecIncludesSubscription: false,
             elecSubscriptionYearly: '',
-
             gasUsed: false,
             gasKwh: '',
             gasEuro: '',
-            gasPriceKwh: '',
             gasIncludesSubscription: false,
             gasSubscriptionYearly: '',
 
-            // ── Enveloppe bâtiment ──────────────────────────────────────────────────────
-            buildingAge: '',         // 'pre1948'|'1948_1974'|'1975_1988'|'1989_2005'|'2006_2012'|'post2012'|'unknown'
-            roofInsulation: '',      // 'none'|'partial'|'done'
-            wallInsulation: '',      // 'none'|'partial'|'done'
-
-            // ── Systèmes techniques ─────────────────────────────────────────────────────
-            boilerAge: '',           // 'under10'|'10to20'|'over20'
-            hasVmc: false,
-            vmcType: '',             // 'simple_flux'|'double_flux'
-            roofAccessible: '',      // 'yes'|'no'|'unknown'
-
-            // ── Équipements activité-spécifiques ────────────────────────────────────────
-            coldEquipmentType: '',        // 'open_shelves'|'closed_doors'|'mixed'|'none'
-            coldEquipmentAge: '',         // 'under5'|'5to15'|'over15'
-            coldMaintenanceStatus: '',    // 'contract'|'occasional'|'none'
-            kitchenType: '',              // 'gas_intensive'|'electric'|'mixed'
-            hasLaundry: false,
-
-            // ── Automatisation ──────────────────────────────────────────────────────────
-            hasGtb: false,
-            hasExteriorLighting: false,
-
-            // ── Qualification prospect (Step4) ──────────────────────────────────────────
-            projectObjective: '',    // 'reduce_costs'|'comply_regulation'|'valorise_asset'|'comfort'
-            decisionHorizon: '',     // 'immediate'|'3to6months'|'6to12months'|'over1year'|'exploring'
-            budgetRange: '',         // 'under5k'|'5to20k'|'20to80k'|'over80k'|'unknown'
-            isDecisionMaker: '',     // 'yes'|'need_approval'|'no'
-
-            // Étape 4 : Contact + Travaux
+            // === ÉTAPE 4 : Contact + Qualification ===
+            firstName: '',
             email: '',
             phone: '',
+            company: '',
             worksDone: [],
-            primaryGoal: '',    // 'reduce_cost' | 'comply_regulation' | 'improve_comfort' | 'csr'
-            projectHorizon: '', // 'lt_1y' | '1_3y' | '3_5y' | 'exploratory'
-            decisionRole: '',   // 'owner' | 'tenant' | 'property_manager' | 'project_owner'
+            projectObjective: '',  // 'reduce_costs' | 'compliance' | 'valorization'
+            decisionHorizon: '',   // 'immediate' | '6months' | '1year' | 'later'
+            isDecisionMaker: '',   // 'yes' | 'no'
 
-            // Méta
+            // === RGPD & Opt-in ===
+            opt_in_politique: false,
             contactOptIn: false
         };
 
@@ -3674,11 +3677,8 @@
                 if (!formData.ecsSameSystem && !formData.ecsSystem) {
                     newErrors.ecsSystem = 'Veuillez sélectionner le système ECS';
                 }
-                if (!formData.buildingAge) newErrors.buildingAge = 'Requis';
-                if (!formData.roofInsulation) newErrors.roofInsulation = 'Requis';
-                if (!formData.wallInsulation) newErrors.wallInsulation = 'Requis';
-                if ((formData.mainHeating === 'gas' || formData.mainHeating === 'other') && !formData.boilerAge) {
-                    newErrors.boilerAge = 'Requis pour ce type de chauffage';
+                if (!formData.buildingAge) {
+                    newErrors.buildingAge = "Veuillez sélectionner l'année de construction";
                 }
 
                 setErrors(newErrors);
@@ -3837,52 +3837,66 @@
                             <h3 className="font-semibold text-[#102A43]">Enveloppe du bâtiment</h3>
                         </div>
                         <div className="mb-4">
-                            <label className="block text-sm font-medium text-[#475569] mb-1">Période de construction <span className="text-red-500">*</span></label>
-                            <select
-                                value={formData.buildingAge}
-                                onChange={e => setFormData(p => ({ ...p, buildingAge: e.target.value }))}
-                                className="w-full border border-[#E2E8F0] rounded-lg p-2.5 text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]"
-                            >
-                                <option value="">-- Sélectionner --</option>
-                                <option value="pre1948">Avant 1948 — isolation absente</option>
-                                <option value="1948_1974">1948–1974 — sans isolation</option>
-                                <option value="1975_1988">1975–1988 — RT1974 (premières réglementations)</option>
-                                <option value="1989_2005">1989–2005 — isolation partielle</option>
-                                <option value="2006_2012">2006–2012 — RT2005</option>
-                                <option value="post2012">Après 2012 — BBC / RT2012 / RE2020</option>
-                                <option value="unknown">Je ne sais pas</option>
-                            </select>
+                            <label className="block text-sm font-medium text-[#475569] mb-3">Année de construction <span className="text-red-500">*</span></label>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                {NEW_DIAGNOSTIC_BUILDING_AGES.map(age => (
+                                    <button
+                                        key={age.id}
+                                        type="button"
+                                        onClick={() => setFormData({ ...formData, buildingAge: age.id })}
+                                        className={`p-4 rounded-xl border-2 text-center transition-all ${
+                                            formData.buildingAge === age.id
+                                                ? 'border-[#1D4ED8] bg-[#EFF6FF]'
+                                                : 'border-[#E2E8F0] hover:border-[#1D4ED8]/40'
+                                        }`}
+                                    >
+                                        <iconify-icon
+                                            icon={age.icon}
+                                            class={`text-2xl mb-2 block mx-auto ${
+                                                formData.buildingAge === age.id ? 'text-[#1D4ED8]' : 'text-neutral-500'
+                                            }`}
+                                        />
+                                        <span className="text-sm font-semibold">{age.label}</span>
+                                    </button>
+                                ))}
+                            </div>
                             {errors.buildingAge && <p className="text-red-500 text-xs mt-1">{errors.buildingAge}</p>}
                         </div>
                         <div className="mb-4">
-                            <label className="block text-sm font-medium text-[#475569] mb-2">Isolation toiture <span className="text-red-500">*</span></label>
+                            <label className="block text-sm font-medium text-[#475569] mb-2">Isolation de la toiture</label>
                             <div className="grid grid-cols-3 gap-2">
                                 {[
-                                    { val: 'none', label: 'Aucune', color: '#EF4444', bg: '#FEF2F2', border: '#FECACA' },
-                                    { val: 'partial', label: 'Partielle', color: '#F59E0B', bg: '#FFFBEB', border: '#FDE68A' },
-                                    { val: 'done', label: 'Réalisée', color: '#16A34A', bg: '#F0FDF4', border: '#BBF7D0' },
+                                    { id: 'yes', label: 'Isolée' },
+                                    { id: 'no', label: 'Non isolée' },
+                                    { id: 'unknown', label: 'Je ne sais pas' }
                                 ].map(opt => (
-                                    <button key={opt.val} type="button"
-                                        onClick={() => setFormData(p => ({ ...p, roofInsulation: opt.val }))}
-                                        style={formData.roofInsulation === opt.val ? { borderColor: opt.border, backgroundColor: opt.bg, color: opt.color } : {}}
-                                        className={`py-2 px-3 rounded-lg border text-sm font-medium transition-all ${formData.roofInsulation === opt.val ? 'border-2' : 'border-[#E2E8F0] text-[#475569] hover:border-[#1D4ED8]'}`}
+                                    <button key={opt.id} type="button"
+                                        onClick={() => setFormData({ ...formData, roofInsulation: opt.id })}
+                                        className={`p-3 rounded-lg border-2 text-sm font-medium transition-all ${
+                                            formData.roofInsulation === opt.id
+                                                ? 'border-[#1D4ED8] bg-[#EFF6FF] text-[#1D4ED8]'
+                                                : 'border-[#E2E8F0] hover:border-[#1D4ED8]/40'
+                                        }`}
                                     >{opt.label}</button>
                                 ))}
                             </div>
                             {errors.roofInsulation && <p className="text-red-500 text-xs mt-1">{errors.roofInsulation}</p>}
                         </div>
                         <div className="mb-2">
-                            <label className="block text-sm font-medium text-[#475569] mb-2">Isolation murs extérieurs <span className="text-red-500">*</span></label>
+                            <label className="block text-sm font-medium text-[#475569] mb-2">Isolation des murs</label>
                             <div className="grid grid-cols-3 gap-2">
                                 {[
-                                    { val: 'none', label: 'Aucune', color: '#EF4444', bg: '#FEF2F2', border: '#FECACA' },
-                                    { val: 'partial', label: 'Partielle', color: '#F59E0B', bg: '#FFFBEB', border: '#FDE68A' },
-                                    { val: 'done', label: 'Réalisée', color: '#16A34A', bg: '#F0FDF4', border: '#BBF7D0' },
+                                    { id: 'yes', label: 'Isolés' },
+                                    { id: 'no', label: 'Non isolés' },
+                                    { id: 'unknown', label: 'Je ne sais pas' }
                                 ].map(opt => (
-                                    <button key={opt.val} type="button"
-                                        onClick={() => setFormData(p => ({ ...p, wallInsulation: opt.val }))}
-                                        style={formData.wallInsulation === opt.val ? { borderColor: opt.border, backgroundColor: opt.bg, color: opt.color } : {}}
-                                        className={`py-2 px-3 rounded-lg border text-sm font-medium transition-all ${formData.wallInsulation === opt.val ? 'border-2' : 'border-[#E2E8F0] text-[#475569] hover:border-[#1D4ED8]'}`}
+                                    <button key={opt.id} type="button"
+                                        onClick={() => setFormData({ ...formData, wallInsulation: opt.id })}
+                                        className={`p-3 rounded-lg border-2 text-sm font-medium transition-all ${
+                                            formData.wallInsulation === opt.id
+                                                ? 'border-[#1D4ED8] bg-[#EFF6FF] text-[#1D4ED8]'
+                                                : 'border-[#E2E8F0] hover:border-[#1D4ED8]/40'
+                                        }`}
                                     >{opt.label}</button>
                                 ))}
                             </div>
@@ -3896,23 +3910,16 @@
                             <Icon icon="solar:settings-bold" className="text-[#1D4ED8] text-xl" />
                             <h3 className="font-semibold text-[#102A43]">Systèmes techniques</h3>
                         </div>
-                        {(formData.mainHeating === 'gas' || formData.mainHeating === 'other') && (
-                            <div className="mb-4">
-                                <label className="block text-sm font-medium text-[#475569] mb-2">Âge de la chaudière <span className="text-red-500">*</span></label>
-                                <div className="grid grid-cols-3 gap-2">
-                                    {[
-                                        { val: 'under10', label: '< 10 ans', color: '#16A34A', bg: '#F0FDF4', border: '#BBF7D0' },
-                                        { val: '10to20', label: '10–20 ans', color: '#F59E0B', bg: '#FFFBEB', border: '#FDE68A' },
-                                        { val: 'over20', label: '> 20 ans', color: '#EF4444', bg: '#FEF2F2', border: '#FECACA' },
-                                    ].map(opt => (
-                                        <button key={opt.val} type="button"
-                                            onClick={() => setFormData(p => ({ ...p, boilerAge: opt.val }))}
-                                            style={formData.boilerAge === opt.val ? { borderColor: opt.border, backgroundColor: opt.bg, color: opt.color } : {}}
-                                            className={`py-2 px-3 rounded-lg border text-sm font-medium transition-all ${formData.boilerAge === opt.val ? 'border-2' : 'border-[#E2E8F0] text-[#475569] hover:border-[#1D4ED8]'}`}
-                                        >{opt.label}</button>
-                                    ))}
-                                </div>
-                                {errors.boilerAge && <p className="text-red-500 text-xs mt-1">{errors.boilerAge}</p>}
+                        {formData.mainHeating === 'gas' && (
+                            <div className="mb-4 fade-in">
+                                <label className="block text-sm font-medium text-[#475569] mb-2">Âge de la chaudière gaz</label>
+                                <NewDiagnosticFormSelect
+                                    value={formData.boilerAge}
+                                    onChange={(v) => setFormData({ ...formData, boilerAge: v })}
+                                    options={NEW_DIAGNOSTIC_BOILER_AGES}
+                                    placeholder="Sélectionnez..."
+                                    error={errors.boilerAge}
+                                />
                             </div>
                         )}
                         <div className="mb-4">
@@ -4142,6 +4149,28 @@
             const warnings = errors.filter(e => typeof e === 'object' && e.type === 'warning');
             const blockingErrors = errors.filter(e => typeof e === 'string');
 
+            const getConfidencePreview = () => {
+                let score = 50;
+                let reasons = [];
+                if (formData.elecKwh && parseFloat(formData.elecKwh) > 0) {
+                    score += 25; reasons.push('kWh élec fournis');
+                } else if (formData.elecEuro && parseFloat(formData.elecEuro) > 0) {
+                    score += 10; reasons.push('€ élec (converti)');
+                }
+                if (formData.gasKwh && parseFloat(formData.gasKwh) > 0) {
+                    score += 25; reasons.push('kWh gaz fournis');
+                } else if (formData.gasEuro && parseFloat(formData.gasEuro) > 0) {
+                    score += 10; reasons.push('€ gaz (converti)');
+                }
+                if (!formData.elecUsed && !formData.gasUsed) { score = 20; reasons = ['Aucune donnée énergie']; }
+                const level = score >= 75 ? 'high' : score >= 50 ? 'medium' : 'low';
+                const label = level === 'high' ? 'Élevée' : level === 'medium' ? 'Moyenne' : 'Faible';
+                const color = level === 'high' ? 'text-green-600 bg-green-50 border-green-200' : level === 'medium' ? 'text-yellow-600 bg-yellow-50 border-yellow-200' : 'text-red-600 bg-red-50 border-red-200';
+                const barColor = level === 'high' ? 'bg-green-500' : level === 'medium' ? 'bg-yellow-500' : 'bg-red-500';
+                return { score, level, label, color, barColor, reasons };
+            };
+            const confidencePreview = getConfidencePreview();
+
             return (
                 <div className="max-w-3xl mx-auto">
                     <h2 className="text-2xl font-bold text-[#102A43] mb-2">Énergies</h2>
@@ -4172,6 +4201,24 @@
                             </ul>
                         </div>
                     )}
+
+                    {/* Score confiance temps réel */}
+                    <div className={`mb-6 p-4 rounded-xl border ${confidencePreview.color}`}>
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <iconify-icon icon="solar:shield-check-linear" class="text-xl" />
+                                <span className="font-semibold text-sm">Confiance estimation : {confidencePreview.label}</span>
+                            </div>
+                            <span className="text-2xl font-bold">{confidencePreview.score}%</span>
+                        </div>
+                        <div className="mt-2 h-2 bg-white/50 rounded-full overflow-hidden">
+                            <div
+                                className={`h-full transition-all duration-500 ${confidencePreview.barColor}`}
+                                style={{ width: `${confidencePreview.score}%` }}
+                            />
+                        </div>
+                        <p className="text-xs mt-2 opacity-75">{confidencePreview.reasons.join(' • ')}</p>
+                    </div>
 
                     {/* Électricité */}
                     <div className="mb-8 p-6 bg-white border border-neutral-200 rounded-xl">
@@ -4305,8 +4352,14 @@
 
             const validate = () => {
                 const newErrors = {};
+                if (!formData.firstName || formData.firstName.trim().length < 2) {
+                    newErrors.firstName = 'Prénom requis (min 2 caractères)';
+                }
                 if (!formData.email || !newDiagnosticValidateEmail(formData.email)) {
-                    newErrors.email = 'Veuillez saisir une adresse email valide pour recevoir votre rapport';
+                    newErrors.email = 'Email valide requis';
+                }
+                if (!formData.opt_in_politique) {
+                    newErrors.opt_in_politique = 'Vous devez accepter la politique de confidentialité';
                 }
                 setErrors(newErrors);
                 return Object.keys(newErrors).length === 0;
@@ -4315,7 +4368,10 @@
             const handleNext = () => {
                 if (validate()) {
                     newDiagnosticTrack('diagnostic_step4_completed', {
-                        works_count: formData.worksDone.length
+                        works_count: formData.worksDone.length,
+                        objective: formData.projectObjective,
+                        horizon: formData.decisionHorizon,
+                        contact_optin: formData.contactOptIn
                     });
                     onNext();
                 }
@@ -4323,153 +4379,183 @@
 
             return (
                 <div className="max-w-2xl mx-auto">
-                    <h2 className="text-2xl font-bold text-[#102A43] mb-2">Votre projet et vos coordonnées</h2>
-                    <p className="text-[#475569] mb-8">
-                        Indiquez votre email pour recevoir votre rapport
-                    </p>
+                    <h2 className="text-2xl font-bold text-[#102A43] mb-2">Dernière étape</h2>
+                    <p className="text-[#475569] mb-8">Vos coordonnées et votre projet</p>
 
-                    {/* Contact fields */}
-                    <div className="mb-6 p-6 bg-white border border-[#E2E8F0] rounded-xl shadow-sm">
-                        <p className="text-sm font-semibold text-neutral-900 mb-4">Vos coordonnées</p>
-                        <NewDiagnosticFormInput
-                            label="Email"
-                            value={formData.email}
-                            onChange={(v) => setFormData({ ...formData, email: v })}
-                            type="email"
-                            placeholder="vous@entreprise.fr"
-                            required
-                            error={errors.email}
-                            helper="Votre rapport PDF vous sera envoyé à cette adresse."
-                        />
-                        <NewDiagnosticFormInput
-                            label="Téléphone (optionnel)"
-                            value={formData.phone || ''}
-                            onChange={(v) => setFormData({ ...formData, phone: v })}
-                            type="tel"
-                            placeholder="06 12 34 56 78"
-                        />
+                    {/* Coordonnées */}
+                    <div className="mb-8 p-6 bg-white border border-[#E2E8F0] rounded-xl shadow-sm">
+                        <h3 className="text-sm font-bold text-neutral-900 mb-4 flex items-center gap-2">
+                            <iconify-icon icon="solar:user-linear" class="text-lg text-[#1D4ED8]" />
+                            Vos coordonnées
+                        </h3>
+                        <div className="grid md:grid-cols-2 gap-4">
+                            <NewDiagnosticFormInput
+                                label="Prénom"
+                                value={formData.firstName || ''}
+                                onChange={(v) => setFormData({ ...formData, firstName: v })}
+                                placeholder="Jean"
+                                required
+                                error={errors.firstName}
+                            />
+                            <NewDiagnosticFormInput
+                                label="Email"
+                                value={formData.email}
+                                onChange={(v) => setFormData({ ...formData, email: v })}
+                                type="email"
+                                placeholder="vous@entreprise.fr"
+                                required
+                                error={errors.email}
+                            />
+                        </div>
+                        <div className="grid md:grid-cols-2 gap-4 mt-4">
+                            <NewDiagnosticFormInput
+                                label="Téléphone"
+                                value={formData.phone || ''}
+                                onChange={(v) => setFormData({ ...formData, phone: v })}
+                                type="tel"
+                                placeholder="06 12 34 56 78"
+                                helper="Optionnel"
+                            />
+                            <NewDiagnosticFormInput
+                                label="Société"
+                                value={formData.company || ''}
+                                onChange={(v) => setFormData({ ...formData, company: v })}
+                                placeholder="Nom de votre entreprise"
+                                helper="Optionnel"
+                            />
+                        </div>
                     </div>
 
-                    {/* ── Qualification prospect ────────────────────────────────── */}
-                    <div className="mb-6 p-5 bg-white border border-[#E2E8F0] rounded-xl shadow-sm">
-                        <div className="flex items-center gap-2 mb-4">
-                            <Icon icon="solar:target-bold" className="text-[#1D4ED8] text-xl" />
-                            <h3 className="font-semibold text-[#102A43]">Votre projet</h3>
-                        </div>
-                        <div className="mb-5">
-                            <label className="block text-sm font-medium text-[#475569] mb-3">Objectif principal</label>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                {[
-                                    { val: 'reduce_costs', label: 'Réduire mes charges', sub: 'Factures trop élevées', color: '#16A34A', bg: '#F0FDF4', border: '#BBF7D0', icon: 'solar:dollar-minimalistic-bold' },
-                                    { val: 'comply_regulation', label: 'Conformité réglementaire', sub: 'Décret Tertiaire, vente, bail', color: '#1D4ED8', bg: '#EFF6FF', border: '#BFDBFE', icon: 'solar:document-bold' },
-                                    { val: 'valorise_asset', label: 'Valoriser mon patrimoine', sub: 'DPE, cession', color: '#7C3AED', bg: '#F5F3FF', border: '#DDD6FE', icon: 'solar:buildings-bold' },
-                                    { val: 'comfort', label: 'Améliorer le confort', sub: "Température, qualité d'air", color: '#F59E0B', bg: '#FFFBEB', border: '#FDE68A', icon: 'solar:smile-circle-bold' },
-                                    { val: 'csr', label: 'Décarbonation / RSE', sub: 'Trajectoire net zéro, bilan carbone', color: '#059669', bg: '#ECFDF5', border: '#A7F3D0', icon: 'solar:leaf-bold' },
-                                ].map(opt => (
-                                    <button key={opt.val} type="button"
-                                        onClick={() => setFormData(p => ({ ...p, projectObjective: opt.val }))}
-                                        style={formData.projectObjective === opt.val ? { borderColor: opt.border, backgroundColor: opt.bg } : {}}
-                                        className={`flex items-start gap-3 p-3 rounded-xl border text-left transition-all ${formData.projectObjective === opt.val ? 'border-2' : 'border-[#E2E8F0] hover:border-[#1D4ED8]'}`}
+                    {/* Projet */}
+                    <div className="mb-8 p-6 bg-white border border-[#E2E8F0] rounded-xl shadow-sm">
+                        <h3 className="text-sm font-bold text-neutral-900 mb-4 flex items-center gap-2">
+                            <iconify-icon icon="solar:target-linear" class="text-lg text-[#1D4ED8]" />
+                            Votre projet
+                        </h3>
+                        <div className="mb-6">
+                            <label className="block text-sm font-medium text-neutral-700 mb-3">Objectif principal</label>
+                            <div className="grid gap-3">
+                                {NEW_DIAGNOSTIC_PROJECT_OBJECTIVES.map(obj => (
+                                    <button
+                                        key={obj.id}
+                                        type="button"
+                                        onClick={() => setFormData({ ...formData, projectObjective: obj.id })}
+                                        className={`p-4 rounded-xl border-2 text-left flex items-center gap-4 transition-all ${
+                                            formData.projectObjective === obj.id
+                                                ? 'border-[#1D4ED8] bg-[#EFF6FF]'
+                                                : 'border-[#E2E8F0] hover:border-[#1D4ED8]/40'
+                                        }`}
                                     >
-                                        <Icon icon={opt.icon} style={{ color: opt.color, fontSize: '22px', flexShrink: 0, marginTop: '2px' }} />
-                                        <div>
-                                            <div className="text-sm font-semibold text-[#102A43]">{opt.label}</div>
-                                            <div className="text-xs text-[#475569] mt-0.5">{opt.sub}</div>
-                                        </div>
+                                        <iconify-icon icon={obj.icon} class={`text-2xl ${formData.projectObjective === obj.id ? 'text-[#1D4ED8]' : 'text-neutral-500'}`} />
+                                        <span className="font-medium">{obj.label}</span>
                                     </button>
                                 ))}
                             </div>
                         </div>
-                        <div className="mb-5">
-                            <label className="block text-sm font-medium text-[#475569] mb-2">Horizon de décision</label>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                                {[
-                                    { val: 'immediate', label: 'Immédiat' },
-                                    { val: '3to6months', label: '3–6 mois' },
-                                    { val: '6to12months', label: '6–12 mois' },
-                                    { val: 'over1year', label: '> 1 an' },
-                                    { val: 'exploring', label: 'En exploration' },
-                                ].map(opt => (
-                                    <button key={opt.val} type="button"
-                                        onClick={() => setFormData(p => ({ ...p, decisionHorizon: opt.val }))}
-                                        className={`py-2 px-3 rounded-lg border text-sm font-medium transition-all ${formData.decisionHorizon === opt.val ? 'bg-[#EFF6FF] border-[#1D4ED8] text-[#1D4ED8] border-2' : 'border-[#E2E8F0] text-[#475569] hover:border-[#1D4ED8]'}`}
-                                    >{opt.label}</button>
-                                ))}
-                            </div>
+                        <div className="grid md:grid-cols-2 gap-4">
+                            <NewDiagnosticFormSelect
+                                label="Horizon de décision"
+                                value={formData.decisionHorizon || ''}
+                                onChange={(v) => setFormData({ ...formData, decisionHorizon: v })}
+                                options={NEW_DIAGNOSTIC_DECISION_HORIZONS}
+                                placeholder="Sélectionnez..."
+                            />
+                            <NewDiagnosticFormSelect
+                                label="Êtes-vous décideur ?"
+                                value={formData.isDecisionMaker || ''}
+                                onChange={(v) => setFormData({ ...formData, isDecisionMaker: v })}
+                                options={[
+                                    { id: 'yes', label: 'Oui, je décide' },
+                                    { id: 'no', label: 'Non, je prépare le dossier' }
+                                ]}
+                                placeholder="Sélectionnez..."
+                            />
                         </div>
-                        <div className="mb-5">
-                            <label className="block text-sm font-medium text-[#475569] mb-2">Budget envisagé</label>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                                {[
-                                    { val: 'under5k', label: '< 5 000 €' },
-                                    { val: '5to20k', label: '5–20 k€' },
-                                    { val: '20to80k', label: '20–80 k€' },
-                                    { val: 'over80k', label: '> 80 000 €' },
-                                    { val: 'unknown', label: 'Non défini' },
-                                ].map(opt => (
-                                    <button key={opt.val} type="button"
-                                        onClick={() => setFormData(p => ({ ...p, budgetRange: opt.val }))}
-                                        className={`py-2 px-3 rounded-lg border text-sm font-medium transition-all ${formData.budgetRange === opt.val ? 'bg-[#EFF6FF] border-[#1D4ED8] text-[#1D4ED8] border-2' : 'border-[#E2E8F0] text-[#475569] hover:border-[#1D4ED8]'}`}
-                                    >{opt.label}</button>
-                                ))}
-                            </div>
+                    </div>
+
+                    {/* Travaux déjà réalisés */}
+                    <div className="mb-8 p-6 bg-white border border-[#E2E8F0] rounded-xl shadow-sm">
+                        <h3 className="text-sm font-bold text-neutral-900 mb-4 flex items-center gap-2">
+                            <iconify-icon icon="solar:hammer-linear" class="text-lg text-[#1D4ED8]" />
+                            Travaux déjà réalisés
+                        </h3>
+                        <p className="text-sm text-neutral-500 mb-4">Ces travaux seront exclus des recommandations du rapport.</p>
+                        <div className="grid md:grid-cols-2 gap-3">
+                            {NEW_DIAGNOSTIC_WORKS_DONE.map(work => (
+                                <label
+                                    key={work.id}
+                                    className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
+                                        formData.worksDone.includes(work.id)
+                                            ? 'border-[#1D4ED8] bg-[#EFF6FF]'
+                                            : 'border-[#E2E8F0] hover:border-[#1D4ED8]/40'
+                                    }`}
+                                >
+                                    <input
+                                        type="checkbox"
+                                        checked={formData.worksDone.includes(work.id)}
+                                        onChange={(e) => {
+                                            if (e.target.checked) {
+                                                setFormData({ ...formData, worksDone: [...formData.worksDone, work.id] });
+                                            } else {
+                                                setFormData({ ...formData, worksDone: formData.worksDone.filter(id => id !== work.id) });
+                                            }
+                                        }}
+                                        className="w-4 h-4 text-[#1D4ED8] rounded"
+                                    />
+                                    <span className="text-sm">{work.label}</span>
+                                </label>
+                            ))}
                         </div>
-                        {formData.role !== 'owner' && (
-                            <div>
-                                <label className="block text-sm font-medium text-[#475569] mb-2">Pouvoir de décision</label>
-                                <div className="grid grid-cols-3 gap-2">
-                                    {[
-                                        { val: 'yes', label: 'Décideur direct' },
-                                        { val: 'need_approval', label: 'Accord requis' },
-                                        { val: 'no', label: 'Pas décideur' },
-                                    ].map(opt => (
-                                        <button key={opt.val} type="button"
-                                            onClick={() => setFormData(p => ({ ...p, isDecisionMaker: opt.val }))}
-                                            className={`py-2 px-3 rounded-lg border text-sm font-medium transition-all ${formData.isDecisionMaker === opt.val ? 'bg-[#EFF6FF] border-[#1D4ED8] text-[#1D4ED8] border-2' : 'border-[#E2E8F0] text-[#475569] hover:border-[#1D4ED8]'}`}
-                                        >{opt.label}</button>
-                                    ))}
+                    </div>
+
+                    {/* RGPD */}
+                    <div className="mb-8 p-6 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl">
+                        <div className="space-y-4">
+                            <label className="flex items-start gap-3 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={formData.opt_in_politique}
+                                    onChange={(e) => setFormData({ ...formData, opt_in_politique: e.target.checked })}
+                                    className="mt-1 w-5 h-5 text-[#1D4ED8] rounded"
+                                />
+                                <div>
+                                    <span className="text-sm text-neutral-700">
+                                        J'accepte la <a href="/politique-confidentialite.html" className="text-[#1D4ED8] underline" target="_blank">politique de confidentialité</a> *
+                                    </span>
+                                    {errors.opt_in_politique && (
+                                        <p className="text-xs text-red-500 mt-1">{errors.opt_in_politique}</p>
+                                    )}
                                 </div>
-                            </div>
-                        )}
+                            </label>
+                            <label className="flex items-start gap-3 cursor-pointer p-4 bg-green-50 rounded-lg border border-green-200">
+                                <input
+                                    type="checkbox"
+                                    checked={formData.contactOptIn}
+                                    onChange={(e) => setFormData({ ...formData, contactOptIn: e.target.checked })}
+                                    className="mt-1 w-5 h-5 text-green-600 rounded"
+                                />
+                                <div>
+                                    <span className="text-sm font-semibold text-green-800">Je souhaite être mis en relation avec un expert partenaire</span>
+                                    <p className="text-xs text-green-700 mt-1">Optionnel — Un professionnel qualifié pourra vous contacter pour affiner votre projet.</p>
+                                </div>
+                            </label>
+                        </div>
                     </div>
 
-                    {/* Works */}
-                    <div className="p-6 bg-white border border-[#E2E8F0] rounded-xl shadow-sm mb-4">
-                        <p className="text-sm font-semibold text-neutral-900 mb-4">Travaux déjà réalisés (facultatif)</p>
-                        <NewDiagnosticCheckboxGroup
-                            options={NEW_DIAGNOSTIC_WORKS_DONE}
-                            selected={formData.worksDone}
-                            onChange={(v) => setFormData({ ...formData, worksDone: v })}
-                        />
-
-                        {formData.worksDone.length === 0 && (
-                            <p className="text-sm text-neutral-500 mt-4 italic">
-                                Aucun travail sélectionné (toutes les actions seront proposées)
-                            </p>
-                        )}
-                    </div>
-
-                    <div className="mt-6 p-4 bg-[#EFF6FF] border border-[#DBEAFE] rounded-lg">
-                        <NewDiagnosticCheckbox
-                            label="J'accepte d'être mis en relation avec un partenaire au sujet de mon projet."
-                            checked={formData.contactOptIn}
-                            onChange={(v) => setFormData({ ...formData, contactOptIn: v })}
-                            helper="Si vous cochez cette case, vos coordonnées et les informations utiles à votre projet pourront être transmises à nos partenaires pour vous recontacter."
-                        />
-                    </div>
-
-                    <div className="flex justify-between mt-8">
-                        <button
-                            onClick={onBack}
-                            className="px-6 py-3 text-neutral-600 hover:text-[#102A43] font-semibold transition-colors"
-                        >
-                            Retour
+                    <div className="flex justify-between">
+                        <button onClick={onBack} className="px-6 py-3 text-neutral-600 hover:text-[#102A43] font-semibold transition-colors">
+                            ← Retour
                         </button>
                         <button
                             onClick={handleNext}
-                            className="px-8 py-3 bg-[#1D4ED8] text-white font-semibold rounded-lg hover:bg-[#1E40AF] transition-colors shadow-sm"
+                            disabled={!formData.opt_in_politique}
+                            className={`px-8 py-3 font-semibold rounded-lg transition-colors shadow-sm ${
+                                formData.opt_in_politique
+                                    ? 'bg-[#1D4ED8] text-white hover:bg-[#1E40AF]'
+                                    : 'bg-neutral-200 text-neutral-400 cursor-not-allowed'
+                            }`}
                         >
-                            Terminer et voir mon rapport
+                            Voir mon rapport →
                         </button>
                     </div>
                 </div>
@@ -5072,154 +5158,166 @@
                     source_level_roi: 'hypothesis'
                 },
 
-                // ─── ACT13 — PAC air/eau ────────────────────────────────────────────────────
                 {
                     id: 'ACT13',
-                    name: 'Remplacement chaudière → Pompe à chaleur air/eau',
-                    category: 'heating_structural',
+                    name: 'Remplacement chaudière gaz par PAC air/eau',
+                    category: 'heating',
                     tier: 'structural',
+                    trigger_rules: ['mainHeating === gas', 'boilerAge >= 15to20'],
                     gain_scope: 'heating_post',
                     gain_pct_low: 0.35, gain_pct_med: 0.50, gain_pct_high: 0.65,
-                    energy_switch: true,
-                    energy_switch_note: 'Consommation gaz réduite, consommation électrique augmentée. Gain net estimé à 50% du poste chauffage gaz. COP moyen 3.2.',
-                    capex_low: 12000, capex_med: 22000, capex_high: 40000, capex_unit: '€',
+                    capex_low: 15000, capex_med: 25000, capex_high: 40000,
+                    capex_unit: '€',
                     roi_method: 'simple_payback',
-                    aid_tags: ['CEE', 'MaPrimeRenov'], fiche_cee: 'BAT-TH-113',
-                    intervenants: 'Installateur RGE — qualification PACPro / QualiPAC',
-                    source_level_gain: 'source_strong', source_ref_gain: 'ADEME — PAC tertiaire, COP 3.2 air/eau',
-                    source_level_capex: 'source_partial', source_ref_capex: 'Retours installateurs RGE 2024-2025',
+                    aid_tags: ['CEE', 'MaPrimeRenov'],
+                    source_level_gain: 'source_strong',
+                    source_ref_gain: 'ADEME - PAC air/eau vs chaudière gaz',
+                    source_level_capex: 'source_partial',
+                    source_ref_capex: 'Prix marché PAC 2025',
                     source_level_roi: 'hypothesis'
                 },
-                // ─── ACT14 — Ballon thermodynamique ─────────────────────────────────────────
                 {
                     id: 'ACT14',
-                    name: 'Ballon thermodynamique (ECS)',
-                    category: 'dhw_structural',
+                    name: 'Installation GTB / Supervision centralisée',
+                    category: 'pilotage',
                     tier: 'equipment',
-                    gain_scope: 'dhw_post',
-                    gain_pct_low: 0.55, gain_pct_med: 0.65, gain_pct_high: 0.75,
-                    capex_low: 2800, capex_med: 4000, capex_high: 6500, capex_unit: '€',
+                    trigger_rules: ['surface > 500'],
+                    gain_scope: 'total',
+                    gain_pct_low: 0.10, gain_pct_med: 0.18, gain_pct_high: 0.28,
+                    capex_low: 8000, capex_med: 20000, capex_high: 45000,
+                    capex_unit: '€',
                     roi_method: 'simple_payback',
-                    aid_tags: ['CEE', 'TVA5.5'], fiche_cee: 'BAT-TH-148',
-                    intervenants: 'Plombier-chauffagiste RGE',
-                    source_level_gain: 'source_strong', source_ref_gain: 'ADEME — Ballon thermodynamique COP 2.8-3.5',
-                    source_level_capex: 'source_strong', source_ref_capex: 'Prix marché 2024-2025',
+                    aid_tags: ['CEE'],
+                    source_level_gain: 'source_partial',
+                    source_ref_gain: 'ADEME - GTB tertiaire',
+                    source_level_capex: 'hypothesis',
+                    source_ref_capex: 'Estimation intégrateurs GTB',
                     source_level_roi: 'hypothesis'
                 },
-                // ─── ACT15 — Isolation toiture ────────────────────────────────────────────────
                 {
                     id: 'ACT15',
-                    name: 'Isolation thermique de la toiture',
+                    name: 'Isolation thermique toiture',
                     category: 'envelope_roof',
                     tier: 'structural',
+                    trigger_rules: ['roofInsulation !== yes'],
                     gain_scope: 'heating_post',
-                    gain_pct_low: 0.14, gain_pct_med: 0.22, gain_pct_high: 0.32,
-                    capex_low: 40, capex_med: 70, capex_high: 120, capex_unit: '€/m²',
+                    gain_pct_low: 0.15, gain_pct_med: 0.22, gain_pct_high: 0.30,
+                    capex_low: 40, capex_med: 70, capex_high: 120,
+                    capex_unit: '€/m²',
                     roi_method: 'simple_payback',
-                    aid_tags: ['CEE', 'MaPrimeRenov'], fiche_cee: 'BAT-EN-102',
-                    intervenants: 'Entreprise isolation RGE — qualif. Qualibat 71x ou 73x',
-                    source_level_gain: 'source_strong', source_ref_gain: 'ADEME — Isolation toiture tertiaire',
-                    source_level_capex: 'source_partial', source_ref_capex: 'Prix marché isolation + MO 2024',
+                    aid_tags: ['CEE', 'MaPrimeRenov'],
+                    source_level_gain: 'source_strong',
+                    source_ref_gain: 'ADEME - Isolation toiture tertiaire',
+                    source_level_capex: 'source_partial',
+                    source_ref_capex: 'Prix marché isolation 2025',
                     source_level_roi: 'hypothesis'
                 },
-                // ─── ACT16 — ITE murs extérieurs ─────────────────────────────────────────────
                 {
                     id: 'ACT16',
-                    name: 'Isolation thermique des murs extérieurs (ITE)',
+                    name: 'Isolation thermique murs extérieurs (ITE)',
                     category: 'envelope_walls',
                     tier: 'structural',
+                    trigger_rules: ['wallInsulation !== yes'],
                     gain_scope: 'heating_post',
-                    gain_pct_low: 0.10, gain_pct_med: 0.18, gain_pct_high: 0.28,
-                    capex_low: 80, capex_med: 130, capex_high: 200, capex_unit: '€/m² de façade',
-                    capex_note: 'Surface façade estimée = surface bâtiment × 0.6',
+                    gain_pct_low: 0.12, gain_pct_med: 0.18, gain_pct_high: 0.25,
+                    capex_low: 120, capex_med: 180, capex_high: 280,
+                    capex_unit: '€/m²',
                     roi_method: 'simple_payback',
-                    aid_tags: ['CEE', 'MaPrimeRenov'], fiche_cee: 'BAT-EN-101',
-                    intervenants: 'Entreprise isolation RGE — ITE qualifiée',
-                    source_level_gain: 'source_partial', source_ref_gain: 'ADEME — Isolation murs tertiaire',
-                    source_level_capex: 'source_partial', source_ref_capex: 'Prix marché ITE 2024',
+                    aid_tags: ['CEE', 'MaPrimeRenov'],
+                    source_level_gain: 'source_partial',
+                    source_ref_gain: 'ADEME - ITE tertiaire',
+                    source_level_capex: 'source_partial',
+                    source_ref_capex: 'Prix marché ITE 2025',
                     source_level_roi: 'hypothesis'
                 },
-                // ─── ACT17 — VMC double flux ─────────────────────────────────────────────────
                 {
                     id: 'ACT17',
-                    name: 'VMC double flux avec récupérateur de chaleur',
-                    category: 'ventilation_structural',
+                    name: 'Remplacement fenêtres (double/triple vitrage)',
+                    category: 'envelope_windows',
                     tier: 'structural',
-                    gain_scope: 'vent_aux_post',
-                    gain_pct_low: 0.30, gain_pct_med: 0.50, gain_pct_high: 0.65,
-                    capex_low: 6000, capex_med: 15000, capex_high: 30000, capex_unit: '€',
+                    trigger_rules: [],
+                    gain_scope: 'heating_post',
+                    gain_pct_low: 0.05, gain_pct_med: 0.10, gain_pct_high: 0.15,
+                    capex_low: 400, capex_med: 600, capex_high: 900,
+                    capex_unit: '€/m² vitré',
                     roi_method: 'simple_payback',
-                    aid_tags: ['CEE'], fiche_cee: 'BAT-TH-125',
-                    intervenants: 'Entreprise ventilation RGE — qualification QualiAir',
-                    source_level_gain: 'source_partial', source_ref_gain: 'ADEME — VMC DF HR tertiaire',
-                    source_level_capex: 'source_partial', source_ref_capex: 'Devis moyens installateurs 2024',
+                    aid_tags: ['CEE', 'MaPrimeRenov'],
+                    source_level_gain: 'source_partial',
+                    source_ref_gain: 'ADEME - Menuiseries',
+                    source_level_capex: 'source_partial',
+                    source_ref_capex: 'Prix marché menuiseries 2025',
                     source_level_roi: 'hypothesis'
                 },
-                // ─── ACT18 — Panneaux PV ─────────────────────────────────────────────────────
                 {
                     id: 'ACT18',
-                    name: 'Panneaux photovoltaïques (autoconsommation)',
-                    category: 'production',
-                    tier: 'structural',
-                    gain_scope: 'elec_post',
-                    gain_pct_low: 0.08, gain_pct_med: 0.15, gain_pct_high: 0.25,
-                    capex_low: 6000, capex_med: 15000, capex_high: 35000, capex_unit: '€',
-                    capex_note: 'Estimé sur 6–10 kWc. À dimensionner selon surface disponible.',
+                    name: 'Ballon ECS thermodynamique',
+                    category: 'dhw',
+                    tier: 'equipment',
+                    trigger_rules: ['ecsSystem === electric_boiler'],
+                    gain_scope: 'dhw_post',
+                    gain_pct_low: 0.50, gain_pct_med: 0.65, gain_pct_high: 0.75,
+                    capex_low: 2500, capex_med: 4000, capex_high: 6000,
+                    capex_unit: '€',
                     roi_method: 'simple_payback',
-                    aid_tags: ['TVA5.5', 'PrimeAutoconsommation'],
-                    intervenants: 'Installateur photovoltaïque RGE — IRCVE ou QualiPV',
-                    source_level_gain: 'source_partial', source_ref_gain: 'ADEME — Solaire PV tertiaire autoconsommation',
-                    source_level_capex: 'source_partial', source_ref_capex: 'Prix marché PV 2024-2025',
+                    aid_tags: ['CEE', 'MaPrimeRenov'],
+                    source_level_gain: 'source_strong',
+                    source_ref_gain: 'ADEME - Chauffe-eau thermodynamique',
+                    source_level_capex: 'source_partial',
+                    source_ref_capex: 'Prix marché CET 2025',
                     source_level_roi: 'hypothesis'
                 },
-                // ─── ACT19 — GTB ─────────────────────────────────────────────────────────────
                 {
                     id: 'ACT19',
-                    name: 'GTB — Gestion Technique du Bâtiment',
-                    category: 'automation',
-                    tier: 'equipment',
-                    gain_scope: 'total',
-                    gain_pct_low: 0.10, gain_pct_med: 0.15, gain_pct_high: 0.22,
-                    capex_low: 6000, capex_med: 18000, capex_high: 45000, capex_unit: '€',
-                    capex_note: 'CAPEX dépend de la surface et du niveau de supervision.',
-                    roi_method: 'simple_payback',
-                    aid_tags: ['CEE'], fiche_cee: 'BAT-TH-116',
-                    intervenants: "Intégrateur GTB / Bureau d'études CVC spécialisé",
-                    source_level_gain: 'source_partial', source_ref_gain: 'ADEME — GTB tertiaire, retours terrain',
-                    source_level_capex: 'source_partial', source_ref_capex: 'Devis moyens intégrateurs GTB 2024',
-                    source_level_roi: 'hypothesis'
-                },
-                // ─── ACT20 — Portes vitrées frigos ───────────────────────────────────────────
-                {
-                    id: 'ACT20',
-                    name: 'Portes vitrées sur meubles frigorifiques ouverts',
-                    category: 'cold_commercial',
-                    tier: 'equipment',
-                    gain_scope: 'cooling_post',
-                    gain_pct_low: 0.22, gain_pct_med: 0.30, gain_pct_high: 0.38,
-                    capex_low: 800, capex_med: 1800, capex_high: 3500, capex_unit: '€/ml',
-                    capex_note: 'Estimé sur 6 ml de linéaire standard. À dimensionner selon linéaire réel.',
-                    roi_method: 'simple_payback',
-                    aid_tags: ['CEE', 'TVA5.5'], fiche_cee: 'BAT-EQ-133',
-                    intervenants: 'Frigoriste RGE — spécialiste froid commercial',
-                    source_level_gain: 'source_strong', source_ref_gain: 'ADEME — Portes sur meubles positifs',
-                    source_level_capex: 'source_partial', source_ref_capex: 'Prix marché pose portes frigo 2024',
-                    source_level_roi: 'hypothesis'
-                },
-                // ─── ACT21 — Maintenance groupes froids ──────────────────────────────────────
-                {
-                    id: 'ACT21',
-                    name: 'Optimisation & maintenance groupes froids',
-                    category: 'cold_commercial',
+                    name: 'Free cooling / Sur-ventilation nocturne',
+                    category: 'cooling',
                     tier: 'quick_win',
+                    trigger_rules: ['hasCooling === true'],
                     gain_scope: 'cooling_post',
-                    gain_pct_low: 0.10, gain_pct_med: 0.18, gain_pct_high: 0.25,
-                    capex_low: 400, capex_med: 1200, capex_high: 3000, capex_unit: '€',
+                    gain_pct_low: 0.15, gain_pct_med: 0.25, gain_pct_high: 0.40,
+                    capex_low: 500, capex_med: 2000, capex_high: 5000,
+                    capex_unit: '€',
                     roi_method: 'simple_payback',
                     aid_tags: [],
-                    intervenants: 'Frigoriste certifié fluides frigorigènes (attestation F-gaz)',
-                    source_level_gain: 'source_partial', source_ref_gain: 'Retours terrain frigoristes',
-                    source_level_capex: 'hypothesis', source_ref_capex: 'Estimation prestation maintenance froid',
+                    source_level_gain: 'hypothesis',
+                    source_ref_gain: 'Estimation produit',
+                    source_level_capex: 'hypothesis',
+                    source_ref_capex: 'Estimation automatisation',
+                    source_level_roi: 'hypothesis'
+                },
+                {
+                    id: 'ACT20',
+                    name: 'Récupération chaleur sur groupe froid',
+                    category: 'heating',
+                    tier: 'equipment',
+                    trigger_rules: ['hasCooling === true'],
+                    gain_scope: 'dhw_post',
+                    gain_pct_low: 0.30, gain_pct_med: 0.50, gain_pct_high: 0.70,
+                    capex_low: 3000, capex_med: 8000, capex_high: 15000,
+                    capex_unit: '€',
+                    roi_method: 'simple_payback',
+                    aid_tags: ['CEE'],
+                    source_level_gain: 'source_partial',
+                    source_ref_gain: 'ADEME - Récupération chaleur froid commercial',
+                    source_level_capex: 'hypothesis',
+                    source_ref_capex: 'Estimation échangeur + installation',
+                    source_level_roi: 'hypothesis'
+                },
+                {
+                    id: 'ACT21',
+                    name: 'Comptage intelligent / Sous-comptage',
+                    category: 'pilotage',
+                    tier: 'quick_win',
+                    trigger_rules: ['surface > 300'],
+                    gain_scope: 'total',
+                    gain_pct_low: 0.03, gain_pct_med: 0.06, gain_pct_high: 0.10,
+                    capex_low: 1000, capex_med: 3000, capex_high: 8000,
+                    capex_unit: '€',
+                    roi_method: 'simple_payback',
+                    aid_tags: [],
+                    source_level_gain: 'hypothesis',
+                    source_ref_gain: 'Estimation effet comportemental',
+                    source_level_capex: 'hypothesis',
+                    source_ref_capex: 'Prix compteurs communicants',
                     source_level_roi: 'hypothesis'
                 }
             ]
@@ -5469,115 +5567,75 @@
         const newDiagnosticFilterAndScoreActions = (formData, totalKwh, breakdown, avgPrice) => {
             const worksDone = formData.worksDone || [];
             const surface = Math.max(1, Number(formData.surface || 100));
-            const energyPrices = { elec: 0.196, gas: 0.105 };
+            const buildingAge = formData.buildingAge || 'after_2005';
+            const boilerAge = formData.boilerAge || 'under5';
 
-            // ── Filtrage éligibilité ────────────────────────────────────────────────────
-            const eligible = NEW_DIAGNOSTIC_ACTIONS_LIBRARY.actions.filter(action => {
-                // Exclusions travaux réalisés
-                if (worksDone.includes('led') && action.category === 'lighting') return false;
-                if (worksDone.includes('regulation') && ['ACT01', 'ACT02'].includes(action.id)) return false;
-                if ((worksDone.includes('hvac_new') || worksDone.includes('pac_done'))
-                    && ['heating', 'heating_structural'].includes(action.category)) return false;
-                if ((worksDone.includes('roof_done') || worksDone.includes('envelope'))
-                    && ['envelope', 'envelope_roof'].includes(action.category)) return false;
-                if ((worksDone.includes('walls_done') || worksDone.includes('envelope'))
-                    && action.category === 'envelope_walls') return false;
-                if (worksDone.includes('dhw') && ['dhw', 'dhw_structural'].includes(action.category)) return false;
-                if ((worksDone.includes('gtb_done') || worksDone.includes('gtb')) && action.id === 'ACT19') return false;
-                if (worksDone.includes('cold_renovated') && ['cold_commercial', 'cold_maintenance'].includes(action.category)) return false;
-                if (worksDone.includes('pv_installed') && action.category === 'production') return false;
+            let eligibleActions = NEW_DIAGNOSTIC_ACTIONS_LIBRARY.actions.filter(action => {
+                // EXCLUSIONS PAR TRAVAUX DÉJÀ RÉALISÉS
+                if (worksDone.includes('led_done') && action.category === 'lighting') return false;
+                if (worksDone.includes('regulation_done') && ['ACT01', 'ACT02', 'ACT03'].includes(action.id)) return false;
+                if (worksDone.includes('pac_done') && action.id === 'ACT13') return false;
+                if (worksDone.includes('boiler_recent') && action.id === 'ACT13') return false;
+                if (worksDone.includes('roof_done') && action.category === 'envelope_roof') return false;
+                if (worksDone.includes('walls_done') && action.category === 'envelope_walls') return false;
+                if (worksDone.includes('windows_done') && action.category === 'envelope_windows') return false;
+                if (worksDone.includes('gtb_done') && action.category === 'pilotage') return false;
+                if (worksDone.includes('dhw_done') && action.category === 'dhw') return false;
+                if (worksDone.includes('vmc_df_done') && action.category === 'ventilation') return false;
 
-                // Gate questions
-                if (!formData.hasCooling && action.category === 'cooling') return false;
-                if (formData.mainHeating === 'electric' && action.id === 'ACT04') return false;
-
-                // ACT13 — PAC
-                if (action.id === 'ACT13') {
-                    if (!['gas', 'other'].includes(formData.mainHeating)) return false;
-                    // Only exclude PAC when boiler is known to be recent; unknown/empty → allow
-                    if (formData.boilerAge === 'under10') return false;
-                }
-                // ACT14 — Ballon thermo
-                if (action.id === 'ACT14') {
-                    const hasElecBoiler = (!formData.ecsSameSystem && formData.ecsSystem === 'electric_boiler')
-                        || (formData.ecsSameSystem && formData.mainHeating === 'electric');
-                    if (!hasElecBoiler) return false;
-                    if (['heat_pump', 'solar'].includes(formData.ecsSystem)) return false;
-                }
-                // ACT15 — Isolation toiture
-                if (action.id === 'ACT15') {
-                    if (formData.roofInsulation === 'done') return false;
-                    if (['post2012', '2006_2012'].includes(formData.buildingAge)) return false;
-                }
-                // ACT16 — ITE murs
-                if (action.id === 'ACT16') {
-                    if (formData.wallInsulation === 'done') return false;
-                    if (!['pre1948', '1948_1974', '1975_1988'].includes(formData.buildingAge)) return false;
-                }
-                // ACT17 — VMC DF
-                if (action.id === 'ACT17') {
-                    if (formData.vmcType === 'double_flux') return false;
-                }
-                // ACT18 — PV
-                if (action.id === 'ACT18') {
-                    if (formData.role !== 'owner') return false;
-                    // Only exclude if roof is explicitly NOT accessible
-                    if (formData.roofAccessible === 'no') return false;
-                    // Only exclude if explicitly no electricity (and no elec consumption data)
-                    if (formData.elecUsed === false && !formData.elecKwh && !formData.elecEuro) return false;
-                }
-                // ACT19 — GTB
-                if (action.id === 'ACT19') {
-                    if (surface < 300) return false;
-                    if (formData.hasGtb) return false;
-                    if (['post2012', '2006_2012'].includes(formData.buildingAge)) return false;
-                }
-                // ACT20 — Portes frigo
-                if (action.id === 'ACT20') {
-                    if (formData.activity !== 'commerce_alim') return false;
-                    if (!['open_shelves', 'mixed'].includes(formData.coldEquipmentType)) return false;
-                }
-                // ACT21 — Maintenance froid
-                if (action.id === 'ACT21') {
-                    const isCold = formData.activity === 'commerce_alim' || formData.activity === 'restaurant';
-                    if (!isCold) return false;
-                    if (!['occasional', 'none'].includes(formData.coldMaintenanceStatus)) return false;
-                }
+                // EXCLUSIONS PAR ÉTAT DU BÂTIMENT
+                if (!formData.hasCooling && ['ACT19', 'ACT20'].includes(action.id)) return false;
+                if (formData.mainHeating === 'electric' && ['ACT04', 'ACT13'].includes(action.id)) return false;
+                if (formData.mainHeating !== 'gas' && action.id === 'ACT13') return false;
+                if (formData.hasGtb && ['ACT14', 'ACT21'].includes(action.id)) return false;
+                if (formData.roofInsulation === 'yes' && action.id === 'ACT15') return false;
+                if (formData.wallInsulation === 'yes' && action.id === 'ACT16') return false;
+                if (formData.ecsSystem !== 'electric_boiler' && !formData.ecsSameSystem && action.id === 'ACT18') return false;
+                if (action.id === 'ACT18' && formData.ecsSameSystem) return false;
 
                 return true;
             });
 
-            // ── Score de priorité ──────────────────────────────────────────────────────
-            const scored = eligible.map(action => {
+            const buildingAgeCoef = (NEW_DIAGNOSTIC_BUILDING_AGES || []).find(a => a.id === buildingAge)?.coef || 1.0;
+            const boilerAgePriority = (NEW_DIAGNOSTIC_BOILER_AGES || []).find(a => a.id === boilerAge)?.pacPriority || 0;
+
+            const energyPrices = { elec: 0.196, gas: 0.105 };
+            const scoredActions = eligibleActions.map(action => {
                 const calc = newDiagnosticCalculateActionGain(action, totalKwh, breakdown, avgPrice, surface, formData, energyPrices);
-                const feasibility = action.tier === 'quick_win' ? 1.2 : action.tier === 'equipment' ? 0.85 : 0.6;
-                const priorityScore = (calc.gainEuro * feasibility) / Math.max(1, calc.capex);
+
+                let feasibility = 1.0;
+                if (action.category?.includes('envelope')) feasibility = 0.5;
+                if (action.category === 'heating' && action.capex_med > 10000) feasibility = 0.6;
+                if (action.category === 'lighting') feasibility = 1.2;
+                if (action.tier === 'quick_win') feasibility *= 1.3;
+                if (action.tier === 'structural') feasibility *= 0.7;
+
+                if (action.category?.includes('envelope') && ['before_1975', '1975_1988'].includes(buildingAge)) {
+                    feasibility *= buildingAgeCoef;
+                }
+                if (action.id === 'ACT13' && boilerAgePriority >= 2) feasibility *= 1.5;
+
+                const safeCapex = Math.max(1, calc.capex);
+                const priorityScore = (calc.gainEuro * feasibility) / safeCapex;
+
                 return { ...action, ...calc, priorityScore };
             });
-            scored.sort((a, b) => b.priorityScore - a.priorityScore);
 
-            // ── Sélection par tier ─────────────────────────────────────────────────────
-            const tierMax = { quick_win: 2, equipment: 3, structural: 3 };
-            const usedFamilies = {};
-            let totalGainPct = 0;
-            const selected = [];
+            scoredActions.sort((a, b) => b.priorityScore - a.priorityScore);
 
-            for (const tier of ['quick_win', 'equipment', 'structural']) {
-                let count = 0;
-                for (const action of scored.filter(a => a.tier === tier)) {
-                    if (count >= tierMax[tier]) break;
-                    if (usedFamilies[action.category]) continue;
-                    // Use gain_pct_total (scope-adjusted) for cap check, not gain_pct_med
-                    const actionTotalGainPct = typeof action.gain_pct_total === 'number' ? action.gain_pct_total : action.gain_pct_med;
-                    if (totalGainPct + actionTotalGainPct > NEW_DIAGNOSTIC_MAX_TOTAL_SAVINGS_PCT) continue;
-                    usedFamilies[action.category] = true;
-                    selected.push(action);
-                    totalGainPct += actionTotalGainPct;
-                    count++;
-                }
-            }
+            const actionsByTier = {
+                quick_win: scoredActions.filter(a => a.tier === 'quick_win').slice(0, 2),
+                equipment: scoredActions.filter(a => a.tier === 'equipment').slice(0, 2),
+                structural: scoredActions.filter(a => a.tier === 'structural').slice(0, 2)
+            };
 
-            return selected;
+            const topActions = [
+                ...actionsByTier.quick_win,
+                ...actionsByTier.equipment,
+                ...actionsByTier.structural
+            ].slice(0, 6);
+
+            return topActions;
         };
 
         /* ─────────────────────────────────────────────────────────────────────────
@@ -7146,6 +7204,43 @@
                             </div>
                         </div>
 
+                        {/* Section Décret Tertiaire si surface >= 1000 m² */}
+                        {parseFloat(reportPayload.inputs_summary.surface && reportPayload.inputs_summary.surface.value) >= 1000 && (
+                            <div className="report-card p-8 mb-8" style={{ borderLeft: '4px solid #7C3AED' }}>
+                                <div className="flex items-start gap-4">
+                                    <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(124,58,237,0.1)' }}>
+                                        <Icon icon="solar:document-text-bold" className="text-2xl" style={{ color: '#7C3AED' }} />
+                                    </div>
+                                    <div className="flex-1">
+                                        <h2 className="text-xl font-bold text-neutral-900 mb-2">
+                                            Décret Tertiaire — Votre bâtiment est concerné
+                                        </h2>
+                                        <p className="text-sm text-neutral-600 mb-4">
+                                            Avec une surface de <strong>{newDiagnosticFormatInteger(surfaceValue)} m²</strong>,
+                                            votre bâtiment est soumis au Décret Tertiaire (dispositif Éco Énergie Tertiaire).
+                                        </p>
+                                        <div className="grid md:grid-cols-3 gap-4 mb-4">
+                                            {[['2030', '-40%'], ['2040', '-50%'], ['2050', '-60%']].map(([year, target]) => (
+                                                <div key={year} className="p-4 rounded-lg" style={{ background: 'rgba(124,58,237,0.05)' }}>
+                                                    <p className="text-xs font-bold uppercase mb-1" style={{ color: '#7C3AED' }}>Objectif {year}</p>
+                                                    <p className="text-2xl font-bold text-neutral-900">{target}</p>
+                                                    <p className="text-xs text-neutral-500">vs année référence</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                            <p className="text-sm text-yellow-800">
+                                                <Icon icon="solar:info-circle-linear" className="inline mr-1" />
+                                                <strong>Action requise :</strong> Vous devez déclarer vos consommations sur la plateforme OPERAT
+                                                et établir un plan d'actions pour atteindre les objectifs. Ce pré-diagnostic peut servir de base
+                                                pour identifier vos priorités.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         <div className="report-card p-6 md:p-8 mb-8">
                             <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-5">
                                 <div>
@@ -7183,78 +7278,125 @@
                             </div>
                         </div>
 
-                        <div className="report-card p-6 md:p-8 mb-8">
-                            <h2 className="text-xl font-bold text-[#102A43] mb-2">Plan d'action par niveau</h2>
-                            <p className="text-sm text-[#475569] mb-6">Actions sélectionnées selon votre situation, classées par niveau d'investissement et de complexité.</p>
+                        {/* Section : Actions par niveau */}
+                        <div className="report-card p-8 mb-8">
+                            <h2 className="text-2xl font-bold text-neutral-900 mb-6">Plan d'actions recommandé</h2>
 
-                            {actions.length > 0 ? (
-                                <>
-                                    {['quick_win', 'equipment', 'structural'].map(tierKey => {
-                                        const tierActions = actions.filter(a => a.tier === tierKey);
-                                        if (tierActions.length === 0) return null;
-                                        const tierCfg = NEW_DIAGNOSTIC_TIER_LABELS[tierKey];
-                                        const tierSavings = tierActions.reduce((s, a) => s + (a.gain_euro_an?.value || 0), 0);
-                                        return (
-                                            <div key={tierKey} className="mb-6">
-                                                <div className="flex items-center justify-between p-3 rounded-xl mb-3 border"
-                                                    style={{ backgroundColor: tierCfg.bg, borderColor: tierCfg.border }}>
-                                                    <div className="flex items-center gap-2">
-                                                        <Icon icon={tierCfg.icon} style={{ color: tierCfg.color, fontSize: '20px' }} />
+                            {(() => {
+                                const InlineActionCard = ({ action, color }) => {
+                                    const borderColors = { green: 'border-green-200 hover:border-green-300', blue: 'border-blue-200 hover:border-blue-300', violet: 'border-violet-200 hover:border-violet-300' };
+                                    return (
+                                        <div className={`p-5 bg-white border-2 ${borderColors[color] || borderColors.blue} rounded-xl transition-colors`}>
+                                            <div className="flex items-start justify-between gap-4">
+                                                <div className="flex-1">
+                                                    <h4 className="font-bold text-neutral-900 mb-3">{action.name}</h4>
+                                                    <div className="grid grid-cols-3 gap-4 text-sm">
                                                         <div>
-                                                            <div className="font-bold text-sm" style={{ color: tierCfg.color }}>{tierCfg.label}</div>
-                                                            <div className="text-xs text-[#475569]">{tierCfg.subtitle}</div>
+                                                            <p className="text-neutral-500 text-xs mb-1">Gain/an</p>
+                                                            <p className="font-bold text-green-600">{(action.gain_euro_an?.value || 0).toLocaleString('fr-FR')} €</p>
+                                                            <p className="text-xs text-neutral-400">{(action.gain_kwh_an?.value || 0).toLocaleString('fr-FR')} kWh</p>
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-neutral-500 text-xs mb-1">Investissement</p>
+                                                            <p className="font-bold text-neutral-900">{(action.capex?.value || 0).toLocaleString('fr-FR')} €</p>
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-neutral-500 text-xs mb-1">ROI</p>
+                                                            <p className="font-bold text-blue-600">{action.roi_years?.value != null ? `${action.roi_years.value} ans` : 'N/A'}</p>
                                                         </div>
                                                     </div>
-                                                    <div className="hidden sm:block text-right">
-                                                        <div className="font-bold text-sm" style={{ color: tierCfg.color }}>
-                                                            {Math.round(tierSavings).toLocaleString('fr-FR')} € / an
-                                                        </div>
-                                                        <div className="text-xs text-[#475569]">Économies estimées</div>
+                                                    <p className="text-xs text-neutral-400 mt-3">Source gains : {action.source_level_gain} • Source CAPEX : {action.source_level_capex}</p>
+                                                </div>
+                                                {action.aid_tags?.includes('CEE') && (
+                                                    <span className="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-full whitespace-nowrap">CEE</span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                };
+
+                                const quickWins = actions.filter(a => a.tier === 'quick_win');
+                                const equipment = actions.filter(a => a.tier === 'equipment');
+                                const structural = actions.filter(a => a.tier === 'structural');
+                                const untiered = actions.filter(a => !a.tier);
+
+                                return (
+                                    <>
+                                        {quickWins.length > 0 && (
+                                            <div className="mb-8">
+                                                <div className="flex items-center gap-3 mb-4">
+                                                    <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                                                        <Icon icon="solar:bolt-linear" className="text-xl text-green-600" />
+                                                    </div>
+                                                    <div>
+                                                        <h3 className="font-bold text-green-800">Actions rapides</h3>
+                                                        <p className="text-xs text-green-600">ROI court, mise en œuvre simple</p>
                                                     </div>
                                                 </div>
-                                                {tierActions.map((action, idx) => (
-                                                    <ActionCard key={action.id} action={action} index={idx} />
-                                                ))}
-                                            </div>
-                                        );
-                                    })}
-                                    {actions.some(a => a.tier === 'structural') && (
-                                        <div id="cta-expert" className="mt-4 p-5 rounded-xl border"
-                                            style={{ background: 'linear-gradient(135deg, #EFF6FF 0%, #F5F3FF 100%)', borderColor: '#BFDBFE' }}>
-                                            <div className="flex items-start gap-3 mb-4">
-                                                <Icon icon="solar:star-bold" className="text-[#1D4ED8] text-2xl flex-shrink-0" />
-                                                <div>
-                                                    <div className="font-bold text-[#102A43] mb-1">Des travaux structurants ont été identifiés</div>
-                                                    <div className="text-sm text-[#475569]">Ces travaux nécessitent une étude personnalisée et peuvent bénéficier d'aides importantes.</div>
+                                                <div className="space-y-4">
+                                                    {quickWins.map(a => <InlineActionCard key={a.id} action={a} color="green" />)}
                                                 </div>
                                             </div>
-                                            <div className="flex flex-col sm:flex-row gap-2">
-                                                <button onClick={openCtaPanel} className="flex-1 py-2.5 px-4 bg-[#1D4ED8] text-white rounded-lg text-sm font-semibold hover:bg-[#1E40AF] transition-colors">
-                                                    Être mis en relation avec un expert
-                                                </button>
-                                                <button className="flex-1 py-2.5 px-4 border border-[#1D4ED8] text-[#1D4ED8] rounded-lg text-sm font-semibold hover:bg-[#EFF6FF] transition-colors">
-                                                    En savoir plus sur les aides
-                                                </button>
+                                        )}
+
+                                        {equipment.length > 0 && (
+                                            <div className="mb-8">
+                                                <div className="flex items-center gap-3 mb-4">
+                                                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                                                        <Icon icon="solar:settings-linear" className="text-xl text-blue-600" />
+                                                    </div>
+                                                    <div>
+                                                        <h3 className="font-bold text-blue-800">Équipements & Pilotage</h3>
+                                                        <p className="text-xs text-blue-600">Investissement modéré, gains durables</p>
+                                                    </div>
+                                                </div>
+                                                <div className="space-y-4">
+                                                    {equipment.map(a => <InlineActionCard key={a.id} action={a} color="blue" />)}
+                                                </div>
                                             </div>
-                                        </div>
-                                    )}
-                                    <div className="mt-4 pt-4 border-t border-slate-200">
-                                        <p className="text-xs font-bold uppercase tracking-wide text-slate-500 mb-3">Synthèse budgétaire du plan</p>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3">
-                                            <BudgetSummaryTile label={actionCopy.budgetTiles.works} value={formatMoney(budgetProgram.capex_brut)} tone={{ bg: 'bg-slate-50', border: 'border-slate-200', label: 'text-slate-500', value: 'text-slate-900' }} />
-                                            <BudgetSummaryTile label={actionCopy.budgetTiles.aids} value={formatMoney(budgetProgram.aides)} tone={{ bg: 'bg-blue-50', border: 'border-blue-200', label: 'text-blue-700', value: 'text-blue-900' }} />
-                                            <BudgetSummaryTile label={actionCopy.budgetTiles.net} value={formatMoney(budgetProgram.capex_net)} tone={{ bg: 'bg-indigo-50', border: 'border-indigo-200', label: 'text-indigo-700', value: 'text-indigo-900' }} />
-                                            <BudgetSummaryTile label={actionCopy.budgetTiles.annual} value={formatMoney(budgetProgram.annual_savings)} tone={{ bg: 'bg-emerald-50', border: 'border-emerald-200', label: 'text-emerald-700', value: 'text-emerald-900' }} />
-                                            <BudgetSummaryTile label={actionCopy.budgetTiles.roi} value={budgetProgram.roi_global_years !== null ? formatYears(budgetProgram.roi_global_years) : 'À confirmer'} tone={{ bg: 'bg-amber-50', border: 'border-amber-200', label: 'text-amber-700', value: 'text-amber-900' }} />
-                                        </div>
-                                    </div>
-                                    <p className="text-xs text-slate-500 mt-4">{actionCopy.footnote}</p>
-                                </>
-                            ) : (
-                                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 text-sm text-slate-700">
-                                    {actionCopy.empty}
-                                </div>
-                            )}
+                                        )}
+
+                                        {structural.length > 0 && (
+                                            <div className="mb-8">
+                                                <div className="flex items-center gap-3 mb-4">
+                                                    <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'rgba(124,58,237,0.1)' }}>
+                                                        <Icon icon="solar:home-angle-linear" className="text-xl" style={{ color: '#7C3AED' }} />
+                                                    </div>
+                                                    <div>
+                                                        <h3 className="font-bold" style={{ color: '#5B21B6' }}>Rénovation structurante</h3>
+                                                        <p className="text-xs" style={{ color: '#7C3AED' }}>Travaux lourds, impact majeur long terme</p>
+                                                    </div>
+                                                </div>
+                                                <div className="space-y-4">
+                                                    {structural.map(a => <InlineActionCard key={a.id} action={a} color="violet" />)}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {untiered.length > 0 && (
+                                            <div className="mb-8">
+                                                <div className="flex items-center gap-3 mb-4">
+                                                    <div className="w-10 h-10 bg-neutral-100 rounded-lg flex items-center justify-center">
+                                                        <Icon icon="solar:list-linear" className="text-xl text-neutral-600" />
+                                                    </div>
+                                                    <div>
+                                                        <h3 className="font-bold text-neutral-800">Autres recommandations</h3>
+                                                    </div>
+                                                </div>
+                                                <div className="space-y-4">
+                                                    {untiered.map(a => <InlineActionCard key={a.id} action={a} color="blue" />)}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {actions.length === 0 && (
+                                            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 text-sm text-slate-700">
+                                                {actionCopy.empty}
+                                            </div>
+                                        )}
+                                    </>
+                                );
+                            })()}
                         </div>
 
                         <div className="report-card p-6 md:p-8 mb-8">

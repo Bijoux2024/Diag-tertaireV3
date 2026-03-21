@@ -3101,6 +3101,10 @@
             coverImageSelected: false,
             coverImageError: null,
             coverStepDismissed: false,
+            coverParcelRef: '',
+            coverCoordinates: null,
+            coverBBox: null,
+            coverGeneratedAt: '',
             role: '',
             activity: '',
             mixedUsage1: '',
@@ -3528,7 +3532,20 @@
         // Composant facultatif Visuel du Bâtiment
         const NewDiagnosticCoverPreview = ({ formData, setFormData }) => {
             const handleGenerate = async () => {
-                setFormData(prev => ({ ...prev, coverImageStatus: 'loading', coverImageError: null, coverImageSelected: false }));
+                setFormData(prev => ({ 
+                    ...prev, 
+                    coverImageStatus: 'loading', 
+                    coverImageError: null, 
+                    coverImageSelected: false,
+                    coverStepDismissed: false,
+                    coverImageSource: '',
+                    coverImagePath: '',
+                    coverImageSignedUrl: '',
+                    coverParcelRef: '',
+                    coverCoordinates: null,
+                    coverBBox: null,
+                    coverGeneratedAt: ''
+                }));
                 try {
                     const payload = { 
                         address: formData.fullAddress || formData.address 
@@ -3572,7 +3589,6 @@
                     }
 
                     console.log('[cover-preview] JSON reçu:', data);
-                    console.log('[cover-preview] valeur finale de coverImageSignedUrl:', data.cover_image_signed_url);
 
                     if (!res.ok || !data.ok) {
                         if (status === 404) throw new Error('Le service de génération du visuel est introuvable');
@@ -3580,12 +3596,22 @@
                         throw new Error(data.error || 'Le service de génération du visuel a renvoyé une réponse invalide');
                     }
 
+                    if (!data.cover_image_signed_url || data.cover_image_signed_url.trim() === '') {
+                        throw new Error("L'aperçu du visuel n'est pas disponible dans la réponse.");
+                    }
+
+                    console.log('[cover-preview] valeur finale de coverImageSignedUrl:', data.cover_image_signed_url);
+
                     setFormData(prev => ({
                         ...prev,
                         coverImageStatus: 'ready',
-                        coverImageSource: data.cover_image_source,
-                        coverImagePath: data.cover_image_path,
-                        coverImageSignedUrl: data.cover_image_signed_url,
+                        coverImageSource: data.cover_image_source || '',
+                        coverImagePath: data.cover_image_path || '',
+                        coverImageSignedUrl: data.cover_image_signed_url || '',
+                        coverParcelRef: data.cover_parcel_ref || '',
+                        coverCoordinates: data.coordinates || null,
+                        coverBBox: data.bbox || null,
+                        coverGeneratedAt: data.cover_generated_at || '',
                         coverImageError: null
                     }));
 
@@ -3600,9 +3626,31 @@
                     setFormData(prev => ({
                         ...prev,
                         coverImageStatus: 'error',
-                        coverImageError: finalErrorMessage || 'Impossible de générer le visuel du bâtiment.'
+                        coverImageError: finalErrorMessage || 'Impossible de générer le visuel du bâtiment.',
+                        coverImageSource: '',
+                        coverImagePath: '',
+                        coverImageSignedUrl: '',
+                        coverParcelRef: '',
+                        coverCoordinates: null,
+                        coverBBox: null,
+                        coverGeneratedAt: ''
                     }));
                 }
+            };
+
+            const handleImageError = () => {
+                setFormData(prev => ({
+                    ...prev,
+                    coverImageStatus: 'error',
+                    coverImageError: "L'aperçu du visuel n'a pas pu être chargé. Vous pouvez réessayer.",
+                    coverImageSource: '',
+                    coverImagePath: '',
+                    coverImageSignedUrl: '',
+                    coverParcelRef: '',
+                    coverCoordinates: null,
+                    coverBBox: null,
+                    coverGeneratedAt: ''
+                }));
             };
 
             const sourceLabels = {
@@ -3611,7 +3659,7 @@
                 'ign_plan': 'IGN (Plan interactif)'
             };
 
-            if (formData.coverStepDismissed || formData.coverImageSelected) return null;
+            if (formData.coverStepDismissed) return null;
 
             return (
                 <div className="mt-8 mb-6 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-6 shadow-sm overflow-hidden relative fade-in">
@@ -3648,58 +3696,85 @@
                     {formData.coverImageStatus === 'loading' && (
                         <div className="flex items-center gap-3 mt-6 text-[#1D4ED8] bg-blue-50/50 p-4 rounded-lg border border-blue-100">
                             <Icon icon="solar:spinner-linear" className="animate-spin text-xl" />
-                            <span className="text-sm font-medium">Recherche d'un visuel (Panoramax / IGN)...</span>
+                            <span className="text-sm font-medium">Génération en cours...</span>
                         </div>
                     )}
 
                     {formData.coverImageStatus === 'error' && (
                         <div className="mt-6">
                             <div className="flex items-center gap-2 text-amber-600 bg-amber-50 p-3 rounded-lg text-sm border border-amber-100 mb-3">
-                                <Icon icon="solar:danger-triangle-linear" className="text-lg" />
+                                <Icon icon="solar:danger-triangle-linear" className="text-lg shrink-0" />
                                 {formData.coverImageError}
                             </div>
                             <button
                                 type="button"
                                 onClick={handleGenerate}
-                                className="text-sm font-semibold text-[#1D4ED8] hover:underline"
+                                className="flex items-center gap-2 text-sm font-semibold text-[#1D4ED8] hover:underline"
                             >
+                                <Icon icon="solar:refresh-linear" />
                                 Réessayer
                             </button>
                         </div>
                     )}
 
                     {formData.coverImageStatus === 'ready' && formData.coverImageSignedUrl && (
-                        <div className="mt-5 animate-fade-in">
-                            <div className="relative rounded-lg overflow-hidden border border-neutral-200 bg-neutral-100 aspect-video max-h-64 object-cover">
-                                <img src={formData.coverImageSignedUrl} alt="Aperçu du bâtiment" className="w-full h-full object-cover" />
+                        <div className="mt-5 animate-fade-in relative">
+                            {formData.coverImageSelected && (
+                                <div className="absolute -top-3 -right-3 z-10 bg-green-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-md flex items-center gap-1">
+                                    <Icon icon="solar:check-circle-bold" className="text-sm" />
+                                    Visuel sélectionné
+                                </div>
+                            )}
+                            <div className={`relative rounded-lg overflow-hidden border ${formData.coverImageSelected ? 'border-green-400 ring-4 ring-green-100' : 'border-neutral-200'} bg-neutral-100 aspect-video max-h-64 object-cover transition-all duration-300`}>
+                                <img 
+                                    src={formData.coverImageSignedUrl} 
+                                    alt="Aperçu du bâtiment" 
+                                    className="w-full h-full object-cover" 
+                                    onError={handleImageError}
+                                />
                                 <div className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-sm text-white text-[10px] font-semibold px-2 py-1 rounded">
                                     Source : {sourceLabels[formData.coverImageSource] || 'IGN'}
                                 </div>
                             </div>
-                            <div className="flex flex-wrap gap-3 mt-4">
-                                <button
-                                    type="button"
-                                    onClick={() => setFormData(prev => ({ ...prev, coverImageSelected: true }))}
-                                    className="flex items-center gap-2 bg-[#1D4ED8] text-white px-5 py-2.5 rounded-lg font-semibold shadow-sm hover:bg-blue-800 transition-colors"
-                                >
-                                    <Icon icon="solar:check-circle-linear" className="text-lg" />
-                                    Utiliser ce visuel
-                                </button>
+                            <div className="flex flex-wrap items-center gap-3 mt-4">
+                                {!formData.coverImageSelected ? (
+                                    <button
+                                        type="button"
+                                        onClick={() => setFormData(prev => ({ ...prev, coverImageSelected: true }))}
+                                        className="flex items-center gap-2 bg-[#1D4ED8] text-white px-5 py-2.5 rounded-lg font-semibold shadow-sm hover:bg-blue-800 transition-colors"
+                                    >
+                                        <Icon icon="solar:check-circle-linear" className="text-lg" />
+                                        Utiliser ce visuel
+                                    </button>
+                                ) : (
+                                    <button
+                                        type="button"
+                                        onClick={() => setFormData(prev => ({ ...prev, coverImageSelected: false }))}
+                                        className="flex items-center gap-2 bg-white text-neutral-600 border border-neutral-200 px-4 py-2.5 rounded-lg font-medium hover:bg-neutral-50 transition-colors text-sm"
+                                    >
+                                        <Icon icon="solar:close-circle-linear" />
+                                        Ne pas utiliser ce visuel
+                                    </button>
+                                )}
+                                
                                 <button
                                     type="button"
                                     onClick={handleGenerate}
                                     className="flex items-center gap-2 bg-white text-neutral-600 border border-neutral-200 px-4 py-2.5 rounded-lg font-medium hover:bg-neutral-50 transition-colors text-sm"
                                 >
                                     <Icon icon="solar:refresh-linear" />
-                                    Actualiser
+                                    Actualiser le visuel
                                 </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setFormData(prev => ({ ...prev, coverStepDismissed: true }))}
-                                    className="flex items-center gap-2 text-neutral-500 px-3 py-2.5 hover:text-neutral-700 transition-colors text-sm font-medium ml-auto"
-                                >
-                                    Ne pas utiliser
-                                </button>
+
+                                {!formData.coverImageSelected && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setFormData(prev => ({ ...prev, coverImageSelected: false, coverStepDismissed: true }))}
+                                        className="flex items-center gap-2 text-neutral-500 px-3 py-2.5 hover:text-neutral-700 transition-colors text-sm font-medium ml-auto"
+                                    >
+                                        Passer / Ne pas utiliser
+                                    </button>
+                                )}
                             </div>
                         </div>
                     )}
@@ -3881,7 +3956,11 @@
                     coverImageSignedUrl: '',
                     coverImageSelected: false,
                     coverImageError: null,
-                    coverStepDismissed: false
+                    coverStepDismissed: false,
+                    coverParcelRef: '',
+                    coverCoordinates: null,
+                    coverBBox: null,
+                    coverGeneratedAt: ''
                 }));
 
                 if (isValid) {
@@ -3920,7 +3999,11 @@
                         coverImageSignedUrl: '',
                         coverImageSelected: false,
                         coverImageError: null,
-                        coverStepDismissed: false
+                        coverStepDismissed: false,
+                        coverParcelRef: '',
+                        coverCoordinates: null,
+                        coverBBox: null,
+                        coverGeneratedAt: ''
                     });
                 } else if (!formData.addressIsValid) {
                     setFormData({ ...formData, address: val });

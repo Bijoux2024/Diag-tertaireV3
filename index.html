@@ -3105,6 +3105,9 @@
             coverCoordinates: null,
             coverBBox: null,
             coverGeneratedAt: '',
+            coverMode: 'panoramax',
+            coverUploadFileName: '',
+            coverUploadPreviewUrl: '',
             role: '',
             activity: '',
             mixedUsage1: '',
@@ -3530,7 +3533,81 @@
            ───────────────────────────────────────────────────────────────────────── */
 
         // Composant facultatif Visuel du Bâtiment
+        // Composant facultatif Visuel du Bâtiment
         const NewDiagnosticCoverPreview = ({ formData, setFormData }) => {
+            const handleModeChange = (newMode) => {
+                if (newMode === formData.coverMode) return;
+                setFormData(prev => ({
+                    ...prev,
+                    coverMode: newMode,
+                    // Reset visuel du composant précédent
+                    coverImageStatus: 'initial',
+                    coverImageError: null,
+                    coverImageSelected: false,
+                    coverStepDismissed: false,
+                    coverImageSource: '',
+                    coverImagePath: '',
+                    coverImageSignedUrl: '',
+                    coverParcelRef: '',
+                    coverCoordinates: null,
+                    coverBBox: null,
+                    coverGeneratedAt: '',
+                    coverUploadFileName: '',
+                    coverUploadPreviewUrl: ''
+                }));
+            };
+
+            const handleFileUpload = (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+
+                const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+                if (!validTypes.includes(file.type)) {
+                    setFormData(prev => ({ 
+                        ...prev, 
+                        coverImageStatus: 'error', 
+                        coverImageError: 'Format non supporté (JPG, PNG, WEBP uniquement).',
+                        coverImageSource: '',
+                        coverImagePath: '',
+                        coverImageSignedUrl: '',
+                        coverParcelRef: '',
+                        coverCoordinates: null,
+                        coverBBox: null,
+                        coverGeneratedAt: ''
+                    }));
+                    return;
+                }
+
+                if (file.size > 5 * 1024 * 1024) {
+                    setFormData(prev => ({ 
+                        ...prev, 
+                        coverImageStatus: 'error', 
+                        coverImageError: 'Fichier trop lourd (max 5 Mo).',
+                        coverImageSource: '',
+                        coverImagePath: '',
+                        coverImageSignedUrl: '',
+                        coverParcelRef: '',
+                        coverCoordinates: null,
+                        coverBBox: null,
+                        coverGeneratedAt: ''
+                    }));
+                    return;
+                }
+
+                const previewUrl = URL.createObjectURL(file);
+                setFormData(prev => ({
+                    ...prev,
+                    coverImageStatus: 'ready',
+                    coverImageError: null,
+                    coverImageSelected: false,
+                    coverStepDismissed: false,
+                    coverUploadFileName: file.name,
+                    coverUploadPreviewUrl: previewUrl,
+                    coverImageSource: 'upload',
+                    coverImageSignedUrl: previewUrl
+                }));
+            };
+
             const handleGenerate = async () => {
                 setFormData(prev => ({ 
                     ...prev, 
@@ -3548,7 +3625,8 @@
                 }));
                 try {
                     const payload = { 
-                        address: formData.fullAddress || formData.address 
+                        address: formData.fullAddress || formData.address,
+                        preferred_source: formData.coverMode
                     };
                     if (formData.postalCode) payload.postalCode = formData.postalCode;
                     if (formData.city) payload.city = formData.city;
@@ -3656,8 +3734,16 @@
             const sourceLabels = {
                 'panoramax': 'Panoramax (Vue au sol)',
                 'ign_ortho': 'IGN (Vue aérienne)',
-                'ign_plan': 'IGN (Plan interactif)'
+                'ign_plan': 'IGN (Plan interactif)',
+                'upload': 'Photo importée'
             };
+
+            const modes = [
+                { id: 'panoramax', label: 'Façade rue' },
+                { id: 'ign_ortho', label: 'Vue aérienne' },
+                { id: 'ign_plan', label: 'Plan' },
+                { id: 'upload', label: 'Téléverser' }
+            ];
 
             if (formData.coverStepDismissed) return null;
 
@@ -3668,13 +3754,30 @@
                             <Icon icon="solar:camera-linear" className="text-xl" />
                         </div>
                         <div className="flex-1">
-                            <h3 className="text-lg font-bold text-neutral-800">Visuel du bâtiment pour le rapport</h3>
-                            <p className="text-sm text-neutral-500 mt-1">Vous pouvez ajouter une photo du bâtiment qui apparaîtra en couverture de votre rapport. Cette étape est facultative.</p>
+                            <h3 className="text-lg font-bold text-neutral-800">Visuel pour la couverture du rapport</h3>
+                            <p className="text-sm text-neutral-500 mt-1">Sélectionnez la source de l'image de couverture. Le processus prend en compte votre saisie adresse. (Étape facultative)</p>
                         </div>
                     </div>
 
-                    {formData.coverImageStatus === 'initial' && (
-                        <div className="flex gap-3 mt-6">
+                    <div className="flex gap-2 mb-6 border-b border-neutral-200 pb-2 overflow-x-auto no-scrollbar">
+                        {modes.map(m => (
+                            <button
+                                key={m.id}
+                                type="button"
+                                onClick={() => handleModeChange(m.id)}
+                                className={`px-4 py-2 text-sm font-semibold rounded-lg shrink-0 transition-colors ${
+                                    formData.coverMode === m.id
+                                        ? 'bg-blue-50 text-[#1D4ED8]'
+                                        : 'text-neutral-500 hover:bg-neutral-50 hover:text-neutral-700'
+                                }`}
+                            >
+                                {m.label}
+                            </button>
+                        ))}
+                    </div>
+
+                    {formData.coverImageStatus === 'initial' && formData.coverMode !== 'upload' && (
+                        <div className="flex gap-3 mt-4">
                             <button
                                 type="button"
                                 onClick={handleGenerate}
@@ -3688,51 +3791,76 @@
                                 onClick={() => setFormData(prev => ({ ...prev, coverStepDismissed: true }))}
                                 className="flex items-center gap-2 text-neutral-500 px-4 py-2 hover:text-neutral-700 transition-colors text-sm font-medium"
                             >
-                                Passer cette étape
+                                Passer
+                            </button>
+                        </div>
+                    )}
+
+                    {formData.coverImageStatus === 'initial' && formData.coverMode === 'upload' && (
+                        <div className="flex gap-3 mt-4">
+                            <label className="flex items-center gap-2 bg-white text-[#1D4ED8] px-4 py-2 rounded-lg font-semibold border border-[#DBEAFE] hover:bg-[#EFF6FF] transition-colors cursor-pointer">
+                                <Icon icon="solar:upload-linear" className="text-lg" />
+                                Sélectionner une photo
+                                <input type="file" className="hidden" accept="image/jpeg,image/png,image/webp" onChange={handleFileUpload} />
+                            </label>
+                            <button
+                                type="button"
+                                onClick={() => setFormData(prev => ({ ...prev, coverStepDismissed: true }))}
+                                className="flex items-center gap-2 text-neutral-500 px-4 py-2 hover:text-neutral-700 transition-colors text-sm font-medium"
+                            >
+                                Passer
                             </button>
                         </div>
                     )}
 
                     {formData.coverImageStatus === 'loading' && (
-                        <div className="flex items-center gap-3 mt-6 text-[#1D4ED8] bg-blue-50/50 p-4 rounded-lg border border-blue-100">
+                        <div className="flex items-center gap-3 mt-4 text-[#1D4ED8] bg-blue-50/50 p-4 rounded-lg border border-blue-100">
                             <Icon icon="solar:spinner-linear" className="animate-spin text-xl" />
                             <span className="text-sm font-medium">Génération en cours...</span>
                         </div>
                     )}
 
                     {formData.coverImageStatus === 'error' && (
-                        <div className="mt-6">
+                        <div className="mt-4">
                             <div className="flex items-center gap-2 text-amber-600 bg-amber-50 p-3 rounded-lg text-sm border border-amber-100 mb-3">
                                 <Icon icon="solar:danger-triangle-linear" className="text-lg shrink-0" />
                                 {formData.coverImageError}
                             </div>
-                            <button
-                                type="button"
-                                onClick={handleGenerate}
-                                className="flex items-center gap-2 text-sm font-semibold text-[#1D4ED8] hover:underline"
-                            >
-                                <Icon icon="solar:refresh-linear" />
-                                Réessayer
-                            </button>
+                            {formData.coverMode !== 'upload' ? (
+                                <button
+                                    type="button"
+                                    onClick={handleGenerate}
+                                    className="flex items-center gap-2 text-sm font-semibold text-[#1D4ED8] hover:underline"
+                                >
+                                    <Icon icon="solar:refresh-linear" />
+                                    Réessayer
+                                </button>
+                            ) : (
+                                <label className="flex w-max items-center gap-2 text-sm font-semibold text-[#1D4ED8] hover:underline cursor-pointer">
+                                    <Icon icon="solar:upload-linear" />
+                                    Téléverser un autre fichier
+                                    <input type="file" className="hidden" accept="image/jpeg,image/png,image/webp" onChange={handleFileUpload} />
+                                </label>
+                            )}
                         </div>
                     )}
 
                     {formData.coverImageStatus === 'ready' && formData.coverImageSignedUrl && (
-                        <div className="mt-5 animate-fade-in relative">
+                        <div className="mt-4 animate-fade-in relative">
                             {formData.coverImageSelected && (
                                 <div className="absolute -top-3 -right-3 z-10 bg-green-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-md flex items-center gap-1">
                                     <Icon icon="solar:check-circle-bold" className="text-sm" />
-                                    Visuel sélectionné
+                                    Sélectionné
                                 </div>
                             )}
-                            <div className={`relative rounded-lg overflow-hidden border ${formData.coverImageSelected ? 'border-green-400 ring-4 ring-green-100' : 'border-neutral-200'} bg-neutral-100 aspect-video max-h-64 object-cover transition-all duration-300`}>
+                            <div className={`relative rounded-lg overflow-hidden border ${formData.coverImageSelected ? 'border-green-400 ring-2 ring-green-100' : 'border-neutral-200'} bg-neutral-100 aspect-video max-h-64 object-cover transition-all duration-300`}>
                                 <img 
                                     src={formData.coverImageSignedUrl} 
                                     alt="Aperçu du bâtiment" 
                                     className="w-full h-full object-cover" 
                                     onError={handleImageError}
                                 />
-                                <div className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-sm text-white text-[10px] font-semibold px-2 py-1 rounded">
+                                <div className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-sm text-white text-[10px] font-semibold px-2 py-1 rounded shadow-sm">
                                     Source : {sourceLabels[formData.coverImageSource] || 'IGN'}
                                 </div>
                             </div>
@@ -3744,35 +3872,54 @@
                                         className="flex items-center gap-2 bg-[#1D4ED8] text-white px-5 py-2.5 rounded-lg font-semibold shadow-sm hover:bg-blue-800 transition-colors"
                                     >
                                         <Icon icon="solar:check-circle-linear" className="text-lg" />
-                                        Utiliser ce visuel
+                                        {formData.coverMode === 'upload' ? 'Utiliser cette photo' : 'Utiliser ce visuel'}
                                     </button>
                                 ) : (
                                     <button
                                         type="button"
                                         onClick={() => setFormData(prev => ({ ...prev, coverImageSelected: false }))}
-                                        className="flex items-center gap-2 bg-white text-neutral-600 border border-neutral-200 px-4 py-2.5 rounded-lg font-medium hover:bg-neutral-50 transition-colors text-sm"
+                                        className="flex items-center gap-2 bg-white text-neutral-600 border border-neutral-200 px-4 py-2.5 rounded-lg font-medium hover:bg-neutral-50 transition-colors text-sm shadow-sm"
                                     >
                                         <Icon icon="solar:close-circle-linear" />
-                                        Ne pas utiliser ce visuel
+                                        Ne pas utiliser
                                     </button>
                                 )}
                                 
-                                <button
-                                    type="button"
-                                    onClick={handleGenerate}
-                                    className="flex items-center gap-2 bg-white text-neutral-600 border border-neutral-200 px-4 py-2.5 rounded-lg font-medium hover:bg-neutral-50 transition-colors text-sm"
-                                >
-                                    <Icon icon="solar:refresh-linear" />
-                                    Actualiser le visuel
-                                </button>
-
-                                {!formData.coverImageSelected && (
+                                {formData.coverMode !== 'upload' ? (
                                     <button
                                         type="button"
-                                        onClick={() => setFormData(prev => ({ ...prev, coverImageSelected: false, coverStepDismissed: true }))}
+                                        onClick={handleGenerate}
+                                        className="flex items-center gap-2 bg-white text-neutral-600 border border-neutral-200 px-4 py-2.5 rounded-lg font-medium hover:bg-neutral-50 transition-colors text-sm shadow-sm"
+                                    >
+                                        <Icon icon="solar:refresh-linear" />
+                                        Actualiser
+                                    </button>
+                                ) : (
+                                    <label className="flex items-center gap-2 bg-white text-neutral-600 border border-neutral-200 px-4 py-2.5 rounded-lg font-medium hover:bg-neutral-50 transition-colors text-sm cursor-pointer shadow-sm">
+                                        <Icon icon="solar:upload-minimalistic-linear" />
+                                        Changer de photo
+                                        <input type="file" className="hidden" accept="image/jpeg,image/png,image/webp" onChange={handleFileUpload} />
+                                    </label>
+                                )}
+
+                                {!formData.coverImageSelected && formData.coverMode === 'upload' && (
+                                    <button
+                                        type="button"
+                                        onClick={() => handleModeChange('upload')}
+                                        className="flex items-center gap-2 text-red-500 bg-red-50 px-3 py-2.5 rounded-lg hover:bg-red-100 transition-colors text-sm font-medium ml-auto"
+                                    >
+                                        <Icon icon="solar:trash-bin-trash-linear" />
+                                        Supprimer
+                                    </button>
+                                )}
+
+                                {!formData.coverImageSelected && formData.coverMode !== 'upload' && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setFormData(prev => ({ ...prev, coverStepDismissed: true }))}
                                         className="flex items-center gap-2 text-neutral-500 px-3 py-2.5 hover:text-neutral-700 transition-colors text-sm font-medium ml-auto"
                                     >
-                                        Passer / Ne pas utiliser
+                                        Passer
                                     </button>
                                 )}
                             </div>
@@ -3960,7 +4107,10 @@
                     coverParcelRef: '',
                     coverCoordinates: null,
                     coverBBox: null,
-                    coverGeneratedAt: ''
+                    coverGeneratedAt: '',
+                    coverMode: 'panoramax',
+                    coverUploadFileName: '',
+                    coverUploadPreviewUrl: ''
                 }));
 
                 if (isValid) {
@@ -4003,7 +4153,10 @@
                         coverParcelRef: '',
                         coverCoordinates: null,
                         coverBBox: null,
-                        coverGeneratedAt: ''
+                        coverGeneratedAt: '',
+                        coverMode: 'panoramax',
+                        coverUploadFileName: '',
+                        coverUploadPreviewUrl: ''
                     });
                 } else if (!formData.addressIsValid) {
                     setFormData({ ...formData, address: val });

@@ -301,25 +301,41 @@ module.exports = async function handler(req, res) {
     const parcelRef = await fetchParcelRef(geo.lon, geo.lat);
     if (parcelRef) log(`Parcel found: ${parcelRef}`);
 
-    // 4. Cascade de providers d'images
-    let coverImage = await fetchPanoramax(geo.lon, geo.lat);
-    if (coverImage) {
-      log('Panoramax image found');
-    } else {
-      log('Panoramax unavailable. Fallback to IGN Ortho...');
-      coverImage = await fetchIgnOrtho(geo.lon, geo.lat);
+    // 4. Sélection du provider d'image via preferred_source
+    const preferredSource = String(payload.preferred_source || '').trim();
+    let coverImage = null;
 
+    if (preferredSource === 'ign_ortho') {
+      log('Preferred source: ign_ortho. Bypassing others.');
+      coverImage = await fetchIgnOrtho(geo.lon, geo.lat);
+      if (!coverImage) throw createHttpError(500, 'IGN Ortho provider failed');
+    } else if (preferredSource === 'ign_plan') {
+      log('Preferred source: ign_plan. Bypassing others.');
+      coverImage = await fetchIgnPlan(geo.lon, geo.lat);
+      if (!coverImage) throw createHttpError(500, 'IGN Plan provider failed');
+    } else {
+      // 'panoramax' ou fallback
+      log(`Preferred source: ${preferredSource || 'none'}. Attempting Panoramax cascade...`);
+      coverImage = await fetchPanoramax(geo.lon, geo.lat);
       if (coverImage) {
-        log('IGN Ortho fallback generated');
+        log('Panoramax image found');
       } else {
-        log('IGN Ortho failed. Fallback to IGN Plan...');
-        coverImage = await fetchIgnPlan(geo.lon, geo.lat);
-        if (!coverImage) {
-          throw createHttpError(500, 'All image providers failed (Panoramax, IGN Ortho, IGN Plan)');
+        log('Panoramax unavailable. Fallback to IGN Ortho...');
+        coverImage = await fetchIgnOrtho(geo.lon, geo.lat);
+
+        if (coverImage) {
+          log('IGN Ortho fallback generated');
+        } else {
+          log('IGN Ortho failed. Fallback to IGN Plan...');
+          coverImage = await fetchIgnPlan(geo.lon, geo.lat);
+          if (!coverImage) {
+            throw createHttpError(500, 'All image providers failed (Panoramax, IGN Ortho, IGN Plan)');
+          }
+          log('IGN Plan fallback generated');
         }
-        log('IGN Plan fallback generated');
       }
     }
+
 
     // 5. Upload Supabase Storage
     const ext = coverImage.contentType.includes('png') ? 'png' : 'jpg';

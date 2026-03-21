@@ -3727,7 +3727,7 @@
                     const res = await fetch(url);
                     if (!res.ok) return null;
                     const data = await res.json();
-                    
+
                     if (data && data.features && data.features.length > 0) {
                         const preciseMatch = data.features.find(f => f.properties && f.properties.type === 'housenumber');
                         if (preciseMatch) {
@@ -3754,6 +3754,8 @@
                 let fullAddress = suggestion.fulltext;
                 let finalSuggestion = suggestion;
                 setQuery(fullAddress);
+                setShowSuggestions(false);
+                setHighlightedIndex(-1);
 
                 // Analyse métier de la précision
                 let isStreetMatch = finalSuggestion.type === 'StreetAddress';
@@ -3770,7 +3772,7 @@
                     setIsLoadingSuggestions(true);
                     const preciseSuggestion = await verifyAddressPrecisionWithSearch(query);
                     setIsLoadingSuggestions(false);
-                    
+
                     if (preciseSuggestion) {
                         finalSuggestion = preciseSuggestion;
                         fullAddress = preciseSuggestion.fulltext;
@@ -3789,8 +3791,9 @@
                     isValid = false;
                 }
 
-                setFormData({
-                    ...formData,
+                // Forme fonctionnelle pour éviter les closures périmées après await
+                setFormData(prev => ({
+                    ...prev,
                     address: fullAddress,
                     addressObj: finalSuggestion,
                     postalCode: finalSuggestion.zipcode || '',
@@ -3813,10 +3816,7 @@
                     coverImageSelected: false,
                     coverImageError: null,
                     coverStepDismissed: false
-                });
-
-                setShowSuggestions(false);
-                setHighlightedIndex(-1);
+                }));
 
                 if (isValid) {
                     setErrors(prev => ({ ...prev, address: null, postalCode: null, city: null }));
@@ -3824,6 +3824,8 @@
                     setErrors(prev => ({ ...prev, address: 'Adresse trop imprécise — précisez le numéro de voie' }));
                 }
             };
+
+
 
             const handleAddressChange = (e) => {
                 const val = e.target.value;

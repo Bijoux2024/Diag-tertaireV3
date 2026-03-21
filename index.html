@@ -3699,13 +3699,32 @@
 
                     setIsLoadingSuggestions(true);
                     try {
-                        const baseUrl = 'https://data.geopf.fr/geocodage/completion';
-                        const url = `${baseUrl}?text=${encodeURIComponent(query)}&type=StreetAddress,PositionOfInterest&maximumResponses=5`;
+                        const url = `https://data.geopf.fr/geocodage/search?q=${encodeURIComponent(query)}&limit=5&autocomplete=1`;
                         const response = await fetch(url);
                         if (response.ok) {
                             const data = await response.json();
-                            if (data && data.results) {
-                                setSuggestions(data.results);
+                            if (data && data.features) {
+                                const mapped = data.features.map(f => {
+                                    const p = f.properties;
+                                    const coords = f.geometry?.coordinates || [null, null];
+                                    let typeMap = 'unknown';
+                                    if (p.type === 'housenumber' || p.type === 'street') typeMap = 'StreetAddress';
+                                    else if (p.type === 'municipality') typeMap = 'Municipality';
+                                    else typeMap = 'PositionOfInterest';
+
+                                    return {
+                                        fulltext: p.label,
+                                        zipcode: p.postcode,
+                                        city: p.city,
+                                        x: coords[0],
+                                        y: coords[1],
+                                        classification: p.score,
+                                        type: typeMap,
+                                        number: p.housenumber,
+                                        street: p.street || p.name
+                                    };
+                                });
+                                setSuggestions(mapped);
                                 setShowSuggestions(true);
                                 setHighlightedIndex(-1);
                             }

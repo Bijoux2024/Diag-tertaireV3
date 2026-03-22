@@ -3108,6 +3108,9 @@
             coverMode: 'panoramax',
             coverUploadFileName: '',
             coverUploadPreviewUrl: '',
+            coverPanX: 50,
+            coverZoom: 1,
+            coverIsPanoramic: false,
             role: '',
             activity: '',
             mixedUsage1: '',
@@ -3553,7 +3556,10 @@
                     coverBBox: null,
                     coverGeneratedAt: '',
                     coverUploadFileName: '',
-                    coverUploadPreviewUrl: ''
+                    coverUploadPreviewUrl: '',
+                    coverPanX: 50,
+                    coverZoom: 1,
+                    coverIsPanoramic: false
                 }));
             };
 
@@ -3573,7 +3579,10 @@
                         coverParcelRef: '',
                         coverCoordinates: null,
                         coverBBox: null,
-                        coverGeneratedAt: ''
+                        coverGeneratedAt: '',
+                        coverPanX: 50,
+                        coverZoom: 1,
+                        coverIsPanoramic: false
                     }));
                     return;
                 }
@@ -3589,7 +3598,10 @@
                         coverParcelRef: '',
                         coverCoordinates: null,
                         coverBBox: null,
-                        coverGeneratedAt: ''
+                        coverGeneratedAt: '',
+                        coverPanX: 50,
+                        coverZoom: 1,
+                        coverIsPanoramic: false
                     }));
                     return;
                 }
@@ -3604,7 +3616,10 @@
                     coverUploadFileName: file.name,
                     coverUploadPreviewUrl: previewUrl,
                     coverImageSource: 'upload',
-                    coverImageSignedUrl: previewUrl
+                    coverImageSignedUrl: previewUrl,
+                    coverPanX: 50,
+                    coverZoom: 1,
+                    coverIsPanoramic: false
                 }));
             };
 
@@ -3621,7 +3636,10 @@
                     coverParcelRef: '',
                     coverCoordinates: null,
                     coverBBox: null,
-                    coverGeneratedAt: ''
+                    coverGeneratedAt: '',
+                    coverPanX: 50,
+                    coverZoom: 1,
+                    coverIsPanoramic: false
                 }));
                 try {
                     const payload = { 
@@ -3690,7 +3708,10 @@
                         coverCoordinates: data.coordinates || null,
                         coverBBox: data.bbox || null,
                         coverGeneratedAt: data.cover_generated_at || '',
-                        coverImageError: null
+                        coverImageError: null,
+                        coverPanX: 50,
+                        coverZoom: 1,
+                        coverIsPanoramic: false
                     }));
 
                 } catch (err) {
@@ -3711,7 +3732,10 @@
                         coverParcelRef: '',
                         coverCoordinates: null,
                         coverBBox: null,
-                        coverGeneratedAt: ''
+                        coverGeneratedAt: '',
+                        coverPanX: 50,
+                        coverZoom: 1,
+                        coverIsPanoramic: false
                     }));
                 }
             };
@@ -3727,8 +3751,20 @@
                     coverParcelRef: '',
                     coverCoordinates: null,
                     coverBBox: null,
-                    coverGeneratedAt: ''
+                    coverGeneratedAt: '',
+                    coverPanX: 50,
+                    coverZoom: 1,
+                    coverIsPanoramic: false
                 }));
+            };
+
+            const handleImageLoad = (e) => {
+                const { naturalWidth, naturalHeight } = e.target;
+                if (formData.coverImageSource === 'panoramax' && (naturalWidth > naturalHeight * 1.5)) {
+                    setFormData(prev => ({ ...prev, coverIsPanoramic: true }));
+                } else {
+                    setFormData(prev => ({ ...prev, coverIsPanoramic: false }));
+                }
             };
 
             const sourceLabels = {
@@ -3857,13 +3893,59 @@
                                 <img 
                                     src={formData.coverImageSignedUrl} 
                                     alt="Aperçu du bâtiment" 
-                                    className="w-full h-full object-cover" 
+                                    className="w-full h-full object-cover transition-transform duration-300"
+                                    style={{
+                                        objectPosition: `${formData.coverPanX ?? 50}% center`,
+                                        transform: `scale(${formData.coverZoom ?? 1})`
+                                    }}
                                     onError={handleImageError}
+                                    onLoad={handleImageLoad}
                                 />
                                 <div className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-sm text-white text-[10px] font-semibold px-2 py-1 rounded shadow-sm">
                                     Source : {sourceLabels[formData.coverImageSource] || 'IGN'}
                                 </div>
                             </div>
+
+                            {formData.coverIsPanoramic && formData.coverImageSource === 'panoramax' && (
+                                <div className="mt-3 bg-white border border-neutral-200 p-3 rounded-lg shadow-sm">
+                                    <div className="text-sm font-semibold text-neutral-700 mb-2">Ajuster le cadrage</div>
+                                    <div className="flex flex-col gap-3">
+                                        <div>
+                                            <label className="text-xs text-neutral-500 mb-1 flex justify-between">
+                                                <span>Déplacer horizontalement</span>
+                                            </label>
+                                            <input 
+                                                type="range" 
+                                                min="0" max="100" 
+                                                value={formData.coverPanX ?? 50} 
+                                                onChange={(e) => setFormData(prev => ({ ...prev, coverPanX: parseInt(e.target.value, 10) }))}
+                                                className="w-full h-1.5 bg-neutral-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-neutral-500 mb-1 flex justify-between">
+                                                <span>Zoom ({Number(formData.coverZoom || 1).toFixed(1)}x)</span>
+                                            </label>
+                                            <input 
+                                                type="range" 
+                                                min="1" max="3" step="0.1" 
+                                                value={formData.coverZoom ?? 1} 
+                                                onChange={(e) => setFormData(prev => ({ ...prev, coverZoom: parseFloat(e.target.value) }))}
+                                                className="w-full h-1.5 bg-neutral-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                                            />
+                                        </div>
+                                        <div className="flex justify-end mt-1">
+                                            <button 
+                                                type="button" 
+                                                onClick={() => setFormData(prev => ({ ...prev, coverPanX: 50, coverZoom: 1 }))}
+                                                className="text-xs text-neutral-500 hover:text-neutral-800 transition-colors font-medium border border-neutral-200 px-2 py-1 rounded bg-neutral-50"
+                                            >
+                                                Réinitialiser le cadrage
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                             <div className="flex flex-wrap items-center gap-3 mt-4">
                                 {!formData.coverImageSelected ? (
                                     <button
@@ -4110,7 +4192,10 @@
                     coverGeneratedAt: '',
                     coverMode: 'panoramax',
                     coverUploadFileName: '',
-                    coverUploadPreviewUrl: ''
+                    coverUploadPreviewUrl: '',
+                    coverPanX: 50,
+                    coverZoom: 1,
+                    coverIsPanoramic: false
                 }));
 
                 if (isValid) {
@@ -4156,7 +4241,10 @@
                         coverGeneratedAt: '',
                         coverMode: 'panoramax',
                         coverUploadFileName: '',
-                        coverUploadPreviewUrl: ''
+                        coverUploadPreviewUrl: '',
+                        coverPanX: 50,
+                        coverZoom: 1,
+                        coverIsPanoramic: false
                     });
                 } else if (!formData.addressIsValid) {
                     setFormData({ ...formData, address: val });

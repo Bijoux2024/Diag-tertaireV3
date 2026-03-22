@@ -3569,7 +3569,7 @@
                 }));
             };
 
-            const handleFileUpload = (e) => {
+            const handleFileUpload = async (e) => {
                 const file = e.target.files?.[0];
                 if (!file) return;
 
@@ -3618,17 +3618,23 @@
                     return;
                 }
 
-                const previewUrl = URL.createObjectURL(file);
+                // Activation de l'état loading
                 setFormData(prev => ({
                     ...prev,
-                    coverImageStatus: 'ready',
+                    coverMode: 'upload',
+                    coverImageStatus: 'loading',
                     coverImageError: null,
                     coverImageSelected: false,
                     coverStepDismissed: false,
+                    coverImageSource: '',
+                    coverImagePath: '',
+                    coverImageSignedUrl: '',
+                    coverParcelRef: '',
+                    coverCoordinates: null,
+                    coverBBox: null,
+                    coverGeneratedAt: '',
                     coverUploadFileName: file.name,
-                    coverUploadPreviewUrl: previewUrl,
-                    coverImageSource: 'upload',
-                    coverImageSignedUrl: previewUrl,
+                    coverUploadPreviewUrl: '',
                     coverPanX: 50,
                     coverZoom: 1,
                     coverIsPanoramic: false,
@@ -3636,6 +3642,77 @@
                     coverCandidates: [],
                     coverSelectedCandidateId: null
                 }));
+
+                try {
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    
+                    const base64String = await new Promise((resolve, reject) => {
+                        reader.onload = () => resolve(reader.result);
+                        reader.onerror = error => reject(error);
+                    });
+
+                    const payload = {
+                        file_name: file.name,
+                        file_base64: base64String,
+                        report_id: formData.publicReportId || null
+                    };
+
+                    const res = await fetch('/api/public-report-cover-upload', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const textContent = await res.text();
+                    let data;
+                    try { data = JSON.parse(textContent); } 
+                    catch(e) { throw new Error('Le service a renvoyé une réponse invalide'); }
+
+                    if (!res.ok || !data.ok) {
+                        throw new Error(data.error || 'Erreur lors du téléversement du fichier');
+                    }
+
+                    if (!data.cover_image_signed_url) {
+                        throw new Error("L'aperçu premium n'est pas disponible.");
+                    }
+
+                    setFormData(prev => ({
+                        ...prev,
+                        coverImageStatus: 'ready',
+                        coverImageSource: data.cover_image_source || 'upload',
+                        coverImagePath: data.cover_image_path || '',
+                        coverImageSignedUrl: data.cover_image_signed_url || '',
+                        coverUploadFileName: data.cover_original_filename || file.name,
+                        coverUploadPreviewUrl: data.cover_image_signed_url, // Vraie source distante
+                        coverImageError: null,
+                        coverPanX: 50,
+                        coverZoom: 1,
+                        coverIsPanoramic: false,
+                        coverPanY: 50,
+                        coverCandidates: [],
+                        coverSelectedCandidateId: null,
+                        coverIsManual: true
+                    }));
+                } catch (err) {
+                    console.error('[cover-upload] error:', err.message);
+                    setFormData(prev => ({
+                        ...prev,
+                        coverImageStatus: 'error',
+                        coverImageError: err.message || 'Impossible de téléverser la photo.',
+                        coverImageSource: '',
+                        coverImagePath: '',
+                        coverImageSignedUrl: '',
+                        coverUploadFileName: '',
+                        coverUploadPreviewUrl: '',
+                        coverPanX: 50,
+                        coverZoom: 1,
+                        coverIsPanoramic: false,
+                        coverPanY: 50,
+                        coverCandidates: [],
+                        coverSelectedCandidateId: null
+                    }));
+                }
             };
 
             const handleGenerate = async () => {
@@ -6895,7 +6972,10 @@
                     address_is_valid: formData.addressIsValid || false,
                     cover_image_source: formData.coverImageSource || null,
                     cover_image_path: formData.coverImagePath || null,
-                    cover_image_selected: formData.coverImageSelected || false,
+                    cover_image_selected: !!formData.coverImageSelected,
+                    cover_image_signed_url: formData.coverImageSignedUrl || null,
+                    cover_original_filename: formData.coverUploadFileName || null,
+                    cover_is_manual: !!formData.coverIsManual,
                     city: formData.city || null,
                     role: formData.role,
                     site_name: formData.siteName || (formData.address ? formData.address.split(',')[0].trim() : 'Bâtiment tertiaire'),

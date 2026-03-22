@@ -3596,11 +3596,11 @@
                     return;
                 }
 
-                if (file.size > 5 * 1024 * 1024) {
+                if (file.size > 3 * 1024 * 1024) {
                     setFormData(prev => ({ 
                         ...prev, 
                         coverImageStatus: 'error', 
-                        coverImageError: 'Fichier trop lourd (max 5 Mo).',
+                        coverImageError: 'Fichier trop lourd (max 3 Mo).',
                         coverImageSource: '',
                         coverImagePath: '',
                         coverImageSignedUrl: '',
@@ -6973,7 +6973,6 @@
                     cover_image_source: formData.coverImageSource || null,
                     cover_image_path: formData.coverImagePath || null,
                     cover_image_selected: !!formData.coverImageSelected,
-                    cover_image_signed_url: formData.coverImageSignedUrl || null,
                     cover_original_filename: formData.coverUploadFileName || null,
                     cover_is_manual: !!formData.coverIsManual,
                     city: formData.city || null,

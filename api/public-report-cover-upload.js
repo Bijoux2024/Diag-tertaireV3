@@ -133,9 +133,9 @@ async function handler(req, res) {
       throw createHttpError(400, 'Empty file buffer');
     }
 
-    // 5 Mo maximum environ (5242880)
-    if (buffer.length > 5.5 * 1024 * 1024) {
-      throw createHttpError(413, 'File too large (max 5 MB)');
+    // 3.5 Mo maximum (pour rester sous 4.5 Mo de Vercel Request Limit une fois en Base64)
+    if (buffer.length > 3.5 * 1024 * 1024) {
+      throw createHttpError(413, 'File too large (max 3.5 MB)');
     }
 
     const { supabaseUrl, serviceKey } = getRequiredServerSupabaseConfig();

@@ -3114,6 +3114,11 @@
             coverPanY: 50,
             coverCandidates: [],
             coverSelectedCandidateId: null,
+            coverStreetViewHeading: 0,
+            coverStreetViewPitch: 0,
+            coverStreetViewFov: 90,
+            coverStreetViewPanoId: null,
+            coverStreetViewAvailable: false,
             role: '',
             activity: '',
             mixedUsage1: '',
@@ -3565,7 +3570,12 @@
                     coverIsPanoramic: false,
                     coverPanY: 50,
                     coverCandidates: [],
-                    coverSelectedCandidateId: null
+                    coverSelectedCandidateId: null,
+                    coverStreetViewHeading: 0,
+                    coverStreetViewPitch: 0,
+                    coverStreetViewFov: 90,
+                    coverStreetViewPanoId: null,
+                    coverStreetViewAvailable: false
                 }));
             };
 
@@ -3591,7 +3601,12 @@
                         coverIsPanoramic: false,
                         coverPanY: 50,
                         coverCandidates: [],
-                        coverSelectedCandidateId: null
+                        coverSelectedCandidateId: null,
+                        coverStreetViewHeading: 0,
+                        coverStreetViewPitch: 0,
+                        coverStreetViewFov: 90,
+                        coverStreetViewPanoId: null,
+                        coverStreetViewAvailable: false
                     }));
                     return;
                 }
@@ -3613,7 +3628,12 @@
                         coverIsPanoramic: false,
                         coverPanY: 50,
                         coverCandidates: [],
-                        coverSelectedCandidateId: null
+                        coverSelectedCandidateId: null,
+                        coverStreetViewHeading: 0,
+                        coverStreetViewPitch: 0,
+                        coverStreetViewFov: 90,
+                        coverStreetViewPanoId: null,
+                        coverStreetViewAvailable: false
                     }));
                     return;
                 }
@@ -3640,7 +3660,12 @@
                     coverIsPanoramic: false,
                     coverPanY: 50,
                     coverCandidates: [],
-                    coverSelectedCandidateId: null
+                    coverSelectedCandidateId: null,
+                    coverStreetViewHeading: 0,
+                    coverStreetViewPitch: 0,
+                    coverStreetViewFov: 90,
+                    coverStreetViewPanoId: null,
+                    coverStreetViewAvailable: false
                 }));
 
                 try {
@@ -3692,6 +3717,11 @@
                         coverPanY: 50,
                         coverCandidates: [],
                         coverSelectedCandidateId: null,
+                        coverStreetViewHeading: 0,
+                        coverStreetViewPitch: 0,
+                        coverStreetViewFov: 90,
+                        coverStreetViewPanoId: null,
+                        coverStreetViewAvailable: false,
                         coverIsManual: true
                     }));
                 } catch (err) {
@@ -3746,71 +3776,85 @@
                     if (formData.lat) payload.lat = formData.lat;
                     if (formData.lon) payload.lon = formData.lon;
 
-                    const res = await fetch('/api/public-report-cover', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-
-                    console.log('[cover-preview] payload envoyé:', payload);
-
-                    const contentType = res.headers.get('content-type') || '';
-                    const status = res.status;
-                    const textContent = await res.text();
-
-                    console.log(`[cover-preview] status=${status} content-type=${contentType}`);
-
-                    if (!contentType.includes('application/json')) {
-                        console.log(`[cover-preview] non-json body: ${textContent.substring(0, 200)}...`);
-                        if (status === 404) {
-                            throw new Error('Le service de génération du visuel est introuvable');
-                        } else if (status >= 500) {
-                            throw new Error('Le service de génération du visuel est temporairement indisponible');
-                        } else {
-                            throw new Error('Le service de génération du visuel a renvoyé une réponse invalide');
+                    if (formData.coverMode === 'panoramax') {
+                        if (!formData.lat || !formData.lon) {
+                            throw new Error("Impossible de localiser l'adresse pour charger Street View.");
                         }
+                        const svRes = await fetch(`/api/public-report-google-streetview?action=meta&lat=${formData.lat}&lon=${formData.lon}`);
+                        let svData;
+                        try { svData = await svRes.json(); } catch(e) { throw new Error('Le service Street View a renvoyé une réponse invalide'); }
+                        
+                        if (!svRes.ok || !svData.ok || !svData.streetview_available) {
+                           throw new Error("Aucune vue Google Street View n'est disponible pour cette adresse.");
+                        }
+
+                        const initialHeading = svData.heading || 0;
+                        const initialPitch = svData.pitch || 0;
+                        const initialFov = svData.fov || 90;
+                        const proxyUrl = `/api/public-report-google-streetview?action=image&lat=${formData.lat}&lon=${formData.lon}&heading=${initialHeading}&pitch=${initialPitch}&fov=${initialFov}`;
+
+                        setFormData(prev => ({
+                            ...prev,
+                            coverImageStatus: 'ready',
+                            coverImageSource: 'google_streetview',
+                            coverImagePath: proxyUrl, // L'URL proxy ne sera insérée que temporairement localement
+                            coverImageSignedUrl: proxyUrl, // Utilisée uniquement pour la preview localement
+                            coverStreetViewAvailable: true,
+                            coverStreetViewHeading: initialHeading,
+                            coverStreetViewPitch: initialPitch,
+                            coverStreetViewFov: initialFov,
+                            coverStreetViewPanoId: svData.pano_id || null,
+                            coverImageError: null
+                        }));
+                    } else {
+                        const res = await fetch('/api/public-report-cover', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+
+                        const contentType = res.headers.get('content-type') || '';
+                        const status = res.status;
+                        const textContent = await res.text();
+
+                        if (!contentType.includes('application/json')) {
+                            if (status === 404) throw new Error('Le service de génération du visuel est introuvable');
+                            if (status >= 500) throw new Error('Le service est temporairement indisponible');
+                            throw new Error('Le service a renvoyé une réponse invalide');
+                        }
+
+                        let data;
+                        try { data = JSON.parse(textContent); } catch (e) { throw new Error('Réponse invalide'); }
+
+                        if (!res.ok || !data.ok) {
+                            if (status === 404) throw new Error('Service introuvable');
+                            if (status >= 500) throw new Error('Service indisponible');
+                            throw new Error(data.error || 'Réponse invalide');
+                        }
+
+                        if (!data.cover_image_signed_url || data.cover_image_signed_url.trim() === '') {
+                            throw new Error("L'aperçu du visuel n'est pas disponible.");
+                        }
+
+                        setFormData(prev => ({
+                            ...prev,
+                            coverImageStatus: 'ready',
+                            coverImageSource: data.cover_image_source || '',
+                            coverImagePath: data.cover_image_path || '',
+                            coverImageSignedUrl: data.cover_image_signed_url || '',
+                            coverParcelRef: data.cover_parcel_ref || '',
+                            coverCoordinates: data.coordinates || null,
+                            coverBBox: data.bbox || null,
+                            coverGeneratedAt: data.cover_generated_at || '',
+                            coverImageError: null,
+                            coverPanX: 50,
+                            coverZoom: 1,
+                            coverIsPanoramic: false,
+                            coverPanY: 50,
+                            coverCandidates: data.cover_candidates || [],
+                            coverSelectedCandidateId: (data.cover_candidates && data.cover_candidates.length > 0) ? data.cover_candidates[0].id : null
+                        }));
                     }
-
-                    let data;
-                    try {
-                        data = JSON.parse(textContent);
-                    } catch (parseError) {
-                        console.error('[cover-preview] JSON parse error:', parseError);
-                        throw new Error('Le service de génération du visuel a renvoyé une réponse invalide');
-                    }
-
-                    console.log('[cover-preview] JSON reçu:', data);
-
-                    if (!res.ok || !data.ok) {
-                        if (status === 404) throw new Error('Le service de génération du visuel est introuvable');
-                        if (status >= 500) throw new Error('Le service de génération du visuel est temporairement indisponible');
-                        throw new Error(data.error || 'Le service de génération du visuel a renvoyé une réponse invalide');
-                    }
-
-                    if (!data.cover_image_signed_url || data.cover_image_signed_url.trim() === '') {
-                        throw new Error("L'aperçu du visuel n'est pas disponible dans la réponse.");
-                    }
-
-                    console.log('[cover-preview] valeur finale de coverImageSignedUrl:', data.cover_image_signed_url);
-
-                    setFormData(prev => ({
-                        ...prev,
-                        coverImageStatus: 'ready',
-                        coverImageSource: data.cover_image_source || '',
-                        coverImagePath: data.cover_image_path || '',
-                        coverImageSignedUrl: data.cover_image_signed_url || '',
-                        coverParcelRef: data.cover_parcel_ref || '',
-                        coverCoordinates: data.coordinates || null,
-                        coverBBox: data.bbox || null,
-                        coverGeneratedAt: data.cover_generated_at || '',
-                        coverImageError: null,
-                        coverPanX: 50,
-                        coverZoom: 1,
-                        coverIsPanoramic: false,
-                        coverPanY: 50,
-                        coverCandidates: data.cover_candidates || [],
-                        coverSelectedCandidateId: (data.cover_candidates && data.cover_candidates.length > 0) ? data.cover_candidates[0].id : null
-                    }));
 
                 } catch (err) {
                     console.error('[cover-preview] fetch error details:', err.message);
@@ -3872,6 +3916,7 @@
             };
 
             const sourceLabels = {
+                'google_streetview': 'Google Street View',
                 'panoramax': 'Panoramax (Vue au sol)',
                 'ign_ortho': 'IGN (Vue aérienne)',
                 'ign_plan': 'IGN (Plan interactif)',
@@ -4010,73 +4055,82 @@
                                 </div>
                             </div>
 
-                            {formData.coverIsPanoramic && formData.coverImageSource === 'panoramax' && (
+                            {formData.coverMode === 'panoramax' && formData.coverImageSource === 'google_streetview' && formData.coverStreetViewAvailable && (
                                 <div className="mt-3 bg-white border border-neutral-200 p-3 rounded-lg shadow-sm">
                                     <div className="text-sm font-semibold text-neutral-700 mb-2">Ajuster le cadrage</div>
                                     <div className="flex flex-col gap-3">
                                         <div>
                                             <label className="text-xs text-neutral-500 mb-1 flex justify-between">
-                                                <span>Déplacer horizontalement</span>
+                                                <span>Orientation (Gauche / Droite)</span>
                                             </label>
                                             <input 
                                                 type="range" 
-                                                min="0" max="100" 
-                                                value={formData.coverPanX ?? 50} 
-                                                onChange={(e) => setFormData(prev => ({ ...prev, coverPanX: parseInt(e.target.value, 10) }))}
+                                                min="0" max="360" 
+                                                value={formData.coverStreetViewHeading ?? 0} 
+                                                onChange={(e) => setFormData(prev => ({ ...prev, coverStreetViewHeading: parseInt(e.target.value, 10) }))}
+                                                onPointerUp={() => {
+                                                    const url = `/api/public-report-google-streetview?action=image&lat=${formData.lat}&lon=${formData.lon}&heading=${formData.coverStreetViewHeading}&pitch=${formData.coverStreetViewPitch}&fov=${formData.coverStreetViewFov}`;
+                                                    setFormData(prev => ({ ...prev, coverImageSignedUrl: url }));
+                                                }}
+                                                onTouchEnd={() => {
+                                                    const url = `/api/public-report-google-streetview?action=image&lat=${formData.lat}&lon=${formData.lon}&heading=${formData.coverStreetViewHeading}&pitch=${formData.coverStreetViewPitch}&fov=${formData.coverStreetViewFov}`;
+                                                    setFormData(prev => ({ ...prev, coverImageSignedUrl: url }));
+                                                }}
                                                 className="w-full h-1.5 bg-neutral-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
                                             />
                                         </div>
                                         <div>
                                             <label className="text-xs text-neutral-500 mb-1 flex justify-between">
-                                                <span>Zoom ({Number(formData.coverZoom || 1).toFixed(1)}x)</span>
+                                                <span>Inclinaison (Haut / Bas)</span>
                                             </label>
                                             <input 
                                                 type="range" 
-                                                min="1" max="3" step="0.1" 
-                                                value={formData.coverZoom ?? 1} 
-                                                onChange={(e) => setFormData(prev => ({ ...prev, coverZoom: parseFloat(e.target.value) }))}
+                                                min="-30" max="30" 
+                                                value={formData.coverStreetViewPitch ?? 0} 
+                                                onChange={(e) => setFormData(prev => ({ ...prev, coverStreetViewPitch: parseInt(e.target.value, 10) }))}
+                                                onPointerUp={() => {
+                                                    const url = `/api/public-report-google-streetview?action=image&lat=${formData.lat}&lon=${formData.lon}&heading=${formData.coverStreetViewHeading}&pitch=${formData.coverStreetViewPitch}&fov=${formData.coverStreetViewFov}`;
+                                                    setFormData(prev => ({ ...prev, coverImageSignedUrl: url }));
+                                                }}
+                                                onTouchEnd={() => {
+                                                    const url = `/api/public-report-google-streetview?action=image&lat=${formData.lat}&lon=${formData.lon}&heading=${formData.coverStreetViewHeading}&pitch=${formData.coverStreetViewPitch}&fov=${formData.coverStreetViewFov}`;
+                                                    setFormData(prev => ({ ...prev, coverImageSignedUrl: url }));
+                                                }}
                                                 className="w-full h-1.5 bg-neutral-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
                                             />
                                         </div>
                                         <div>
                                             <label className="text-xs text-neutral-500 mb-1 flex justify-between">
-                                                <span>Déplacer verticalement</span>
+                                                <span>Zoom (Champ de vision)</span>
                                             </label>
                                             <input 
                                                 type="range" 
-                                                min="0" max="100" 
-                                                value={formData.coverPanY ?? 50} 
-                                                onChange={(e) => setFormData(prev => ({ ...prev, coverPanY: parseInt(e.target.value, 10) }))}
+                                                min="20" max="90" 
+                                                value={formData.coverStreetViewFov ?? 90} 
+                                                onChange={(e) => setFormData(prev => ({ ...prev, coverStreetViewFov: parseInt(e.target.value, 10) }))}
+                                                onPointerUp={() => {
+                                                    const url = `/api/public-report-google-streetview?action=image&lat=${formData.lat}&lon=${formData.lon}&heading=${formData.coverStreetViewHeading}&pitch=${formData.coverStreetViewPitch}&fov=${formData.coverStreetViewFov}`;
+                                                    setFormData(prev => ({ ...prev, coverImageSignedUrl: url }));
+                                                }}
+                                                onTouchEnd={() => {
+                                                    const url = `/api/public-report-google-streetview?action=image&lat=${formData.lat}&lon=${formData.lon}&heading=${formData.coverStreetViewHeading}&pitch=${formData.coverStreetViewPitch}&fov=${formData.coverStreetViewFov}`;
+                                                    setFormData(prev => ({ ...prev, coverImageSignedUrl: url }));
+                                                }}
                                                 className="w-full h-1.5 bg-neutral-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
                                             />
                                         </div>
                                         <div className="flex justify-end mt-1">
                                             <button 
                                                 type="button" 
-                                                onClick={() => setFormData(prev => ({ ...prev, coverPanX: 50, coverPanY: 50, coverZoom: 1 }))}
+                                                onClick={() => {
+                                                    const url = `/api/public-report-google-streetview?action=image&lat=${formData.lat}&lon=${formData.lon}&heading=0&pitch=0&fov=90`;
+                                                    setFormData(prev => ({ ...prev, coverStreetViewHeading: 0, coverStreetViewPitch: 0, coverStreetViewFov: 90, coverImageSignedUrl: url }));
+                                                }}
                                                 className="text-xs text-neutral-500 hover:text-neutral-800 transition-colors font-medium border border-neutral-200 px-2 py-1 rounded bg-neutral-50"
                                             >
                                                 Réinitialiser le cadrage
                                             </button>
                                         </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {formData.coverImageStatus === 'ready' && formData.coverMode === 'panoramax' && formData.coverCandidates?.length > 1 && (
-                                <div className="mt-3">
-                                    <h4 className="text-sm font-semibold text-neutral-700 mb-2">Autres vues disponibles</h4>
-                                    <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-                                        {formData.coverCandidates.map(c => (
-                                            <button 
-                                                key={c.id} 
-                                                type="button"
-                                                onClick={() => handleCandidateSelect(c.id)}
-                                                className={`relative shrink-0 w-24 h-16 rounded overflow-hidden border-2 transition-all ${formData.coverSelectedCandidateId === c.id ? 'border-[#1D4ED8] ring-2 ring-blue-100' : 'border-transparent hover:border-neutral-300'}`}
-                                            >
-                                                <img src={c.url} alt="Candidat" className="w-full h-full object-cover" />
-                                            </button>
-                                        ))}
                                     </div>
                                 </div>
                             )}
@@ -4332,7 +4386,12 @@
                     coverIsPanoramic: false,
                     coverPanY: 50,
                     coverCandidates: [],
-                    coverSelectedCandidateId: null
+                    coverSelectedCandidateId: null,
+                    coverStreetViewHeading: 0,
+                    coverStreetViewPitch: 0,
+                    coverStreetViewFov: 90,
+                    coverStreetViewPanoId: null,
+                    coverStreetViewAvailable: false
                 }));
 
                 if (isValid) {
@@ -4384,7 +4443,12 @@
                         coverIsPanoramic: false,
                         coverPanY: 50,
                         coverCandidates: [],
-                        coverSelectedCandidateId: null
+                        coverSelectedCandidateId: null,
+                        coverStreetViewHeading: 0,
+                        coverStreetViewPitch: 0,
+                        coverStreetViewFov: 90,
+                        coverStreetViewPanoId: null,
+                        coverStreetViewAvailable: false
                     });
                 } else if (!formData.addressIsValid) {
                     setFormData({ ...formData, address: val });

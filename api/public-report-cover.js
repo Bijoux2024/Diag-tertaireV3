@@ -161,7 +161,7 @@ const fetchPanoramax = async (lon, lat) => {
   const bbox = bboxCoords.join(',');
 
   try {
-    const res = await fetch(`${rootUrl}/search?bbox=${bbox}&limit=1`);
+    const res = await fetch(`${rootUrl}/search?bbox=${bbox}&limit=5`);
     if (!res.ok) return null;
     const data = await res.json();
     if (!data.features || data.features.length === 0) return null;
@@ -174,12 +174,18 @@ const fetchPanoramax = async (lon, lat) => {
     if (!imgRes.ok) return null;
     const arrayBuffer = await imgRes.arrayBuffer();
 
+    const candidates = data.features.map(f => {
+      const url = f.assets?.hd?.href || f.assets?.sd?.href || f.links?.find(l => l.rel === 'data')?.href;
+      return { id: f.id, url, provider: f.properties?.provider || 'panoramax' };
+    }).filter(c => c.url);
+
     return {
       buffer: Buffer.from(arrayBuffer),
       source: 'panoramax',
       provider: feature.properties?.provider || 'panoramax',
       contentType: imgRes.headers.get('content-type') || 'image/jpeg',
-      bbox: bboxCoords
+      bbox: bboxCoords,
+      candidates
     };
   } catch (err) {
     console.warn('[public-report-cover] Panoramax error:', err.message);
@@ -375,13 +381,15 @@ module.exports = async function handler(req, res) {
     return res.status(200).json({
       ok: true,
       public_report_id: publicReportId,
-      cover_image_source: coverImage.source,
       cover_image_status: 'ready',
+      cover_image_source: coverImage.source,
       cover_image_path: storagePath,
       cover_image_signed_url: signedUrl,
       cover_parcel_ref: parcelRef,
       coordinates: { lon: geo.lon, lat: geo.lat },
       bbox: coverImage.bbox || null,
+      cover_generated_at: new Date().toISOString(),
+      cover_candidates: coverImage.candidates || [],
       logs
     });
 

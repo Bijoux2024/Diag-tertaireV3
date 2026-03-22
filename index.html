@@ -3111,6 +3111,9 @@
             coverPanX: 50,
             coverZoom: 1,
             coverIsPanoramic: false,
+            coverPanY: 50,
+            coverCandidates: [],
+            coverSelectedCandidateId: null,
             role: '',
             activity: '',
             mixedUsage1: '',
@@ -3559,7 +3562,10 @@
                     coverUploadPreviewUrl: '',
                     coverPanX: 50,
                     coverZoom: 1,
-                    coverIsPanoramic: false
+                    coverIsPanoramic: false,
+                    coverPanY: 50,
+                    coverCandidates: [],
+                    coverSelectedCandidateId: null
                 }));
             };
 
@@ -3582,7 +3588,10 @@
                         coverGeneratedAt: '',
                         coverPanX: 50,
                         coverZoom: 1,
-                        coverIsPanoramic: false
+                        coverIsPanoramic: false,
+                        coverPanY: 50,
+                        coverCandidates: [],
+                        coverSelectedCandidateId: null
                     }));
                     return;
                 }
@@ -3601,7 +3610,10 @@
                         coverGeneratedAt: '',
                         coverPanX: 50,
                         coverZoom: 1,
-                        coverIsPanoramic: false
+                        coverIsPanoramic: false,
+                        coverPanY: 50,
+                        coverCandidates: [],
+                        coverSelectedCandidateId: null
                     }));
                     return;
                 }
@@ -3619,7 +3631,10 @@
                     coverImageSignedUrl: previewUrl,
                     coverPanX: 50,
                     coverZoom: 1,
-                    coverIsPanoramic: false
+                    coverIsPanoramic: false,
+                    coverPanY: 50,
+                    coverCandidates: [],
+                    coverSelectedCandidateId: null
                 }));
             };
 
@@ -3639,7 +3654,10 @@
                     coverGeneratedAt: '',
                     coverPanX: 50,
                     coverZoom: 1,
-                    coverIsPanoramic: false
+                    coverIsPanoramic: false,
+                    coverPanY: 50,
+                    coverCandidates: [],
+                    coverSelectedCandidateId: null
                 }));
                 try {
                     const payload = { 
@@ -3711,7 +3729,10 @@
                         coverImageError: null,
                         coverPanX: 50,
                         coverZoom: 1,
-                        coverIsPanoramic: false
+                        coverIsPanoramic: false,
+                        coverPanY: 50,
+                        coverCandidates: data.cover_candidates || [],
+                        coverSelectedCandidateId: (data.cover_candidates && data.cover_candidates.length > 0) ? data.cover_candidates[0].id : null
                     }));
 
                 } catch (err) {
@@ -3735,7 +3756,10 @@
                         coverGeneratedAt: '',
                         coverPanX: 50,
                         coverZoom: 1,
-                        coverIsPanoramic: false
+                        coverIsPanoramic: false,
+                        coverPanY: 50,
+                        coverCandidates: [],
+                        coverSelectedCandidateId: null
                     }));
                 }
             };
@@ -3754,7 +3778,10 @@
                     coverGeneratedAt: '',
                     coverPanX: 50,
                     coverZoom: 1,
-                    coverIsPanoramic: false
+                    coverIsPanoramic: false,
+                    coverPanY: 50,
+                    coverCandidates: [],
+                    coverSelectedCandidateId: null
                 }));
             };
 
@@ -3895,7 +3922,7 @@
                                     alt="Aperçu du bâtiment" 
                                     className="w-full h-full object-cover transition-transform duration-300"
                                     style={{
-                                        objectPosition: `${formData.coverPanX ?? 50}% center`,
+                                        objectPosition: `${formData.coverPanX ?? 50}% ${formData.coverPanY ?? 50}%`,
                                         transform: `scale(${formData.coverZoom ?? 1})`
                                     }}
                                     onError={handleImageError}
@@ -3934,15 +3961,45 @@
                                                 className="w-full h-1.5 bg-neutral-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
                                             />
                                         </div>
+                                        <div>
+                                            <label className="text-xs text-neutral-500 mb-1 flex justify-between">
+                                                <span>Déplacer verticalement</span>
+                                            </label>
+                                            <input 
+                                                type="range" 
+                                                min="0" max="100" 
+                                                value={formData.coverPanY ?? 50} 
+                                                onChange={(e) => setFormData(prev => ({ ...prev, coverPanY: parseInt(e.target.value, 10) }))}
+                                                className="w-full h-1.5 bg-neutral-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                                            />
+                                        </div>
                                         <div className="flex justify-end mt-1">
                                             <button 
                                                 type="button" 
-                                                onClick={() => setFormData(prev => ({ ...prev, coverPanX: 50, coverZoom: 1 }))}
+                                                onClick={() => setFormData(prev => ({ ...prev, coverPanX: 50, coverPanY: 50, coverZoom: 1 }))}
                                                 className="text-xs text-neutral-500 hover:text-neutral-800 transition-colors font-medium border border-neutral-200 px-2 py-1 rounded bg-neutral-50"
                                             >
                                                 Réinitialiser le cadrage
                                             </button>
                                         </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {formData.coverImageStatus === 'ready' && formData.coverMode === 'panoramax' && formData.coverCandidates?.length > 1 && (
+                                <div className="mt-3">
+                                    <h4 className="text-sm font-semibold text-neutral-700 mb-2">Autres vues disponibles</h4>
+                                    <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+                                        {formData.coverCandidates.map(c => (
+                                            <button 
+                                                key={c.id} 
+                                                type="button"
+                                                onClick={() => handleCandidateSelect(c.id)}
+                                                className={`relative shrink-0 w-24 h-16 rounded overflow-hidden border-2 transition-all ${formData.coverSelectedCandidateId === c.id ? 'border-[#1D4ED8] ring-2 ring-blue-100' : 'border-transparent hover:border-neutral-300'}`}
+                                            >
+                                                <img src={c.url} alt="Candidat" className="w-full h-full object-cover" />
+                                            </button>
+                                        ))}
                                     </div>
                                 </div>
                             )}
@@ -4195,7 +4252,10 @@
                     coverUploadPreviewUrl: '',
                     coverPanX: 50,
                     coverZoom: 1,
-                    coverIsPanoramic: false
+                    coverIsPanoramic: false,
+                    coverPanY: 50,
+                    coverCandidates: [],
+                    coverSelectedCandidateId: null
                 }));
 
                 if (isValid) {
@@ -4244,7 +4304,10 @@
                         coverUploadPreviewUrl: '',
                         coverPanX: 50,
                         coverZoom: 1,
-                        coverIsPanoramic: false
+                        coverIsPanoramic: false,
+                        coverPanY: 50,
+                        coverCandidates: [],
+                        coverSelectedCandidateId: null
                     });
                 } else if (!formData.addressIsValid) {
                     setFormData({ ...formData, address: val });

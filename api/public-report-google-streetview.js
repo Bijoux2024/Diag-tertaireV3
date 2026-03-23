@@ -21,6 +21,13 @@ const createHttpError = (statusCode, message) => {
   return error;
 };
 
+// Limiteur rudimentaire "Soft Cap" Vercel : 
+// En serverless, ce compteur est global au "container" Vercel. Dès que le container meurt (Cold Start), 
+// le compteur retombe à zéro. Cela offre une protection empirique mais pas absolue si l'app tourne sur 50 containers.
+// Une protection 100% stricte exigerait un appel Redis/Supabase.
+let svDailyCounter = 0;
+let svLastResetDay = new Date().getDate();
+
 module.exports = async function handler(req, res) {
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET');
@@ -28,6 +35,22 @@ module.exports = async function handler(req, res) {
   }
 
   try {
+    const currentDay = new Date().getDate();
+    if (currentDay !== svLastResetDay) {
+      svDailyCounter = 0;
+      svLastResetDay = currentDay;
+    }
+
+    if (svDailyCounter >= 300) {
+      return res.status(429).json({
+        ok: false,
+        error: "Quota journalier interne Street View atteint (300 requêtes/jour).",
+        fallback_recommended: true
+      });
+    }
+    
+    // On incrémente pour chaque appel (meta ou proxy)
+    svDailyCounter++;
     const apiKey = readEnv('GOOGLE_STREETVIEW_SERVER_KEY');
     if (!apiKey) {
       throw createHttpError(500, 'GOOGLE_STREETVIEW_SERVER_KEY is not configured on server.');

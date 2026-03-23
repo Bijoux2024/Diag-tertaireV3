@@ -3051,10 +3051,12 @@
         ];
 
         const NEW_DIAGNOSTIC_BUILDING_AGES = [
-            { id: 'before_1975', label: 'Avant 1975', coef: 1.35, icon: 'solar:home-angle-linear' },
-            { id: '1975_1988', label: '1975 - 1988', coef: 1.20, icon: 'solar:home-2-linear' },
+            { id: 'pre1948', label: 'Avant 1948', coef: 1.50, icon: 'solar:home-angle-linear' },
+            { id: '1948_1974', label: '1948 - 1974', coef: 1.35, icon: 'solar:home-angle-linear' },
+            { id: '1975_1988', label: '1975 - 1988', coef: 1.15, icon: 'solar:home-2-linear' },
             { id: '1989_2005', label: '1989 - 2005', coef: 1.05, icon: 'solar:buildings-linear' },
-            { id: 'after_2005', label: 'Après 2005', coef: 0.90, icon: 'solar:buildings-2-linear' }
+            { id: '2006_2012', label: '2006 - 2012', coef: 1.00, icon: 'solar:buildings-2-linear' },
+            { id: 'post2012', label: 'Après 2012', coef: 0.75, icon: 'solar:buildings-2-linear' }
         ];
 
         const NEW_DIAGNOSTIC_BOILER_AGES = [
@@ -3128,7 +3130,7 @@
 
             // === ÉTAPE 2 : Bâtiment ===
             surface: '',
-            buildingAge: '',       // 'before_1975' | '1975_1988' | '1989_2005' | 'after_2005'
+            buildingAge: '',       // 'pre1948' | '1948_1974' | '1975_1988' | '1989_2005' | '2006_2012' | 'post2012'
             roofInsulation: '',    // 'yes' | 'no' | 'unknown'
             wallInsulation: '',    // 'yes' | 'no' | 'unknown'
             mainHeating: '',
@@ -3579,6 +3581,32 @@
                 }));
             };
 
+            // --- Street View Control Debouncer ---
+            // Évite de déclencher la facturation Google Image au moindre changement de valeur de range.
+            React.useEffect(() => {
+                if (formData.coverMode !== 'panoramax' || formData.coverImageSource !== 'google_streetview' || !formData.coverStreetViewAvailable || !formData.lat || !formData.lon) return;
+
+                const url = `/api/public-report-google-streetview?action=image&lat=${formData.lat}&lon=${formData.lon}&heading=${formData.coverStreetViewHeading}&pitch=${formData.coverStreetViewPitch}&fov=${formData.coverStreetViewFov}`;
+                
+                if (formData.coverImageSignedUrl === url) return;
+
+                const timerId = setTimeout(() => {
+                    setFormData(prev => ({ ...prev, coverImageSignedUrl: url }));
+                }, 400);
+
+                return () => clearTimeout(timerId);
+            }, [
+                formData.coverMode, 
+                formData.coverImageSource,
+                formData.coverStreetViewAvailable,
+                formData.coverStreetViewHeading, 
+                formData.coverStreetViewPitch, 
+                formData.coverStreetViewFov,
+                formData.lat,
+                formData.lon,
+                formData.coverImageSignedUrl
+            ]);
+
             const handleFileUpload = async (e) => {
                 const file = e.target.files?.[0];
                 if (!file) return;
@@ -3784,7 +3812,13 @@
                         let svData;
                         try { svData = await svRes.json(); } catch(e) { throw new Error('Le service Street View a renvoyé une réponse invalide'); }
                         
-                        if (!svRes.ok || !svData.ok || !svData.streetview_available) {
+                        if (!svRes.ok || !svData.ok) {
+                            if (svData && svData.fallback_recommended) {
+                                throw new Error(`${svData.error} Veuillez privilégier la Vue aérienne, le Plan, ou Téléverser.`);
+                            }
+                            throw new Error(svData?.error || "Le service Google Street View est indisponible.");
+                        }
+                        if (!svData.streetview_available) {
                            throw new Error("Aucune vue Google Street View n'est disponible pour cette adresse.");
                         }
 
@@ -3886,10 +3920,14 @@
             };
 
             const handleImageError = () => {
+                const errorMsg = formData.coverImageSource === 'google_streetview'
+                    ? "L'image Street View n'a pas pu être chargée (quota périodique potentiel). Veuillez privilégier la Vue aérienne ou le Plan."
+                    : "L'aperçu du visuel n'a pas pu être chargé. Vous pouvez réessayer.";
+                
                 setFormData(prev => ({
                     ...prev,
                     coverImageStatus: 'error',
-                    coverImageError: "L'aperçu du visuel n'a pas pu être chargé. Vous pouvez réessayer.",
+                    coverImageError: errorMsg,
                     coverImageSource: '',
                     coverImagePath: '',
                     coverImageSignedUrl: '',
@@ -4068,14 +4106,6 @@
                                                 min="0" max="360" 
                                                 value={formData.coverStreetViewHeading ?? 0} 
                                                 onChange={(e) => setFormData(prev => ({ ...prev, coverStreetViewHeading: parseInt(e.target.value, 10) }))}
-                                                onPointerUp={() => {
-                                                    const url = `/api/public-report-google-streetview?action=image&lat=${formData.lat}&lon=${formData.lon}&heading=${formData.coverStreetViewHeading}&pitch=${formData.coverStreetViewPitch}&fov=${formData.coverStreetViewFov}`;
-                                                    setFormData(prev => ({ ...prev, coverImageSignedUrl: url }));
-                                                }}
-                                                onTouchEnd={() => {
-                                                    const url = `/api/public-report-google-streetview?action=image&lat=${formData.lat}&lon=${formData.lon}&heading=${formData.coverStreetViewHeading}&pitch=${formData.coverStreetViewPitch}&fov=${formData.coverStreetViewFov}`;
-                                                    setFormData(prev => ({ ...prev, coverImageSignedUrl: url }));
-                                                }}
                                                 className="w-full h-1.5 bg-neutral-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
                                             />
                                         </div>
@@ -4088,14 +4118,6 @@
                                                 min="-30" max="30" 
                                                 value={formData.coverStreetViewPitch ?? 0} 
                                                 onChange={(e) => setFormData(prev => ({ ...prev, coverStreetViewPitch: parseInt(e.target.value, 10) }))}
-                                                onPointerUp={() => {
-                                                    const url = `/api/public-report-google-streetview?action=image&lat=${formData.lat}&lon=${formData.lon}&heading=${formData.coverStreetViewHeading}&pitch=${formData.coverStreetViewPitch}&fov=${formData.coverStreetViewFov}`;
-                                                    setFormData(prev => ({ ...prev, coverImageSignedUrl: url }));
-                                                }}
-                                                onTouchEnd={() => {
-                                                    const url = `/api/public-report-google-streetview?action=image&lat=${formData.lat}&lon=${formData.lon}&heading=${formData.coverStreetViewHeading}&pitch=${formData.coverStreetViewPitch}&fov=${formData.coverStreetViewFov}`;
-                                                    setFormData(prev => ({ ...prev, coverImageSignedUrl: url }));
-                                                }}
                                                 className="w-full h-1.5 bg-neutral-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
                                             />
                                         </div>
@@ -4108,14 +4130,6 @@
                                                 min="20" max="90" 
                                                 value={formData.coverStreetViewFov ?? 90} 
                                                 onChange={(e) => setFormData(prev => ({ ...prev, coverStreetViewFov: parseInt(e.target.value, 10) }))}
-                                                onPointerUp={() => {
-                                                    const url = `/api/public-report-google-streetview?action=image&lat=${formData.lat}&lon=${formData.lon}&heading=${formData.coverStreetViewHeading}&pitch=${formData.coverStreetViewPitch}&fov=${formData.coverStreetViewFov}`;
-                                                    setFormData(prev => ({ ...prev, coverImageSignedUrl: url }));
-                                                }}
-                                                onTouchEnd={() => {
-                                                    const url = `/api/public-report-google-streetview?action=image&lat=${formData.lat}&lon=${formData.lon}&heading=${formData.coverStreetViewHeading}&pitch=${formData.coverStreetViewPitch}&fov=${formData.coverStreetViewFov}`;
-                                                    setFormData(prev => ({ ...prev, coverImageSignedUrl: url }));
-                                                }}
                                                 className="w-full h-1.5 bg-neutral-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
                                             />
                                         </div>
@@ -5656,21 +5670,15 @@
         const NEW_DIAGNOSTIC_MAX_TOTAL_SAVINGS_PCT = 0.65;
 
         const NEW_DIAGNOSTIC_TIER_LABELS = {
-            quick_win: {
-                label: 'Actions rapides',
-                subtitle: 'Sans travaux ou faible investissement — ROI court',
+            light: {
+                label: 'Actions rapides (sans gros travaux)',
+                subtitle: 'Faible investissement — ROI court — sans travaux lourds',
                 color: '#16A34A', bg: '#F0FDF4', border: '#BBF7D0',
                 icon: 'solar:bolt-bold'
             },
-            equipment: {
-                label: 'Équipements & pilotage',
-                subtitle: 'Investissements ciblés à rentabilité confirmée',
-                color: '#1D4ED8', bg: '#EFF6FF', border: '#BFDBFE',
-                icon: 'solar:settings-bold'
-            },
-            structural: {
-                label: 'Rénovation structurante',
-                subtitle: 'Travaux de fond — gains durables sur 15–20 ans',
+            heavy: {
+                label: 'Travaux de rénovation',
+                subtitle: 'Investissements structurants — aides disponibles — gains durables',
                 color: '#7C3AED', bg: '#F5F3FF', border: '#DDD6FE',
                 icon: 'solar:buildings-bold'
             }
@@ -5702,106 +5710,114 @@
         };
 
         const NEW_DIAGNOSTIC_ENERGY_PRICES = {
-            version_tag: 'v1.0-2026',
-            last_updated: '2026-02-23',
+            version_tag: 'v1.1-2026',
+            last_updated: '2026-03-23',
 
             electricity: {
-                price_default_eur_kwh: 0.196,
+                price_default_eur_kwh: 0.206,
                 price_min_eur_kwh: 0.15,
                 price_max_eur_kwh: 0.30,
                 unit: '€/kWh TTC',
                 source_level: 'source_partial',
-                source_ref: 'CRE - TRVE électricité professionnelle T3 2024',
-                source_note: 'Ordre de grandeur TTC retenu : 0,196 €/kWh, hors abonnement',
+                source_ref: 'CRE - TRVE S1 2026 (post hausse fév 2025)',
+                source_note: 'Ordre de grandeur TTC retenu : 0,206 €/kWh, hors abonnement',
                 validity_limits: 'Tertiaire < 36 kVA, périmètre France métropolitaine',
                 subscription_excluded: true
             },
 
             gas: {
-                price_default_eur_kwh: 0.105,
+                price_default_eur_kwh: 0.108,
                 price_min_eur_kwh: 0.09630,
                 price_max_eur_kwh: 0.12291,
                 unit: '€/kWh TTC',
                 source_level: 'source_strong',
-                source_ref: 'CRE - Prix repère gaz professionnel 2025, profil chauffage',
+                source_ref: 'CRE - Prix repère gaz professionnel 2026, profil chauffage',
                 source_note: 'Tarif TTC confirmé, applicable TPE/PME tertiaire',
                 validity_limits: 'Profil chauffage, < 150 MWh/an',
                 subscription_excluded: true
             },
-            heat_network: { price_default_eur_kwh: 0.092 },
-            fuel_oil: { price_default_eur_kwh: 0.118 },
-            wood_pellets: { price_default_eur_kwh: 0.065 }
+            heat_network: { price_default_eur_kwh: 0.095 },
+            fuel_oil: { price_default_eur_kwh: 0.125 },
+            wood_pellets: { price_default_eur_kwh: 0.068 }
         };
 
         const INFLATION_ENERGIE = {
-            electricite: 0.030, // SOURCE_PARTIAL — à revalider annuellement
-            gaz: 0.055, // SOURCE_PARTIAL — volatilité post-2021, trajectoire sortie fossile. 5.5% = moyenne prudente 10 ans
-            reseau_chaleur: 0.035, // SOURCE_PARTIAL
-            fioul: 0.060, // SOURCE_PARTIAL — sortie progressive, raréfaction
-            bois_granules: 0.025, // SOURCE_PARTIAL — marché plus stable
+            electricite: 0.035, // SOURCE_PARTIAL — hausse ARENH + TURPE
+            gaz: 0.045, // SOURCE_PARTIAL — stabilisation post-crise, phase-out progressif
+            reseau_chaleur: 0.030, // SOURCE_PARTIAL — stable, renouvelable
+            fioul: 0.060, // SOURCE_PARTIAL — phase-out, taxe carbone croissante
+            bois_granules: 0.025, // SOURCE_PARTIAL — marché stable
+        };
+
+        const CARBON_FACTORS_KG_CO2_PER_KWH = {
+            electricite: 0.0569,     // Base Carbone ADEME 2024 — mix France
+            gaz: 0.227,              // Base Carbone ADEME 2024
+            fioul: 0.324,            // Base Carbone ADEME 2024
+            reseau_chaleur: 0.100,   // Moyenne nationale (très variable)
+            bois_granules: 0.030,    // Base Carbone ADEME 2024
         };
 
         /* ─────────────────────────────────────────────────────────────────────────
            TABLE 2 : NEW_DIAGNOSTIC_BENCHMARKS_INTENSITY
-           v1.1 — Valeurs expertes validées (kWh EF/m²/an)
+           v2.0 — Valeurs corrigées ADEME/OPERAT/CEREN (kWh EF/m²/an)
            ───────────────────────────────────────────────────────────────────────── */
 
         const NEW_DIAGNOSTIC_BENCHMARKS_INTENSITY = {
-            version_tag: 'v1.1-2026',
-            last_updated: '2026-03-06',
+            version_tag: 'v2.0-2026',
+            last_updated: '2026-03-23',
 
             offices: {
-                median_kwh_m2_an: 180, low_kwh_m2_an: 120, high_kwh_m2_an: 280,
+                median_kwh_m2_an: 140, low_kwh_m2_an: 90, high_kwh_m2_an: 200,
                 unit: 'kWh EF/m²/an', energy_scope: 'final_energy', stat_type: 'median_q1_q3',
-                source_level: 'source_partial', source_ref: 'ADEME ECNA 2022 — Énergie finale tous usages',
+                source_level: 'source_partial', source_ref: 'ADEME ECNA 2022 + OPERAT',
                 source_note: 'Bureaux chauffés, médiane France métropolitaine', validity_limits: 'Bureaux standards, hors data centers'
             },
             retail: {
-                median_kwh_m2_an: 320, low_kwh_m2_an: 200, high_kwh_m2_an: 500,
+                median_kwh_m2_an: 130, low_kwh_m2_an: 80, high_kwh_m2_an: 200,
                 unit: 'kWh EF/m²/an', energy_scope: 'final_energy', stat_type: 'median_q1_q3',
-                source_level: 'source_partial', source_ref: 'CEREN 2019 — Commerce non-alimentaire',
+                source_level: 'source_partial', source_ref: 'ADEME/CEREN 2019 révisé',
                 source_note: 'Commerce non-alimentaire, hors froid commercial', validity_limits: 'Commerce de détail hors alimentaire'
             },
             retail_food: {
-                median_kwh_m2_an: 650, low_kwh_m2_an: 450, high_kwh_m2_an: 900,
+                median_kwh_m2_an: 360, low_kwh_m2_an: 250, high_kwh_m2_an: 500,
                 unit: 'kWh EF/m²/an', energy_scope: 'final_energy', stat_type: 'median_q1_q3',
-                source_level: 'source_partial', source_ref: 'CEREN 2019 — Commerce alimentaire',
+                source_level: 'source_partial', source_ref: 'ADEME (froid alimentaire)',
                 source_note: 'Commerce alimentaire avec froid intégré', validity_limits: 'Supermarché, épicerie avec froid'
             },
             hotel: {
-                median_kwh_m2_an: 280, low_kwh_m2_an: 200, high_kwh_m2_an: 420,
+                median_kwh_m2_an: 241, low_kwh_m2_an: 150, high_kwh_m2_an: 400,
                 unit: 'kWh EF/m²/an', energy_scope: 'final_energy', stat_type: 'median_q1_q3',
-                source_level: 'source_partial', source_ref: 'ADEME — Hôtellerie',
+                source_level: 'source_partial', source_ref: 'ADEME Hôtellerie 2024',
                 source_note: 'Hors blanchisserie industrielle et restauration', validity_limits: 'Hôtellerie standard, hors palace'
             },
             restaurant: {
-                median_kwh_m2_an: 300, low_kwh_m2_an: 220, high_kwh_m2_an: 450,
+                median_kwh_m2_an: 250, low_kwh_m2_an: 180, high_kwh_m2_an: 380,
                 unit: 'kWh EF/m²/an', energy_scope: 'final_energy', stat_type: 'median_q1_q3',
-                source_level: 'source_partial', source_ref: 'ADEME - Restauration commerciale (ordre de grandeur énergie finale)',
+                source_level: 'source_partial', source_ref: 'ADEME HORECA 2024',
                 source_note: 'Restaurant / brasserie avec cuisson, valeurs ajustées pour un usage réel hors fast-food', validity_limits: 'Restaurant service, hors restauration très intensive'
             },
             education: {
-                median_kwh_m2_an: 150, low_kwh_m2_an: 100, high_kwh_m2_an: 220,
+                median_kwh_m2_an: 100, low_kwh_m2_an: 70, high_kwh_m2_an: 160,
                 unit: 'kWh EF/m²/an', energy_scope: 'final_energy', stat_type: 'median_q1_q3',
-                source_level: 'source_partial', source_ref: 'ADEME — Établissements scolaires',
+                source_level: 'source_partial', source_ref: 'ADEME/OPERAT (-27% depuis 2010)',
                 source_note: 'Primaire/secondaire, hors université', validity_limits: 'Enseignement primaire/secondaire'
             },
             warehouse_heated: {
-                median_kwh_m2_an: 80, low_kwh_m2_an: 50, high_kwh_m2_an: 130,
+                median_kwh_m2_an: 135, low_kwh_m2_an: 80, high_kwh_m2_an: 200,
                 unit: 'kWh EF/m²/an', energy_scope: 'final_energy', stat_type: 'median_q1_q3',
-                source_level: 'source_partial', source_ref: 'CEREN — Entrepôts chauffés',
+                source_level: 'source_partial', source_ref: 'CEREN Logistique révisé',
                 source_note: 'Chauffage + éclairage', validity_limits: 'Logistique légère chauffée'
             },
             light_warehouse: {
-                median_kwh_m2_an: 45, low_kwh_m2_an: 25, high_kwh_m2_an: 70,
+                median_kwh_m2_an: 50, low_kwh_m2_an: 25, high_kwh_m2_an: 80,
                 unit: 'kWh EF/m²/an', energy_scope: 'final_energy', stat_type: 'median_q1_q3',
-                source_level: 'source_partial', source_ref: 'CEREN — Entrepôts logistiques',
+                source_level: 'source_partial', source_ref: 'CEREN Logistique',
                 source_note: 'Éclairage seul', validity_limits: 'Logistique légère, hors entrepôts frigorifiques'
             },
             health_local: {
-                median_kwh_m2_an: 220, low_kwh_m2_an: 160, high_kwh_m2_an: 350,
+                median_kwh_m2_an: 200, low_kwh_m2_an: 130, high_kwh_m2_an: 320,
                 unit: 'kWh EF/m²/an', energy_scope: 'final_energy', stat_type: 'median_q1_q3',
-                source_level: 'pending_expert', source_ref: 'À confirmer',
+                source_level: 'source_partial', source_ref: 'ADEME Santé',
                 source_note: 'Ventilation réglementaire incluse, cabinets < 500m²', validity_limits: 'Santé ambulatoire < 500m²'
             }
         };
@@ -5816,6 +5832,28 @@
         NEW_DIAGNOSTIC_BENCHMARKS_INTENSITY.commerce_non_alim = NEW_DIAGNOSTIC_BENCHMARKS_INTENSITY.retail;
         NEW_DIAGNOSTIC_BENCHMARKS_INTENSITY.commerce_alim = NEW_DIAGNOSTIC_BENCHMARKS_INTENSITY.retail_food;
 
+        // Cibles Décret Tertiaire 2030 (Cabs) — uniquement pour bâtiments > 1000m²
+        const DECRET_TERTIAIRE_CABS_2030 = {
+            offices: { cabs_kwh_m2_an: 103, source: 'Arrêté 13 avril 2022' },
+            education: { cabs_kwh_m2_an: 80, source: 'Arrêté 13 avril 2022' },
+            health_local: { cabs_kwh_m2_an: 165, source: 'Arrêté 28 novembre 2023' },
+            hotel: { cabs_kwh_m2_an: 170, source: 'Arrêté 28 novembre 2023' },
+            restaurant: { cabs_kwh_m2_an: 185, source: 'Arrêté 28 novembre 2023' },
+            retail: { cabs_kwh_m2_an: 125, source: 'Divers arrêtés' },
+            retail_food: { cabs_kwh_m2_an: 125, source: 'Divers arrêtés' },
+            warehouse_heated: { cabs_kwh_m2_an: 135, source: 'Arrêté 13 avril 2022' },
+            light_warehouse: { cabs_kwh_m2_an: 135, source: 'Arrêté 13 avril 2022' }
+        };
+        // Aliases Cabs
+        DECRET_TERTIAIRE_CABS_2030.bureau = DECRET_TERTIAIRE_CABS_2030.offices;
+        DECRET_TERTIAIRE_CABS_2030.restauration = DECRET_TERTIAIRE_CABS_2030.restaurant;
+        DECRET_TERTIAIRE_CABS_2030.sante = DECRET_TERTIAIRE_CABS_2030.health_local;
+        DECRET_TERTIAIRE_CABS_2030.enseignement = DECRET_TERTIAIRE_CABS_2030.education;
+        DECRET_TERTIAIRE_CABS_2030.entrepot_chauffe = DECRET_TERTIAIRE_CABS_2030.warehouse_heated;
+        DECRET_TERTIAIRE_CABS_2030.entrepot_non_chauffe = DECRET_TERTIAIRE_CABS_2030.light_warehouse;
+        DECRET_TERTIAIRE_CABS_2030.commerce_non_alim = DECRET_TERTIAIRE_CABS_2030.retail;
+        DECRET_TERTIAIRE_CABS_2030.commerce_alim = DECRET_TERTIAIRE_CABS_2030.retail_food;
+
 
 
         /* ─────────────────────────────────────────────────────────────────────────
@@ -5826,17 +5864,17 @@
            ───────────────────────────────────────────────────────────────────────── */
 
         const NEW_DIAGNOSTIC_USAGE_BREAKDOWNS = {
-            version_tag: 'v1.0-2026',
-            last_updated: '2026-02-23',
+            version_tag: 'v2.0-2026',
+            last_updated: '2026-03-23',
 
             offices: {
-                heating_pct: 45,
-                cooling_pct: 8,
-                vent_aux_pct: 12,
-                lighting_pct: 18,
+                heating_pct: 43,
+                cooling_pct: 10,
+                vent_aux_pct: 8,
+                lighting_pct: 20,
                 dhw_pct: 5,
                 cooking_pct: 0,
-                other_specific_pct: 12,
+                other_specific_pct: 14,
                 breakdown_mode: 'coarse_statistical',
                 source_level: 'source_partial',
                 source_ref: 'ADEME - Répartition usages bureaux tertiaire',
@@ -5846,12 +5884,12 @@
 
             retail: {
                 heating_pct: 30,
-                cooling_pct: 10,
-                vent_aux_pct: 8,
-                lighting_pct: 35,
+                cooling_pct: 12,
+                vent_aux_pct: 7,
+                lighting_pct: 32,
                 dhw_pct: 3,
                 cooking_pct: 0,
-                other_specific_pct: 14,
+                other_specific_pct: 16,
                 breakdown_mode: 'coarse_statistical',
                 source_level: 'source_partial',
                 source_ref: 'CEREN - Commerce',
@@ -5860,13 +5898,13 @@
             },
 
             hotel: {
-                heating_pct: 40,
-                cooling_pct: 5,
-                vent_aux_pct: 10,
+                heating_pct: 38,
+                cooling_pct: 8,
+                vent_aux_pct: 8,
                 lighting_pct: 15,
-                dhw_pct: 20,
+                dhw_pct: 22,
                 cooking_pct: 5,
-                other_specific_pct: 5,
+                other_specific_pct: 4,
                 breakdown_mode: 'coarse_statistical',
                 source_level: 'source_partial',
                 source_ref: 'ADEME - Hôtellerie',
@@ -5875,47 +5913,47 @@
             },
 
             restaurant: {
-                heating_pct: 28,
-                cooling_pct: 4,
-                vent_aux_pct: 25,
-                lighting_pct: 24,
-                dhw_pct: 9,
-                cooking_pct: 6,
-                other_specific_pct: 4,
+                heating_pct: 25,
+                cooling_pct: 5,
+                vent_aux_pct: 15,
+                lighting_pct: 18,
+                dhw_pct: 10,
+                cooking_pct: 20,
+                other_specific_pct: 7,
                 breakdown_mode: 'coarse_statistical',
                 source_level: 'source_partial',
                 source_ref: 'ADEME - Restauration commerciale, profil brasserie',
-                source_note: 'Petite brasserie avec service continu, extraction présente et salle éclairée sur de longues plages',
+                source_note: 'Cuisson = poste majeur, extraction importante, salle éclairée sur de longues plages',
                 validity_limits: 'Restaurant service, hors restauration très intensive et hors cuisine de production lourde'
             },
 
             health_local: {
-                heating_pct: 38,
-                cooling_pct: 5,
-                vent_aux_pct: 22,  // T09 — Ventilation réglementaire santé = 22% (cabinets < 500m²)
+                heating_pct: 35,
+                cooling_pct: 8,
+                vent_aux_pct: 18,
                 lighting_pct: 15,
-                dhw_pct: 10,
+                dhw_pct: 12,
                 cooking_pct: 0,
-                other_specific_pct: 10,
-                breakdown_mode: 'heating_vs_other',
-                source_level: 'pending_expert',
-                source_ref: 'À confirmer',
-                source_note: 'Ventilation 22% fixée réglementairement pour cabinets de santé < 500m²',
+                other_specific_pct: 12,
+                breakdown_mode: 'coarse_statistical',
+                source_level: 'source_partial',
+                source_ref: 'ADEME Santé',
+                source_note: 'Ventilation réglementaire importante, équipements médicaux en "autre"',
                 validity_limits: 'Cabinet médical/dentaire local < 500m²'
             },
 
             education: {
-                heating_pct: 55,
-                cooling_pct: 2,
+                heating_pct: 52,
+                cooling_pct: 3,
                 vent_aux_pct: 8,
                 lighting_pct: 20,
-                dhw_pct: 5,
-                cooking_pct: 0,
-                other_specific_pct: 10,
+                dhw_pct: 7,
+                cooking_pct: 2,
+                other_specific_pct: 8,
                 breakdown_mode: 'coarse_statistical',
                 source_level: 'source_partial',
                 source_ref: 'ADEME - Établissements scolaires',
-                source_note: 'Occupation partielle année, chauffage dominant',
+                source_note: 'Occupation partielle année, chauffage dominant, cantine scolaire',
                 validity_limits: 'Enseignement primaire/secondaire'
             },
 
@@ -5940,7 +5978,7 @@
             restauration: null,   // alias -> restaurant
             sante: null,          // alias -> health_local
             enseignement: null,   // alias -> education
-            entrepot_chauffe: null,      // alias -> light_warehouse (chauffé)
+            entrepot_chauffe: null,      // alias -> warehouse_heated (chauffé)
             entrepot_non_chauffe: null,  // alias -> light_warehouse
             commerce_non_alim: null,     // alias -> retail
             commerce_alim: null          // alias -> retail (+ froid)
@@ -5951,412 +5989,339 @@
         NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.restauration = NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.restaurant;
         NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.sante = NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.health_local;
         NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.enseignement = NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.education;
-        NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.entrepot_chauffe = { ...NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.light_warehouse, heating_pct: 55, lighting_pct: 30, other_specific_pct: 10 };
+        NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.entrepot_chauffe = { ...NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.light_warehouse, heating_pct: 50, lighting_pct: 30, vent_aux_pct: 5, other_specific_pct: 15 };
         NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.entrepot_non_chauffe = NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.light_warehouse;
         NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.commerce_non_alim = NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.retail;
-        NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.commerce_alim = { ...NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.retail, cooling_pct: 25, heating_pct: 15, other_specific_pct: 20 };
+        NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.commerce_alim = { ...NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.retail, cooling_pct: 35, heating_pct: 12, lighting_pct: 25, cooking_pct: 5, other_specific_pct: 14 };
 
         /* ─────────────────────────────────────────────────────────────────────────
            TABLE 4 : NEW_DIAGNOSTIC_ACTIONS_LIBRARY
            
-           12 actions minimum avec gains/CAPEX/ROI
-           Chaque action a un source_level par composant
+           22 actions avec gains/CAPEX/ROI + aid_pct
+           tier: 'light' (max 3) ou 'heavy' (max 3)
            ───────────────────────────────────────────────────────────────────────── */
 
         const NEW_DIAGNOSTIC_ACTIONS_LIBRARY = {
-            version_tag: 'v1.0-2026',
-            last_updated: '2026-02-23',
+            version_tag: 'v2.0-2026',
+            last_updated: '2026-03-23',
 
             actions: [
                 {
                     id: 'ACT01',
                     name: 'Réglage horaires et abaissement chauffage',
                     category: 'heating',
-                    tier: 'quick_win',
+                    tier: 'light',
+                    aid_pct: 0.00,
                     trigger_rules: ['heating_post > 30%', 'no_regulation_done'],
                     gain_scope: 'heating_post',
-                    gain_pct_low: 0.08,
-                    gain_pct_med: 0.12,
-                    gain_pct_high: 0.18,
-                    capex_low: 0,
-                    capex_med: 500,
-                    capex_high: 1500,
+                    gain_pct_low: 0.08, gain_pct_med: 0.12, gain_pct_high: 0.18,
+                    capex_low: 0, capex_med: 500, capex_high: 1500,
                     capex_unit: '€',
                     roi_method: 'simple_payback',
                     aid_tags: [],
-                    source_level_gain: 'source_partial',
-                    source_ref_gain: 'ADEME - Réglages chauffage tertiaire',
-                    source_level_capex: 'hypothesis',
-                    source_ref_capex: 'Estimation produit - main d\'œuvre réglage',
+                    source_level_gain: 'source_partial', source_ref_gain: 'ADEME - Réglages chauffage tertiaire',
+                    source_level_capex: 'hypothesis', source_ref_capex: 'Estimation produit - main d\'oeuvre réglage',
                     source_level_roi: 'hypothesis'
                 },
-
                 {
                     id: 'ACT02',
                     name: 'Régulation centrale chauffage (sonde + programmation)',
                     category: 'heating',
-                    tier: 'equipment',
+                    tier: 'light',
+                    aid_pct: 0.20,
                     trigger_rules: ['heating_post > 30%', 'no_regulation_done'],
                     gain_scope: 'heating_post',
-                    gain_pct_low: 0.10,
-                    gain_pct_med: 0.15,
-                    gain_pct_high: 0.25,
-                    capex_low: 1500,
-                    capex_med: 4000,
-                    capex_high: 8000,
+                    gain_pct_low: 0.10, gain_pct_med: 0.15, gain_pct_high: 0.25,
+                    capex_low: 1500, capex_med: 4000, capex_high: 8000,
                     capex_unit: '€',
                     roi_method: 'simple_payback',
                     aid_tags: ['CEE'],
-                    source_level_gain: 'source_partial',
-                    source_ref_gain: 'ADEME - Régulation centrale',
-                    source_level_capex: 'source_partial',
-                    source_ref_capex: 'Retours installateurs + ADEME',
+                    source_level_gain: 'source_partial', source_ref_gain: 'ADEME - Régulation centrale',
+                    source_level_capex: 'source_partial', source_ref_capex: 'Retours installateurs + ADEME',
                     source_level_roi: 'hypothesis'
                 },
-
                 {
                     id: 'ACT03',
                     name: 'Robinets thermostatiques (zonage)',
                     category: 'heating',
-                    tier: 'equipment',
+                    tier: 'light',
+                    aid_pct: 0.15,
                     trigger_rules: ['heating_post > 25%', 'surface > 200'],
                     gain_scope: 'heating_post',
-                    gain_pct_low: 0.05,
-                    gain_pct_med: 0.10,
-                    gain_pct_high: 0.15,
-                    capex_low: 30,
-                    capex_med: 50,
-                    capex_high: 80,
+                    gain_pct_low: 0.05, gain_pct_med: 0.10, gain_pct_high: 0.15,
+                    capex_low: 30, capex_med: 50, capex_high: 80,
                     capex_unit: '€/radiateur',
                     roi_method: 'simple_payback',
                     aid_tags: ['CEE'],
-                    source_level_gain: 'source_partial',
-                    source_ref_gain: 'ADEME - Robinets thermostatiques',
-                    source_level_capex: 'source_strong',
-                    source_ref_capex: 'Prix marché constatés 2025',
+                    source_level_gain: 'source_partial', source_ref_gain: 'ADEME - Robinets thermostatiques',
+                    source_level_capex: 'source_strong', source_ref_capex: 'Prix marché constatés 2025',
                     source_level_roi: 'hypothesis'
                 },
-
                 {
                     id: 'ACT04',
                     name: 'Désembouage et équilibrage réseau chauffage',
                     category: 'heating',
-                    tier: 'equipment',
+                    tier: 'light',
+                    aid_pct: 0.10,
                     trigger_rules: ['heating_post > 30%', 'age_building > 15'],
                     gain_scope: 'heating_post',
-                    gain_pct_low: 0.05,
-                    gain_pct_med: 0.08,
-                    gain_pct_high: 0.12,
-                    capex_low: 1000,
-                    capex_med: 2500,
-                    capex_high: 5000,
+                    gain_pct_low: 0.05, gain_pct_med: 0.08, gain_pct_high: 0.12,
+                    capex_low: 1000, capex_med: 2500, capex_high: 5000,
                     capex_unit: '€',
                     roi_method: 'simple_payback',
                     aid_tags: [],
-                    source_level_gain: 'hypothesis',
-                    source_ref_gain: 'Retours terrain installateurs',
-                    source_level_capex: 'source_partial',
-                    source_ref_capex: 'Devis moyens constatés',
+                    source_level_gain: 'hypothesis', source_ref_gain: 'Retours terrain installateurs',
+                    source_level_capex: 'source_partial', source_ref_capex: 'Devis moyens constatés',
                     source_level_roi: 'hypothesis'
                 },
-
                 {
                     id: 'ACT05',
                     name: 'Pilotage ventilation / extraction hors service',
                     category: 'ventilation',
-                    tier: 'quick_win',
+                    tier: 'light',
+                    aid_pct: 0.15,
                     trigger_rules: ['vent_aux_post > 8%', 'no_regulation_done'],
                     gain_scope: 'vent_aux_post',
-                    gain_pct_low: 0.15,
-                    gain_pct_med: 0.25,
-                    gain_pct_high: 0.40,
-                    capex_low: 500,
-                    capex_med: 1500,
-                    capex_high: 3000,
+                    gain_pct_low: 0.15, gain_pct_med: 0.25, gain_pct_high: 0.40,
+                    capex_low: 500, capex_med: 1500, capex_high: 3000,
                     capex_unit: '€',
                     roi_method: 'simple_payback',
                     aid_tags: ['CEE'],
-                    source_level_gain: 'source_partial',
-                    source_ref_gain: 'ADEME - Ventilation tertiaire / extraction sur plages pilotées',
-                    source_level_capex: 'hypothesis',
-                    source_ref_capex: 'Estimation horloge, pilotage simple et raccordement',
+                    source_level_gain: 'source_partial', source_ref_gain: 'ADEME - Ventilation tertiaire / extraction sur plages pilotées',
+                    source_level_capex: 'hypothesis', source_ref_capex: 'Estimation horloge, pilotage simple et raccordement',
                     source_level_roi: 'hypothesis'
                 },
-
                 {
                     id: 'ACT06',
                     name: 'Ventilation asservie présence',
                     category: 'ventilation',
-                    tier: 'equipment',
+                    tier: 'light',
+                    aid_pct: 0.20,
                     trigger_rules: ['vent_aux_post > 8%', 'offices or education'],
                     gain_scope: 'vent_aux_post',
-                    gain_pct_low: 0.20,
-                    gain_pct_med: 0.30,
-                    gain_pct_high: 0.45,
-                    capex_low: 2000,
-                    capex_med: 5000,
-                    capex_high: 10000,
+                    gain_pct_low: 0.20, gain_pct_med: 0.30, gain_pct_high: 0.45,
+                    capex_low: 2000, capex_med: 5000, capex_high: 10000,
                     capex_unit: '€',
                     roi_method: 'simple_payback',
                     aid_tags: ['CEE'],
-                    source_level_gain: 'source_partial',
-                    source_ref_gain: 'ADEME - Détection présence ventilation',
-                    source_level_capex: 'hypothesis',
-                    source_ref_capex: 'Estimation sondes + GTB',
+                    source_level_gain: 'source_partial', source_ref_gain: 'ADEME - Détection présence ventilation',
+                    source_level_capex: 'hypothesis', source_ref_capex: 'Estimation sondes + GTB',
                     source_level_roi: 'hypothesis'
                 },
-
                 {
                     id: 'ACT07',
                     name: 'Ventilation asservie CO2 / humidité',
                     category: 'ventilation',
-                    tier: 'equipment',
+                    tier: 'heavy',
+                    aid_pct: 0.20,
                     trigger_rules: ['vent_aux_post > 10%', 'high_occupancy'],
                     gain_scope: 'vent_aux_post',
-                    gain_pct_low: 0.15,
-                    gain_pct_med: 0.25,
-                    gain_pct_high: 0.35,
-                    capex_low: 3000,
-                    capex_med: 7000,
-                    capex_high: 15000,
+                    gain_pct_low: 0.15, gain_pct_med: 0.25, gain_pct_high: 0.35,
+                    capex_low: 3000, capex_med: 7000, capex_high: 15000,
                     capex_unit: '€',
                     roi_method: 'simple_payback',
                     aid_tags: ['CEE'],
-                    source_level_gain: 'source_partial',
-                    source_ref_gain: 'ADEME - VAV CO2',
-                    source_level_capex: 'hypothesis',
-                    source_ref_capex: 'Estimation sondes qualité air + régulation',
+                    source_level_gain: 'source_partial', source_ref_gain: 'ADEME - VAV CO2',
+                    source_level_capex: 'hypothesis', source_ref_capex: 'Estimation sondes qualité air + régulation',
                     source_level_roi: 'hypothesis'
                 },
-
                 {
                     id: 'ACT08',
                     name: 'Relamping LED complet',
                     category: 'lighting',
-                    tier: 'equipment',
+                    tier: 'light',
+                    aid_pct: 0.50,
                     trigger_rules: ['lighting_post > 15%', 'no_led_done'],
                     gain_scope: 'lighting_post',
-                    gain_pct_low: 0.40,
-                    gain_pct_med: 0.55,
-                    gain_pct_high: 0.70,
-                    capex_low: 15,
-                    capex_med: 25,
-                    capex_high: 40,
+                    gain_pct_low: 0.45, gain_pct_med: 0.60, gain_pct_high: 0.80,
+                    capex_low: 15, capex_med: 30, capex_high: 45,
                     capex_unit: '€/m²',
                     roi_method: 'simple_payback',
                     aid_tags: ['CEE'],
-                    source_level_gain: 'source_strong',
-                    source_ref_gain: 'ADEME - LED tertiaire, gains mesurés',
-                    source_level_capex: 'source_strong',
-                    source_ref_capex: 'Prix marché LED 2025',
+                    source_level_gain: 'source_strong', source_ref_gain: 'ADEME - LED tertiaire, gains mesurés',
+                    source_level_capex: 'source_strong', source_ref_capex: 'Prix marché LED 2025-2026',
                     source_level_roi: 'hypothesis'
                 },
-
                 {
                     id: 'ACT09',
                     name: 'Éclairage détection présence et zonage',
                     category: 'lighting',
-                    tier: 'equipment',
+                    tier: 'light',
+                    aid_pct: 0.25,
                     trigger_rules: ['lighting_post > 15%', 'offices or education'],
                     gain_scope: 'lighting_post',
-                    gain_pct_low: 0.15,
-                    gain_pct_med: 0.25,
-                    gain_pct_high: 0.35,
-                    capex_low: 10,
-                    capex_med: 20,
-                    capex_high: 35,
+                    gain_pct_low: 0.15, gain_pct_med: 0.25, gain_pct_high: 0.35,
+                    capex_low: 10, capex_med: 20, capex_high: 35,
                     capex_unit: '€/m²',
                     roi_method: 'simple_payback',
                     aid_tags: ['CEE'],
-                    source_level_gain: 'source_partial',
-                    source_ref_gain: 'ADEME - Détection présence éclairage',
-                    source_level_capex: 'source_partial',
-                    source_ref_capex: 'Prix détecteurs + installation',
+                    source_level_gain: 'source_partial', source_ref_gain: 'ADEME - Détection présence éclairage',
+                    source_level_capex: 'source_partial', source_ref_capex: 'Prix détecteurs + installation',
                     source_level_roi: 'hypothesis'
                 },
-
                 {
                     id: 'ACT10',
                     name: 'Calorifugeage conduites ECS',
                     category: 'dhw',
-                    tier: 'equipment',
+                    tier: 'light',
+                    aid_pct: 0.20,
                     trigger_rules: ['dhw_post > 8%', 'no_dhw_done'],
                     gain_scope: 'dhw_post',
-                    gain_pct_low: 0.10,
-                    gain_pct_med: 0.15,
-                    gain_pct_high: 0.25,
-                    capex_low: 500,
-                    capex_med: 1500,
-                    capex_high: 3000,
+                    gain_pct_low: 0.10, gain_pct_med: 0.15, gain_pct_high: 0.25,
+                    capex_low: 500, capex_med: 1500, capex_high: 3000,
                     capex_unit: '€',
                     roi_method: 'simple_payback',
                     aid_tags: ['CEE'],
-                    source_level_gain: 'source_partial',
-                    source_ref_gain: 'ADEME - Calorifugeage ECS',
-                    source_level_capex: 'source_partial',
-                    source_ref_capex: 'Prix isolants + MO',
+                    source_level_gain: 'source_partial', source_ref_gain: 'ADEME - Calorifugeage ECS',
+                    source_level_capex: 'source_partial', source_ref_capex: 'Prix isolants + MO',
                     source_level_roi: 'hypothesis'
                 },
-
                 {
                     id: 'ACT11',
                     name: 'Isolation ballon ECS',
                     category: 'dhw',
-                    tier: 'equipment',
+                    tier: 'light',
+                    aid_pct: 0.15,
                     trigger_rules: ['dhw_post > 8%', 'no_dhw_done'],
                     gain_scope: 'dhw_post',
-                    gain_pct_low: 0.08,
-                    gain_pct_med: 0.12,
-                    gain_pct_high: 0.20,
-                    capex_low: 200,
-                    capex_med: 500,
-                    capex_high: 1000,
+                    gain_pct_low: 0.08, gain_pct_med: 0.12, gain_pct_high: 0.20,
+                    capex_low: 200, capex_med: 500, capex_high: 1000,
                     capex_unit: '€',
                     roi_method: 'simple_payback',
                     aid_tags: ['CEE'],
-                    source_level_gain: 'source_partial',
-                    source_ref_gain: 'ADEME - Isolation ballons',
-                    source_level_capex: 'hypothesis',
-                    source_ref_capex: 'Estimation jaquette isolante',
+                    source_level_gain: 'source_partial', source_ref_gain: 'ADEME - Isolation ballons',
+                    source_level_capex: 'hypothesis', source_ref_capex: 'Estimation jaquette isolante',
                     source_level_roi: 'hypothesis'
                 },
-
                 {
                     id: 'ACT12',
                     name: 'Isolation toiture (si travaux prévus)',
                     category: 'envelope',
-                    tier: 'structural',
+                    tier: 'heavy',
+                    aid_pct: 0.35,
                     trigger_rules: ['heating_post > 35%', 'no_envelope_done', 'age_building > 15'],
                     gain_scope: 'heating_post',
-                    gain_pct_low: 0.15,
-                    gain_pct_med: 0.22,
-                    gain_pct_high: 0.30,
-                    capex_low: 40,
-                    capex_med: 70,
-                    capex_high: 120,
+                    gain_pct_low: 0.15, gain_pct_med: 0.20, gain_pct_high: 0.30,
+                    capex_low: 40, capex_med: 80, capex_high: 120,
                     capex_unit: '€/m²',
                     roi_method: 'simple_payback',
                     aid_tags: ['CEE', 'MaPrimeRenov'],
-                    source_level_gain: 'source_strong',
-                    source_ref_gain: 'ADEME - Isolation toiture tertiaire',
-                    source_level_capex: 'source_partial',
-                    source_ref_capex: 'Prix marché isolation + MO',
+                    source_level_gain: 'source_strong', source_ref_gain: 'ADEME - Isolation toiture tertiaire',
+                    source_level_capex: 'source_partial', source_ref_capex: 'Prix marché isolation + MO',
                     source_level_roi: 'hypothesis'
                 },
-
                 {
                     id: 'ACT13',
                     name: 'Remplacement chaudière gaz par PAC air/eau',
                     category: 'heating',
-                    tier: 'structural',
+                    tier: 'heavy',
+                    aid_pct: 0.35,
                     trigger_rules: ['mainHeating === gas', 'boilerAge >= 15to20'],
                     gain_scope: 'heating_post',
                     gain_pct_low: 0.35, gain_pct_med: 0.50, gain_pct_high: 0.65,
                     capex_low: 15000, capex_med: 25000, capex_high: 40000,
                     capex_unit: '€',
+                    capex_per_m2: 35,
+                    capex_min: 15000,
                     roi_method: 'simple_payback',
                     aid_tags: ['CEE', 'MaPrimeRenov'],
-                    source_level_gain: 'source_strong',
-                    source_ref_gain: 'ADEME - PAC air/eau vs chaudière gaz',
-                    source_level_capex: 'source_partial',
-                    source_ref_capex: 'Prix marché PAC 2025',
+                    source_level_gain: 'source_strong', source_ref_gain: 'ADEME - PAC air/eau vs chaudière gaz',
+                    source_level_capex: 'source_partial', source_ref_capex: 'Prix marché PAC 2025-2026',
                     source_level_roi: 'hypothesis'
                 },
                 {
                     id: 'ACT14',
                     name: 'Installation GTB / Supervision centralisée',
                     category: 'pilotage',
-                    tier: 'equipment',
+                    tier: 'heavy',
+                    aid_pct: 0.28,
                     trigger_rules: ['surface > 500'],
                     gain_scope: 'total',
-                    gain_pct_low: 0.10, gain_pct_med: 0.18, gain_pct_high: 0.28,
+                    gain_pct_low: 0.12, gain_pct_med: 0.20, gain_pct_high: 0.28,
                     capex_low: 8000, capex_med: 20000, capex_high: 45000,
                     capex_unit: '€',
+                    capex_per_m2: 25,
+                    capex_min: 8000,
                     roi_method: 'simple_payback',
                     aid_tags: ['CEE'],
-                    source_level_gain: 'source_partial',
-                    source_ref_gain: 'ADEME - GTB tertiaire',
-                    source_level_capex: 'hypothesis',
-                    source_ref_capex: 'Estimation intégrateurs GTB',
+                    source_level_gain: 'source_partial', source_ref_gain: 'ADEME - GTB tertiaire',
+                    source_level_capex: 'hypothesis', source_ref_capex: 'Estimation intégrateurs GTB',
                     source_level_roi: 'hypothesis'
                 },
                 {
                     id: 'ACT15',
                     name: 'Isolation thermique toiture',
                     category: 'envelope_roof',
-                    tier: 'structural',
+                    tier: 'heavy',
+                    aid_pct: 0.35,
                     trigger_rules: ['roofInsulation !== yes'],
                     gain_scope: 'heating_post',
-                    gain_pct_low: 0.15, gain_pct_med: 0.22, gain_pct_high: 0.30,
-                    capex_low: 40, capex_med: 70, capex_high: 120,
+                    gain_pct_low: 0.15, gain_pct_med: 0.20, gain_pct_high: 0.30,
+                    capex_low: 40, capex_med: 80, capex_high: 120,
                     capex_unit: '€/m²',
                     roi_method: 'simple_payback',
                     aid_tags: ['CEE', 'MaPrimeRenov'],
-                    source_level_gain: 'source_strong',
-                    source_ref_gain: 'ADEME - Isolation toiture tertiaire',
-                    source_level_capex: 'source_partial',
-                    source_ref_capex: 'Prix marché isolation 2025',
+                    source_level_gain: 'source_strong', source_ref_gain: 'ADEME - Isolation toiture tertiaire',
+                    source_level_capex: 'source_partial', source_ref_capex: 'Prix marché isolation 2025',
                     source_level_roi: 'hypothesis'
                 },
                 {
                     id: 'ACT16',
                     name: 'Isolation thermique murs extérieurs (ITE)',
                     category: 'envelope_walls',
-                    tier: 'structural',
+                    tier: 'heavy',
+                    aid_pct: 0.35,
                     trigger_rules: ['wallInsulation !== yes'],
                     gain_scope: 'heating_post',
                     gain_pct_low: 0.12, gain_pct_med: 0.18, gain_pct_high: 0.25,
-                    capex_low: 120, capex_med: 180, capex_high: 280,
+                    capex_low: 120, capex_med: 190, capex_high: 280,
                     capex_unit: '€/m²',
                     roi_method: 'simple_payback',
                     aid_tags: ['CEE', 'MaPrimeRenov'],
-                    source_level_gain: 'source_partial',
-                    source_ref_gain: 'ADEME - ITE tertiaire',
-                    source_level_capex: 'source_partial',
-                    source_ref_capex: 'Prix marché ITE 2025',
+                    source_level_gain: 'source_partial', source_ref_gain: 'ADEME - ITE tertiaire',
+                    source_level_capex: 'source_partial', source_ref_capex: 'Prix marché ITE 2025-2026',
                     source_level_roi: 'hypothesis'
                 },
                 {
                     id: 'ACT17',
                     name: 'Remplacement fenêtres (double/triple vitrage)',
                     category: 'envelope_windows',
-                    tier: 'structural',
+                    tier: 'heavy',
+                    aid_pct: 0.22,
                     trigger_rules: [],
                     gain_scope: 'heating_post',
-                    gain_pct_low: 0.05, gain_pct_med: 0.10, gain_pct_high: 0.15,
-                    capex_low: 400, capex_med: 600, capex_high: 900,
+                    gain_pct_low: 0.05, gain_pct_med: 0.12, gain_pct_high: 0.15,
+                    capex_low: 400, capex_med: 550, capex_high: 900,
                     capex_unit: '€/m² vitré',
                     roi_method: 'simple_payback',
                     aid_tags: ['CEE', 'MaPrimeRenov'],
-                    source_level_gain: 'source_partial',
-                    source_ref_gain: 'ADEME - Menuiseries',
-                    source_level_capex: 'source_partial',
-                    source_ref_capex: 'Prix marché menuiseries 2025',
+                    source_level_gain: 'source_partial', source_ref_gain: 'ADEME - Menuiseries',
+                    source_level_capex: 'source_partial', source_ref_capex: 'Prix marché menuiseries 2025',
                     source_level_roi: 'hypothesis'
                 },
                 {
                     id: 'ACT18',
                     name: 'Ballon ECS thermodynamique',
                     category: 'dhw',
-                    tier: 'equipment',
+                    tier: 'heavy',
+                    aid_pct: 0.20,
                     trigger_rules: ['ecsSystem === electric_boiler'],
                     gain_scope: 'dhw_post',
-                    gain_pct_low: 0.50, gain_pct_med: 0.65, gain_pct_high: 0.75,
-                    capex_low: 2500, capex_med: 4000, capex_high: 6000,
+                    gain_pct_low: 0.50, gain_pct_med: 0.60, gain_pct_high: 0.75,
+                    capex_low: 2500, capex_med: 4500, capex_high: 6000,
                     capex_unit: '€',
                     roi_method: 'simple_payback',
                     aid_tags: ['CEE', 'MaPrimeRenov'],
-                    source_level_gain: 'source_strong',
-                    source_ref_gain: 'ADEME - Chauffe-eau thermodynamique',
-                    source_level_capex: 'source_partial',
-                    source_ref_capex: 'Prix marché CET 2025',
+                    source_level_gain: 'source_strong', source_ref_gain: 'ADEME - Chauffe-eau thermodynamique',
+                    source_level_capex: 'source_partial', source_ref_capex: 'Prix marché CET 2025-2026',
                     source_level_roi: 'hypothesis'
                 },
                 {
                     id: 'ACT19',
                     name: 'Free cooling / Sur-ventilation nocturne',
                     category: 'cooling',
-                    tier: 'quick_win',
+                    tier: 'light',
+                    aid_pct: 0.10,
                     trigger_rules: ['hasCooling === true'],
                     gain_scope: 'cooling_post',
                     gain_pct_low: 0.15, gain_pct_med: 0.25, gain_pct_high: 0.40,
@@ -6364,17 +6329,16 @@
                     capex_unit: '€',
                     roi_method: 'simple_payback',
                     aid_tags: [],
-                    source_level_gain: 'hypothesis',
-                    source_ref_gain: 'Estimation produit',
-                    source_level_capex: 'hypothesis',
-                    source_ref_capex: 'Estimation automatisation',
+                    source_level_gain: 'hypothesis', source_ref_gain: 'Estimation produit',
+                    source_level_capex: 'hypothesis', source_ref_capex: 'Estimation automatisation',
                     source_level_roi: 'hypothesis'
                 },
                 {
                     id: 'ACT20',
                     name: 'Récupération chaleur sur groupe froid',
                     category: 'heating',
-                    tier: 'equipment',
+                    tier: 'heavy',
+                    aid_pct: 0.28,
                     trigger_rules: ['hasCooling === true'],
                     gain_scope: 'dhw_post',
                     gain_pct_low: 0.30, gain_pct_med: 0.50, gain_pct_high: 0.70,
@@ -6382,17 +6346,16 @@
                     capex_unit: '€',
                     roi_method: 'simple_payback',
                     aid_tags: ['CEE'],
-                    source_level_gain: 'source_partial',
-                    source_ref_gain: 'ADEME - Récupération chaleur froid commercial',
-                    source_level_capex: 'hypothesis',
-                    source_ref_capex: 'Estimation échangeur + installation',
+                    source_level_gain: 'source_partial', source_ref_gain: 'ADEME - Récupération chaleur froid commercial',
+                    source_level_capex: 'hypothesis', source_ref_capex: 'Estimation échangeur + installation',
                     source_level_roi: 'hypothesis'
                 },
                 {
                     id: 'ACT21',
                     name: 'Comptage intelligent / Sous-comptage',
                     category: 'pilotage',
-                    tier: 'quick_win',
+                    tier: 'light',
+                    aid_pct: 0.15,
                     trigger_rules: ['surface > 300'],
                     gain_scope: 'total',
                     gain_pct_low: 0.03, gain_pct_med: 0.06, gain_pct_high: 0.10,
@@ -6400,10 +6363,26 @@
                     capex_unit: '€',
                     roi_method: 'simple_payback',
                     aid_tags: [],
-                    source_level_gain: 'hypothesis',
-                    source_ref_gain: 'Estimation effet comportemental',
-                    source_level_capex: 'hypothesis',
-                    source_ref_capex: 'Prix compteurs communicants',
+                    source_level_gain: 'hypothesis', source_ref_gain: 'Estimation effet comportemental',
+                    source_level_capex: 'hypothesis', source_ref_capex: 'Prix compteurs communicants',
+                    source_level_roi: 'hypothesis'
+                },
+                {
+                    id: 'ACT22',
+                    name: 'Installation photovoltaïque en autoconsommation',
+                    category: 'production',
+                    tier: 'heavy',
+                    aid_pct: 0.10,
+                    trigger_rules: ['surface > 300', 'roofAccessible !== no'],
+                    gain_scope: 'elec_post',
+                    gain_pct_low: 0.10, gain_pct_med: 0.20, gain_pct_high: 0.30,
+                    capex_low: 8000, capex_med: 15000, capex_high: 30000,
+                    capex_unit: '€',
+                    capex_per_kwc: 1200,
+                    roi_method: 'simple_payback',
+                    aid_tags: [],
+                    source_level_gain: 'hypothesis', source_ref_gain: 'Estimation autoconsommation tertiaire (70% taux)',
+                    source_level_capex: 'source_partial', source_ref_capex: 'Prix marché PV 2025 — 1,20€/Wc installé',
                     source_level_roi: 'hypothesis'
                 }
             ]
@@ -6590,7 +6569,7 @@
 
         const newDiagnosticCalculateActionGain = (action, totalKwh, breakdown, avgPrice, surface, formData, energyPrices) => {
             let baseKwh = totalKwh;
-            const ePrices = energyPrices || { elec: 0.196, gas: 0.105 };
+            const ePrices = energyPrices || { elec: 0.206, gas: 0.108 };
 
             // Si gain sur poste spécifique
             if (action.gain_scope !== 'total' && action.gain_scope.endsWith('_post')) {
@@ -6599,8 +6578,19 @@
                 baseKwh = totalKwh * (postPct / 100);
             }
 
-            // Calcul gain (médian)
-            const gainKwh = Math.round(baseKwh * action.gain_pct_med);
+            // === Gain conditionnel PAC (ACT13) ===
+            let gainPctMed = action.gain_pct_med;
+            if (action.id === 'ACT13' && formData) {
+                const mh = formData.mainHeating || 'gas';
+                const ba = formData.boilerAge || 'under5';
+                if (mh === 'other') gainPctMed = 0.60;       // fioul/autre
+                else if (mh === 'gas' && ['15to20', 'over20'].includes(ba)) gainPctMed = 0.55;
+                else if (mh === 'gas') gainPctMed = 0.45;
+                else if (mh === 'electric') gainPctMed = 0.35;
+            }
+
+            // Calcul gain (médian ajusté)
+            const gainKwh = Math.round(baseKwh * gainPctMed);
 
             // Prix par type d'énergie
             const energyType = NEW_DIAGNOSTIC_ACTION_ENERGY_MAP[action.category] || 'avg';
@@ -6612,39 +6602,72 @@
 
             // CAPEX (médian)
             let capex = action.capex_med;
+            const safeSurface = Math.max(1, Number(surface || 100));
 
-            // Si capex par m² ou par unité, estimer avec la surface réelle
-            if (action.capex_unit === '€/m²') {
-                const safeSurface = Math.max(1, Number(surface || 100));
+            // CAPEX proportionnel à la surface (ACT13 PAC, ACT14 GTB)
+            if (action.capex_per_m2) {
+                capex = Math.max(action.capex_min || action.capex_low, Math.round(safeSurface * action.capex_per_m2));
+            }
+            // Si capex par m²
+            else if (action.capex_unit === '€/m²') {
                 capex = action.capex_med * safeSurface;
-            } else if (action.capex_unit === '€/radiateur') {
-                const estimatedRadiators = Math.max(6, Math.round(Number(surface || 100) / 15));
+            }
+            // Si capex par radiateur
+            else if (action.capex_unit === '€/radiateur') {
+                const estimatedRadiators = Math.max(6, Math.round(safeSurface / 15));
                 capex = action.capex_med * estimatedRadiators;
             }
 
             // CAPEX façade (ACT16)
-            if (action.capex_unit === '€/m² de façade') {
-                const safeSurface = Math.max(1, Number(surface || 100));
+            if (action.capex_unit === '€/m² de façade' || action.capex_unit === '€/m²' && action.category === 'envelope_walls') {
                 capex = action.capex_med * safeSurface * 0.6;
             }
-            // CAPEX €/ml (ACT20 — portes frigo sur 6 ml standard)
+            // CAPEX vitrages (ACT17) — estimé 20% de la surface
+            if (action.capex_unit === '€/m² vitré') {
+                capex = action.capex_med * safeSurface * 0.2;
+            }
+            // CAPEX €/ml
             if (action.capex_unit === '€/ml') {
                 capex = action.capex_med * 6;
             }
-            // Gain PV sur conso électrique seulement (ACT18)
-            if (action.id === 'ACT18' && action.gain_scope === 'elec_post') {
+
+            // Gain PV sur conso électrique seulement (ACT22)
+            if (action.id === 'ACT22' && action.gain_scope === 'elec_post') {
                 const elecConvValue = (formData && formData.elecUsed) ? (parseFloat((formData && formData.elecKwh) || 0) || 0) : 0;
                 const elecPct = totalKwh > 0 ? Math.max(0.3, Math.min(1.0, elecConvValue / totalKwh)) : 0.5;
-                baseKwh = totalKwh * elecPct;
+                const elecKwh = totalKwh * elecPct;
+                // Production estimée : surface_toit × 0.15 × 1100 kWh/kWc × 70% autoconsommation
+                const levels = Math.max(1, parseInt((formData && formData.levels) || 1));
+                const roofSurface = safeSurface / levels;
+                const pvProduction = roofSurface * 0.15 * 1100 * 0.70;
+                const pvGainKwh = Math.min(pvProduction, elecKwh * 0.30); // cap à 30% de la conso élec
+                return {
+                    gainKwh: Math.round(pvGainKwh),
+                    gainEuro: Math.round(pvGainKwh * ePrices.elec),
+                    capex: Math.round(roofSurface * 0.6 * 200 * 1.20), // 60% emprise × 200 Wc/m² × 1.20€/Wc
+                    capexNet: Math.round(roofSurface * 0.6 * 200 * 1.20 * (1 - (action.aid_pct || 0))),
+                    aidAmount: Math.round(roofSurface * 0.6 * 200 * 1.20 * (action.aid_pct || 0)),
+                    aidPct: action.aid_pct || 0,
+                    roi_years: pvGainKwh > 0 ? Math.round((roofSurface * 0.6 * 200 * 1.20 * (1 - (action.aid_pct || 0))) / (pvGainKwh * ePrices.elec) * 10) / 10 : null,
+                    gain_pct_total: totalKwh > 0 ? pvGainKwh / totalKwh : 0
+                };
             }
 
-            // ROI
-            const roi_years = gainEuro > 0 ? Math.round((capex / gainEuro) * 10) / 10 : null;
+            // ==== Calcul CAPEX net (après aides) ====
+            const aidPct = action.aid_pct || 0;
+            const capexNet = Math.round(capex * (1 - aidPct));
+            const aidAmount = Math.round(capex * aidPct);
+
+            // ROI sur CAPEX net (après aides)
+            const roi_years = gainEuro > 0 ? Math.round((capexNet / gainEuro) * 10) / 10 : null;
 
             return {
                 gainKwh,
                 gainEuro,
                 capex,
+                capexNet,
+                aidAmount,
+                aidPct,
                 roi_years,
                 gain_pct_total: totalKwh > 0 ? gainKwh / totalKwh : 0
             };
@@ -6653,7 +6676,7 @@
         const newDiagnosticFilterAndScoreActions = (formData, totalKwh, breakdown, avgPrice) => {
             const worksDone = formData.worksDone || [];
             const surface = Math.max(1, Number(formData.surface || 100));
-            const buildingAge = formData.buildingAge || 'after_2005';
+            const buildingAge = formData.buildingAge || '2006_2012';
             const boilerAge = formData.boilerAge || 'under5';
 
             let eligibleActions = NEW_DIAGNOSTIC_ACTIONS_LIBRARY.actions.filter(action => {
@@ -6678,6 +6701,9 @@
                 if (formData.wallInsulation === 'yes' && action.id === 'ACT16') return false;
                 if (formData.ecsSystem !== 'electric_boiler' && !formData.ecsSameSystem && action.id === 'ACT18') return false;
                 if (action.id === 'ACT18' && formData.ecsSameSystem) return false;
+                // ACT22 conditions
+                if (action.id === 'ACT22' && surface < 300) return false;
+                if (action.id === 'ACT22' && formData.roofAccessible === 'no') return false;
 
                 return true;
             });
@@ -6685,41 +6711,42 @@
             const buildingAgeCoef = (NEW_DIAGNOSTIC_BUILDING_AGES || []).find(a => a.id === buildingAge)?.coef || 1.0;
             const boilerAgePriority = (NEW_DIAGNOSTIC_BOILER_AGES || []).find(a => a.id === boilerAge)?.pacPriority || 0;
 
-            const energyPrices = { elec: 0.196, gas: 0.105 };
+            const energyPrices = { elec: NEW_DIAGNOSTIC_ENERGY_PRICES.electricity.price_default_eur_kwh, gas: NEW_DIAGNOSTIC_ENERGY_PRICES.gas.price_default_eur_kwh };
             const scoredActions = eligibleActions.map(action => {
                 const calc = newDiagnosticCalculateActionGain(action, totalKwh, breakdown, avgPrice, surface, formData, energyPrices);
 
                 let feasibility = 1.0;
-                if (action.category?.includes('envelope')) feasibility = 0.5;
-                if (action.category === 'heating' && action.capex_med > 10000) feasibility = 0.6;
-                if (action.category === 'lighting') feasibility = 1.2;
-                if (action.tier === 'quick_win') feasibility *= 1.3;
-                if (action.tier === 'structural') feasibility *= 0.7;
+                if (action.category?.includes('envelope')) feasibility = 0.55;
+                if (action.category === 'heating' && (calc.capex || 0) > 10000) feasibility = 0.65;
+                if (action.category === 'lighting') feasibility = 1.3;
+                if (action.tier === 'light') feasibility *= 1.3;
+                if (action.tier === 'heavy') feasibility *= 0.7;
 
-                if (action.category?.includes('envelope') && ['before_1975', '1975_1988'].includes(buildingAge)) {
+                if (action.category?.includes('envelope') && ['pre1948', '1948_1974', '1975_1988'].includes(buildingAge)) {
                     feasibility *= buildingAgeCoef;
                 }
                 if (action.id === 'ACT13' && boilerAgePriority >= 2) feasibility *= 1.5;
 
-                const safeCapex = Math.max(1, calc.capex);
+                const safeCapex = Math.max(1, calc.capexNet || calc.capex);
                 const priorityScore = (calc.gainEuro * feasibility) / safeCapex;
 
                 return { ...action, ...calc, priorityScore };
             });
 
-            scoredActions.sort((a, b) => b.priorityScore - a.priorityScore);
+            // Filtrer les actions non rentables
+            const filteredActions = scoredActions.filter(a => {
+                if (a.roi_years !== null && a.roi_years > 10) return false;
+                if (a.gainEuro <= 0) return false;
+                return true;
+            });
 
-            const actionsByTier = {
-                quick_win: scoredActions.filter(a => a.tier === 'quick_win').slice(0, 2),
-                equipment: scoredActions.filter(a => a.tier === 'equipment').slice(0, 2),
-                structural: scoredActions.filter(a => a.tier === 'structural').slice(0, 2)
-            };
+            filteredActions.sort((a, b) => b.priorityScore - a.priorityScore);
 
-            const topActions = [
-                ...actionsByTier.quick_win,
-                ...actionsByTier.equipment,
-                ...actionsByTier.structural
-            ].slice(0, 6);
+            // Sélection max 3 light + 3 heavy
+            const lightActions = filteredActions.filter(a => a.tier === 'light').slice(0, 3);
+            const heavyActions = filteredActions.filter(a => a.tier === 'heavy').slice(0, 3);
+
+            const topActions = [...lightActions, ...heavyActions];
 
             return topActions;
         };
@@ -6927,8 +6954,8 @@
 
             // Correctif âge bâtiment sur le poste chauffage
             const AGE_HEATING_COEFF = {
-                pre1948: 1.45, '1948_1974': 1.32, '1975_1988': 1.18,
-                '1989_2005': 1.08, '2006_2012': 1.00, post2012: 0.80, unknown: 1.00
+                pre1948: 1.50, '1948_1974': 1.35, '1975_1988': 1.15,
+                '1989_2005': 1.05, '2006_2012': 1.00, post2012: 0.75, unknown: 1.10
             };
             const ageCoeff = AGE_HEATING_COEFF[formData.buildingAge] || 1.0;
             if (formData.buildingAge && formData.buildingAge !== 'unknown' && ageCoeff !== 1.0) {
@@ -7092,10 +7119,13 @@
                     id: a.id,
                     name: a.name,
                     category: a.category,
-                    tier: a.tier || 'equipment',
+                    tier: a.tier || 'light',
                     gain_kwh_an: { value: a.gainKwh, unit: 'kWh/an' },
                     gain_euro_an: { value: a.gainEuro, unit: '€/an' },
                     capex: { value: a.capex, unit: '€' },
+                    capex_net: { value: a.capexNet || a.capex, unit: '€' },
+                    aid_amount: { value: a.aidAmount || 0, unit: '€' },
+                    aid_pct: a.aidPct || 0,
                     roi_years: { value: a.roi_years, unit: 'ans' },
                     source_level_gain: a.source_level_gain,
                     source_level_capex: a.source_level_capex,
@@ -7176,9 +7206,7 @@
             const capexBrut = (actions || []).reduce((s, a) => s + (a.capex?.value || 0), 0);
             let aidesTotal = 0;
             for (const action of (actions || [])) {
-                const capVal = action.capex?.value || 0;
-                aidesTotal += capVal * (0.20 - 0.055) / 1.20;
-                if (action.aid_tags?.includes('CEE')) aidesTotal += capVal * 0.015;
+                aidesTotal += action.aid_amount?.value || 0;
             }
             const capexNet = Math.max(0, capexBrut - aidesTotal);
             const roiGlobal = annualSavingsEuro > 0 ? capexNet / annualSavingsEuro : 999;
@@ -8353,7 +8381,7 @@
                                 </div>
                                 <div className="text-xs text-slate-500 md:text-right">
                                     <p>Inflation pondérée : {projection.tauxPct}%/an</p>
-                                    <p>Aides déduites au niveau prudent : {formatMoney(projection.aidesTotal)}</p>
+                                    <p>Aides estimées déduites : {formatMoney(projection.aidesTotal)}</p>
                                 </div>
                             </div>
                             <NewDiagnosticInactionGraph
@@ -8386,21 +8414,41 @@
                             {(() => {
                                 const InlineActionCard = ({ action, color }) => {
                                     const borderColors = { green: 'border-green-200 hover:border-green-300', blue: 'border-blue-200 hover:border-blue-300', violet: 'border-violet-200 hover:border-violet-300' };
+                                    const isHeavy = action.tier === 'heavy';
+                                    const aidAmount = action.aid_amount?.value || 0;
+                                    const capexNet = action.capex_net?.value || action.capex?.value || 0;
                                     return (
                                         <div className={`p-5 bg-white border-2 ${borderColors[color] || borderColors.blue} rounded-xl transition-colors`}>
                                             <div className="flex items-start justify-between gap-4">
                                                 <div className="flex-1">
                                                     <h4 className="font-bold text-neutral-900 mb-3">{action.name}</h4>
-                                                    <div className="grid grid-cols-3 gap-4 text-sm">
+                                                    <div className={`grid ${isHeavy ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3'} gap-4 text-sm`}>
                                                         <div>
                                                             <p className="text-neutral-500 text-xs mb-1">Gain/an</p>
                                                             <p className="font-bold text-green-600">{(action.gain_euro_an?.value || 0).toLocaleString('fr-FR')} €</p>
                                                             <p className="text-xs text-neutral-400">{(action.gain_kwh_an?.value || 0).toLocaleString('fr-FR')} kWh</p>
                                                         </div>
-                                                        <div>
-                                                            <p className="text-neutral-500 text-xs mb-1">Investissement</p>
-                                                            <p className="font-bold text-neutral-900">{(action.capex?.value || 0).toLocaleString('fr-FR')} €</p>
-                                                        </div>
+                                                        {isHeavy ? (
+                                                            <>
+                                                                <div>
+                                                                    <p className="text-neutral-500 text-xs mb-1">Coût estimé</p>
+                                                                    <p className="font-bold text-neutral-900">{(action.capex?.value || 0).toLocaleString('fr-FR')} €</p>
+                                                                </div>
+                                                                <div>
+                                                                    <p className="text-neutral-500 text-xs mb-1">Aide estimée</p>
+                                                                    <p className="font-bold text-emerald-600">−{aidAmount.toLocaleString('fr-FR')} €</p>
+                                                                </div>
+                                                                <div>
+                                                                    <p className="text-neutral-500 text-xs mb-1">Reste à charge</p>
+                                                                    <p className="font-bold text-blue-700">{capexNet.toLocaleString('fr-FR')} €</p>
+                                                                </div>
+                                                            </>
+                                                        ) : (
+                                                            <div>
+                                                                <p className="text-neutral-500 text-xs mb-1">Investissement</p>
+                                                                <p className="font-bold text-neutral-900">{(action.capex?.value || 0).toLocaleString('fr-FR')} €</p>
+                                                            </div>
+                                                        )}
                                                         <div>
                                                             <p className="text-neutral-500 text-xs mb-1">ROI</p>
                                                             <p className="font-bold text-blue-600">{action.roi_years?.value != null ? `${action.roi_years.value} ans` : 'N/A'}</p>
@@ -8408,69 +8456,59 @@
                                                     </div>
                                                     <p className="text-xs text-neutral-400 mt-3">Source gains : {action.source_level_gain} • Source CAPEX : {action.source_level_capex}</p>
                                                 </div>
-                                                {action.aid_tags?.includes('CEE') && (
-                                                    <span className="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-full whitespace-nowrap">CEE</span>
+                                                {action.aid_tags?.length > 0 && (
+                                                    <div className="flex flex-col gap-1">
+                                                        {action.aid_tags.map(tag => (
+                                                            <span key={tag} className="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-full whitespace-nowrap">{tag}</span>
+                                                        ))}
+                                                    </div>
                                                 )}
                                             </div>
                                         </div>
                                     );
                                 };
 
-                                const quickWins = actions.filter(a => a.tier === 'quick_win');
-                                const equipment = actions.filter(a => a.tier === 'equipment');
-                                const structural = actions.filter(a => a.tier === 'structural');
-                                const untiered = actions.filter(a => !a.tier);
+                                const lightActions = actions.filter(a => a.tier === 'light');
+                                const heavyActions = actions.filter(a => a.tier === 'heavy');
+                                const untiered = actions.filter(a => !a.tier || !['light', 'heavy'].includes(a.tier));
 
                                 return (
                                     <>
-                                        {quickWins.length > 0 && (
+                                        {lightActions.length > 0 && (
                                             <div className="mb-8">
                                                 <div className="flex items-center gap-3 mb-4">
                                                     <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
                                                         <Icon icon="solar:bolt-linear" className="text-xl text-green-600" />
                                                     </div>
                                                     <div>
-                                                        <h3 className="font-bold text-green-800">Actions rapides</h3>
-                                                        <p className="text-xs text-green-600">ROI court, mise en œuvre simple</p>
+                                                        <h3 className="font-bold text-green-800">Actions rapides (sans gros travaux)</h3>
+                                                        <p className="text-xs text-green-600">Faible investissement, ROI court, mise en œuvre simple</p>
                                                     </div>
                                                 </div>
                                                 <div className="space-y-4">
-                                                    {quickWins.map(a => <InlineActionCard key={a.id} action={a} color="green" />)}
+                                                    {lightActions.map(a => <InlineActionCard key={a.id} action={a} color="green" />)}
                                                 </div>
                                             </div>
                                         )}
 
-                                        {equipment.length > 0 && (
-                                            <div className="mb-8">
-                                                <div className="flex items-center gap-3 mb-4">
-                                                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                                                        <Icon icon="solar:settings-linear" className="text-xl text-blue-600" />
-                                                    </div>
-                                                    <div>
-                                                        <h3 className="font-bold text-blue-800">Équipements & Pilotage</h3>
-                                                        <p className="text-xs text-blue-600">Investissement modéré, gains durables</p>
-                                                    </div>
-                                                </div>
-                                                <div className="space-y-4">
-                                                    {equipment.map(a => <InlineActionCard key={a.id} action={a} color="blue" />)}
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {structural.length > 0 && (
+                                        {heavyActions.length > 0 && (
                                             <div className="mb-8">
                                                 <div className="flex items-center gap-3 mb-4">
                                                     <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'rgba(124,58,237,0.1)' }}>
-                                                        <Icon icon="solar:home-angle-linear" className="text-xl" style={{ color: '#7C3AED' }} />
+                                                        <Icon icon="solar:buildings-bold" className="text-xl" style={{ color: '#7C3AED' }} />
                                                     </div>
                                                     <div>
-                                                        <h3 className="font-bold" style={{ color: '#5B21B6' }}>Rénovation structurante</h3>
-                                                        <p className="text-xs" style={{ color: '#7C3AED' }}>Travaux lourds, impact majeur long terme</p>
+                                                        <h3 className="font-bold" style={{ color: '#5B21B6' }}>Travaux de rénovation</h3>
+                                                        <p className="text-xs" style={{ color: '#7C3AED' }}>Investissements structurants — aides disponibles — gains durables</p>
                                                     </div>
                                                 </div>
                                                 <div className="space-y-4">
-                                                    {structural.map(a => <InlineActionCard key={a.id} action={a} color="violet" />)}
+                                                    {heavyActions.map(a => <InlineActionCard key={a.id} action={a} color="violet" />)}
                                                 </div>
+                                                <p className="text-xs text-neutral-500 mt-4 italic">
+                                                    Les aides estimées incluent les Certificats d'Économie d'Énergie (CEE) et les dispositifs nationaux courants.
+                                                    Le montant réel dépend de votre situation et des conditions en vigueur au moment des travaux.
+                                                </p>
                                             </div>
                                         )}
 

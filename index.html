@@ -3315,34 +3315,41 @@
         // NewDiagnosticStepper (barre de progression)
         const NewDiagnosticStepper = ({ currentStep, totalSteps }) => {
             const steps = Array.from({ length: totalSteps }, (_, i) => i + 1);
+            const stepTitles = ["Le projet", "Le bâtiment", "Les équipements", "Données & Contact"];
 
             return (
-                <div className="mb-8">
-                    <div className="flex items-center justify-center gap-2">
-                        {steps.map((step) => (
-                            <div key={step} className="flex items-center">
-                                <div
-                                    className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-colors ${step < currentStep
-                                        ? 'bg-green-500 text-white'
-                                        : step === currentStep
-                                            ? 'bg-[#1D4ED8] text-white'
-                                            : 'bg-neutral-200 text-neutral-500'
-                                        }`}
-                                >
-                                    {step < currentStep ? '✓' : step}
-                                </div>
-                                {step < totalSteps && (
-                                    <div
-                                        className={`w-12 h-1 ${step < currentStep ? 'bg-green-500' : 'bg-neutral-200'
+                <div className="mb-10 lg:mb-12">
+                    <div className="flex items-center justify-between sm:justify-center sm:gap-4 lg:gap-8 max-w-3xl mx-auto px-2">
+                        {steps.map((step) => {
+                            const isActive = step === currentStep;
+                            const isPast = step < currentStep;
+                            return (
+                                <React.Fragment key={step}>
+                                    <div className="flex flex-col items-center gap-2 relative z-10">
+                                        <div
+                                            className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center font-bold text-[15px] sm:text-base border-[3px] transition-all duration-300 ${
+                                                isPast
+                                                ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm'
+                                                : isActive
+                                                    ? 'bg-white border-[#1D4ED8] text-[#1D4ED8] shadow-[0_0_15px_rgba(29,78,216,0.3)]'
+                                                    : 'bg-white border-slate-200 text-slate-400'
                                             }`}
-                                    />
-                                )}
-                            </div>
-                        ))}
+                                        >
+                                            {isPast ? <Icon icon="solar:check-read-bold" className="text-xl" /> : step}
+                                        </div>
+                                        <span className={`hidden sm:block text-xs font-semibold whitespace-nowrap transition-colors ${isActive ? 'text-[#1D4ED8]' : isPast ? 'text-emerald-600' : 'text-slate-400'}`}>
+                                            {stepTitles[step - 1]}
+                                        </span>
+                                    </div>
+                                    {step < totalSteps && (
+                                        <div className="flex-1 sm:w-16 lg:w-24 h-1.5 rounded-full overflow-hidden bg-slate-100 mb-6 sm:mb-6">
+                                            <div className={`h-full transition-all duration-500 ease-out ${isPast ? 'w-full bg-emerald-500' : 'w-0'}`}></div>
+                                        </div>
+                                    )}
+                                </React.Fragment>
+                            );
+                        })}
                     </div>
-                    <p className="text-center text-sm text-neutral-500 mt-4">
-                        Étape {currentStep} sur {totalSteps}
-                    </p>
                 </div>
             );
         };
@@ -3360,8 +3367,8 @@
             helper = null,
             disabled = false
         }) => (
-            <div className="mb-4">
-                <label className="block text-sm font-medium text-neutral-700 mb-2">
+            <div className="mb-5 relative group">
+                <label className="block text-[13px] font-bold tracking-wide uppercase text-slate-500 mb-2 transition-colors group-focus-within:text-[#1D4ED8]">
                     {label} {required && <span className="text-red-500">*</span>}
                 </label>
                 <div className="relative">
@@ -3371,10 +3378,11 @@
                         onChange={(e) => onChange(e.target.value)}
                         placeholder={placeholder}
                         disabled={disabled}
-                        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-colors ${error
-                            ? 'border-red-300 focus:ring-red-500'
-                            : 'border-[#E2E8F0] focus:ring-[#1D4ED8] focus:border-[#1D4ED8]'
-                            } ${disabled ? 'bg-neutral-100 text-neutral-500 cursor-not-allowed' : ''}`}
+                        className={`w-full px-4 text-[15px] font-medium h-[52px] border-2 rounded-xl focus:outline-none transition-all duration-200 ${
+                            error
+                            ? 'border-red-300 bg-red-50/50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10'
+                            : 'border-slate-200 bg-white hover:border-slate-300 focus:border-[#1D4ED8] focus:ring-4 focus:ring-blue-500/10 focus:shadow-[0_0_20px_rgba(29,78,216,0.06)]'
+                            } ${disabled ? 'bg-slate-50 text-slate-400 cursor-not-allowed border-slate-100 hover:border-slate-100' : 'text-slate-800'}`}
                     />
                     {suffix && (
                         <span className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-500 text-sm">
@@ -3397,25 +3405,28 @@
             error = null,
             placeholder = 'Sélectionnez...'
         }) => (
-            <div className="mb-4">
-                <label className="block text-sm font-medium text-neutral-700 mb-2">
+            <div className="mb-5 relative group">
+                <label className="block text-[13px] font-bold tracking-wide uppercase text-slate-500 mb-2 transition-colors group-focus-within:text-[#1D4ED8]">
                     {label} {required && <span className="text-red-500">*</span>}
                 </label>
-                <select
-                    value={value}
-                    onChange={(e) => onChange(e.target.value)}
-                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-colors ${error
-                        ? 'border-red-300 focus:ring-red-500'
-                        : 'border-[#E2E8F0] focus:ring-[#1D4ED8] focus:border-[#1D4ED8]'
-                        }`}
-                >
-                    <option value="">{placeholder}</option>
+                <div className="relative">
+                    <select
+                        value={value}
+                        onChange={(e) => onChange(e.target.value)}
+                        className={`w-full px-4 appearance-none text-[15px] font-medium h-[52px] border-2 rounded-xl focus:outline-none transition-all duration-200 ${
+                            error
+                            ? 'border-red-300 bg-red-50/50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10'
+                            : 'border-slate-200 bg-white hover:border-slate-300 focus:border-[#1D4ED8] focus:ring-4 focus:ring-blue-500/10 focus:shadow-[0_0_20px_rgba(29,78,216,0.06)]'
+                            } ${!value ? 'text-slate-400' : 'text-slate-800'}`}
+                    >
+                        <option value="" disabled>{placeholder}</option>
                     {options.map((opt) => (
                         <option key={opt.id} value={opt.id}>
                             {opt.label}
                         </option>
                     ))}
-                </select>
+                    </select>
+                </div>
                 {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
             </div>
         );
@@ -3423,50 +3434,62 @@
         // Radio cards
         const NewDiagnosticRadioCards = ({ options, selected, onChange, columns = 2 }) => {
             const gridClass = columns === 3
-                ? 'grid md:grid-cols-3 gap-4'
+                ? 'grid xs:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4'
                 : columns === 1
-                    ? 'grid md:grid-cols-1 gap-4'
-                    : 'grid md:grid-cols-2 gap-4';
+                    ? 'grid md:grid-cols-1 gap-3 md:gap-4'
+                    : 'grid xs:grid-cols-2 md:grid-cols-2 gap-3 md:gap-4';
 
             return (
                 <div className={gridClass}>
-                    {options.map((option) => (
-                        <button
-                            type="button"
-                            key={option.id}
-                            onClick={() => onChange(option.id)}
-                            className={`p-4 rounded-xl border-2 transition-all text-left ${selected === option.id
-                                ? 'border-[#1D4ED8] bg-[#EFF6FF]'
-                                : 'border-[#E2E8F0] hover:border-[#1D4ED8]/40'
-                                }`}
-                        >
-                            {option.icon && (
-                                <Icon
-                                    icon={option.icon}
-                                    className={`text-2xl mb-2 block ${selected === option.id ? 'text-[#1D4ED8]' : 'text-neutral-500'}`}
-                                    style={{ fontSize: '1.5rem' }}
-                                />
-                            )}
-                            <div className="font-semibold text-neutral-900 mb-1">{option.label}</div>
-                            {option.desc && <div className="text-sm text-neutral-600">{option.desc}</div>}
-                        </button>
-                    ))}
+                    {options.map((option) => {
+                        const isSelected = selected === option.id;
+                        return (
+                            <button
+                                type="button"
+                                key={option.id}
+                                onClick={() => onChange(option.id)}
+                                className={`relative p-5 rounded-2xl border-2 transition-all duration-300 text-left flex flex-col h-full focus:outline-none active:scale-[0.98] ${
+                                    isSelected
+                                    ? 'border-[#1D4ED8] bg-[#EFF6FF] shadow-[0_8px_20px_-6px_rgba(29,78,216,0.2)] z-10'
+                                    : 'border-slate-200 bg-white hover:border-[#1D4ED8]/40 hover:bg-slate-50 hover:shadow-sm'
+                                    }`}
+                            >
+                                {isSelected && (
+                                    <div className="absolute top-3 right-3 text-[#1D4ED8]">
+                                        <Icon icon="solar:check-circle-bold" className="text-xl" />
+                                    </div>
+                                )}
+                                {option.icon && (
+                                    <div className={`w-12 h-12 rounded-xl mb-3 flex items-center justify-center transition-colors ${isSelected ? 'bg-blue-100 text-[#1D4ED8]' : 'bg-slate-100 text-slate-500'}`}>
+                                        <Icon
+                                            icon={option.icon}
+                                            className="text-2xl"
+                                        />
+                                    </div>
+                                )}
+                                <div className={`font-bold text-[15px] mb-1 leading-tight ${isSelected ? 'text-[#1D4ED8]' : 'text-slate-800'}`}>{option.label}</div>
+                                {option.desc && <div className={`text-xs mt-auto ${isSelected ? 'text-blue-700/80' : 'text-slate-500'}`}>{option.desc}</div>}
+                            </button>
+                        );
+                    })}
                 </div>
             );
         };
 
-        // NewDiagnosticCheckbox
         const NewDiagnosticCheckbox = ({ label, checked, onChange, helper = null }) => (
-            <label className="flex items-start gap-3 cursor-pointer">
-                <input
-                    type="checkbox"
-                    checked={checked}
-                    onChange={(e) => onChange(e.target.checked)}
-                    className="mt-1 w-5 h-5 rounded border-[#E2E8F0] text-[#1D4ED8] focus:ring-[#1D4ED8]"
-                />
-                <div>
-                    <span className="text-neutral-700">{label}</span>
-                    {helper && <p className="text-xs text-neutral-500 mt-1">{helper}</p>}
+            <label className={`flex items-start gap-3 cursor-pointer p-4 rounded-xl border-2 transition-all duration-200 ${checked ? 'border-[#1D4ED8] bg-[#EFF6FF]' : 'border-slate-200 bg-white hover:bg-slate-50'}`}>
+                <div className="relative flex items-center justify-center shrink-0 mt-0.5">
+                    <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={(e) => onChange(e.target.checked)}
+                        className="peer appearance-none w-5 h-5 rounded-[4px] border-2 border-slate-300 checked:border-[#1D4ED8] checked:bg-[#1D4ED8] transition-all cursor-pointer focus:outline-none focus:ring-4 focus:ring-[#1D4ED8]/10"
+                    />
+                    <Icon icon="solar:check-read-bold" className="absolute text-white opacity-0 peer-checked:opacity-100 text-sm pointer-events-none transition-opacity" />
+                </div>
+                <div className="flex-1">
+                    <span className={`text-[15px] font-semibold transition-colors ${checked ? 'text-[#1D4ED8]' : 'text-slate-700'}`}>{label}</span>
+                    {helper && <p className="text-xs text-slate-500 mt-1">{helper}</p>}
                 </div>
             </label>
         );
@@ -3502,13 +3525,19 @@
             const isValid = newDiagnosticValidateMixUsage(officesPct, retailPct);
 
             return (
-                <div className="mb-6">
-                    <label className="block text-sm font-medium text-neutral-700 mb-4">
+                <div className="mb-8 p-6 bg-slate-50 border border-slate-100 rounded-2xl">
+                    <label className="block text-[13px] font-bold tracking-wide uppercase text-slate-500 mb-6 text-center">
                         Répartition des usages <span className="text-red-500">*</span>
                     </label>
 
-                    <div className="space-y-4">
-                        <div className="px-2">
+                    <div className="space-y-6">
+                        <div className="flex justify-between items-center px-4">
+                            <span className="text-sm font-bold text-[#1D4ED8] bg-blue-100 px-3 py-1 rounded-full">{Math.round(officesPct)}%</span>
+                            <span className="text-sm font-bold text-[#F59E0B] bg-amber-100 px-3 py-1 rounded-full">{Math.round(retailPct)}%</span>
+                        </div>
+                        
+                        <div className="px-4 relative">
+                            {/* Custom style for the slider to look punchy */}
                             <input
                                 type="range"
                                 min="0"
@@ -3516,25 +3545,29 @@
                                 step="1"
                                 value={officesPct}
                                 onChange={(e) => handleOfficeChange(e.target.value)}
-                                className="mix-range"
+                                className="w-full h-3 rounded-full appearance-none bg-slate-200 focus:outline-none focus:ring-4 focus:ring-blue-500/10 cursor-pointer"
+                                style={{
+                                    background: `linear-gradient(to right, #3B82F6 0%, #3B82F6 ${officesPct}%, #F59E0B ${officesPct}%, #F59E0B 100%)`
+                                }}
                             />
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="p-4 bg-[#EFF6FF] rounded-lg text-center border border-[#DBEAFE]">
-                                <div className="text-3xl font-bold text-[#1D4ED8]">{Math.round(officesPct)}%</div>
-                                <div className="text-sm text-neutral-600 mt-1">Bureaux</div>
+                        <div className="grid grid-cols-2 gap-5 mt-4">
+                            <div className="p-4 bg-white rounded-xl text-center border-2 border-transparent shadow-sm">
+                                <div className="text-3xl font-black text-[#1D4ED8]">{Math.round(officesPct)}%</div>
+                                <div className="text-[13px] font-semibold text-slate-500 mt-1">Bureaux</div>
                             </div>
-                            <div className="p-4 bg-amber-50 rounded-lg text-center border border-amber-100">
-                                <div className="text-3xl font-bold text-[#F59E0B]">{Math.round(retailPct)}%</div>
-                                <div className="text-sm text-neutral-600 mt-1">Commerce</div>
+                            <div className="p-4 bg-white rounded-xl text-center border-2 border-transparent shadow-sm">
+                                <div className="text-3xl font-black text-[#F59E0B]">{Math.round(retailPct)}%</div>
+                                <div className="text-[13px] font-semibold text-slate-500 mt-1">Commerce</div>
                             </div>
                         </div>
 
                         {!isValid && (
-                            <p className="text-xs text-red-500">
-                                La somme doit être égale à 100%
-                            </p>
+                            <div className="flex items-center justify-center gap-2 mt-2 text-red-500 bg-red-50 p-2 rounded-lg">
+                                <Icon icon="solar:danger-triangle-bold" />
+                                <span className="text-xs font-semibold">La somme doit être égale à 100%</span>
+                            </div>
                         )}
                     </div>
                 </div>
@@ -7283,13 +7316,8 @@
             const { ComposedChart, Line, XAxis, YAxis, CartesianGrid, Tooltip: GrTooltip, ReferenceLine, ResponsiveContainer: GrResponsive, Area } = window.Recharts;
             const projection = newDiagnosticBuildProjectionData({ annualSavingsEuro, totalCostEuroAn, elecKwh, gasKwh, actions });
 
-            if (!projection.graphiquePubliable) {
-                return (
-                    <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800">
-                        Projection financière non publiable avec le niveau de données actuel. Un cadrage expert est recommandé avant arbitrage.
-                    </div>
-                );
-            }
+            // On retire le blocage strict et on affiche un avertissement si les données sont partielles
+            const isPrudent = !projection.graphiquePubliable;
 
             return (
                 <div>
@@ -8313,25 +8341,100 @@
                                     <DecisionCard icon="solar:leaf-bold" title="Opportunité" text={decisionReadout.opportunity} tone={{ bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700' }} />
                                 </div>
 
-                                <div className="report-subcard p-5">
-                                    <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 mb-4">
-                                        <div>
-                                            <p className="text-xs font-bold uppercase tracking-wide text-slate-500 mb-1">Positionnement sectoriel</p>
-                                            <p className="text-sm font-semibold text-slate-900">{benchmarkGapText}</p>
+                                <div className="grid lg:grid-cols-2 gap-5 mb-8">
+                                    <div className="report-subcard p-5">
+                                        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 mb-4">
+                                            <div>
+                                                <p className="text-xs font-bold uppercase tracking-wide text-slate-500 mb-1">Positionnement sectoriel</p>
+                                                <p className="text-sm font-semibold text-slate-900">{benchmarkGapText}</p>
+                                            </div>
+                                            <p className="text-xs text-slate-400 md:text-right">Source : {benchmark.source_ref || 'Références sectorielles'}</p>
                                         </div>
-                                        <p className="text-xs text-slate-400 md:text-right">Source : {benchmark.source_ref || 'Références sectorielles'}</p>
+                                        <NewDiagnosticPositioningGauge
+                                            intensity={benchmark.site_intensity.value}
+                                            low={benchmark.benchmark_low.value}
+                                            median={benchmark.benchmark_median.value}
+                                            high={benchmark.benchmark_high.value}
+                                            targetIntensity={targetIntensity}
+                                        />
+                                        <p className="text-sm text-slate-600 mt-2">{benchmarkComment}</p>
                                     </div>
-                                    <NewDiagnosticPositioningGauge
-                                        intensity={benchmark.site_intensity.value}
-                                        low={benchmark.benchmark_low.value}
-                                        median={benchmark.benchmark_median.value}
-                                        high={benchmark.benchmark_high.value}
-                                        targetIntensity={targetIntensity}
-                                    />
-                                    <p className="text-sm text-slate-600 mt-2">{benchmarkComment}</p>
+
+                                    <div className="report-subcard p-5">
+                                        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 mb-2">
+                                            <div>
+                                                <p className="text-xs font-bold uppercase tracking-wide text-slate-500 mb-1">Impact estimé par poste</p>
+                                                <p className="text-sm font-semibold text-slate-900">Fondé sur la référence de l'activité cible</p>
+                                            </div>
+                                        </div>
+                                        {(() => {
+                                            const rawBd = reportPayload.usage_breakdown || {};
+                                            const totalCost = (reportPayload.calculation_results?.total_cost_euro_an?.value) || 0;
+                                            
+                                            // Extraire les pourcentages des sous-objets pour chaque usage
+                                            const keysToMap = [
+                                                { k: 'heating_pct', n: 'Chauffage', color: '#EF4444' },
+                                                { k: 'cooling_pct', n: 'Climatisation', color: '#3B82F6' },
+                                                { k: 'dhw_pct', n: 'Eau Chaude San.', color: '#F59E0B' },
+                                                { k: 'lighting_pct', n: 'Éclairage', color: '#EAB308' },
+                                                { k: 'ventilation_pct', n: 'Ventilation', color: '#8B5CF6' },
+                                                { k: 'other_specific_pct', n: 'Autres usages', color: '#94A3B8' }
+                                            ];
+                                            
+                                            const postesData = keysToMap.map(km => {
+                                                const obj = rawBd[km.k];
+                                                const pctRaw = obj && obj.value ? obj.value : (typeof obj === 'number' ? obj : 0);
+                                                const val = parseFloat(pctRaw);
+                                                return {
+                                                    name: km.n,
+                                                    pct: val,
+                                                    value: val,
+                                                    eur: Math.round(totalCost * (val / 100)),
+                                                    fill: km.color
+                                                };
+                                            }).filter(d => d.value > 0).sort((a,b) => b.value - a.value);
+
+                                            return (
+                                                <div className="flex flex-col items-center mt-2">
+                                                    <div className="w-full flex-shrink-0" style={{ height: '200px' }}>
+                                                        {window.Recharts ? (
+                                                            <window.Recharts.ResponsiveContainer width="100%" height="100%">
+                                                                <window.Recharts.PieChart>
+                                                                    <window.Recharts.Pie 
+                                                                        data={postesData} 
+                                                                        cx="50%" cy="50%" 
+                                                                        innerRadius={45} outerRadius={75} 
+                                                                        dataKey="value" nameKey="name" 
+                                                                        paddingAngle={2}
+                                                                        stroke="none"
+                                                                    >
+                                                                        {postesData.map((d, i) => <window.Recharts.Cell key={i} fill={d.fill} />)}
+                                                                    </window.Recharts.Pie>
+                                                                    <window.Recharts.Tooltip formatter={(v, n, p) => [`${p.payload.eur?.toLocaleString('fr-FR')} €/an (${p.payload.pct}%)`, n]} />
+                                                                </window.Recharts.PieChart>
+                                                            </window.Recharts.ResponsiveContainer>
+                                                        ) : (
+                                                            <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs text-center border border-dashed rounded-lg bg-slate-50">
+                                                                Le graphique de répartition nécessite l'activation de Recharts au chargement.
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="w-full flex flex-wrap justify-center gap-3 mt-1">
+                                                        {postesData.map((d, i) => (
+                                                            <div key={i} className="flex items-center gap-1.5 text-[10px] sm:text-xs">
+                                                                <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: d.fill }}></span>
+                                                                <span className="text-slate-600 font-medium">{d.name} <span className="opacity-60 tabular-nums">({d.pct}%)</span></span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })()}
+                                    </div>
                                 </div>
                             </div>
                         </div>
+
 
                         {/* Section Décret Tertiaire si surface >= 1000 m² */}
                         {parseFloat(reportPayload.inputs_summary.surface && reportPayload.inputs_summary.surface.value) >= 1000 && (
@@ -8655,10 +8758,49 @@
                                         <div className="font-bold text-[#102A43] mb-1">
                                             {lead_qualification.objective === 'comply_regulation' ? 'Votre délai réglementaire approche' : 'Votre projet est prêt à démarrer'}
                                         </div>
-                                        <div className="text-sm text-[#475569] mb-3">Nos experts peuvent vous accompagner gratuitement de l'audit à la mise en oeuvre.</div>
-                                        <button onClick={openCtaPanel} className="w-full sm:w-auto py-2.5 px-6 bg-[#1D4ED8] text-white rounded-lg text-sm font-semibold hover:bg-[#1E40AF] transition-colors">
-                                            Être mis en relation avec un expert
-                                        </button>
+                                        <div className="text-sm text-[#475569] mb-4">Nos experts peuvent vous accompagner gratuitement de l'audit à la mise en oeuvre.</div>
+                                        
+                                        {ctaSent ? (
+                                            <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 flex items-center gap-3">
+                                                <Icon icon="solar:check-circle-bold" className="text-green-500 text-xl shrink-0" />
+                                                <p className="text-green-800 font-medium text-sm">Demande envoyée. Nos experts vous contacteront rapidement.</p>
+                                            </div>
+                                        ) : (
+                                            <div className="flex flex-col gap-3 max-w-lg">
+                                                <textarea 
+                                                    value={ctaMessage} 
+                                                    onChange={(e) => setCtaMessage(e.target.value)} 
+                                                    placeholder="Précisions sur le site, le délai ou vos priorités... (facultatif)" 
+                                                    rows={2} 
+                                                    className="w-full px-3 py-2 border border-blue-100 bg-blue-50/50 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1D4ED8] resize-none transition-colors" 
+                                                />
+                                                <button 
+                                                    type="button"
+                                                    onClick={async () => {
+                                                        const nameToUse = reportPayload.inputs_summary?.name?.value || ctaName || "Contact Rapide";
+                                                        const leadPayload = newDiagnosticBuildReportCtaLeadPayload(reportPayload, nameToUse, ctaMessage);
+                                                        let leadId = reportPayload?.lead_submission_id || null;
+                                                        
+                                                        // Prevent double click
+                                                        if (ctaSent) return;
+
+                                                        if (!leadId) {
+                                                            const inserted = await newDiagnosticSubmitLead(leadPayload);
+                                                            if (inserted && inserted.id) {
+                                                                leadId = inserted.id;
+                                                                if (typeof onLeadSubmissionCreated === 'function') onLeadSubmissionCreated(leadId);
+                                                            }
+                                                        }
+                                                        
+                                                        await newDiagnosticSubmitPartnerLead(leadPayload, leadId);
+                                                        setCtaSent(true);
+                                                    }}
+                                                    className="w-full py-2.5 px-6 bg-[#1D4ED8] text-white rounded-lg text-sm font-semibold hover:bg-[#1E40AF] transition-colors shadow-sm"
+                                                >
+                                                    Confirmer ma demande de contact
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
@@ -8696,65 +8838,6 @@
                             </NewDiagnosticAccordion>
                         </div>
                     </div>
-
-                    {showCTAModal && (
-                        <div ref={ctaPanelRef} className="report-card p-6 md:p-8 mb-8 scroll-mt-6">
-                            <div className="flex items-center justify-between gap-4 mb-5">
-                                <div>
-                                    <p className="text-[11px] font-bold uppercase tracking-wide text-[#1D4ED8] mb-1">Mise en relation</p>
-                                    <h3 className="text-xl font-bold text-neutral-900">{nextStepCopy.cta}</h3>
-                                </div>
-                                <button type="button" onClick={() => setShowCTAModal(false)} aria-label="Fermer" className="text-neutral-400 hover:text-neutral-600 shrink-0">
-                                    <Icon icon="solar:close-circle-linear" className="text-2xl" />
-                                </button>
-                            </div>
-                            <p className="text-sm text-neutral-600 mb-5">Nous revenons vers vous pour confirmer les hypothèses, prioriser les actions et cadrer le budget de mise en œuvre.</p>
-                            {ctaSent ? (
-                                <div className="rounded-2xl border border-green-200 bg-green-50 px-4 py-5 text-center">
-                                    <Icon icon="solar:check-circle-bold" className="text-green-500 text-4xl mx-auto mb-2" />
-                                    <p className="text-green-800 font-medium">{nextStepCopy.success}</p>
-                                </div>
-                            ) : (
-                                <>
-                                    <div className="mb-4">
-                                        <label className="block text-sm font-medium text-neutral-700 mb-1">Votre nom</label>
-                                        <input type="text" value={ctaName} onChange={(e) => setCtaName(e.target.value)} placeholder="Prénom Nom" className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                                    </div>
-                                    <div className="mb-5">
-                                        <label className="block text-sm font-medium text-neutral-700 mb-1">Message (optionnel)</label>
-                                        <textarea value={ctaMessage} onChange={(e) => setCtaMessage(e.target.value)} placeholder="Précisions sur le site, le délai ou vos priorités..." rows={4} className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y" />
-                                    </div>
-                                    <div className="flex flex-col-reverse sm:flex-row gap-3">
-                                        <button type="button" onClick={() => setShowCTAModal(false)} className="flex-1 px-4 py-3 border border-neutral-300 text-neutral-700 rounded-xl text-sm font-medium hover:bg-neutral-50">Annuler</button>
-                                        <button
-                                            type="button"
-                                            onClick={async () => {
-                                                const leadPayload = newDiagnosticBuildReportCtaLeadPayload(reportPayload, ctaName, ctaMessage);
-                                                let leadSubmissionId = reportPayload && reportPayload.lead_submission_id
-                                                    ? reportPayload.lead_submission_id
-                                                    : null;
-
-                                                if (!leadSubmissionId) {
-                                                    const insertedLead = await newDiagnosticSubmitLead(leadPayload);
-                                                    leadSubmissionId = insertedLead && insertedLead.id ? insertedLead.id : null;
-
-                                                    if (leadSubmissionId && typeof onLeadSubmissionCreated === 'function') {
-                                                        onLeadSubmissionCreated(leadSubmissionId);
-                                                    }
-                                                }
-
-                                                await newDiagnosticSubmitPartnerLead(leadPayload, leadSubmissionId);
-                                                setCtaSent(true);
-                                            }}
-                                            className="flex-1 px-4 py-3 bg-[#1D4ED8] text-white rounded-xl text-sm font-semibold hover:bg-[#1E40AF]"
-                                        >
-                                            Envoyer
-                                        </button>
-                                    </div>
-                                </>
-                            )}
-                        </div>
-                    )}
                 </div>
             );
 

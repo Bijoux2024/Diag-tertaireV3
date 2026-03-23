@@ -2991,7 +2991,7 @@
                 icon: 'solar:shop-minimalistic-linear',
                 refKwh: 650,
                 source_level: 'source_partial',
-                source_ref: 'CEREN 2019 — Commerce alimentaire',
+                source_ref: 'CEREN 2019 · Commerce alimentaire',
                 source_note: 'Épicerie, supérette, supermarché avec froid intégré'
             },
             {
@@ -4444,7 +4444,7 @@
                 if (isValid) {
                     setErrors(prev => ({ ...prev, address: null, postalCode: null, city: null }));
                 } else {
-                    setErrors(prev => ({ ...prev, address: 'Adresse trop imprécise — précisez le numéro de voie' }));
+                    setErrors(prev => ({ ...prev, address: 'Adresse trop imprécise : précisez le numéro de voie' }));
                 }
             };
 
@@ -4568,7 +4568,7 @@
                 if (!formData.addressIsValid || !formData.address) {
                     newErrors.address = 'Veuillez sélectionner une adresse valide dans la liste proposée';
                 } else if (formData.addressPrecision === 'street') {
-                    newErrors.address = 'Adresse trop imprécise — veuillez préciser le numéro de voie';
+                    newErrors.address = 'Adresse trop imprécise : veuillez préciser le numéro de voie';
                 }
                 if (!formData.role) {
                     newErrors.role = 'Veuillez sélectionner votre rôle';
@@ -5285,27 +5285,6 @@
             const warnings = errors.filter(e => typeof e === 'object' && e.type === 'warning');
             const blockingErrors = errors.filter(e => typeof e === 'string');
 
-            const getConfidencePreview = () => {
-                let score = 50;
-                let reasons = [];
-                if (formData.elecKwh && parseFloat(formData.elecKwh) > 0) {
-                    score += 25; reasons.push('kWh élec fournis');
-                } else if (formData.elecEuro && parseFloat(formData.elecEuro) > 0) {
-                    score += 10; reasons.push('€ élec (converti)');
-                }
-                if (formData.gasKwh && parseFloat(formData.gasKwh) > 0) {
-                    score += 25; reasons.push('kWh gaz fournis');
-                } else if (formData.gasEuro && parseFloat(formData.gasEuro) > 0) {
-                    score += 10; reasons.push('€ gaz (converti)');
-                }
-                if (!formData.elecUsed && !formData.gasUsed) { score = 20; reasons = ['Aucune donnée énergie']; }
-                const level = score >= 75 ? 'high' : score >= 50 ? 'medium' : 'low';
-                const label = level === 'high' ? 'Élevée' : level === 'medium' ? 'Moyenne' : 'Faible';
-                const color = level === 'high' ? 'text-green-600 bg-green-50 border-green-200' : level === 'medium' ? 'text-yellow-600 bg-yellow-50 border-yellow-200' : 'text-red-600 bg-red-50 border-red-200';
-                const barColor = level === 'high' ? 'bg-green-500' : level === 'medium' ? 'bg-yellow-500' : 'bg-red-500';
-                return { score, level, label, color, barColor, reasons };
-            };
-            const confidencePreview = getConfidencePreview();
 
             return (
                 <div className="max-w-3xl mx-auto">
@@ -5338,23 +5317,6 @@
                         </div>
                     )}
 
-                    {/* Score confiance temps réel */}
-                    <div className={`mb-6 p-4 rounded-xl border ${confidencePreview.color}`}>
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <iconify-icon icon="solar:shield-check-linear" class="text-xl" />
-                                <span className="font-semibold text-sm">Confiance estimation : {confidencePreview.label}</span>
-                            </div>
-                            <span className="text-2xl font-bold">{confidencePreview.score}%</span>
-                        </div>
-                        <div className="mt-2 h-2 bg-white/50 rounded-full overflow-hidden">
-                            <div
-                                className={`h-full transition-all duration-500 ${confidencePreview.barColor}`}
-                                style={{ width: `${confidencePreview.score}%` }}
-                            />
-                        </div>
-                        <p className="text-xs mt-2 opacity-75">{confidencePreview.reasons.join(' • ')}</p>
-                    </div>
 
                     {/* Électricité */}
                     <div className="mb-8 p-6 bg-white border border-neutral-200 rounded-xl">
@@ -5670,7 +5632,7 @@
                                 />
                                 <div>
                                     <span className="text-sm font-semibold text-green-800">Je souhaite être mis en relation avec un expert partenaire</span>
-                                    <p className="text-xs text-green-700 mt-1">Optionnel — Un professionnel qualifié pourra vous contacter pour affiner votre projet.</p>
+                                    <p className="text-xs text-green-700 mt-1">Optionnel · Un professionnel qualifié pourra vous contacter pour affiner votre projet.</p>
                                 </div>
                             </label>
                         </div>
@@ -5705,13 +5667,13 @@
         const NEW_DIAGNOSTIC_TIER_LABELS = {
             light: {
                 label: 'Actions rapides (sans gros travaux)',
-                subtitle: 'Faible investissement — ROI court — sans travaux lourds',
+                subtitle: 'Faible investissement · ROI court · sans travaux lourds',
                 color: '#16A34A', bg: '#F0FDF4', border: '#BBF7D0',
                 icon: 'solar:bolt-bold'
             },
             heavy: {
                 label: 'Travaux de rénovation',
-                subtitle: 'Investissements structurants — aides disponibles — gains durables',
+                subtitle: 'Investissements structurants · aides disponibles · gains durables',
                 color: '#7C3AED', bg: '#F5F3FF', border: '#DDD6FE',
                 icon: 'solar:buildings-bold'
             }
@@ -7308,9 +7270,9 @@
 
             const KEYS = ['sans_travaux', 'avec_actions_rapides', 'avec_travaux'];
             const meta = {
-                sans_travaux:          { label: 'Sans action (cumulé)',           color: '#EF4444' },
-                avec_actions_rapides:  { label: 'Actions rapides (cumulé)',        color: '#F59E0B' },
-                avec_travaux:          { label: 'Toutes les actions (cumulé)',     color: '#10B981' },
+                sans_travaux:          { label: 'Situation actuelle (cumulé)',     color: '#EF4444' },
+                avec_actions_rapides:  { label: 'Actions sans travaux (cumulé)',   color: '#F59E0B' },
+                avec_travaux:          { label: 'Actions légères + travaux (cumulé)', color: '#10B981' },
             };
 
             const byKey = {};
@@ -7355,33 +7317,34 @@
 
             return (
                 <div>
-                    <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-slate-500 mb-4">
+                    {/* Légende lisible avec couleurs */}
+                    <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mb-5 p-3 bg-slate-50 rounded-xl border border-slate-200">
                         <div className="flex items-center gap-2">
-                            <span className="inline-block w-8 h-0.5 bg-red-400" style={{ borderTop: '2px dashed #EF4444', background: 'none' }}></span>
-                            <span>Sans action</span>
+                            <span className="inline-block w-8 shrink-0" style={{ borderTop: '2px dashed #EF4444', height: 0 }}></span>
+                            <span className="text-xs font-semibold text-slate-700">Situation actuelle</span>
                         </div>
                         {projection.hasLightScenario && (
                             <div className="flex items-center gap-2">
-                                <span className="inline-block w-8 h-0.5" style={{ borderTop: '2px solid #F59E0B', background: 'none' }}></span>
-                                <span>Actions rapides</span>
+                                <span className="inline-block w-8 shrink-0" style={{ borderTop: '2px dashed #F59E0B', height: 0 }}></span>
+                                <span className="text-xs font-semibold text-slate-700">Actions sans travaux</span>
                             </div>
                         )}
                         <div className="flex items-center gap-2">
-                            <span className="inline-block w-8 h-0.5" style={{ borderTop: '2.5px solid #10B981', background: 'none' }}></span>
-                            <span>Avec toutes les actions</span>
+                            <span className="inline-block w-8 shrink-0" style={{ borderTop: '2.5px solid #10B981', height: 0 }}></span>
+                            <span className="text-xs font-semibold text-slate-700">Actions légères + travaux</span>
                         </div>
-                        <span className="ml-auto text-slate-400">Inflation pondérée : {projection.tauxPct}%/an</span>
+                        <span className="ml-auto text-[11px] text-slate-400 shrink-0">Inflation : {projection.tauxPct}%/an</span>
                     </div>
-                    <div className="h-[320px] w-full">
+                    <div className="h-[340px] w-full">
                         <GrResponsive width="100%" height="100%">
-                            <ComposedChart data={projection.data} margin={{ top: 12, right: 18, bottom: 6, left: 2 }}>
+                            <ComposedChart data={projection.data} margin={{ top: 12, right: 24, bottom: 6, left: 2 }}>
                                 <defs>
                                     <linearGradient id="newDiagProjSans" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#EF4444" stopOpacity={0.08} />
+                                        <stop offset="5%" stopColor="#EF4444" stopOpacity={0.10} />
                                         <stop offset="95%" stopColor="#EF4444" stopOpacity={0} />
                                     </linearGradient>
                                     <linearGradient id="newDiagProjAvec" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#10B981" stopOpacity={0.12} />
+                                        <stop offset="5%" stopColor="#10B981" stopOpacity={0.14} />
                                         <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
@@ -7392,21 +7355,23 @@
                                     tickLine={false}
                                     axisLine={false}
                                     tickFormatter={v => newDiagnosticFormatCompactCurrencyTick(v)}
+                                    width={54}
                                 />
                                 <GrTooltip content={props => <NewDiagnosticProjectionTooltipCompact {...props} projection={projection} />} />
                                 <Area type="monotone" dataKey="sans_travaux" stroke="none" fill="url(#newDiagProjSans)" />
                                 <Area type="monotone" dataKey="avec_travaux" stroke="none" fill="url(#newDiagProjAvec)" />
-                                <Line type="monotone" dataKey="sans_travaux" name="Sans action" stroke="#EF4444" strokeWidth={2.2} strokeDasharray="6 3" dot={false} />
+                                <Line type="monotone" dataKey="sans_travaux" name="Situation actuelle" stroke="#EF4444" strokeWidth={2.5} strokeDasharray="6 3" dot={false} />
                                 {projection.hasLightScenario && (
-                                    <Line type="monotone" dataKey="avec_actions_rapides" name="Actions rapides" stroke="#F59E0B" strokeWidth={2} strokeDasharray="3 2" dot={false} />
+                                    <Line type="monotone" dataKey="avec_actions_rapides" name="Actions sans travaux" stroke="#F59E0B" strokeWidth={2} strokeDasharray="4 2" dot={false} />
                                 )}
-                                <Line type="monotone" dataKey="avec_travaux" name="Avec toutes les actions" stroke="#10B981" strokeWidth={2.8} dot={false} />
+                                <Line type="monotone" dataKey="avec_travaux" name="Actions légères + travaux" stroke="#10B981" strokeWidth={3} dot={false} />
                                 {projection.roiAnnee && (
                                     <ReferenceLine
                                         x={projection.roiAnnee}
                                         stroke="#1D4ED8"
+                                        strokeWidth={1.5}
                                         strokeDasharray="4 2"
-                                        label={{ value: `Rentable : ${projection.roiAnnee}`, position: 'insideTopLeft', fill: '#1D4ED8', fontSize: 11, fontWeight: 700 }}
+                                        label={{ value: `Rentabilité : ${projection.roiAnnee}`, position: 'insideTopRight', fill: '#1D4ED8', fontSize: 11, fontWeight: 700 }}
                                     />
                                 )}
                             </ComposedChart>
@@ -7428,30 +7393,53 @@
             const posMedian = getPos(median);
             const posHigh = getPos(high);
 
-            const Marker = ({ left, label, color = '#64748B' }) => (
-                <div className="absolute -top-8 -translate-x-1/2" style={{ left: `${left}%` }}>
-                    <p className="text-[10px] font-semibold whitespace-nowrap" style={{ color }}>{label}</p>
-                    <div className="w-px h-6 mx-auto bg-neutral-300 mt-1"></div>
-                </div>
-            );
-
             return (
-                <div className="relative px-2 pt-12 pb-10">
-                    <div className="h-4 w-full rounded-full bg-gradient-to-r from-[#DCFCE7] via-[#FEF3C7] to-[#FEE2E2] border border-neutral-200 relative">
-                        <Marker left={posLow} label={`Zone basse ${Math.round(low)}`} color="#059669" />
-                        <Marker left={posMedian} label={`Mediane ${Math.round(median)}`} color="#D97706" />
-                        <Marker left={posHigh} label={`Zone haute ${Math.round(high)}`} color="#DC2626" />
+                <div className="relative px-2 pt-14 pb-12">
+                    {/* Étiquettes de référence au-dessus */}
+                    <div className="absolute top-0 left-2 right-2" style={{ height: 52 }}>
+                        {[
+                            { pos: posLow,    label: `Bas secteur`,        sub: `${Math.round(low)} kWh/m²`, color: '#059669' },
+                            { pos: posMedian, label: `Médiane`,            sub: `${Math.round(median)} kWh/m²`, color: '#D97706' },
+                            { pos: posHigh,   label: `Haut secteur`,       sub: `${Math.round(high)} kWh/m²`, color: '#DC2626' },
+                        ].map(({ pos, label, sub, color }, i) => (
+                            <div key={i} className="absolute flex flex-col items-center" style={{ left: `${pos}%`, transform: 'translateX(-50%)' }}>
+                                <p className="text-[10px] font-bold whitespace-nowrap" style={{ color }}>{label}</p>
+                                <p className="text-[9px] whitespace-nowrap text-slate-400">{sub}</p>
+                                <div className="w-px h-3 mt-0.5" style={{ background: color, opacity: 0.4 }}></div>
+                            </div>
+                        ))}
+                    </div>
 
-                        <div className="absolute -top-2 bottom-0 w-[2px] bg-[#0F172A]" style={{ left: `${posCurrent}%` }}>
-                            <div className="absolute -top-7 -translate-x-1/2 whitespace-nowrap bg-[#0F172A] text-white text-[10px] px-2 py-0.5 rounded-md font-semibold">
-                                Actuel {Math.round(intensity)}
+                    {/* Barre de gradient */}
+                    <div className="h-6 w-full rounded-full border border-neutral-200 relative overflow-visible"
+                         style={{ background: 'linear-gradient(to right, #DCFCE7 0%, #FEF3C7 50%, #FEE2E2 100%)' }}>
+
+                        {/* Marqueur niveau actuel */}
+                        <div className="absolute top-0 bottom-0 flex items-center" style={{ left: `${posCurrent}%`, transform: 'translateX(-50%)' }}>
+                            <div className="w-5 h-5 rounded-full border-2 border-white shadow-md flex items-center justify-center" style={{ background: '#0F172A' }}>
+                                <div className="w-2 h-2 rounded-full bg-white"></div>
                             </div>
                         </div>
 
-                        <div className="absolute -top-2 bottom-0 w-[2px] bg-[#059669]" style={{ left: `${posTarget}%` }}>
-                            <div className="absolute top-5 -translate-x-1/2 whitespace-nowrap bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] px-2 py-0.5 rounded-md font-semibold">
-                                Cible {Math.round(targetIntensity)}
+                        {/* Marqueur cible */}
+                        <div className="absolute top-0 bottom-0 flex items-center" style={{ left: `${posTarget}%`, transform: 'translateX(-50%)' }}>
+                            <div className="w-5 h-5 rounded-full border-2 border-white shadow-md flex items-center justify-center" style={{ background: '#059669' }}>
+                                <div className="w-2 h-2 rounded-full bg-white"></div>
                             </div>
+                        </div>
+                    </div>
+
+                    {/* Labels en dessous des marqueurs */}
+                    <div className="relative" style={{ height: 32 }}>
+                        <div className="absolute flex flex-col items-center" style={{ left: `${posCurrent}%`, transform: 'translateX(-50%)' }}>
+                            <div className="w-px h-2 bg-slate-600"></div>
+                            <p className="text-[10px] font-bold whitespace-nowrap bg-slate-900 text-white px-1.5 py-0.5 rounded-md mt-0.5">{Math.round(intensity)} kWh/m²/an</p>
+                            <p className="text-[9px] text-slate-500 mt-0.5">Niveau actuel</p>
+                        </div>
+                        <div className="absolute flex flex-col items-center" style={{ left: `${posTarget}%`, transform: 'translateX(-50%)' }}>
+                            <div className="w-px h-2 bg-emerald-600"></div>
+                            <p className="text-[10px] font-bold whitespace-nowrap bg-emerald-600 text-white px-1.5 py-0.5 rounded-md mt-0.5">{Math.round(targetIntensity)} kWh/m²/an</p>
+                            <p className="text-[9px] text-emerald-600 font-medium mt-0.5">Cible estimée</p>
                         </div>
                     </div>
                 </div>
@@ -7602,18 +7590,18 @@
                 carHint: 'équivalent émissions annuelles'
             },
             nextStep: {
-                title: 'Prochaine étape recommandée',
-                intro: "Ce pré-diagnostic met en évidence un potentiel d'amélioration. Pour identifier la meilleure solution, l'avis du bon expert est maintenant nécessaire.",
+                title: 'Confirmez vos leviers avec un expert',
+                intro: "Chaque bâtiment est différent. Un échange de 20 à 30 minutes avec un professionnel permet de confirmer les actions prioritaires, d'affiner le budget réel et de structurer les premières étapes concrètes.",
                 bullets: [
-                    'Nos partenaires peuvent confirmer les postes à traiter.',
-                    'Ils valident la faisabilité selon votre site.',
-                    'Ils précisent le budget réel et les solutions adaptées.',
-                    'Ils vous orientent vers la meilleure suite à donner.'
+                    'Confirmer les postes à fort potentiel selon votre configuration réelle.',
+                    'Affiner le budget et identifier les aides auxquelles vous avez droit.',
+                    'Identifier les actions faisables rapidement, sans grands travaux.',
+                    'Structurer un plan adapté à votre horizon de décision.'
                 ],
-                proof: "Seuls des partenaires qualifiés peuvent confirmer la solution la plus adaptée à votre site, à votre usage et à votre budget.",
-                cta: 'Accepter la mise en relation',
+                proof: "Gratuit, sans engagement. Votre rapport est transmis à un partenaire qualifié qui vous contacte sous 48h.",
+                cta: 'Être mis en relation gratuitement',
                 secondary: 'Conserver ce rapport',
-                success: 'Votre demande de mise en relation est enregistrée. Un partenaire qualifié reviendra vers vous avec une première orientation.'
+                success: 'Votre demande est enregistrée. Un partenaire qualifié vous contactera sous 48h avec une première orientation adaptée à votre site.'
             }
         };
 
@@ -8096,13 +8084,6 @@
             const co2EviteAnnuel = Math.max(0, Math.round((composite.annual_kwh.value || 0) * weightedCo2Factor));
             const co2Eq = newDiagnosticGetCO2Equivalences(co2EviteAnnuel);
 
-            // Confiance -> badge
-            const confidenceColors = {
-                strong: 'bg-emerald-500/15 text-emerald-100 border border-emerald-400/20',
-                medium: 'bg-amber-500/15 text-amber-100 border border-amber-300/20',
-                low: 'bg-rose-500/15 text-rose-100 border border-rose-300/20'
-            };
-            const confidenceTone = confidenceColors[confidence.level] || confidenceColors.medium;
 
             const formatMoney = (value) => newDiagnosticFormatCurrency(value);
             const formatKwh = (value) => newDiagnosticFormatUnitValue(value, 'kWh/an');
@@ -8261,14 +8242,6 @@
             return (
                 <div className="new-diagnostic-report fade-in py-12 px-4">
                     <div className="max-w-5xl mx-auto">
-                        <div className="report-card p-0 overflow-hidden mb-6 border-[#F59E0B]/20">
-                            <div className="px-5 py-3 bg-[#FFF8EE] flex items-start gap-3">
-                                <Icon icon="solar:danger-triangle-bold" className="text-[#F59E0B] text-lg mt-0.5" />
-                                <p className="text-xs text-[#92400E] leading-relaxed">
-                                    <span className="font-bold">Note d’interprétation :</span> ce pré-diagnostic est un outil d’aide à la décision basé sur des références statistiques. Il ne remplace pas une étude technique sur site.
-                                </p>
-                            </div>
-                        </div>
 
                         <div className="report-card p-0 overflow-hidden mb-8">
                             <div className="report-hero-gradient px-6 py-7 md:px-8 md:py-8 text-white">
@@ -8310,7 +8283,6 @@
                                     <div className="w-full lg:w-auto flex flex-col gap-3 lg:items-end">
                                         <div className="flex flex-wrap gap-2 lg:justify-end">
                                             <span className="report-chip bg-white/10 text-white border border-white/10">{roleLabel}</span>
-                                            <span className={`report-chip ${confidenceTone}`}>Confiance : {confidence.label}</span>
                                         </div>
                                         <p className="text-xs text-slate-300 lg:text-right">{new Date(reportPayload.generated_at).toLocaleDateString('fr-FR')} - {horizonLabel}</p>
                                         {serverPdfUrl ? (
@@ -8391,13 +8363,8 @@
 
                                 <div className="grid lg:grid-cols-2 gap-5 mb-8">
                                     <div className="report-subcard p-5">
-                                        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 mb-4">
-                                            <div>
-                                                <p className="text-xs font-bold uppercase tracking-wide text-slate-500 mb-1">Positionnement sectoriel</p>
-                                                <p className="text-sm font-semibold text-slate-900">{benchmarkGapText}</p>
-                                            </div>
-                                            <p className="text-xs text-slate-400 md:text-right">Source : {benchmark.source_ref || 'Références sectorielles'}</p>
-                                        </div>
+                                        <p className="text-xs font-bold uppercase tracking-wide text-slate-500 mb-1">Positionnement sectoriel</p>
+                                        <p className="text-base font-bold text-slate-900 mb-1">{benchmarkGapText}</p>
                                         <NewDiagnosticPositioningGauge
                                             intensity={benchmark.site_intensity.value}
                                             low={benchmark.benchmark_low.value}
@@ -8405,17 +8372,16 @@
                                             high={benchmark.benchmark_high.value}
                                             targetIntensity={targetIntensity}
                                         />
-                                        <p className="text-sm text-slate-600 mt-2">{benchmarkComment}</p>
+                                        <p className="text-sm text-slate-600 mt-1">{benchmarkComment}</p>
+                                        <p className="text-[10px] text-slate-400 mt-2">Source : {benchmark.source_ref || 'Références sectorielles'}</p>
                                     </div>
 
                                     <div className="report-subcard p-5">
                                         <div className="mb-3">
-                                            <p className="text-xs font-bold uppercase tracking-wide text-slate-500 mb-1">Répartition indicative par usage</p>
-                                            <p className="text-sm font-semibold text-slate-900">Selon votre secteur d'activité</p>
+                                            <p className="text-xs font-bold uppercase tracking-wide text-slate-500 mb-1">Répartition par usage</p>
+                                            <p className="text-base font-bold text-slate-900">Lecture indicative selon votre secteur</p>
                                         </div>
                                         {(() => {
-                                            // Fix: lire breakdown_pct (structure réelle du moteur)
-                                            // La clé vent_aux_pct est utilisée par le moteur (et non ventilation_pct)
                                             const usageBd = reportPayload.usage_breakdown || {};
                                             const brkPct = usageBd.breakdown_pct && typeof usageBd.breakdown_pct === 'object' ? usageBd.breakdown_pct : usageBd;
                                             const totalCost = (reportPayload.calculation_results?.total_cost_euro_an?.value) || 0;
@@ -8447,16 +8413,18 @@
                                                 </div>
                                             );
 
+                                            const topPoste = postesData[0];
+
                                             return (
-                                                <div className="mt-1">
-                                                    <div className="w-full" style={{ height: '185px' }}>
+                                                <div>
+                                                    <div className="w-full" style={{ height: '220px' }}>
                                                         {window.Recharts ? (
                                                             <window.Recharts.ResponsiveContainer width="100%" height="100%">
                                                                 <window.Recharts.PieChart>
                                                                     <window.Recharts.Pie
                                                                         data={postesData}
                                                                         cx="50%" cy="50%"
-                                                                        innerRadius={44} outerRadius={72}
+                                                                        innerRadius={52} outerRadius={88}
                                                                         dataKey="value" nameKey="name"
                                                                         paddingAngle={2}
                                                                         stroke="none"
@@ -8477,17 +8445,28 @@
                                                             </div>
                                                         )}
                                                     </div>
-                                                    <div className="flex flex-wrap justify-center gap-x-3 gap-y-1.5 mt-2">
+                                                    {/* Légende améliorée avec montants */}
+                                                    <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 mt-3">
                                                         {postesData.map((d, i) => (
-                                                            <div key={i} className="flex items-center gap-1.5 text-[10px]">
-                                                                <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: d.fill }}></span>
-                                                                <span className="text-slate-600 font-medium">{d.name}</span>
-                                                                <span className="text-slate-400 tabular-nums">{Math.round(d.pct)}%</span>
+                                                            <div key={i} className="flex items-center gap-2">
+                                                                <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: d.fill }}></span>
+                                                                <span className="text-[11px] text-slate-700 font-medium flex-1 min-w-0 truncate">{d.name}</span>
+                                                                <span className="text-[11px] font-bold tabular-nums" style={{ color: d.fill }}>{Math.round(d.pct)}%</span>
                                                             </div>
                                                         ))}
                                                     </div>
-                                                    <p className="text-[10px] text-slate-400 mt-3 italic leading-relaxed">
-                                                        Répartition indicative basée sur votre secteur d'activité. Elle n'est pas issue d'une mesure réelle du bâtiment.
+                                                    {/* Interprétation ciblée sur le poste dominant */}
+                                                    {topPoste && (
+                                                        <div className="mt-3 p-3 rounded-xl bg-slate-50 border border-slate-200">
+                                                            <p className="text-[11px] text-slate-700 leading-relaxed">
+                                                                <span className="font-bold" style={{ color: topPoste.fill }}>{topPoste.name}</span> est le premier poste estimé
+                                                                ({Math.round(topPoste.pct)}% ≈ {topPoste.eur.toLocaleString('fr-FR')} €/an), ce qui explique pourquoi
+                                                                les actions liées à ce poste ressortent en priorité.
+                                                            </p>
+                                                        </div>
+                                                    )}
+                                                    <p className="text-[10px] text-slate-400 mt-2 italic">
+                                                        Estimation typologique, non issue d'un relevé réel poste par poste.
                                                     </p>
                                                 </div>
                                             );
@@ -8507,7 +8486,7 @@
                                     </div>
                                     <div className="flex-1">
                                         <h2 className="text-xl font-bold text-neutral-900 mb-2">
-                                            Décret Tertiaire — Votre bâtiment est concerné
+                                            Décret Tertiaire : votre bâtiment est concerné
                                         </h2>
                                         <p className="text-sm text-neutral-600 mb-4">
                                             Avec une surface de <strong>{newDiagnosticFormatInteger(surfaceValue)} m²</strong>,
@@ -8542,10 +8521,9 @@
                                         <Icon icon="solar:graph-new-up-bold" className="text-[#1D4ED8]" />
                                         Projection financière sur 10 ans
                                     </h2>
-                                    <p className="text-sm text-slate-500 mt-2">Comparaison du cumul de charges sans action et avec les 3 actions prioritaires visibles.</p>
+                                    <p className="text-sm text-slate-500 mt-2">Cumul des charges énergétiques selon trois scénarios. Chaque courbe intègre l'inflation et le coût réel d'investissement.</p>
                                 </div>
-                                <div className="text-xs text-slate-500 md:text-right">
-                                    <p>Inflation pondérée : {projection.tauxPct}%/an</p>
+                                <div className="text-xs text-slate-400 md:text-right shrink-0">
                                     <p>Aides estimées déduites : {formatMoney(projection.aidesTotal)}</p>
                                 </div>
                             </div>
@@ -8561,30 +8539,36 @@
                                 const d3 = projection.data.find(d => d.annee === 'A+3') || {};
                                 const d10 = projection.data[projection.data.length - 1] || {};
                                 const gainCumul10 = Math.max(0, (d10.sans_travaux || 0) - (d10.avec_travaux || 0));
+                                const diff1 = Math.max(0, (d1.sans_travaux || 0) - (d1.avec_travaux || 0));
+                                const diff3 = Math.max(0, (d3.sans_travaux || 0) - (d3.avec_travaux || 0));
                                 return (
-                                    <div className="mt-5 space-y-3">
+                                    <div className="mt-5">
                                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                                             <div className="report-subcard p-4 text-center">
-                                                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400 mb-1">A+1 sans action</p>
-                                                <p className="text-lg font-black text-slate-700">{formatMoney(d1.sans_travaux || 0)}</p>
-                                                <p className="text-[10px] text-emerald-600 font-semibold mt-0.5">Avec actions : {formatMoney(d1.avec_travaux || 0)}</p>
+                                                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400 mb-2">Année 1</p>
+                                                <p className="text-base font-black text-slate-800">{formatMoney(d1.sans_travaux || 0)}</p>
+                                                <p className="text-[10px] text-slate-500 mt-0.5">sans action</p>
+                                                {diff1 > 0 && <p className="text-[11px] text-emerald-600 font-bold mt-1.5">-{formatMoney(diff1)} avec actions</p>}
                                             </div>
                                             <div className="report-subcard p-4 text-center">
-                                                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400 mb-1">A+3 sans action</p>
-                                                <p className="text-lg font-black text-slate-700">{formatMoney(d3.sans_travaux || 0)}</p>
-                                                <p className="text-[10px] text-emerald-600 font-semibold mt-0.5">Avec actions : {formatMoney(d3.avec_travaux || 0)}</p>
+                                                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400 mb-2">Année 3</p>
+                                                <p className="text-base font-black text-slate-800">{formatMoney(d3.sans_travaux || 0)}</p>
+                                                <p className="text-[10px] text-slate-500 mt-0.5">sans action</p>
+                                                {diff3 > 0 && <p className="text-[11px] text-emerald-600 font-bold mt-1.5">-{formatMoney(diff3)} avec actions</p>}
                                             </div>
                                             <div className="report-subcard p-4 text-center">
-                                                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400 mb-1">A+10 sans action</p>
-                                                <p className="text-lg font-black text-slate-700">{formatMoney(d10.sans_travaux || 0)}</p>
-                                                <p className="text-[10px] text-emerald-600 font-semibold mt-0.5">Avec actions : {formatMoney(d10.avec_travaux || 0)}</p>
+                                                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400 mb-2">Année 10</p>
+                                                <p className="text-base font-black text-slate-800">{formatMoney(d10.sans_travaux || 0)}</p>
+                                                <p className="text-[10px] text-slate-500 mt-0.5">sans action</p>
+                                                <p className="text-[11px] text-emerald-600 font-bold mt-1.5">{formatMoney(d10.avec_travaux || 0)} avec actions</p>
                                             </div>
-                                            <div className="report-subcard p-4 text-center bg-emerald-50 border-emerald-200">
-                                                <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-600 mb-1">Gain cumulé 10 ans</p>
-                                                <p className="text-lg font-black text-emerald-700">{formatMoney(gainCumul10)}</p>
-                                                <p className="text-[10px] text-slate-500 font-semibold mt-0.5">Rentable : {projection.roiAnnee || 'À confirmer'}</p>
+                                            <div className="report-subcard p-4 text-center" style={{ background: 'linear-gradient(135deg, #ECFDF5 0%, #F0FDF4 100%)', borderColor: '#86EFAC' }}>
+                                                <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-600 mb-2">Gain cumulé 10 ans</p>
+                                                <p className="text-xl font-black text-emerald-700">{formatMoney(gainCumul10)}</p>
+                                                <p className="text-[10px] text-slate-500 mt-1.5">Rentabilité : <span className="font-bold text-slate-700">{projection.roiAnnee || 'À confirmer'}</span></p>
                                             </div>
                                         </div>
+                                        <p className="text-[10px] text-slate-400 italic mt-3">Lecture indicative selon votre activité. Montants cumulés incluant investissement et inflation énergie.</p>
                                     </div>
                                 );
                             })()}
@@ -8735,7 +8719,7 @@
                                     <>
                                         <ActionGroup
                                             title="Sans gros travaux"
-                                            subtitle="Faible investissement — mise en œuvre simple — ROI rapide"
+                                            subtitle="Faible investissement · mise en œuvre simple · ROI rapide"
                                             groupActions={lightGroup}
                                             icon="solar:bolt-bold"
                                             hdrBg="bg-emerald-50 border border-emerald-100"
@@ -8743,7 +8727,7 @@
                                         />
                                         <ActionGroup
                                             title="Actions structurantes"
-                                            subtitle="Investissements rentables sur la durée — aides disponibles"
+                                            subtitle="Investissements rentables sur la durée · aides disponibles"
                                             groupActions={heavyGroup}
                                             icon="solar:buildings-bold"
                                             hdrBg="bg-indigo-50 border border-indigo-100"
@@ -8765,68 +8749,103 @@
                         </div>
 
                         <div className="report-card p-6 md:p-8 mb-8">
-                            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-5">
-                                <div>
-                                    <h2 className="report-section-title">
-                                        <Icon icon="solar:leaf-bold" className="text-[#16A34A]" />
-                                        {impactCopy.title}
-                                    </h2>
-                                    <p className="text-sm text-slate-500 mt-2">{impactCopy.subtitle}</p>
-                                </div>
-                            </div>
-                            <div className="grid gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
-                                <div className="rounded-[28px] border border-emerald-300 bg-gradient-to-br from-emerald-50 via-emerald-50/80 to-white p-5 md:p-6">
-                                    <div className="w-12 h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center mb-4 shadow-sm">
-                                        <Icon icon="solar:leaf-bold" className="text-[26px]" />
+                            <h2 className="report-section-title mb-1">
+                                <Icon icon="solar:leaf-bold" className="text-[#16A34A]" />
+                                {impactCopy.title}
+                            </h2>
+                            <p className="text-sm text-slate-500 mb-6">{impactCopy.subtitle}</p>
+                            <div className="grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+                                {/* Bloc CO2 principal */}
+                                <div className="rounded-[28px] border-2 border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-emerald-50/40 p-6 md:p-8 flex flex-col justify-between">
+                                    <div className="flex items-center gap-3 mb-5">
+                                        <div className="w-14 h-14 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shadow-md shrink-0">
+                                            <Icon icon="solar:leaf-bold" className="text-[32px]" />
+                                        </div>
+                                        <div>
+                                            <p className="text-[11px] font-bold uppercase tracking-widest text-emerald-700">{impactCopy.annualLabel}</p>
+                                            <p className="text-[10px] text-slate-500 mt-0.5">Actions prioritaires combinées</p>
+                                        </div>
                                     </div>
-                                    <p className="text-[11px] font-bold uppercase tracking-wide text-emerald-800 mb-2">{impactCopy.annualLabel}</p>
-                                    <p className="text-3xl md:text-4xl font-black text-slate-900">{formatKgCo2(co2EviteAnnuel)}</p>
-                                    <p className="text-sm text-slate-600 mt-3 max-w-lg">{impactCopy.annualHint}</p>
+                                    <p className="text-4xl md:text-5xl font-black text-slate-900 leading-none">{formatKgCo2(co2EviteAnnuel)}</p>
+                                    <p className="text-sm text-slate-600 mt-4 leading-relaxed">{impactCopy.annualHint}</p>
                                 </div>
-                                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-                                    <ImpactEquivalenceCard icon="solar:leaf-bold" title="Arbres — équivalent annuel" value={newDiagnosticFormatInteger(co2Eq.arbres)} hint="selon référence de séquestration ADEME" iconClass="bg-emerald-600 text-white border-emerald-600 shadow-sm" />
-                                    <ImpactEquivalenceCard icon="solar:car-bold" title="Voitures retirées de la route" value={newDiagnosticFormatDecimal(co2Eq.voitures, 1)} hint="équivalent émissions annuelles moyennes" iconClass="bg-slate-700 text-white border-slate-700 shadow-sm" />
+                                {/* Équivalences */}
+                                <div className="grid gap-3">
+                                    <div className="report-subcard p-5 flex items-center gap-4">
+                                        <div className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-sm shrink-0 bg-emerald-600 text-white">
+                                            <Icon icon="solar:trees-bold-duotone" className="text-[36px]" />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="text-[32px] font-black text-slate-900 leading-none">{newDiagnosticFormatInteger(co2Eq.arbres)}</p>
+                                            <p className="text-xs font-bold uppercase tracking-wide text-slate-500 mt-1.5">Arbres équivalents / an</p>
+                                            <p className="text-[10px] text-slate-400 mt-0.5">séquestration ADEME</p>
+                                        </div>
+                                    </div>
+                                    <div className="report-subcard p-5 flex items-center gap-4">
+                                        <div className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-sm shrink-0 bg-slate-800 text-white">
+                                            <Icon icon="solar:car-bold-duotone" className="text-[36px]" />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="text-[32px] font-black text-slate-900 leading-none">{newDiagnosticFormatDecimal(co2Eq.voitures, 1)}</p>
+                                            <p className="text-xs font-bold uppercase tracking-wide text-slate-500 mt-1.5">Voitures retirées / an</p>
+                                            <p className="text-[10px] text-slate-400 mt-0.5">émissions moyennes annuelles</p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         <div className="report-card p-6 md:p-8 mb-8">
-                            <div className="rounded-[24px] border border-[#DBEAFE] bg-gradient-to-r from-[#EFF6FF] via-white to-[#F8FAFC] p-6 md:p-7">
+                            <div className="rounded-[24px] border-2 border-[#BFDBFE] bg-gradient-to-br from-[#EFF6FF] via-white to-[#F0FDF4] p-6 md:p-8">
                                 <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
                                     <div className="min-w-0 flex-1">
-                                        <div className="flex items-center gap-2 text-[#1D4ED8] mb-3">
-                                            <Icon icon="solar:check-circle-bold" className="text-xl" />
-                                            <p className="text-xs font-bold uppercase tracking-wide">Prochaine étape recommandée</p>
+                                        <div className="inline-flex items-center gap-2 text-[#1D4ED8] mb-4 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-200">
+                                            <Icon icon="solar:chat-round-call-bold" className="text-base" />
+                                            <p className="text-xs font-bold uppercase tracking-wide">Prochaine étape</p>
                                         </div>
-                                        <h2 className="text-2xl font-bold text-[#102A43]">{nextStepCopy.title}</h2>
-                                        <p className="text-sm text-slate-600 mt-3 max-w-2xl">{nextStepCopy.intro}</p>
-                                        <div className="grid gap-3 mt-5 sm:grid-cols-2">
+                                        <h2 className="text-2xl font-black text-[#102A43] leading-tight">{nextStepCopy.title}</h2>
+                                        <p className="text-sm text-slate-600 mt-3 max-w-2xl leading-relaxed">{nextStepCopy.intro}</p>
+                                        <div className="grid gap-2.5 mt-5 sm:grid-cols-2">
                                             {nextStepCopy.bullets.slice(0, 4).map((bullet, index) => (
-                                                <div key={index} className="rounded-2xl border border-white bg-white/80 px-4 py-3 flex items-start gap-3 shadow-sm">
-                                                    <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#DBEAFE] text-[#1D4ED8] text-xs font-bold shrink-0">{index + 1}</span>
+                                                <div key={index} className="rounded-2xl border border-slate-200 bg-white px-4 py-3 flex items-start gap-3 shadow-sm">
+                                                    <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#1D4ED8] text-white text-xs font-bold shrink-0 mt-0.5">{index + 1}</span>
                                                     <p className="text-sm text-slate-700 leading-relaxed">{bullet}</p>
                                                 </div>
                                             ))}
                                         </div>
                                     </div>
-                                    <div className="w-full lg:w-[280px] flex flex-col gap-3 lg:self-start">
+                                    <div className="w-full lg:w-[300px] flex flex-col gap-4 lg:self-start">
                                         {hasCtaConfirmation ? (
-                                            <div className="rounded-2xl border border-green-200 bg-green-50 px-4 py-4">
+                                            <div className="rounded-2xl border border-green-200 bg-green-50 px-5 py-5">
                                                 <div className="flex items-start gap-3">
-                                                    <Icon icon="solar:check-circle-bold" className="text-green-600 text-2xl shrink-0" />
-                                                    <p className="text-sm text-green-800 font-medium">{nextStepCopy.success}</p>
+                                                    <Icon icon="solar:check-circle-bold" className="text-green-600 text-2xl shrink-0 mt-0.5" />
+                                                    <p className="text-sm text-green-800 font-medium leading-relaxed">{nextStepCopy.success}</p>
                                                 </div>
                                             </div>
                                         ) : (
-                                            <button
-                                                onClick={openCtaPanel}
-                                                className="w-full px-5 py-3.5 bg-[#1D4ED8] text-white rounded-xl text-sm font-bold hover:bg-[#1E40AF] transition-colors shadow-md flex items-center justify-center gap-2"
-                                            >
-                                                <Icon icon="solar:users-group-rounded-bold" className="text-lg" />
-                                                Être mis en relation gratuitement
-                                            </button>
+                                            <div className="flex flex-col gap-2">
+                                                <button
+                                                    onClick={openCtaPanel}
+                                                    className="w-full px-5 py-4 bg-[#1D4ED8] text-white rounded-2xl text-sm font-bold hover:bg-[#1E40AF] active:scale-[0.99] transition-all shadow-lg flex items-center justify-center gap-2"
+                                                >
+                                                    <Icon icon="solar:users-group-rounded-bold" className="text-lg shrink-0" />
+                                                    Être mis en relation gratuitement
+                                                </button>
+                                                <p className="text-[11px] text-center text-slate-500 leading-relaxed px-1">{nextStepCopy.proof}</p>
+                                            </div>
                                         )}
-                                        <p className="text-xs text-slate-500 leading-relaxed">{nextStepCopy.proof}</p>
+                                        <div className="flex flex-col gap-2 p-4 rounded-2xl bg-white border border-slate-200">
+                                            {[
+                                                { icon: 'solar:shield-check-bold', text: 'Aucun engagement ni frais', color: 'text-emerald-600' },
+                                                { icon: 'solar:clock-circle-bold', text: 'Réponse sous 48h', color: 'text-blue-600' },
+                                                { icon: 'solar:star-bold', text: 'Partenaire qualifié et sélectionné', color: 'text-amber-500' },
+                                            ].map(({ icon, text, color }, i) => (
+                                                <div key={i} className="flex items-center gap-2">
+                                                    <Icon icon={icon} className={`text-base shrink-0 ${color}`} />
+                                                    <p className="text-xs text-slate-700 font-medium">{text}</p>
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -8885,68 +8904,6 @@
                             </div>
                         </div>
 
-                        {(lead_qualification?.objective || lead_qualification?.horizon) && (
-                            <div className="report-card p-6 md:p-8 mb-8">
-                                <h2 className="text-xl font-bold text-[#102A43] mb-6">Votre profil de projet</h2>
-                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
-                                    {lead_qualification?.objective && (() => {
-                                        const objMap = {
-                                            reduce_costs: { icon: 'solar:dollar-minimalistic-bold', color: '#16A34A', label: 'Réduire mes charges' },
-                                            comply_regulation: { icon: 'solar:document-bold', color: '#1D4ED8', label: 'Conformité réglementaire' },
-                                            valorise_asset: { icon: 'solar:buildings-bold', color: '#7C3AED', label: 'Valoriser le patrimoine' },
-                                            comfort: { icon: 'solar:smile-circle-bold', color: '#F59E0B', label: 'Améliorer le confort' },
-                                        };
-                                        const obj = objMap[lead_qualification.objective] || { icon: 'solar:target-bold', color: '#475569', label: lead_qualification.objective };
-                                        return (
-                                            <div className="report-card p-3 text-center">
-                                                <Icon icon={obj.icon} style={{ color: obj.color, fontSize: '24px' }} />
-                                                <div className="text-xs text-[#475569] mt-1">Objectif</div>
-                                                <div className="text-xs font-semibold text-[#102A43] mt-0.5">{obj.label}</div>
-                                            </div>
-                                        );
-                                    })()}
-                                    {lead_qualification?.horizon && (
-                                        <div className="report-card p-3 text-center">
-                                            <Icon icon="solar:calendar-bold" className="text-[#1D4ED8] text-2xl" />
-                                            <div className="text-xs text-[#475569] mt-1">Horizon</div>
-                                            <div className="text-xs font-semibold text-[#102A43] mt-0.5">
-                                                {({ 'immediate': 'Immédiat', '3to6months': '3–6 mois', '6to12months': '6–12 mois', 'over1year': '> 1 an', 'exploring': 'Exploration' })[lead_qualification.horizon] || lead_qualification.horizon}
-                                            </div>
-                                        </div>
-                                    )}
-                                    {lead_qualification?.budget && (
-                                        <div className="report-card p-3 text-center">
-                                            <Icon icon="solar:wallet-bold" className="text-[#16A34A] text-2xl" />
-                                            <div className="text-xs text-[#475569] mt-1">Budget</div>
-                                            <div className="text-xs font-semibold text-[#102A43] mt-0.5">
-                                                {({ 'under5k': '< 5 k€', '5to20k': '5–20 k€', '20to80k': '20–80 k€', 'over80k': '> 80 k€', 'unknown': 'Non défini' })[lead_qualification.budget] || lead_qualification.budget}
-                                            </div>
-                                        </div>
-                                    )}
-                                    {composite?.annual_euro?.value && (
-                                        <div className="report-card p-3 text-center">
-                                            <Icon icon="solar:graph-up-bold" className="text-[#16A34A] text-2xl" />
-                                            <div className="text-xs text-[#475569] mt-1">Potentiel</div>
-                                            <div className="text-xs font-semibold text-[#16A34A] mt-0.5">
-                                                {Math.round(composite.annual_euro.value).toLocaleString('fr-FR')} € / an
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                                {['reduce_costs', 'comply_regulation'].includes(lead_qualification?.objective) && (
-                                    <div className="p-4 rounded-xl bg-blue-50 border border-blue-100 text-sm text-blue-800">
-                                        <Icon icon="solar:info-circle-linear" className="inline mr-1.5 text-blue-500" />
-                                        {lead_qualification.objective === 'comply_regulation'
-                                            ? 'Votre délai réglementaire approche — un accompagnement peut aider à structurer rapidement votre plan.'
-                                            : 'Votre objectif de réduction des charges est atteignable. Un partenaire peut vous accompagner gratuitement.'}
-                                        {' '}
-                                        {!ctaSent && !showCTAModal && (
-                                            <button onClick={openCtaPanel} className="font-bold underline hover:no-underline">Être mis en relation →</button>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                        )}
 
                         <div className="report-card p-6 md:p-8 mb-8">
                             <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-5">
@@ -9082,7 +9039,7 @@ body{margin:0;font-family:Arial,sans-serif;background:#f8fafc;color:#0f172a;}
 </style></head><body>
 <div class="page">
   <div class="hero">
-    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;opacity:.8;">DiagTertiaire — Rapport public</div>
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;opacity:.8;">DiagTertiaire · Rapport public</div>
     <div class="hero-title">${esc(siteName)}</div>
     <div class="hero-meta">${esc(activity)}${surface > 0 ? ' | ' + fmtInt(surface, 'm²') : ''}${address ? ' | ' + esc(address) : ''}<br/>Rapport ${esc(reportId)} | Généré le ${esc(new Date(generatedAt).toLocaleDateString('fr-FR'))}</div>
     <div class="hero-grid">
@@ -9093,7 +9050,7 @@ body{margin:0;font-family:Arial,sans-serif;background:#f8fafc;color:#0f172a;}
           <div class="detail"><strong>Intensité actuelle</strong><span>${esc(fmtInt(siteIntensity, 'kWh/m²/an'))}</span></div>
           <div class="detail"><strong>Médiane secteur</strong><span>${esc(fmtInt(benchMedian, 'kWh/m²/an'))}</span></div>
           <div class="detail"><strong>Cible estimée</strong><span>${esc(fmtInt(targetIntensity, 'kWh/m²/an'))}</span></div>
-          <div class="detail"><strong>Confiance</strong><span>${esc(confidence.label || 'Moyen')}</span></div>
+          <div class="detail"><strong>Cible estimée</strong><span>${esc(fmtInt(targetIntensity, 'kWh/m²/an'))}</span></div>
         </div>
       </div>
       <div class="card score-card">
@@ -9108,13 +9065,13 @@ body{margin:0;font-family:Arial,sans-serif;background:#f8fafc;color:#0f172a;}
     <div class="stat"><div class="stat-lbl">Coût annuel</div><div class="stat-val">${esc(fmtEur(totalCost))}</div><div class="stat-sub">Charges énergie estimées</div></div>
     <div class="stat"><div class="stat-lbl">Économie annuelle</div><div class="stat-val">${esc(fmtEur(annualEuro))}</div><div class="stat-sub">${esc(fmtInt(annualKwh, 'kWh/an'))}</div></div>
     <div class="stat"><div class="stat-lbl">Indice DiagTertiaire</div><div class="stat-val" style="color:${scoreColors[score]};">${esc(score)}</div><div class="stat-sub">${esc(scoreLabels[score])}</div></div>
-    <div class="stat"><div class="stat-lbl">Confiance calcul</div><div class="stat-val" style="font-size:16px;">${esc(confidence.label || 'Moyen')}</div><div class="stat-sub">${esc(confidence.level || 'medium')}</div></div>
+    <div class="stat"><div class="stat-lbl">Retour estimé</div><div class="stat-val" style="font-size:16px;">${esc(fmtEur(annualEuro))}/an</div><div class="stat-sub">Économies potentielles</div></div>
   </div>
   <div class="section">
     <h2>Actions prioritaires</h2>
     ${actionsRows}
   </div>
-  <p class="footer">Rapport DiagTertiaire généré le ${esc(new Date(generatedAt).toLocaleDateString('fr-FR'))} — diag-tertiaire.fr</p>
+  <p class="footer">Rapport DiagTertiaire généré le ${esc(new Date(generatedAt).toLocaleDateString('fr-FR'))} · diag-tertiaire.fr</p>
 </div>
 </body></html>`;
 
@@ -9126,11 +9083,79 @@ body{margin:0;font-family:Arial,sans-serif;background:#f8fafc;color:#0f172a;}
            CONTENEUR PRINCIPAL FORMULAIRE
            ───────────────────────────────────────────────────────────────────────── */
 
+        /* ─── Transition premium formulaire → rapport ───────────────────── */
+        const REVEAL_MESSAGES = [
+            'Analyse du site en cours…',
+            'Structuration des recommandations…',
+            'Votre rapport est prêt.',
+        ];
+
+        const ReportRevealTransition = ({ onDone }) => {
+            const [msgIdx, setMsgIdx] = React.useState(0);
+            const [fadeOut, setFadeOut] = React.useState(false);
+            const prefersReduced = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+            React.useEffect(() => {
+                if (prefersReduced) { onDone(); return; }
+                const timers = [
+                    setTimeout(() => setMsgIdx(1), 250),
+                    setTimeout(() => setMsgIdx(2), 550),
+                    setTimeout(() => setFadeOut(true), 750),
+                    setTimeout(() => onDone(), 950),
+                ];
+                return () => timers.forEach(clearTimeout);
+            }, []);
+
+            return (
+                <div
+                    style={{
+                        position: 'fixed', inset: 0, zIndex: 9999,
+                        background: 'linear-gradient(135deg, #0A1928 0%, #1D4ED8 60%, #0F2236 100%)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        flexDirection: 'column', gap: 20,
+                        opacity: fadeOut ? 0 : 1,
+                        transition: 'opacity 200ms ease',
+                        pointerEvents: 'none',
+                    }}
+                >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                            <circle cx="16" cy="16" r="14" stroke="rgba(255,255,255,0.25)" strokeWidth="2" />
+                            <circle cx="16" cy="16" r="14" stroke="white" strokeWidth="2"
+                                strokeDasharray="88" strokeDashoffset="22"
+                                style={{ transformOrigin: 'center', animation: 'spin 1.2s linear infinite' }} />
+                        </svg>
+                        <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.6)' }}>DiagTertiaire</span>
+                    </div>
+                    <p style={{
+                        fontSize: 22, fontWeight: 900, color: '#fff',
+                        letterSpacing: '-0.5px', textAlign: 'center', maxWidth: 320,
+                        transition: 'opacity 200ms ease',
+                        opacity: 1,
+                    }}>
+                        {REVEAL_MESSAGES[msgIdx]}
+                    </p>
+                    <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
+                        {REVEAL_MESSAGES.map((_, i) => (
+                            <div key={i} style={{
+                                width: i === msgIdx ? 20 : 6, height: 6,
+                                borderRadius: 3,
+                                background: i === msgIdx ? '#fff' : 'rgba(255,255,255,0.3)',
+                                transition: 'all 200ms ease',
+                            }} />
+                        ))}
+                    </div>
+                    <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+                </div>
+            );
+        };
+
         const NewDiagnosticForm = ({ onComplete }) => {
             const [currentStep, setCurrentStep] = useState(1);
             const [formData, setFormData] = useState(NEW_DIAGNOSTIC_DEFAULT_FORM_DATA);
             const [reportPayload, setReportPayload] = useState(null);
             const [submitError, setSubmitError] = useState(null);
+            const [isTransitioning, setIsTransitioning] = useState(false);
 
             useEffect(() => {
                 newDiagnosticTrack('start_diagnostic');
@@ -9170,6 +9195,7 @@ body{margin:0;font-family:Arial,sans-serif;background:#f8fafc;color:#0f172a;}
                     }
 
                     setReportPayload(nextReportPayload);
+                    setIsTransitioning(true);
 
                     // Appel silencieux — ne jamais bloquer l'affichage du rapport
                     const notifyAndSavePdf = async (rp, fd, lsId) => {
@@ -9265,6 +9291,12 @@ body{margin:0;font-family:Arial,sans-serif;background:#f8fafc;color:#0f172a;}
             if (reportPayload) {
                 return (
                     <div className="new-diagnostic-report-shell">
+                        {isTransitioning && (
+                            <ReportRevealTransition onDone={() => {
+                                setIsTransitioning(false);
+                                try { window.scrollTo({ top: 0, behavior: 'instant' }); } catch (_) { window.scrollTo(0, 0); }
+                            }} />
+                        )}
                         <div className="max-w-5xl mx-auto px-4 pt-8">
                             <div className="flex flex-wrap gap-3">
                                 <button

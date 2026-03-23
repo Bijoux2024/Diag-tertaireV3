@@ -380,15 +380,15 @@
             <YAxis tickFormatter={fmtTick} tick={{ fontSize: 10, fill: T.slate600 }} width={48} />
             <Tooltip formatter={v => fmtEur(v)} />
             <Legend wrapperStyle={{ fontSize: 10, paddingTop: 8 }} />
-            <Area type="monotone" dataKey="sans_travaux" name="Sans action"
+            <Area type="monotone" dataKey="sans_travaux" name="Situation actuelle"
                   stroke="#EA580C" strokeWidth={2.2} strokeDasharray="6 3"
                   fill="url(#gSans)" isAnimationActive={false} />
             {hasLight && (
-              <Area type="monotone" dataKey="avec_actions_rapides" name="Actions rapides seulement"
+              <Area type="monotone" dataKey="avec_actions_rapides" name="Actions sans travaux"
                     stroke="#F59E0B" strokeWidth={1.8} strokeDasharray="3 2"
                     fill="url(#gLight)" isAnimationActive={false} />
             )}
-            <Area type="monotone" dataKey="avec_travaux" name="Avec toutes les actions"
+            <Area type="monotone" dataKey="avec_travaux" name="Actions légères + travaux"
                   stroke={T.blue} strokeWidth={2.5} fill="url(#gAvec)"
                   isAnimationActive={false} />
           </AreaChart>
@@ -525,7 +525,7 @@
                       { label: 'Conso actuelle',  value: fmtInt(siteI,    'kWh/m²/an') },
                       { label: 'Médiane secteur', value: fmtInt(benchMed, 'kWh/m²/an') },
                       { label: 'Cible estimée',   value: fmtInt(targetI,  'kWh/m²/an') },
-                      { label: 'Précision',        value: conf.label || 'Moyenne'       },
+                      { label: 'Économies/an',    value: fmtEur(annualEuro)             },
                     ].map(ic => (
                       <div key={ic.label} style={{
                         flex: '1 1 90px',
@@ -662,35 +662,35 @@
               exceeds content area; CHART_W=636 fits within ~644px.
           ═════════════════════════════════════════════════ */}
           <Section
-            title="Projection financière — 10 ans"
+            title="Projection financière sur 10 ans"
             sub={
-              `3 scénarios comparés · Inflation énergie estimée : ${projection.taux}%/an · ` +
-              (projection.roiAnnee
-                ? `Rentabilité estimée à A+${projection.roiAnnee}`
-                : 'Rentabilité non atteinte sur la période simulée')
+              `3 scénarios : Situation actuelle · Actions sans travaux · Actions légères + travaux · Inflation : ${projection.taux}%/an`
             }
           >
             <ProjectionChart data={projection.data} hasLight={projection.hasLight} />
             {/* Résumé chiffré A+1 / A+3 / A+10 */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginTop: 14 }}>
               {[
-                { label: 'A+1 — coût annuel', st: projection.data[1]?.sans_travaux, av: projection.data[1]?.avec_travaux },
-                { label: 'A+3 — coût annuel', st: projection.data[3]?.sans_travaux, av: projection.data[3]?.avec_travaux },
-                { label: 'A+10 — coût annuel', st: projection.data[10]?.sans_travaux, av: projection.data[10]?.avec_travaux },
-                { label: 'Point de rentabilité', special: projection.roiAnnee ? `Année ${projection.roiAnnee}` : 'À confirmer' },
+                { label: 'Année 1 · sans action', st: projection.data[1]?.sans_travaux, av: projection.data[1]?.avec_travaux },
+                { label: 'Année 3 · sans action', st: projection.data[3]?.sans_travaux, av: projection.data[3]?.avec_travaux },
+                { label: 'Année 10 · sans action', st: projection.data[10]?.sans_travaux, av: projection.data[10]?.avec_travaux },
+                { label: 'Gain cumulé 10 ans', special: fmtEur(Math.max(0, (projection.data[10]?.sans_travaux || 0) - (projection.data[10]?.avec_travaux || 0))), roi: projection.roiAnnee },
               ].map((c, i) => (
                 <div key={i} className="pba" style={{
-                  background: i === 3 ? '#EFF6FF' : T.slate50,
-                  border: `1px solid ${i === 3 ? '#BFDBFE' : T.slate200}`,
+                  background: i === 3 ? '#F0FDF4' : T.slate50,
+                  border: `1px solid ${i === 3 ? '#86EFAC' : T.slate200}`,
                   borderRadius: 10, padding: '10px 12px',
                 }}>
-                  <div style={{ fontSize: 8, fontWeight: 700, textTransform: 'uppercase', color: T.slate400, marginBottom: 6 }}>{c.label}</div>
+                  <div style={{ fontSize: 8, fontWeight: 700, textTransform: 'uppercase', color: i === 3 ? '#15803D' : T.slate400, marginBottom: 6 }}>{c.label}</div>
                   {c.special ? (
-                    <div style={{ fontSize: 16, fontWeight: 900, color: T.blue }}>{c.special}</div>
+                    <>
+                      <div style={{ fontSize: 16, fontWeight: 900, color: '#15803D' }}>{c.special}</div>
+                      {c.roi && <div style={{ fontSize: 10, color: T.blue, marginTop: 4, fontWeight: 700 }}>Rentabilité : {c.roi}</div>}
+                    </>
                   ) : (
                     <>
                       <div style={{ fontSize: 13, fontWeight: 800, color: '#374151' }}>{fmtEur(c.st)}</div>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: '#059669', marginTop: 3 }}>→ {fmtEur(c.av)} avec actions</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: '#059669', marginTop: 3 }}>Avec actions : {fmtEur(c.av)}</div>
                     </>
                   )}
                 </div>
@@ -776,7 +776,7 @@
             paddingTop: 16, borderTop: `1px solid ${T.slate200}`,
           }}>
             <strong style={{ color: T.slate600 }}>DiagTertiaire</strong>
-            {' '}— Pré-diagnostic énergétique indicatif, non opposable
+            {' '}· Pré-diagnostic énergétique indicatif · Lecture selon activité déclarée
             {rp.report_id ? ` · Rapport ${rp.report_id}` : ''} · {fmtDate(rp.generated_at)}<br />
             Pour un audit certifié, contactez un bureau d'études RGE agréé. Ce document est à usage informatif.
           </div>

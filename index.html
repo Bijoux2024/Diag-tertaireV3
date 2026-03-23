@@ -1349,7 +1349,7 @@
         const PageHome = ({ navigate }) => (
             <div className="fade-in">
                 {/* HERO — VERROUILLAGE FINAL */}
-                <section className="relative w-full overflow-hidden" style={{ paddingTop: 'clamp(3rem, 8vw, 8rem)', paddingBottom: 'clamp(3rem, 7vw, 8rem)', background: '#FFFFFF' }}>
+                <section className="relative w-full overflow-hidden" style={{ paddingTop: 'clamp(1.5rem, 5vw, 8rem)', paddingBottom: 'clamp(2rem, 5vw, 8rem)', background: '#FFFFFF' }}>
                     {/* GLOW — halos structurés */}
                     <div className="absolute inset-0 pointer-events-none z-0" aria-hidden="true">
                         <div className="absolute top-0 left-0"
@@ -1408,8 +1408,8 @@
                             {/* RIGHT COLUMN - MOCKUP PDF PREMIUM V3 */}
                             {/* Performance estimée */}
                             {/* RIGHT COLUMN - MOCKUP PDF PREMIUM V4 */}
-                            <div className="flex justify-center items-center order-3 lg:order-2 mt-6 sm:mt-8 lg:mt-0">
-                                <div className="mockup-float relative" style={{ width: 'min(300px, 88vw)', maxWidth: '100%' }} data-desktop-w="450">
+                            <div className="flex justify-center items-center order-3 lg:order-2 mt-4 sm:mt-6 lg:mt-0">
+                                <div className="mockup-float relative" style={{ width: 'min(280px, 80vw)', maxWidth: '100%' }} data-desktop-w="450">
 
                                     {/* Depth layer */}
                                     <div
@@ -1743,7 +1743,7 @@
                 </section>
 
                 {/* BENEFITS — verrouillé, moment de valeur perçue */}
-                <section style={{ padding: 'clamp(2.5rem, 6vw, 6.5rem) 0', background: '#FFFFFF' }}>
+                <section style={{ padding: 'clamp(1.75rem, 5vw, 6.5rem) 0', background: '#FFFFFF' }}>
                     <div className="max-w-6xl mx-auto px-4">
                         <div style={{ textAlign: 'center', marginBottom: 'clamp(2rem, 5vw, 4.25rem)' }}>
                             <h2 style={{ fontSize: 'clamp(1.5rem, 4.2vw, 2.25rem)', fontWeight: 700, color: '#0A1929', marginBottom: '1rem', letterSpacing: '-0.8px', lineHeight: 1.15 }}>Un rapport utile pour décider avant d'engager un budget</h2>
@@ -1779,7 +1779,7 @@
                 </section>
 
                 {/* EXPERT / EFFICACITE BLOC — fond blue-xlight premium */}
-                <section style={{ padding: 'clamp(2.5rem, 6vw, 5.5rem) 0', background: '#FAFAFA' }}>
+                <section style={{ padding: 'clamp(1.75rem, 5vw, 5.5rem) 0', background: '#FAFAFA' }}>
                     <div className="max-w-6xl mx-auto px-4">
                         <div className="grid lg:grid-cols-2 gap-14 lg:gap-20 items-center">
                             {/* Left: Text */}
@@ -1870,7 +1870,7 @@
                 </section>
 
                 {/* PROCESS - Fond bleu clair premium */}
-                <section style={{ padding: 'clamp(2.5rem, 6vw, 5.5rem) 0', background: '#FFFFFF' }}>
+                <section style={{ padding: 'clamp(1.75rem, 5vw, 5.5rem) 0', background: '#FFFFFF' }}>
                     <div className="max-w-6xl mx-auto px-4">
                         <div style={{ textAlign: 'center', marginBottom: '3.75rem' }}>
                             <h2 style={{ fontSize: 'clamp(1.5rem, 4vw, 2rem)', fontWeight: 700, color: '#0C1F35', marginBottom: '0.875rem', letterSpacing: '-0.6px', lineHeight: 1.2 }}>Comment obtenir votre rapport</h2>
@@ -1920,7 +1920,7 @@
                 </section>
 
                 {/* CTA FINAL - Gradient navy→blue→navy restauré (version précédente) */}
-                <section style={{ padding: 'clamp(2.5rem, 6vw, 5rem) 0', background: 'linear-gradient(135deg, #102A43 0%, #1D4ED8 50%, #102A43 100%)', position: 'relative', overflow: 'hidden' }}>
+                <section style={{ padding: 'clamp(1.75rem, 5vw, 5rem) 0', background: 'linear-gradient(135deg, #102A43 0%, #1D4ED8 50%, #102A43 100%)', position: 'relative', overflow: 'hidden' }}>
                     <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
                         <div style={{ position: 'absolute', top: '-80px', right: '-80px', width: '280px', height: '280px', background: 'rgba(255,255,255,0.035)', borderRadius: '50%', filter: 'blur(50px)' }} />
                         <div style={{ position: 'absolute', bottom: '-80px', left: '-80px', width: '280px', height: '280px', background: 'rgba(255,255,255,0.035)', borderRadius: '50%', filter: 'blur(50px)' }} />
@@ -8241,7 +8241,7 @@
             );
 
             return (
-                <div className="new-diagnostic-report fade-in py-12 px-4">
+                <div className="new-diagnostic-report fade-in pt-4 pb-20 px-4">
                     <div className="max-w-5xl mx-auto">
 
                         <div className="report-card p-0 overflow-hidden mb-8">
@@ -8261,10 +8261,9 @@
                                                 Rapport pré-diagnostic
                                             </div>
                                         </div>
-                                        <h1 className="text-3xl md:text-4xl font-black tracking-tight text-white mb-3">Lecture énergie simple et partageable</h1>
-                                        <div className="space-y-2 text-slate-200">
-                                            <p className="text-lg font-semibold text-white break-words">{(reportPayload.inputs_summary.site_name && reportPayload.inputs_summary.site_name !== 'uyktdtu') ? reportPayload.inputs_summary.site_name : 'Bâtiment diagnostiqué'}</p>
-                                            <p className="text-sm md:text-base">{reportPayload.inputs_summary.activity} - {newDiagnosticFormatInteger(surfaceValue)} m² - {roleLabel}</p>
+                                        <h1 className="text-2xl md:text-3xl font-black tracking-tight text-white mb-2 leading-tight">{(reportPayload.inputs_summary.site_name && reportPayload.inputs_summary.site_name !== 'uyktdtu') ? reportPayload.inputs_summary.site_name : 'Bâtiment diagnostiqué'}</h1>
+                                        <div className="space-y-1.5 text-slate-200">
+                                            <p className="text-sm md:text-base font-semibold text-slate-100">{reportPayload.inputs_summary.activity} · {newDiagnosticFormatInteger(surfaceValue)} m² · {roleLabel}</p>
                                             {(() => {
                                                 const addr = reportPayload.inputs_summary.address;
                                                 const cp = reportPayload.inputs_summary.postal_code;
@@ -8945,147 +8944,22 @@
                                 </ul>
                             </NewDiagnosticAccordion>
                         </div>
+
+                        {/* ── Fin de document ── */}
+                        <div className="mt-8 pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+                            <div className="flex items-center gap-2.5 opacity-70">
+                                <DiagTertiaireBrand dark={true} size={18} />
+                                <span className="text-xs text-slate-400 font-medium">Pré-diagnostic énergétique · DiagTertiaire</span>
+                            </div>
+                            <p className="text-[11px] text-slate-400 text-center sm:text-right leading-relaxed max-w-xs">
+                                Estimations fondées sur données déclaratives et références sectorielles. Non substitutif à un audit réglementaire.
+                            </p>
+                        </div>
+
                     </div>
                 </div>
             );
 
-        };
-
-        /* ─────────────────────────────────────────────────────────────────────────
-           HELPERS : EXPORT PDF SERVEUR (save-public-report)
-           ───────────────────────────────────────────────────────────────────────── */
-
-        const newDiagnosticBuildDownloadFileName = (siteName, ext = 'pdf') => {
-            const stem = String(siteName || 'rapport')
-                .toLowerCase()
-                .replace(/[^\w]+/g, '-')
-                .replace(/-+/g, '-')
-                .replace(/^-|-$/g, '') || 'rapport';
-            return `${stem}.${ext}`;
-        };
-
-        const newDiagnosticBuildPdfExportPayload = (reportPayload) => {
-            const rp = reportPayload || {};
-            const meta = rp.inputs_summary || {};
-            const bench = rp.benchmark_result || {};
-            const composite = rp.composite_savings || {};
-            const calc = rp.calculation_results || {};
-            const actions = (rp.top_actions || []).slice(0, 6);
-            const confidence = rp.confidence || {};
-            const siteName = meta.site_name || 'Bâtiment diagnostiqué';
-            const activity = meta.activity || 'Activité à confirmer';
-            const address = meta.address || '';
-            const surface = Number((meta.surface && meta.surface.value) || meta.surface || 0);
-            const siteIntensity = Number((bench.site_intensity && bench.site_intensity.value) || 0);
-            const benchMedian = Number((bench.benchmark_median && bench.benchmark_median.value) || 0);
-            const annualKwh = Number((composite.annual_kwh && composite.annual_kwh.value) || 0);
-            const annualEuro = Number((composite.annual_euro && composite.annual_euro.value) || 0);
-            const totalCost = Number((calc.total_cost_euro_an && calc.total_cost_euro_an.value) || 0);
-            const reportId = rp.report_id || '';
-            const generatedAt = rp.generated_at || new Date().toISOString();
-
-            const ratio = benchMedian > 0 ? siteIntensity / benchMedian : 1;
-            const score = ratio < 0.6 ? 'A' : ratio < 0.9 ? 'B' : ratio < 1.2 ? 'C' : ratio < 1.7 ? 'D' : 'E';
-            const scoreColors = { A: '#16A34A', B: '#22C55E', C: '#F59E0B', D: '#F97316', E: '#EF4444' };
-            const scoreBgs = { A: '#DCFCE7', B: '#E8F5E9', C: '#FEF3C7', D: '#FFF7ED', E: '#FEE2E2' };
-            const scoreLabels = { A: 'Très performant', B: 'Performant', C: 'Dans la médiane', D: 'Surconsommation', E: 'Très énergivore' };
-            const targetIntensity = Math.max(0, Math.round(siteIntensity - (surface > 0 ? annualKwh / surface : 0)));
-            const tRatio = benchMedian > 0 ? targetIntensity / benchMedian : 1;
-            const targetScore = tRatio < 0.6 ? 'A' : tRatio < 0.9 ? 'B' : tRatio < 1.2 ? 'C' : tRatio < 1.7 ? 'D' : 'E';
-
-            const fmtEur = (v) => `${Math.round(Number(v || 0)).toLocaleString('fr-FR')} EUR`;
-            const fmtInt = (v, u) => { const s = Math.round(Number(v || 0)).toLocaleString('fr-FR'); return u ? `${s} ${u}` : s; };
-            const esc = (v) => String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-
-            const actionsRows = actions.length === 0
-                ? '<p style="font-size:13px;color:#64748b;">Aucune action prioritaire exploitable.</p>'
-                : `<table style="width:100%;border-collapse:collapse;font-size:13px;">
-                    <thead><tr>
-                      <th style="text-align:left;padding:10px 8px;border-bottom:1px solid #e2e8f0;font-size:11px;text-transform:uppercase;color:#64748b;">Action</th>
-                      <th style="text-align:left;padding:10px 8px;border-bottom:1px solid #e2e8f0;font-size:11px;text-transform:uppercase;color:#64748b;">Gain/an</th>
-                      <th style="text-align:left;padding:10px 8px;border-bottom:1px solid #e2e8f0;font-size:11px;text-transform:uppercase;color:#64748b;">Budget</th>
-                      <th style="text-align:left;padding:10px 8px;border-bottom:1px solid #e2e8f0;font-size:11px;text-transform:uppercase;color:#64748b;">ROI</th>
-                    </tr></thead>
-                    <tbody>${actions.map(a => {
-                    const roi = a.roi_years && a.roi_years.value != null ? `${String(a.roi_years.value).replace('.', ',')} ans` : 'À confirmer';
-                    return `<tr>
-                          <td style="padding:10px 8px;border-bottom:1px solid #e2e8f0;vertical-align:top;"><strong>${esc(a.name || 'Action recommandée')}</strong><div style="font-size:12px;color:#64748b;">${esc(a.category || '')}</div></td>
-                          <td style="padding:10px 8px;border-bottom:1px solid #e2e8f0;vertical-align:top;">${esc(fmtEur(a.gain_euro_an && a.gain_euro_an.value || 0))}</td>
-                          <td style="padding:10px 8px;border-bottom:1px solid #e2e8f0;vertical-align:top;">${esc(fmtEur(a.capex && a.capex.value || 0))}</td>
-                          <td style="padding:10px 8px;border-bottom:1px solid #e2e8f0;vertical-align:top;">${esc(roi)}</td>
-                        </tr>`;
-                }).join('')}</tbody>
-                  </table>`;
-
-            const html = `<!DOCTYPE html>
-<html lang="fr"><head>
-<meta charset="UTF-8"/>
-<title>DiagTertiaire - ${esc(siteName)}</title>
-<style>
-*{box-sizing:border-box;}
-body{margin:0;font-family:Arial,sans-serif;background:#f8fafc;color:#0f172a;}
-.page{padding:28px;}
-.hero{background:linear-gradient(135deg,#102a43 0%,#1d4ed8 100%);color:#fff;border-radius:20px;padding:24px;}
-.hero-title{margin:8px 0;font-size:26px;font-weight:800;line-height:1.1;}
-.hero-meta{font-size:13px;color:rgba(255,255,255,0.85);line-height:1.6;}
-.hero-grid{display:grid;grid-template-columns:1.5fr 0.9fr;gap:14px;margin-top:18px;}
-.card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:18px;page-break-inside:avoid;}
-.score-card{text-align:center;background:${scoreBgs[score]};color:${scoreColors[score]};}
-.score-val{font-size:52px;font-weight:900;line-height:1;margin:6px 0;}
-.score-lbl{font-size:14px;font-weight:700;color:#0f172a;}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px;}
-.stat{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:14px;}
-.stat-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#64748b;}
-.stat-val{font-size:22px;font-weight:900;margin-top:8px;}
-.stat-sub{font-size:11px;color:#64748b;margin-top:6px;}
-.section{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:18px;margin-top:14px;page-break-inside:avoid;}
-.section h2{margin:0 0 10px;font-size:16px;}
-.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;}
-.detail{border:1px solid #e2e8f0;border-radius:12px;padding:12px;background:#f8fafc;}
-.detail strong{display:block;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;}
-.detail span{font-size:18px;font-weight:800;}
-.footer{margin-top:18px;font-size:11px;color:#94a3b8;text-align:center;}
-</style></head><body>
-<div class="page">
-  <div class="hero">
-    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;opacity:.8;">DiagTertiaire · Rapport public</div>
-    <div class="hero-title">${esc(siteName)}</div>
-    <div class="hero-meta">${esc(activity)}${surface > 0 ? ' | ' + fmtInt(surface, 'm²') : ''}${address ? ' | ' + esc(address) : ''}<br/>Rapport ${esc(reportId)} | Généré le ${esc(new Date(generatedAt).toLocaleDateString('fr-FR'))}</div>
-    <div class="hero-grid">
-      <div class="card">
-        <strong style="display:block;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.07em;">Lecture rapide</strong>
-        <p style="margin:8px 0 0;font-size:14px;line-height:1.7;">Le site se positionne en <strong>${esc(scoreLabels[score])}</strong>, avec un potentiel estimé à <strong>${esc(fmtEur(annualEuro))}</strong> d'économies par an.</p>
-        <div class="detail-grid">
-          <div class="detail"><strong>Intensité actuelle</strong><span>${esc(fmtInt(siteIntensity, 'kWh/m²/an'))}</span></div>
-          <div class="detail"><strong>Médiane secteur</strong><span>${esc(fmtInt(benchMedian, 'kWh/m²/an'))}</span></div>
-          <div class="detail"><strong>Cible estimée</strong><span>${esc(fmtInt(targetIntensity, 'kWh/m²/an'))}</span></div>
-          <div class="detail"><strong>Cible estimée</strong><span>${esc(fmtInt(targetIntensity, 'kWh/m²/an'))}</span></div>
-        </div>
-      </div>
-      <div class="card score-card">
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:${scoreColors[score]};">Score énergie</div>
-        <div class="score-val">${esc(score)}</div>
-        <div class="score-lbl">${esc(scoreLabels[score])}</div>
-        <div style="font-size:12px;color:#334155;margin-top:4px;">Après travaux : ${esc(targetScore)}</div>
-      </div>
-    </div>
-  </div>
-  <div class="stats">
-    <div class="stat"><div class="stat-lbl">Coût annuel</div><div class="stat-val">${esc(fmtEur(totalCost))}</div><div class="stat-sub">Charges énergie estimées</div></div>
-    <div class="stat"><div class="stat-lbl">Économie annuelle</div><div class="stat-val">${esc(fmtEur(annualEuro))}</div><div class="stat-sub">${esc(fmtInt(annualKwh, 'kWh/an'))}</div></div>
-    <div class="stat"><div class="stat-lbl">Indice DiagTertiaire</div><div class="stat-val" style="color:${scoreColors[score]};">${esc(score)}</div><div class="stat-sub">${esc(scoreLabels[score])}</div></div>
-    <div class="stat"><div class="stat-lbl">Retour estimé</div><div class="stat-val" style="font-size:16px;">${esc(fmtEur(annualEuro))}/an</div><div class="stat-sub">Économies potentielles</div></div>
-  </div>
-  <div class="section">
-    <h2>Actions prioritaires</h2>
-    ${actionsRows}
-  </div>
-  <p class="footer">Rapport DiagTertiaire généré le ${esc(new Date(generatedAt).toLocaleDateString('fr-FR'))} · diag-tertiaire.fr</p>
-</div>
-</body></html>`;
-
-            const fileName = newDiagnosticBuildDownloadFileName(siteName, 'pdf');
-            return { html, fileName };
         };
 
         /* ─────────────────────────────────────────────────────────────────────────
@@ -9306,8 +9180,8 @@ body{margin:0;font-family:Arial,sans-serif;background:#f8fafc;color:#0f172a;}
                                 try { window.scrollTo({ top: 0, behavior: 'instant' }); } catch (_) { window.scrollTo(0, 0); }
                             }} />
                         )}
-                        <div className="max-w-5xl mx-auto px-4 pt-5 pb-2">
-                            <div className="flex flex-wrap items-center gap-2 py-3 px-4 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-2xl shadow-sm">
+                        <div className="max-w-5xl mx-auto px-3 pt-3 pb-1">
+                            <div className="flex flex-wrap items-center gap-2 py-2.5 px-3.5 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-2xl shadow-sm">
                                 <button
                                     type="button"
                                     onClick={handleReset}
@@ -9474,11 +9348,11 @@ body{margin:0;font-family:Arial,sans-serif;background:#f8fafc;color:#0f172a;}
 
                                 <button
                                     type="button"
-                                    className="md:hidden flex items-center justify-center w-10 h-10 rounded-xl border border-[#E2E8F0] bg-white text-[#102A43] hover:text-[#1D4ED8] hover:border-[#1D4ED8] transition-colors shadow-sm"
+                                    className="md:hidden flex items-center justify-center w-11 h-11 rounded-xl border border-[#E2E8F0] bg-white text-[#102A43] hover:text-[#1D4ED8] hover:border-[#1D4ED8] transition-colors shadow-sm"
                                     onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                                     aria-label={isMobileMenuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
                                 >
-                                    <Icon icon={isMobileMenuOpen ? "solar:close-square-linear" : "solar:hamburger-menu-linear"} className="text-xl" />
+                                    <Icon icon={isMobileMenuOpen ? "solar:close-square-linear" : "solar:hamburger-menu-linear"} className="text-2xl" />
                                 </button>
                             </div>
                         </div>

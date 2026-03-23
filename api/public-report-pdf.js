@@ -10,7 +10,7 @@
  *   4. Construit l'URL de la page print dédiée
  *   5. Puppeteer ouvre la page, attend window.__REPORT_READY__
  *   6. Exporte en PDF A4
- *   7. Upload vers bucket public-report-assets
+ *   7. Upload vers bucket public-reports
  *   8. Signed URL 30 jours
  *   9. UPDATE public_reports : pdf_status='ready', efface le token
  *  10. UPDATE lead_submissions.pdf_url (best-effort)
@@ -20,7 +20,7 @@
  *  Erreur → pdf_status='failed', pdf_error=message
  *
  * Table   : public.public_reports
- * Bucket  : public-report-assets (privé)
+ * Bucket  : public-reports (public)
  * Path    : reports/{year}/{month}/{public_report_id}/official.pdf
  */
 
@@ -28,7 +28,7 @@ const crypto = require('crypto');
 const { renderPdfFromUrl } = require('./_lib/pdf-renderer');
 const { getRequiredServerSupabaseConfig } = require('./_lib/supabase-server');
 
-const PUBLIC_REPORT_ASSETS_BUCKET = 'public-report-assets';
+const PUBLIC_REPORT_ASSETS_BUCKET = 'public-reports';
 const SIGNED_URL_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
 const TOKEN_TTL_SECONDS = 60 * 60 * 2;        // 2 h (print session)
 
@@ -404,7 +404,7 @@ module.exports = async function handler(req, res) {
       }
     });
 
-    // 6. Upload to public-report-assets
+    // 6. Upload to public-reports
     await uploadPdfToStorage({ supabaseUrl, serviceKey, storagePath, pdfBuffer });
     console.log('[public-report-pdf] Uploaded:', storagePath);
 

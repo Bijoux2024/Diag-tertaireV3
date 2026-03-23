@@ -6802,7 +6802,7 @@
 
             const totalSavings = casesComputed.reduce((acc, c) => acc + (c._computed?.totalSavingsEur || c.estimatedSavingsPerYear || 0), 0);
             const avgSavingsPerCase = casesComputed.length > 0 ? Math.round(totalSavings / casesComputed.length) : 0;
-            const isFullyDone = c => !!(c.engineResult || c.reportGeneratedAt || c.id?.startsWith('case_') || c._computed?.score);
+            const isFullyDone = c => !!(c.engineResult || c.reportGeneratedAt);
             const hasAnyData = c => !!(c.formData?.contactName || c.formData?.company || c.formData?.buildingArea || c.clientName || c.company);
             const completedCount = casesComputed.filter(isFullyDone).length;
             const inProgressFromCases = casesComputed.filter(c => !isFullyDone(c) && hasAnyData(c)).length;
@@ -8312,6 +8312,24 @@
                 }
             };
 
+            const handleAbandonDraft = async () => {
+                if (!window.confirm('Abandonner ce brouillon ? Les données saisies seront définitivement perdues.')) return;
+                try {
+                    setDraftError('');
+                    setValidationError('');
+                    setIsDraftActionPending(true);
+                    skipNextDraftSyncRef.current = true;
+                    setForm(PRO_NEW_DIAG_INITIAL_FORM);
+                    setShowResume(false);
+                    await onSaveDraft?.(PRO_NEW_DIAG_INITIAL_FORM);
+                    window.scrollTo(0, 0);
+                } catch (error) {
+                    setDraftError(error?.message || 'Impossible d\'abandonner le brouillon.');
+                } finally {
+                    setIsDraftActionPending(false);
+                }
+            };
+
             const handleRestoreArchived = async (archiveId) => {
                 try {
                     setDraftError('');
@@ -8538,13 +8556,20 @@
                         {!showResume && hasActiveDraft && (
                             <div className="mb-4 inline-flex max-w-xl flex-col items-center gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm shadow-slate-200/40">
                                 <div className="text-sm text-slate-600">
-                                    Le formulaire en cours est sauvegarde automatiquement et peut etre archive avant d'ouvrir un nouveau diagnostic.
+                                    Le formulaire en cours est sauvegardé automatiquement et peut être archivé avant d'ouvrir un nouveau diagnostic.
                                 </div>
-                                <button type="button" onClick={handleStartFresh} disabled={isDraftActionPending || isGenerating}
-                                    className="pro-btn pro-btn-secondary text-sm">
-                                    <Icon icon="solar:add-square-bold" />
-                                    {isDraftActionPending ? 'Sauvegarde...' : 'Sauvegarder ce brouillon et commencer un autre diagnostic'}
-                                </button>
+                                <div className="flex flex-col sm:flex-row items-center gap-2 w-full justify-center">
+                                    <button type="button" onClick={handleStartFresh} disabled={isDraftActionPending || isGenerating}
+                                        className="pro-btn pro-btn-secondary text-sm">
+                                        <Icon icon="solar:add-square-bold" />
+                                        {isDraftActionPending ? 'Sauvegarde...' : 'Sauvegarder et commencer un autre'}
+                                    </button>
+                                    <button type="button" onClick={handleAbandonDraft} disabled={isDraftActionPending || isGenerating}
+                                        className="pro-btn text-sm px-4 py-2 rounded-xl border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 transition-colors font-semibold flex items-center gap-1.5">
+                                        <Icon icon="solar:trash-bin-trash-linear" />
+                                        Abandonner ce brouillon
+                                    </button>
+                                </div>
                             </div>
                         )}
                         <div className="max-w-lg mx-auto">
@@ -9176,7 +9201,7 @@
                     )}
 
                     <div className="space-y-8">
-                        <div className="grid lg:grid-cols-2 gap-8 items-start">
+                        <div className="space-y-8">
                             {/* SECTION BRANDING */}
                             <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm shadow-slate-200/40 border border-slate-200" data-tour="branding-section">
                                 <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
@@ -9254,10 +9279,15 @@
                             </div>
 
                             {/* SECTION APERÇU LIVE (Gros plus SaaS) */}
-                            <div className="sticky top-6">
-                                <h3 className="text-[13px] font-bold text-slate-500 uppercase tracking-[0.1em] mb-4 flex items-center gap-2">
-                                    <Icon icon="solar:laptop-minimalistic-bold" className="text-blue-500" /> Aperçu du livrable client
+                            <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm shadow-slate-200/40 border border-slate-200">
+                                <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+                                    <Icon icon="solar:laptop-minimalistic-bold" className="text-blue-600" /> Aperçu du livrable client
                                 </h3>
+                                <div className="grid lg:grid-cols-2 gap-8 items-start">
+                                <div className="flex flex-col justify-center gap-4">
+                                    <p className="text-sm text-slate-600 leading-relaxed">Vos clients reçoivent des rapports interactifs à vos couleurs. Valorisez votre expertise et accélérez la prise de décision.</p>
+                                    <p className="text-sm text-slate-500 leading-relaxed">La mise à jour du logo ou de la couleur ci-dessus se reflète instantanément dans l'aperçu.</p>
+                                </div>
                                 <div className="bg-white border border-slate-200/80 rounded-[20px] overflow-hidden shadow-2xl shadow-blue-900/5 ring-1 ring-slate-900/5">
                                     {/* Browser Header Mock */}
                                     <div className="px-4 py-3 flex items-center gap-2 border-b border-slate-100 bg-slate-50/80 backdrop-blur-sm">
@@ -9311,9 +9341,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <p className="text-center text-[12px] text-slate-500 mt-6 px-4 font-medium leading-relaxed">
-                                    Vos clients reçoivent des rapports interactifs à vos couleurs. Valorisez votre expertise et accélérez la prise de décision.
-                                </p>
+                                </div>
                             </div>
                         </div>
 
@@ -9544,8 +9572,8 @@
         const ProTopbar = ({ title, toggleMobile }) => (
             <div className="bg-white border-b border-slate-200 px-4 md:px-8 py-4 flex items-center justify-between sticky top-0 z-30 shadow-sm shadow-slate-200/40">
                 <div className="flex items-center gap-3">
-                    <button type="button" onClick={toggleMobile} className="lg:hidden w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200 transition-colors">
-                        <Icon icon="solar:hamburger-menu-linear" style={{ fontSize: '22px' }} />
+                    <button type="button" onClick={toggleMobile} className="lg:hidden w-12 h-12 flex items-center justify-center rounded-xl bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200 transition-colors">
+                        <Icon icon="solar:hamburger-menu-linear" style={{ fontSize: '24px' }} />
                     </button>
                     <h1 className="text-xl font-bold text-slate-800 tracking-tight hidden sm:block">{title}</h1>
                 </div>
@@ -9961,10 +9989,10 @@
                                 <button
                                     type="button"
                                     onClick={() => setIsMobileNavOpen(!isMobileNavOpen)}
-                                    className="sm:hidden w-9 h-9 flex items-center justify-center rounded-xl bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200 transition-colors"
+                                    className="sm:hidden w-11 h-11 flex items-center justify-center rounded-xl bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200 transition-colors"
                                     aria-label={isMobileNavOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
                                 >
-                                    <Icon icon={isMobileNavOpen ? 'solar:close-square-linear' : 'solar:hamburger-menu-linear'} style={{ fontSize: '20px' }} />
+                                    <Icon icon={isMobileNavOpen ? 'solar:close-square-linear' : 'solar:hamburger-menu-linear'} style={{ fontSize: '22px' }} />
                                 </button>
                             </div>
                         </div>

@@ -54,11 +54,27 @@ A creer manuellement dans Supabase Dashboard -> Storage :
 4. File size limit : 10 MB
 5. Allowed MIME types : `application/pdf`
 
-Variables serveur supplementaires requises pour `/api/save-public-report` :
+### Route canonique PDF public
+
+`/api/public-report-pdf` — pipeline Puppeteer :
+- Front (`index.html`) POST `{ lead_submission_id, report_payload }`
+- Serveur genere un token temporaire, INSERT `public_reports` (status=generating)
+- Construit l'URL de la page print `public-report-print.html?token=...`
+- Puppeteer ouvre la page, attend `window.__REPORT_READY__`
+- Export PDF A4 -> upload bucket `public-reports` (PUBLIC)
+- URL signee 30 jours -> UPDATE `public_reports` (status=ready)
+- UPDATE `lead_submissions.pdf_url` (best-effort)
+- Email Resend (fire-and-forget)
+- Retourne `{ ok, public_report_id, report_url, pdf_url }`
+
+Variables serveur requises :
 - `RESEND_API_KEY`
 - `RESEND_FROM`
 
-Flux : formulaire public -> rapport interactif -> PDF Chromium -> bucket `public-reports` -> URL signee 15 jours -> email Resend -> `public_report_pdfs` + `lead_submissions.pdf_url`.
+### Route deprecee
+
+`/api/save-public-report` retourne desormais 410 Gone. Elle n'est plus appelee par le front.
+Ne pas la supprimer tant qu'elle peut recevoir des appels externes residuels.
 
 Exemples de redirect URLs :
 - `http://localhost:3000/index.saaspro.html`

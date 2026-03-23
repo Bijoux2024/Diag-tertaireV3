@@ -7362,7 +7362,7 @@
                                 <Area type="monotone" dataKey="avec_travaux" stroke="none" fill="url(#newDiagProjAvec)" />
                                 <Line type="monotone" dataKey="sans_travaux" name="Situation actuelle" stroke="#EF4444" strokeWidth={2.5} strokeDasharray="6 3" dot={false} />
                                 {projection.hasLightScenario && (
-                                    <Line type="monotone" dataKey="avec_actions_rapides" name="Actions sans travaux" stroke="#F59E0B" strokeWidth={2} strokeDasharray="4 2" dot={false} />
+                                    <Line type="monotone" dataKey="avec_actions_rapides" name="Actions sans travaux" stroke="#F59E0B" strokeWidth={2.5} strokeDasharray="10 4" dot={false} connectNulls={false} />
                                 )}
                                 <Line type="monotone" dataKey="avec_travaux" name="Actions légères + travaux" stroke="#10B981" strokeWidth={3} dot={false} />
                                 {projection.roiAnnee && (
@@ -7394,7 +7394,7 @@
             const posHigh = getPos(high);
 
             return (
-                <div className="relative px-2 pt-14 pb-12">
+                <div className="relative px-2 pt-14 pb-2">
                     {/* Étiquettes de référence au-dessus */}
                     <div className="absolute top-0 left-2 right-2" style={{ height: 52 }}>
                         {[
@@ -7430,7 +7430,7 @@
                     </div>
 
                     {/* Labels en dessous des marqueurs */}
-                    <div className="relative" style={{ height: 32 }}>
+                    <div className="relative" style={{ minHeight: 50 }}>
                         <div className="absolute flex flex-col items-center" style={{ left: `${posCurrent}%`, transform: 'translateX(-50%)' }}>
                             <div className="w-px h-2 bg-slate-600"></div>
                             <p className="text-[10px] font-bold whitespace-nowrap bg-slate-900 text-white px-1.5 py-0.5 rounded-md mt-0.5">{Math.round(intensity)} kWh/m²/an</p>
@@ -8089,7 +8089,6 @@
             const formatKwh = (value) => newDiagnosticFormatUnitValue(value, 'kWh/an');
             const formatKgCo2 = (value) => newDiagnosticFormatUnitValue(value, 'kgCO2e');
             const formatYears = (value) => newDiagnosticFormatYears(value, 1);
-            const shortActions = actions.slice(0, 3);
             const horizonLabel = role === 'tenant' ? 'Lecture charges à 3 ans' : 'Lecture patrimoniale à 10 ans';
             const actionCopy = NEW_DIAGNOSTIC_REPORT_COPY.actions;
             const impactCopy = NEW_DIAGNOSTIC_REPORT_COPY.impact;
@@ -8179,12 +8178,12 @@
                         <table className="min-w-[760px] w-full text-sm">
                             <thead className="bg-slate-50">
                                 <tr>
-                                    <th className="px-4 py-3 md:px-5 text-left text-[11px] font-bold uppercase tracking-wide text-slate-500">{actionCopy.columns.priority}</th>
-                                    <th className="px-4 py-3 md:px-5 text-left text-[11px] font-bold uppercase tracking-wide text-slate-500">{actionCopy.columns.action}</th>
-                                    <th className="px-4 py-3 md:px-5 text-right text-[11px] font-bold uppercase tracking-wide text-slate-500">{actionCopy.columns.annualSavings}</th>
-                                    <th className="px-4 py-3 md:px-5 text-right text-[11px] font-bold uppercase tracking-wide text-slate-500">{actionCopy.columns.energyGain}</th>
-                                    <th className="px-4 py-3 md:px-5 text-right text-[11px] font-bold uppercase tracking-wide text-slate-500">{actionCopy.columns.budget}</th>
-                                    <th className="px-4 py-3 md:px-5 text-right text-[11px] font-bold uppercase tracking-wide text-slate-500">{actionCopy.columns.roi}</th>
+                                    <th className="px-4 py-4 md:px-5 text-left text-[11px] font-bold uppercase tracking-wide text-slate-400">{actionCopy.columns.priority}</th>
+                                    <th className="px-4 py-4 md:px-5 text-left text-[11px] font-bold uppercase tracking-wide text-slate-400">{actionCopy.columns.action}</th>
+                                    <th className="px-4 py-4 md:px-5 text-right text-[11px] font-bold uppercase tracking-wide text-slate-400">{actionCopy.columns.annualSavings}</th>
+                                    <th className="px-4 py-4 md:px-5 text-right text-[11px] font-bold uppercase tracking-wide text-slate-400">{actionCopy.columns.energyGain}</th>
+                                    <th className="px-4 py-4 md:px-5 text-right text-[11px] font-bold uppercase tracking-wide text-slate-400">{actionCopy.columns.budget}</th>
+                                    <th className="px-4 py-4 md:px-5 text-right text-[11px] font-bold uppercase tracking-wide text-slate-400">{actionCopy.columns.roi}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -8195,21 +8194,23 @@
                                     const roiValue = action.roi_years && action.roi_years.value !== null ? formatYears(action.roi_years.value) : 'À confirmer';
 
                                     return (
-                                        <tr key={action.id || index} className="border-t border-slate-200 odd:bg-white even:bg-slate-50 hover:bg-[#F8FAFC] transition-colors">
-                                            <td className="px-4 py-4 md:px-5 md:py-5 align-top">
+                                        <tr key={action.id || index} className="border-t border-slate-100 odd:bg-white even:bg-slate-50/60 hover:bg-[#F8FAFC] transition-colors">
+                                            <td className="px-4 py-5 md:px-5 md:py-6 align-top">
                                                 <div className="flex items-center gap-2">
                                                     <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-slate-900 text-white text-xs font-black">{index + 1}</span>
                                                     <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold border whitespace-nowrap ${priorityBadge.className}`}>{priorityBadge.label}</span>
                                                 </div>
                                             </td>
-                                            <td className="px-4 py-4 md:px-5 md:py-5 align-top min-w-[260px]">
-                                                <p className="font-semibold text-slate-900 leading-snug">{action.name}</p>
-                                                <p className="text-xs text-slate-500 mt-1">{categoryLabel} · {actionRobustness.label}</p>
+                                            <td className="px-4 py-5 md:px-5 md:py-6 align-top min-w-[260px]">
+                                                <p className="font-bold text-slate-900 leading-snug">{action.name}</p>
+                                                <p className="text-xs text-slate-400 mt-1.5">{categoryLabel} · {actionRobustness.label}</p>
                                             </td>
-                                            <td className="px-4 py-4 md:px-5 md:py-5 align-top text-right whitespace-nowrap font-semibold text-emerald-700">{formatMoney(action.gain_euro_an.value)}</td>
-                                            <td className="px-4 py-4 md:px-5 md:py-5 align-top text-right whitespace-nowrap font-semibold text-blue-700">{formatKwh(action.gain_kwh_an.value)}</td>
-                                            <td className="px-4 py-4 md:px-5 md:py-5 align-top text-right whitespace-nowrap font-semibold text-slate-900">{formatMoney(action.capex.value)}</td>
-                                            <td className="px-4 py-4 md:px-5 md:py-5 align-top text-right whitespace-nowrap font-semibold text-amber-700">{roiValue}</td>
+                                            <td className="px-4 py-5 md:px-5 md:py-6 align-top text-right whitespace-nowrap">
+                                                <p className="font-bold text-emerald-700">{formatMoney(action.gain_euro_an.value)}</p>
+                                            </td>
+                                            <td className="px-4 py-5 md:px-5 md:py-6 align-top text-right whitespace-nowrap font-semibold text-blue-700">{formatKwh(action.gain_kwh_an.value)}</td>
+                                            <td className="px-4 py-5 md:px-5 md:py-6 align-top text-right whitespace-nowrap font-semibold text-slate-800">{formatMoney(action.capex.value)}</td>
+                                            <td className="px-4 py-5 md:px-5 md:py-6 align-top text-right whitespace-nowrap font-bold text-amber-700">{roiValue}</td>
                                         </tr>
                                     );
                                 })}
@@ -8417,28 +8418,36 @@
 
                                             return (
                                                 <div>
-                                                    <div className="w-full" style={{ height: '220px' }}>
+                                                    <div className="w-full relative" style={{ height: '230px' }}>
                                                         {window.Recharts ? (
-                                                            <window.Recharts.ResponsiveContainer width="100%" height="100%">
-                                                                <window.Recharts.PieChart>
-                                                                    <window.Recharts.Pie
-                                                                        data={postesData}
-                                                                        cx="50%" cy="50%"
-                                                                        innerRadius={52} outerRadius={88}
-                                                                        dataKey="value" nameKey="name"
-                                                                        paddingAngle={2}
-                                                                        stroke="none"
-                                                                    >
-                                                                        {postesData.map((d, i) => <window.Recharts.Cell key={i} fill={d.fill} />)}
-                                                                    </window.Recharts.Pie>
-                                                                    <window.Recharts.Tooltip
-                                                                        formatter={(v, n, p) => [
-                                                                            `${(p.payload.eur || 0).toLocaleString('fr-FR')} €/an`,
-                                                                            `${n} (${Math.round(p.payload.pct)}%)`
-                                                                        ]}
-                                                                    />
-                                                                </window.Recharts.PieChart>
-                                                            </window.Recharts.ResponsiveContainer>
+                                                            <>
+                                                                <window.Recharts.ResponsiveContainer width="100%" height="100%">
+                                                                    <window.Recharts.PieChart>
+                                                                        <window.Recharts.Pie
+                                                                            data={postesData}
+                                                                            cx="50%" cy="50%"
+                                                                            innerRadius={56} outerRadius={94}
+                                                                            dataKey="value" nameKey="name"
+                                                                            paddingAngle={2}
+                                                                            stroke="none"
+                                                                        >
+                                                                            {postesData.map((d, i) => <window.Recharts.Cell key={i} fill={d.fill} />)}
+                                                                        </window.Recharts.Pie>
+                                                                        <window.Recharts.Tooltip
+                                                                            formatter={(v, n, p) => [
+                                                                                `${(p.payload.eur || 0).toLocaleString('fr-FR')} €/an`,
+                                                                                `${n} (${Math.round(p.payload.pct)}%)`
+                                                                            ]}
+                                                                        />
+                                                                    </window.Recharts.PieChart>
+                                                                </window.Recharts.ResponsiveContainer>
+                                                                {totalCost > 0 && (
+                                                                    <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center', pointerEvents: 'none' }}>
+                                                                        <p className="text-sm font-black text-slate-900 leading-tight tabular-nums">{totalCost.toLocaleString('fr-FR')} €</p>
+                                                                        <p className="text-[9px] text-slate-500 font-medium">/ an</p>
+                                                                    </div>
+                                                                )}
+                                                            </>
                                                         ) : (
                                                             <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs text-center border border-dashed rounded-lg bg-slate-50">
                                                                 Graphique non disponible.
@@ -8532,7 +8541,7 @@
                                 totalCostEuroAn={calc.total_cost_euro_an.value}
                                 elecKwh={calc.elec_kwh_an.value}
                                 gasKwh={calc.gas_kwh_an.value}
-                                actions={shortActions}
+                                actions={actions}
                             />
                             {(() => {
                                 const d1 = projection.data.find(d => d.annee === 'A+1') || {};
@@ -8796,34 +8805,34 @@
                         </div>
 
                         <div className="report-card p-6 md:p-8 mb-8">
-                            <div className="rounded-[24px] border-2 border-[#BFDBFE] bg-gradient-to-br from-[#EFF6FF] via-white to-[#F0FDF4] p-6 md:p-8">
-                                <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-                                    <div className="min-w-0 flex-1">
-                                        <div className="inline-flex items-center gap-2 text-[#1D4ED8] mb-4 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-200">
-                                            <Icon icon="solar:chat-round-call-bold" className="text-base" />
-                                            <p className="text-xs font-bold uppercase tracking-wide">Prochaine étape</p>
-                                        </div>
-                                        <h2 className="text-2xl font-black text-[#102A43] leading-tight">{nextStepCopy.title}</h2>
-                                        <p className="text-sm text-slate-600 mt-3 max-w-2xl leading-relaxed">{nextStepCopy.intro}</p>
-                                        <div className="grid gap-2.5 mt-5 sm:grid-cols-2">
-                                            {nextStepCopy.bullets.slice(0, 4).map((bullet, index) => (
-                                                <div key={index} className="rounded-2xl border border-slate-200 bg-white px-4 py-3 flex items-start gap-3 shadow-sm">
-                                                    <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#1D4ED8] text-white text-xs font-bold shrink-0 mt-0.5">{index + 1}</span>
-                                                    <p className="text-sm text-slate-700 leading-relaxed">{bullet}</p>
-                                                </div>
-                                            ))}
-                                        </div>
+                            <div className="rounded-[24px] border-2 border-[#BFDBFE] bg-gradient-to-br from-[#EFF6FF] via-white to-[#F0FDF4] p-8 md:p-10">
+                                <div className="max-w-xl mx-auto flex flex-col items-center text-center gap-5">
+                                    <div className="inline-flex items-center gap-2 text-[#1D4ED8] px-3 py-1.5 rounded-full bg-blue-50 border border-blue-200">
+                                        <Icon icon="solar:chat-round-call-bold" className="text-base" />
+                                        <p className="text-xs font-bold uppercase tracking-wide">Prochaine étape</p>
                                     </div>
-                                    <div className="w-full lg:w-[300px] flex flex-col gap-4 lg:self-start">
+                                    <div>
+                                        <h2 className="text-2xl font-black text-[#102A43] leading-tight">{nextStepCopy.title}</h2>
+                                        <p className="text-sm text-slate-600 mt-3 leading-relaxed">{nextStepCopy.intro}</p>
+                                    </div>
+                                    <div className="grid gap-2.5 sm:grid-cols-2 w-full text-left">
+                                        {nextStepCopy.bullets.slice(0, 4).map((bullet, index) => (
+                                            <div key={index} className="rounded-2xl border border-slate-200 bg-white px-4 py-3 flex items-start gap-3 shadow-sm">
+                                                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#1D4ED8] text-white text-xs font-bold shrink-0 mt-0.5">{index + 1}</span>
+                                                <p className="text-sm text-slate-700 leading-relaxed">{bullet}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="w-full flex flex-col items-center gap-2 mt-1">
                                         {hasCtaConfirmation ? (
-                                            <div className="rounded-2xl border border-green-200 bg-green-50 px-5 py-5">
+                                            <div className="w-full rounded-2xl border border-green-200 bg-green-50 px-5 py-4">
                                                 <div className="flex items-start gap-3">
                                                     <Icon icon="solar:check-circle-bold" className="text-green-600 text-2xl shrink-0 mt-0.5" />
                                                     <p className="text-sm text-green-800 font-medium leading-relaxed">{nextStepCopy.success}</p>
                                                 </div>
                                             </div>
                                         ) : (
-                                            <div className="flex flex-col gap-2">
+                                            <>
                                                 <button
                                                     onClick={openCtaPanel}
                                                     className="w-full px-5 py-4 bg-[#1D4ED8] text-white rounded-2xl text-sm font-bold hover:bg-[#1E40AF] active:scale-[0.99] transition-all shadow-lg flex items-center justify-center gap-2"
@@ -8831,21 +8840,21 @@
                                                     <Icon icon="solar:users-group-rounded-bold" className="text-lg shrink-0" />
                                                     Être mis en relation gratuitement
                                                 </button>
-                                                <p className="text-[11px] text-center text-slate-500 leading-relaxed px-1">{nextStepCopy.proof}</p>
-                                            </div>
+                                                <p className="text-[11px] text-slate-500 leading-relaxed">{nextStepCopy.proof}</p>
+                                            </>
                                         )}
-                                        <div className="flex flex-col gap-2 p-4 rounded-2xl bg-white border border-slate-200">
-                                            {[
-                                                { icon: 'solar:shield-check-bold', text: 'Aucun engagement ni frais', color: 'text-emerald-600' },
-                                                { icon: 'solar:clock-circle-bold', text: 'Réponse sous 48h', color: 'text-blue-600' },
-                                                { icon: 'solar:star-bold', text: 'Partenaire qualifié et sélectionné', color: 'text-amber-500' },
-                                            ].map(({ icon, text, color }, i) => (
-                                                <div key={i} className="flex items-center gap-2">
-                                                    <Icon icon={icon} className={`text-base shrink-0 ${color}`} />
-                                                    <p className="text-xs text-slate-700 font-medium">{text}</p>
-                                                </div>
-                                            ))}
-                                        </div>
+                                    </div>
+                                    <div className="flex flex-wrap justify-center gap-4 pt-1">
+                                        {[
+                                            { icon: 'solar:shield-check-bold', text: 'Aucun engagement ni frais', color: 'text-emerald-600' },
+                                            { icon: 'solar:clock-circle-bold', text: 'Réponse sous 48h', color: 'text-blue-600' },
+                                            { icon: 'solar:star-bold', text: 'Partenaire qualifié et sélectionné', color: 'text-amber-500' },
+                                        ].map(({ icon, text, color }, i) => (
+                                            <div key={i} className="flex items-center gap-1.5">
+                                                <Icon icon={icon} className={`text-base shrink-0 ${color}`} />
+                                                <p className="text-xs text-slate-600 font-medium">{text}</p>
+                                            </div>
+                                        ))}
                                     </div>
                                 </div>
                             </div>
@@ -9297,12 +9306,12 @@ body{margin:0;font-family:Arial,sans-serif;background:#f8fafc;color:#0f172a;}
                                 try { window.scrollTo({ top: 0, behavior: 'instant' }); } catch (_) { window.scrollTo(0, 0); }
                             }} />
                         )}
-                        <div className="max-w-5xl mx-auto px-4 pt-8">
-                            <div className="flex flex-wrap gap-3">
+                        <div className="max-w-5xl mx-auto px-4 pt-5 pb-2">
+                            <div className="flex flex-wrap items-center gap-2 py-3 px-4 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-2xl shadow-sm">
                                 <button
                                     type="button"
                                     onClick={handleReset}
-                                    className="inline-flex items-center gap-2 bg-[#F8FAFC] text-[#475569] px-4 py-2.5 rounded-xl font-semibold border border-[#E2E8F0] hover:bg-[#F1F5F9] transition-colors shadow-sm text-sm"
+                                    className="inline-flex items-center gap-2 bg-slate-50 text-slate-600 px-3.5 py-2 rounded-xl font-semibold border border-slate-200 hover:bg-slate-100 transition-colors text-sm"
                                 >
                                     <Icon icon="solar:restart-linear" className="text-base" />
                                     Nouveau rapport
@@ -9310,11 +9319,12 @@ body{margin:0;font-family:Arial,sans-serif;background:#f8fafc;color:#0f172a;}
                                 <button
                                     type="button"
                                     onClick={handleEdit}
-                                    className="inline-flex items-center gap-2 bg-[#EFF6FF] text-[#1D4ED8] px-4 py-2.5 rounded-xl font-semibold border border-[#DBEAFE] hover:bg-[#DBEAFE] transition-colors shadow-sm text-sm"
+                                    className="inline-flex items-center gap-2 bg-blue-50 text-[#1D4ED8] px-3.5 py-2 rounded-xl font-semibold border border-blue-200 hover:bg-blue-100 transition-colors text-sm"
                                 >
                                     <Icon icon="solar:pen-bold" className="text-base" />
                                     Modifier mon rapport
                                 </button>
+                                <span className="ml-auto text-[11px] text-slate-400 hidden sm:block">Pré-diagnostic énergétique · DiagTertiaire</span>
                             </div>
                         </div>
 

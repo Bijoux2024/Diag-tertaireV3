@@ -371,7 +371,6 @@ module.exports = async function handler(req, res) {
         report_payload: reportPayload,
         cover_image_url: asPlainObject(reportPayload.inputs_summary).cover_image_path || null,
         cover_image_source: asPlainObject(reportPayload.inputs_summary).cover_image_source || null,
-        cover_is_manual: !!asPlainObject(reportPayload.inputs_summary).cover_is_manual,
         cover_original_filename: asPlainObject(reportPayload.inputs_summary).cover_original_filename || null,
         pdf_status: 'generating',
         access_token_hash: token.hash,

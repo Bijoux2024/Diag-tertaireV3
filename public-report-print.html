@@ -153,27 +153,42 @@
 
     // @sync — energy inflation: 4%/year
     const buildProjection = ({ totalCostEuroAn, annualEuro, actions }) => {
-      const taux      = 0.04;
-      const capexBrut = arr(actions).reduce((s, a) => s + num(a?.capex?.value), 0);
-      const aides     = Math.round(capexBrut * 0.12);
-      const capexNet  = Math.max(0, Math.round(capexBrut - aides));
-      const base      = num(totalCostEuroAn);
-      const savings   = num(annualEuro);
+      const taux       = 0.04;
+      const safeActs   = arr(actions);
+      const capexBrut  = safeActs.reduce((s, a) => s + num(a?.capex?.value), 0);
+      const aides      = Math.round(capexBrut * 0.12);
+      const capexNet   = Math.max(0, Math.round(capexBrut - aides));
+      const base       = num(totalCostEuroAn);
+      const savings    = num(annualEuro);
+
+      // Scénario 2 : actions rapides seulement (tier=light)
+      const lightActs  = safeActs.filter(a => a?.tier === 'light' || (!a?.tier && num(a?.capex?.value) < 3000));
+      const lightSav   = lightActs.reduce((s, a) => s + num(a?.gain_euro_an?.value), 0);
+      const lightCapex = Math.max(0, Math.round(lightActs.reduce((s, a) => s + num(a?.capex?.value), 0) * 0.88));
+      const hasLight   = lightActs.length > 0 && lightActs.length < safeActs.length;
+
       const data = [];
       for (let i = 0; i <= 10; i++) {
-        data.push({
+        const f = Math.pow(1 + taux, i);
+        const row = {
           annee: `A+${i}`,
-          sans_travaux: Math.round(base * Math.pow(1 + taux, i)),
+          sans_travaux: Math.round(base * f),
           avec_travaux: i === 0
             ? Math.round(base + capexNet)
-            : Math.round(Math.max(0, base - savings) * Math.pow(1 + taux, i))
-        });
+            : Math.round(Math.max(0, base - savings) * f),
+        };
+        if (hasLight) {
+          row.avec_actions_rapides = i === 0
+            ? Math.round(base + lightCapex)
+            : Math.round(Math.max(0, base - lightSav) * f);
+        }
+        data.push(row);
       }
       const roiIdx = data.findIndex((d, i) => i > 0 && d.avec_travaux <= d.sans_travaux);
       console.log('[print] projection points:', data.length,
         '| A+0:', JSON.stringify(data[0]),
         '| A+5:', JSON.stringify(data[5]));
-      return { data, taux: taux * 100, roiAnnee: roiIdx > 0 ? roiIdx : null };
+      return { data, taux: taux * 100, roiAnnee: roiIdx > 0 ? roiIdx : null, hasLight };
     };
 
     const TIER_CONF = {
@@ -331,12 +346,13 @@
          Recharts animations are async; without this Puppeteer may
          snapshot mid-animation yielding paths with no 'd' attribute.
     ═══════════════════════════════════════════════════════ */
-    const ProjectionChart = ({ data }) => {
+    const ProjectionChart = ({ data, hasLight }) => {
       if (!AreaChart || !data || data.length === 0) {
         console.warn('[print] ProjectionChart: AreaChart unavailable or no data');
         return null;
       }
       const fmtTick = v => `${Math.round(v / 1000)}k€`;
+      const { RC: _RC, Line, LineChart } = window.Recharts || {};
       return (
         <div className="chart-host pba">
           <AreaChart
@@ -347,23 +363,32 @@
           >
             <defs>
               <linearGradient id="gSans" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%"  stopColor="#EA580C" stopOpacity={0.22} />
+                <stop offset="5%"  stopColor="#EA580C" stopOpacity={0.14} />
                 <stop offset="95%" stopColor="#EA580C" stopOpacity={0} />
               </linearGradient>
               <linearGradient id="gAvec" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%"  stopColor={T.blue} stopOpacity={0.18} />
+                <stop offset="5%"  stopColor={T.blue} stopOpacity={0.14} />
                 <stop offset="95%" stopColor={T.blue} stopOpacity={0} />
+              </linearGradient>
+              <linearGradient id="gLight" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%"  stopColor="#F59E0B" stopOpacity={0.12} />
+                <stop offset="95%" stopColor="#F59E0B" stopOpacity={0} />
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke={T.slate200} />
             <XAxis dataKey="annee" tick={{ fontSize: 10, fill: T.slate600 }} />
             <YAxis tickFormatter={fmtTick} tick={{ fontSize: 10, fill: T.slate600 }} width={48} />
             <Tooltip formatter={v => fmtEur(v)} />
-            <Legend wrapperStyle={{ fontSize: 11, paddingTop: 10 }} />
-            <Area type="monotone" dataKey="sans_travaux" name="Sans travaux"
-                  stroke="#EA580C" strokeWidth={2.5} fill="url(#gSans)"
-                  isAnimationActive={false} />
-            <Area type="monotone" dataKey="avec_travaux" name="Avec travaux"
+            <Legend wrapperStyle={{ fontSize: 10, paddingTop: 8 }} />
+            <Area type="monotone" dataKey="sans_travaux" name="Sans action"
+                  stroke="#EA580C" strokeWidth={2.2} strokeDasharray="6 3"
+                  fill="url(#gSans)" isAnimationActive={false} />
+            {hasLight && (
+              <Area type="monotone" dataKey="avec_actions_rapides" name="Actions rapides seulement"
+                    stroke="#F59E0B" strokeWidth={1.8} strokeDasharray="3 2"
+                    fill="url(#gLight)" isAnimationActive={false} />
+            )}
+            <Area type="monotone" dataKey="avec_travaux" name="Avec toutes les actions"
                   stroke={T.blue} strokeWidth={2.5} fill="url(#gAvec)"
                   isAnimationActive={false} />
           </AreaChart>
@@ -639,13 +664,38 @@
           <Section
             title="Projection financière — 10 ans"
             sub={
-              `Inflation énergie estimée : ${projection.taux}%/an · ` +
+              `3 scénarios comparés · Inflation énergie estimée : ${projection.taux}%/an · ` +
               (projection.roiAnnee
-                ? `Croisement estimé à A+${projection.roiAnnee}`
-                : 'Croisement non atteint sur la période')
+                ? `Rentabilité estimée à A+${projection.roiAnnee}`
+                : 'Rentabilité non atteinte sur la période simulée')
             }
           >
-            <ProjectionChart data={projection.data} />
+            <ProjectionChart data={projection.data} hasLight={projection.hasLight} />
+            {/* Résumé chiffré A+1 / A+3 / A+10 */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginTop: 14 }}>
+              {[
+                { label: 'A+1 — coût annuel', st: projection.data[1]?.sans_travaux, av: projection.data[1]?.avec_travaux },
+                { label: 'A+3 — coût annuel', st: projection.data[3]?.sans_travaux, av: projection.data[3]?.avec_travaux },
+                { label: 'A+10 — coût annuel', st: projection.data[10]?.sans_travaux, av: projection.data[10]?.avec_travaux },
+                { label: 'Point de rentabilité', special: projection.roiAnnee ? `Année ${projection.roiAnnee}` : 'À confirmer' },
+              ].map((c, i) => (
+                <div key={i} className="pba" style={{
+                  background: i === 3 ? '#EFF6FF' : T.slate50,
+                  border: `1px solid ${i === 3 ? '#BFDBFE' : T.slate200}`,
+                  borderRadius: 10, padding: '10px 12px',
+                }}>
+                  <div style={{ fontSize: 8, fontWeight: 700, textTransform: 'uppercase', color: T.slate400, marginBottom: 6 }}>{c.label}</div>
+                  {c.special ? (
+                    <div style={{ fontSize: 16, fontWeight: 900, color: T.blue }}>{c.special}</div>
+                  ) : (
+                    <>
+                      <div style={{ fontSize: 13, fontWeight: 800, color: '#374151' }}>{fmtEur(c.st)}</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: '#059669', marginTop: 3 }}>→ {fmtEur(c.av)} avec actions</div>
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
           </Section>
 
           {/* ══════════════════════════════════════════════════

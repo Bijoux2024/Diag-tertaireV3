@@ -91,8 +91,6 @@
 
   <script type="text/babel" data-presets="react">
     const { useState, useEffect, useRef } = React;
-    const RC = window.Recharts || {};
-    const { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend } = RC;
     // NOTE: ResponsiveContainer is intentionally NOT used in the print page.
     // It depends on ResizeObserver which does not fire reliably in Puppeteer
     // print-media mode → charts render with width=0 → empty SVG paths.
@@ -110,6 +108,7 @@
     const obj = v => (v && typeof v === 'object' && !Array.isArray(v)) ? v : {};
     const arr = v => Array.isArray(v) ? v : [];
     const num = (v, fb = 0) => { const n = Number(v); return isFinite(n) ? n : fb; };
+    const bool = (v) => v === true || ['true', '1', 'yes'].includes(String(v ?? '').trim().toLowerCase());
 
     const fmtEur = v => `${Math.round(num(v, 0)).toLocaleString('fr-FR')} €`;
     const fmtInt = (v, u = '') => {
@@ -340,8 +339,57 @@
     /* ═══════════════════════════════════════════════════════
        COVER IMAGE — print-safe building photo block
     ═══════════════════════════════════════════════════════ */
-    const CoverImageBlock = ({ url }) => {
-      if (!url) return null;
+    const COVER_SOURCE_LABELS = {
+      upload: 'Photo téléversée',
+      panoramax: 'Vue façade',
+      google_streetview: 'Street View',
+      aerial: 'Vue aérienne',
+      plan: 'Plan cadastral',
+      storage: 'Image enregistrée',
+      url: 'Image distante'
+    };
+    const CoverImageBlock = ({ selected, url, source, path }) => {
+      const [hasError, setHasError] = useState(false);
+      const sourceLabel = COVER_SOURCE_LABELS[String(source || '').trim()] || 'Image de couverture';
+
+      useEffect(() => {
+        if (!selected || url) return;
+        const message = 'Cover selected but no printable URL available';
+        window.__REPORT_COVER_ERROR__ = message;
+        console.error('[print] ' + message, { source: source || null, path: path || null });
+      }, [selected, url, source, path]);
+
+      useEffect(() => {
+        if (!selected || !hasError) return;
+        const message = 'Cover selected but failed to load for print';
+        window.__REPORT_COVER_ERROR__ = message;
+        console.error('[print] ' + message, { source: source || null, path: path || null, url: url || null });
+      }, [selected, hasError, source, path, url]);
+
+      if (!selected) return null;
+
+      if (!url || hasError) {
+        return (
+          <div className="pba" style={{
+            marginBottom: 18,
+            borderRadius: 14,
+            border: '1px solid ' + T.slate200,
+            background: 'linear-gradient(135deg, #F8FAFC 0%, #EEF2FF 100%)',
+            padding: '20px 22px',
+          }}>
+            <div style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: T.blue, marginBottom: 8 }}>
+              Image de couverture
+            </div>
+            <div style={{ fontSize: 15, fontWeight: 800, color: T.navy, marginBottom: 6 }}>
+              Le visuel sélectionné n'a pas pu être chargé pour l'impression.
+            </div>
+            <div style={{ fontSize: 11, color: T.slate600, lineHeight: 1.6 }}>
+              Source : {sourceLabel}
+            </div>
+          </div>
+        );
+      }
+
       return (
         <div className="pba" style={{
           marginBottom: 18, borderRadius: 14, overflow: 'hidden',
@@ -351,24 +399,20 @@
             src={url}
             alt="Photo du bâtiment"
             data-report-image="true"
-            style={{ width: '100%', height: '190px', objectFit: 'cover', display: 'block' }}
-            onError={(e) => {
-              try {
-                const block = e.target.closest && e.target.closest('.pba');
-                if (block) block.style.display = 'none';
-                else if (e.target.parentNode) e.target.parentNode.style.display = 'none';
-              } catch (_) {}
-            }}
+            data-report-image-critical="true"
+            style={{ width: '100%', height: '210px', objectFit: 'cover', display: 'block' }}
+            onError={() => setHasError(true)}
           />
           <div style={{
             position: 'absolute', bottom: 0, left: 0, right: 0,
-            background: 'linear-gradient(to top, rgba(10,25,40,0.65) 0%, transparent 100%)',
+            background: 'linear-gradient(to top, rgba(10,25,40,0.70) 0%, rgba(10,25,40,0.05) 100%)',
             padding: '10px 16px 12px',
           }}>
             <div style={{
               fontSize: 9, fontWeight: 700, textTransform: 'uppercase',
-              letterSpacing: '0.1em', color: 'rgba(255,255,255,0.85)',
+              letterSpacing: '0.1em', color: 'rgba(255,255,255,0.82)', marginBottom: 3,
             }}>Vue du bâtiment</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#FFFFFF' }}>{sourceLabel}</div>
           </div>
         </div>
       );
@@ -477,52 +521,194 @@
          Recharts animations are async; without this Puppeteer may
          snapshot mid-animation yielding paths with no 'd' attribute.
     ═══════════════════════════════════════════════════════ */
-    const ProjectionChart = ({ data, hasLight }) => {
-      if (!AreaChart || !data || data.length === 0) {
-        console.warn('[print] ProjectionChart: AreaChart unavailable or no data');
+    const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+    const formatProjectionTick = (value) => {
+      const safe = Math.max(0, num(value));
+      if (safe >= 1_000_000) {
+        return `${(safe / 1_000_000).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} M€`;
+      }
+      return `${Math.round(safe / 1000)}k€`;
+    };
+    const getNiceTickStep = (maxValue, tickCount = 4) => {
+      const safeMax = Math.max(1, num(maxValue));
+      const rough = safeMax / Math.max(1, tickCount);
+      const magnitude = Math.pow(10, Math.floor(Math.log10(rough)));
+      const residual = rough / magnitude;
+      const nice =
+        residual > 5 ? 10 :
+        residual > 2 ? 5 :
+        residual > 1 ? 2 : 1;
+      return nice * magnitude;
+    };
+    const buildSvgLinePath = (points) => {
+      if (!Array.isArray(points) || points.length === 0) return '';
+      return points.map((point, index) => `${index === 0 ? 'M' : 'L'}${point.x},${point.y}`).join(' ');
+    };
+    const buildSvgAreaPath = (points, baselineY) => {
+      if (!Array.isArray(points) || points.length === 0) return '';
+      const linePath = buildSvgLinePath(points);
+      const first = points[0];
+      const last = points[points.length - 1];
+      return `${linePath} L${last.x},${baselineY} L${first.x},${baselineY} Z`;
+    };
+    const getGaugeLabelLayout = (pos, distance = 40) => {
+      if (pos <= 10) {
+        return { transform: `translateX(${distance}px)`, textAlign: 'left', alignItems: 'flex-start' };
+      }
+      if (pos >= 90) {
+        return { transform: `translateX(-${distance}px)`, textAlign: 'right', alignItems: 'flex-end' };
+      }
+      return { transform: 'translateX(0)', textAlign: 'center', alignItems: 'center' };
+    };
+    const ProjectionChart = ({ data, hasLight, roiLabel }) => {
+      const safeData = arr(data);
+      if (safeData.length === 0) {
+        console.warn('[print] ProjectionChart: no data');
         return null;
       }
-      const fmtTick = v => `${Math.round(v / 1000)}k€`;
-      const { RC: _RC, Line, LineChart } = window.Recharts || {};
+
+      const width = CHART_W;
+      const height = CHART_H;
+      const margin = { top: 18, right: 22, bottom: 40, left: 62 };
+      const plotWidth = width - margin.left - margin.right;
+      const plotHeight = height - margin.top - margin.bottom;
+      const allValues = safeData.flatMap(point => [
+        num(point.sans_travaux),
+        num(point.avec_actions_rapides),
+        num(point.avec_travaux)
+      ]).filter(value => value > 0);
+
+      if (!allValues.length) {
+        console.warn('[print] ProjectionChart: no positive values');
+        return null;
+      }
+
+      const tickStep = getNiceTickStep(Math.max(...allValues), 4);
+      const yMax = Math.max(tickStep, Math.ceil(Math.max(...allValues) / tickStep) * tickStep);
+      const yTicks = [];
+      for (let tick = 0; tick <= yMax; tick += tickStep) {
+        yTicks.push(tick);
+      }
+
+      const getX = (index) => (
+        margin.left + (safeData.length <= 1 ? plotWidth / 2 : (index / (safeData.length - 1)) * plotWidth)
+      );
+      const getY = (value) => margin.top + plotHeight - (clamp(num(value), 0, yMax) / yMax) * plotHeight;
+      const baseLineY = margin.top + plotHeight;
+      const seriesMeta = [
+        { key: 'sans_travaux', label: 'Situation actuelle', stroke: '#EA580C', dash: '6 4', fill: 'url(#printProjSans)' },
+        ...(hasLight ? [{ key: 'avec_actions_rapides', label: 'Actions sans travaux', stroke: '#F59E0B', dash: '9 4', fill: null }] : []),
+        { key: 'avec_travaux', label: 'Actions légères + travaux', stroke: T.blue, dash: null, fill: 'url(#printProjAvec)' },
+      ];
+      const series = seriesMeta.map(meta => ({
+        ...meta,
+        points: safeData.map((point, index) => ({ x: getX(index), y: getY(point[meta.key]), value: num(point[meta.key]) }))
+      }));
+      const roiIndex = safeData.findIndex(point => point.annee === roiLabel);
+      const roiX = roiIndex >= 0 ? getX(roiIndex) : null;
+
       return (
-        <div className="chart-host pba">
-          <AreaChart
-            width={CHART_W}
-            height={CHART_H}
-            data={data}
-            margin={{ top: 8, right: 16, left: 0, bottom: 4 }}
+        <div className="chart-host pba" data-report-chart="projection">
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, marginBottom: 10, alignItems: 'center' }}>
+            {series.map(meta => (
+              <div key={meta.key} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{
+                  width: 24,
+                  height: 0,
+                  borderTop: `2.5px ${meta.dash ? 'dashed' : 'solid'} ${meta.stroke}`,
+                  opacity: 0.95,
+                }} />
+                <span style={{ fontSize: 10, fontWeight: 700, color: T.slate600 }}>{meta.label}</span>
+              </div>
+            ))}
+            <span style={{ marginLeft: 'auto', fontSize: 10, color: T.slate400 }}>
+              Cumul dépenses + investissement initial
+            </span>
+          </div>
+
+          <svg
+            width={width}
+            height={height}
+            viewBox={`0 0 ${width} ${height}`}
+            role="img"
+            aria-label="Projection financière sur 10 ans"
           >
             <defs>
-              <linearGradient id="gSans" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%"  stopColor="#EA580C" stopOpacity={0.14} />
-                <stop offset="95%" stopColor="#EA580C" stopOpacity={0} />
+              <linearGradient id="printProjSans" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#EA580C" stopOpacity="0.16" />
+                <stop offset="100%" stopColor="#EA580C" stopOpacity="0.02" />
               </linearGradient>
-              <linearGradient id="gAvec" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%"  stopColor={T.blue} stopOpacity={0.14} />
-                <stop offset="95%" stopColor={T.blue} stopOpacity={0} />
-              </linearGradient>
-              <linearGradient id="gLight" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%"  stopColor="#F59E0B" stopOpacity={0.12} />
-                <stop offset="95%" stopColor="#F59E0B" stopOpacity={0} />
+              <linearGradient id="printProjAvec" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={T.blue} stopOpacity="0.18" />
+                <stop offset="100%" stopColor={T.blue} stopOpacity="0.02" />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke={T.slate200} />
-            <XAxis dataKey="annee" tick={{ fontSize: 10, fill: T.slate600 }} />
-            <YAxis tickFormatter={fmtTick} tick={{ fontSize: 10, fill: T.slate600 }} width={48} />
-            <Tooltip formatter={v => fmtEur(v)} />
-            <Legend wrapperStyle={{ fontSize: 10, paddingTop: 8 }} />
-            <Area type="monotone" dataKey="sans_travaux" name="Situation actuelle"
-                  stroke="#EA580C" strokeWidth={2.2} strokeDasharray="6 3"
-                  fill="url(#gSans)" isAnimationActive={false} />
-            {hasLight && (
-              <Area type="monotone" dataKey="avec_actions_rapides" name="Actions sans travaux"
-                    stroke="#F59E0B" strokeWidth={2.2} strokeDasharray="8 3"
-                    fill="url(#gLight)" isAnimationActive={false} />
+
+            <rect x={margin.left} y={margin.top} width={plotWidth} height={plotHeight} rx="12" fill={T.slate50} />
+
+            {yTicks.map((tick) => {
+              const y = getY(tick);
+              return (
+                <g key={tick}>
+                  <line x1={margin.left} y1={y} x2={margin.left + plotWidth} y2={y} stroke={T.slate200} strokeDasharray="3 4" />
+                  <text x={margin.left - 10} y={y + 4} textAnchor="end" fontSize="10" fill={T.slate600}>
+                    {formatProjectionTick(tick)}
+                  </text>
+                </g>
+              );
+            })}
+
+            <line x1={margin.left} y1={baseLineY} x2={margin.left + plotWidth} y2={baseLineY} stroke={T.slate200} />
+
+            {safeData.map((point, index) => {
+              const x = getX(index);
+              return (
+                <g key={point.annee}>
+                  <line x1={x} y1={margin.top} x2={x} y2={baseLineY} stroke={index === 0 || index === safeData.length - 1 ? T.slate200 : T.slate100} />
+                  <text x={x} y={height - 10} textAnchor="middle" fontSize="10" fill={T.slate600}>
+                    {point.annee}
+                  </text>
+                </g>
+              );
+            })}
+
+            {series.filter(meta => meta.fill).map(meta => (
+              <path key={`${meta.key}-area`} d={buildSvgAreaPath(meta.points, baseLineY)} fill={meta.fill} stroke="none" />
+            ))}
+
+            {series.map(meta => (
+              <path
+                key={`${meta.key}-line`}
+                d={buildSvgLinePath(meta.points)}
+                fill="none"
+                stroke={meta.stroke}
+                strokeWidth={meta.key === 'avec_travaux' ? 3 : 2.5}
+                strokeDasharray={meta.dash || undefined}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            ))}
+
+            {series.map(meta => {
+              const lastPoint = meta.points[meta.points.length - 1];
+              if (!lastPoint) return null;
+              return (
+                <g key={`${meta.key}-last`}>
+                  <circle cx={lastPoint.x} cy={lastPoint.y} r="4" fill={meta.stroke} stroke="#fff" strokeWidth="2" />
+                </g>
+              );
+            })}
+
+            {roiX !== null && (
+              <g>
+                <line x1={roiX} y1={margin.top} x2={roiX} y2={baseLineY} stroke={T.blue} strokeWidth="1.5" strokeDasharray="4 4" />
+                <rect x={clamp(roiX - 44, margin.left, margin.left + plotWidth - 88)} y={6} width="88" height="20" rx="10" fill="#DBEAFE" stroke="#93C5FD" />
+                <text x={clamp(roiX, margin.left + 44, margin.left + plotWidth - 44)} y={20} textAnchor="middle" fontSize="10" fontWeight="700" fill={T.blue}>
+                  Rentabilité : {roiLabel}
+                </text>
+              </g>
             )}
-            <Area type="monotone" dataKey="avec_travaux" name="Actions légères + travaux"
-                  stroke={T.blue} strokeWidth={2.5} fill="url(#gAvec)"
-                  isAnimationActive={false} />
-          </AreaChart>
+          </svg>
         </div>
       );
     };
@@ -630,8 +816,11 @@
        rate change.
     ═══════════════════════════════════════════════════════ */
     const ReportPrint = ({ reportPayload: rp, printAssets }) => {
-      const coverImageUrl = (printAssets && printAssets.cover_image_url) || null;
       const inputs    = obj(rp.inputs_summary);
+      const coverImageSelected = bool((printAssets && printAssets.cover_image_selected) ?? inputs.cover_image_selected);
+      const coverImageUrl = (printAssets && printAssets.cover_image_url) || null;
+      const coverImageSource = (printAssets && printAssets.cover_image_source) || inputs.cover_image_source || null;
+      const coverImagePath = (printAssets && printAssets.cover_image_path) || inputs.cover_image_path || null;
       const bench     = obj(rp.benchmark_result);
       const composite = obj(rp.composite_savings);
       const calc      = obj(rp.calculation_results);
@@ -653,19 +842,24 @@
       const annualEuro = num(composite.annual_euro?.value);
       const annualKwh  = num(composite.annual_kwh?.value);
       const totalCost  = num(calc.total_cost_euro_an?.value);
+      const elecKwhPr  = num(calc.elec_kwh_an?.value);
+      const gasKwhPr   = num(calc.gas_kwh_an?.value);
 
       const score       = computeScore(siteI, benchMed);
       const targetI     = Math.max(0, Math.round(siteI - (surface > 0 ? annualKwh / surface : 0)));
       const targetScore = computeScore(targetI, benchMed);
       const sCfg        = scoreConf(score);
-      const tCfg        = scoreConf(targetScore);
 
       const budget     = buildBudget(actions, annualEuro);
-      const projection = buildProjection({ totalCostEuroAn: totalCost, annualEuro, actions });
+      const projection = buildProjection({
+        totalCostEuroAn: totalCost,
+        annualEuro,
+        actions,
+        elecKwh: elecKwhPr,
+        gasKwh: gasKwhPr
+      });
 
       // ── CO₂ impact ────────────────────────────────────────────────────────
-      const elecKwhPr   = num(calc.elec_kwh_an?.value);
-      const gasKwhPr    = num(calc.gas_kwh_an?.value);
       const totKnownPr  = elecKwhPr + gasKwhPr;
       const co2FactorPr = totKnownPr > 0
         ? (elecKwhPr / totKnownPr) * 0.079 + (gasKwhPr / totKnownPr) * 0.227
@@ -812,15 +1006,6 @@
                   fontSize: 11, fontWeight: 700, color: '#0F172A',
                   marginBottom: 8,
                 }}>{sCfg.label}</div>
-                <div style={{
-                  fontSize: 10, color: '#475569',
-                  background: 'rgba(255,255,255,0.6)',
-                  padding: '4px 10px', borderRadius: 20,
-                  border: '1px solid rgba(0,0,0,0.06)',
-                }}>
-                  Après travaux&nbsp;
-                  <strong style={{ color: tCfg.color }}>{targetScore}</strong>
-                </div>
               </div>
             </div>
 
@@ -868,7 +1053,12 @@
           {/* ══════════════════════════════════════════════════
               COVER IMAGE — building photo (if available)
           ═════════════════════════════════════════════════ */}
-          <CoverImageBlock url={coverImageUrl} />
+          <CoverImageBlock
+            selected={coverImageSelected}
+            url={coverImageUrl}
+            source={coverImageSource}
+            path={coverImagePath}
+          />
 
           {/* ══════════════════════════════════════════════════
               KPI GRID — 2×2, large numbers, never split
@@ -911,13 +1101,23 @@
                 <div style={{ position: 'relative', paddingTop: 44, paddingBottom: 2 }}>
                   {/* Reference labels above bar */}
                   <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 40 }}>
-                    {refs.map((m, i) => (
-                      <div key={i} style={{ position: 'absolute', left: `${m.pos}%`, transform: 'translateX(-50%)', textAlign: 'center' }}>
-                        <div style={{ fontSize: 9, fontWeight: 700, color: m.color, whiteSpace: 'nowrap' }}>{m.label}</div>
-                        <div style={{ fontSize: 8, color: T.slate400, whiteSpace: 'nowrap' }}>{m.sub}</div>
+                    {refs.map((m, i) => {
+                      const layout = getGaugeLabelLayout(m.pos, 34);
+                      return (
+                      <div key={i} style={{ position: 'absolute', left: `${m.pos}%`, transform: 'translateX(-50%)' }}>
+                        <div style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: layout.alignItems,
+                          textAlign: layout.textAlign,
+                          transform: layout.transform,
+                        }}>
+                          <div style={{ fontSize: 9, fontWeight: 700, color: m.color, whiteSpace: 'nowrap' }}>{m.label}</div>
+                          <div style={{ fontSize: 8, color: T.slate400, whiteSpace: 'nowrap' }}>{m.sub}</div>
+                        </div>
                         <div style={{ width: 1, height: 8, background: m.color, opacity: 0.5, margin: '2px auto 0' }} />
                       </div>
-                    ))}
+                    )})}
                   </div>
                   {/* Gradient bar */}
                   <div style={{
@@ -933,20 +1133,46 @@
                     </div>
                   </div>
                   {/* Labels below markers */}
-                  <div style={{ position: 'relative', minHeight: 42, marginTop: 2 }}>
-                    <div style={{ position: 'absolute', left: `${gp(siteI)}%`, transform: 'translateX(-50%)', textAlign: 'center' }}>
+                  <div style={{ position: 'relative', minHeight: 62, marginTop: 4 }}>
+                    <div style={{
+                      position: 'absolute',
+                      left: `${gp(siteI)}%`,
+                      transform: 'translateX(-50%)',
+                      top: Math.abs(gp(siteI) - gp(targetI)) < 12 && gp(siteI) > gp(targetI) ? 18 : 0,
+                    }}>
                       <div style={{ width: 1, height: 5, background: T.navy, margin: '0 auto' }} />
-                      <div style={{ fontSize: 9, fontWeight: 800, whiteSpace: 'nowrap', background: T.navy, color: '#fff', padding: '1px 5px', borderRadius: 3, marginTop: 1 }}>
-                        {Math.round(siteI)}&nbsp;kWh/m²/an
+                      <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: getGaugeLabelLayout(gp(siteI), 42).alignItems,
+                        textAlign: getGaugeLabelLayout(gp(siteI), 42).textAlign,
+                        transform: getGaugeLabelLayout(gp(siteI), 42).transform,
+                      }}>
+                        <div style={{ fontSize: 9, fontWeight: 800, whiteSpace: 'nowrap', background: T.navy, color: '#fff', padding: '1px 5px', borderRadius: 3, marginTop: 1 }}>
+                          {Math.round(siteI)}&nbsp;kWh/m²/an
+                        </div>
+                        <div style={{ fontSize: 8, color: T.slate400, marginTop: 2 }}>Niveau actuel</div>
                       </div>
-                      <div style={{ fontSize: 8, color: T.slate400, marginTop: 2 }}>Niveau actuel</div>
                     </div>
-                    <div style={{ position: 'absolute', left: `${gp(targetI)}%`, transform: 'translateX(-50%)', textAlign: 'center' }}>
+                    <div style={{
+                      position: 'absolute',
+                      left: `${gp(targetI)}%`,
+                      transform: 'translateX(-50%)',
+                      top: Math.abs(gp(siteI) - gp(targetI)) < 12 && gp(targetI) >= gp(siteI) ? 18 : 0,
+                    }}>
                       <div style={{ width: 1, height: 5, background: '#059669', margin: '0 auto' }} />
-                      <div style={{ fontSize: 9, fontWeight: 800, whiteSpace: 'nowrap', background: '#059669', color: '#fff', padding: '1px 5px', borderRadius: 3, marginTop: 1 }}>
-                        {Math.round(targetI)}&nbsp;kWh/m²/an
+                      <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: getGaugeLabelLayout(gp(targetI), 42).alignItems,
+                        textAlign: getGaugeLabelLayout(gp(targetI), 42).textAlign,
+                        transform: getGaugeLabelLayout(gp(targetI), 42).transform,
+                      }}>
+                        <div style={{ fontSize: 9, fontWeight: 800, whiteSpace: 'nowrap', background: '#059669', color: '#fff', padding: '1px 5px', borderRadius: 3, marginTop: 1 }}>
+                          {Math.round(targetI)}&nbsp;kWh/m²/an
+                        </div>
+                        <div style={{ fontSize: 8, color: '#059669', marginTop: 2, fontWeight: 700 }}>Cible estimée</div>
                       </div>
-                      <div style={{ fontSize: 8, color: '#059669', marginTop: 2, fontWeight: 700 }}>Cible estimée</div>
                     </div>
                   </div>
                 </div>
@@ -1010,7 +1236,7 @@
               `3 scénarios : Situation actuelle · Actions sans travaux · Actions légères + travaux · Inflation : ${projection.taux}%/an`
             }
           >
-            <ProjectionChart data={projection.data} hasLight={projection.hasLight} />
+            <ProjectionChart data={projection.data} hasLight={projection.hasLight} roiLabel={projection.roiAnnee} />
             {/* Résumé chiffré A+1 / A+3 / A+10 */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginTop: 14 }}>
               {[
@@ -1237,6 +1463,7 @@
         if (!reportPayload || readyFired.current) return;
 
         let cancelled = false;
+        window.__REPORT_COVER_ERROR__ = null;
 
         const doFire = () => {
           if (cancelled || readyFired.current) return;
@@ -1244,83 +1471,114 @@
           window.__REPORT_READY__ = true;
           console.log('[print] __REPORT_READY__ fired');
         };
+        const fail = (message) => {
+          if (cancelled || readyFired.current) return;
+          readyFired.current = true;
+          window.__REPORT_ERROR__ = message;
+          window.__REPORT_READY__ = true;
+          console.error('[print] __REPORT_ERROR__:', message);
+        };
 
         const maxTimer = setTimeout(() => {
           console.warn('[print] hard ceiling reached — firing ready');
           doFire();
         }, 4000);
 
+        const waitForImage = async (img, timeoutMs) => {
+          if (!img) return false;
+          if (img.complete) {
+            if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+              if (img.decode) {
+                try { await img.decode(); } catch (_) {}
+              }
+              return true;
+            }
+            return false;
+          }
+
+          return await new Promise((resolve) => {
+            let settled = false;
+            const finish = async (ok) => {
+              if (settled) return;
+              settled = true;
+              if (ok && img.decode) {
+                try { await img.decode(); } catch (_) {}
+              }
+              resolve(!!ok);
+            };
+            const timer = setTimeout(() => finish(false), timeoutMs);
+            img.addEventListener('load', () => {
+              clearTimeout(timer);
+              finish(true);
+            }, { once: true });
+            img.addEventListener('error', () => {
+              clearTimeout(timer);
+              finish(false);
+            }, { once: true });
+          });
+        };
+
         const run = async () => {
           try {
-            // Step 1: Web fonts
+            const inputs = obj(reportPayload.inputs_summary);
+            const coverSelected = bool((printAssets && printAssets.cover_image_selected) ?? inputs.cover_image_selected);
+            const coverUrl = String((printAssets && printAssets.cover_image_url) || '').trim();
+
             if (document.fonts?.ready) await document.fonts.ready;
             if (cancelled || readyFired.current) return;
 
-            // Step 2+3: Poll for .recharts-wrapper with positive dimensions
-            // With fixed-width AreaChart, this should succeed on the first poll.
-            let wrapperReady = false;
+            let projectionReady = false;
             for (let i = 0; i < 30 && !cancelled && !readyFired.current; i++) {
-              const wrapper = document.querySelector('.recharts-wrapper');
-              if (wrapper) {
-                const rect = wrapper.getBoundingClientRect();
+              const chart = document.querySelector('[data-report-chart="projection"] svg');
+              if (chart) {
+                const rect = chart.getBoundingClientRect();
                 if (rect.width >= 100 && rect.height >= 100) {
-                  wrapperReady = true;
-                  console.log('[print] recharts-wrapper ready:', Math.round(rect.width), '×', Math.round(rect.height));
+                  projectionReady = true;
+                  console.log('[print] projection svg ready:', Math.round(rect.width), '×', Math.round(rect.height));
                   break;
                 }
               }
               await new Promise(r => setTimeout(r, 80));
             }
-            if (!wrapperReady) {
-              console.warn('[print] recharts-wrapper not visible — proceeding anyway');
+            if (!projectionReady) {
+              console.warn('[print] projection svg not visible — proceeding anyway');
             }
             if (cancelled || readyFired.current) return;
 
-            // Step 4: Poll for drawn SVG path elements (data lines)
-            let pathsFound = false;
-            for (let i = 0; i < 15 && !cancelled && !readyFired.current; i++) {
-              const paths = document.querySelectorAll('.recharts-wrapper svg path[d]');
-              if (paths.length > 0) {
-                pathsFound = true;
-                console.log('[print] SVG paths found:', paths.length);
-                break;
+            if (coverSelected && !coverUrl) {
+              clearTimeout(maxTimer);
+              fail('Cover sélectionnée sans URL exploitable pour l’impression');
+              return;
+            }
+
+            const criticalImages = Array.from(document.querySelectorAll('[data-report-image-critical="true"]'));
+            if (coverSelected) {
+              if (!criticalImages.length) {
+                clearTimeout(maxTimer);
+                fail('Cover sélectionnée mais absente du DOM print');
+                return;
               }
-              await new Promise(r => setTimeout(r, 80));
-            }
-            if (!pathsFound) {
-              console.warn('[print] SVG paths not found — firing ready anyway');
+              console.log('[print] waiting for critical cover image...');
+              const criticalResults = await Promise.all(criticalImages.map(img => waitForImage(img, 5000)));
+              if (criticalResults.some(ok => !ok) || window.__REPORT_COVER_ERROR__) {
+                clearTimeout(maxTimer);
+                fail(window.__REPORT_COVER_ERROR__ || 'Cover sélectionnée non chargée avant capture PDF');
+                return;
+              }
+              console.log('[print] critical cover image ready');
             }
             if (cancelled || readyFired.current) return;
 
-            // Step 4.5: Wait for [data-report-image] images to load and decode
-            const reportImages = Array.from(document.querySelectorAll('[data-report-image]'));
+            const reportImages = Array.from(document.querySelectorAll('[data-report-image]'))
+              .filter(img => !img.hasAttribute('data-report-image-critical'));
             if (reportImages.length > 0) {
               console.log('[print] waiting for', reportImages.length, 'report image(s)...');
-              try {
-                await Promise.race([
-                  Promise.all(reportImages.map(img => {
-                    if (img.complete && img.naturalHeight > 0) {
-                      return (img.decode ? img.decode().catch(() => {}) : Promise.resolve());
-                    }
-                    return new Promise(res => {
-                      const done = () =>
-                        (img.decode ? img.decode().catch(() => {}) : Promise.resolve()).then(res);
-                      img.addEventListener('load',  done, { once: true });
-                      img.addEventListener('error', res,  { once: true });
-                      setTimeout(res, 3500);
-                    });
-                  })),
-                  new Promise(res => setTimeout(res, 4000))
-                ]);
-              } catch (_) {}
+              await Promise.all(reportImages.map(img => waitForImage(img, 4000)));
               console.log('[print] report images: done');
             }
             if (cancelled || readyFired.current) return;
 
-            // Step 5: Short stabilization wait
             await new Promise(r => setTimeout(r, 80));
-
-            // Step 6: Double rAF — layout engine settled
             await new Promise(r => requestAnimationFrame(r));
             await new Promise(r => requestAnimationFrame(r));
 
@@ -1335,7 +1593,7 @@
 
         run();
         return () => { cancelled = true; clearTimeout(maxTimer); };
-      }, [reportPayload]);
+      }, [reportPayload, printAssets]);
 
       /* Signal Puppeteer on fetch error — prevents indefinite hang */
       useEffect(() => {

@@ -14,6 +14,23 @@ const crypto = require('crypto');
 const { getRequiredServerSupabaseConfig } = require('./_lib/supabase-server');
 
 const encodeQ = (v) => encodeURIComponent(String(v ?? ''));
+const toBoolean = (value) => {
+  if (value === true || value === false) return value;
+  const normalized = String(value ?? '').trim().toLowerCase();
+  return normalized === 'true' || normalized === '1' || normalized === 'yes';
+};
+const isDirectCoverUrl = (value) => {
+  const path = String(value || '').trim();
+  return /^https?:\/\//i.test(path)
+    || path.startsWith('/')
+    || /^api\//i.test(path);
+};
+const normalizeDirectCoverUrl = (value) => {
+  const path = String(value || '').trim();
+  if (!path) return '';
+  if (/^https?:\/\//i.test(path)) return path;
+  return path.startsWith('/') ? path : '/' + path.replace(/^\/+/, '');
+};
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -79,19 +96,26 @@ module.exports = async function handler(req, res) {
       return res.status(401).json({ error: 'Token expired' });
     }
 
-    // Optional: generate fresh signed URL for cover image (non-blocking)
-    // Priority: inputs_summary.cover_image_path → public_reports.cover_image_url (set by /api/public-report-cover)
+    // Cover asset for print page.
+    // Priority: inputs_summary.cover_* metadata from the public form.
     let printAssets = {};
     try {
       const inputs = (row.report_payload && row.report_payload.inputs_summary) || {};
+      const coverSelected = toBoolean(inputs.cover_image_selected);
       const coverPath = String(inputs.cover_image_path || row.cover_image_url || '').trim();
       const coverSourceHint = String(inputs.cover_image_source || row.cover_image_source || '').trim();
+      printAssets = {
+        cover_image_selected: coverSelected,
+        cover_image_source: coverSourceHint || null,
+        cover_image_path: coverPath || null,
+        cover_image_url: null
+      };
 
-      if (coverPath && /^https?:\/\//i.test(coverPath)) {
-        // Already a full URL (e.g. Google Street View, signed URL) — use directly
-        printAssets.cover_image_url = coverPath;
+      if (coverSelected && coverPath && isDirectCoverUrl(coverPath)) {
+        // Direct URL or first-party route (e.g. /api/public-report-google-streetview).
+        printAssets.cover_image_url = normalizeDirectCoverUrl(coverPath);
         printAssets.cover_image_source = coverSourceHint || 'url';
-      } else if (coverPath) {
+      } else if (coverSelected && coverPath) {
         // Storage path → generate fresh signed URL (1 hour TTL sufficient for print session)
         const coverBucket = String(process.env.REPORT_COVER_BUCKET || 'report-cover-assets');
         const encodedPath = coverPath.split('/').map(function(s) { return encodeURIComponent(s); }).join('/');
@@ -116,10 +140,34 @@ module.exports = async function handler(req, res) {
             printAssets.cover_image_url = coverUrl;
             printAssets.cover_image_source = coverSourceHint || 'storage';
           }
+        } else {
+          const signBody = await signRes.text();
+          console.error('[public-report-view] Cover sign failed:', {
+            publicReportId,
+            bucket: coverBucket,
+            status: signRes.status,
+            body: signBody.slice(0, 400),
+            source: coverSourceHint || null,
+            path: coverPath
+          });
         }
       }
+
+      if (coverSelected && !printAssets.cover_image_url) {
+        const coverError = 'Selected cover image has no printable URL';
+        printAssets.cover_image_error = coverError;
+        console.error('[public-report-view] ' + coverError + ':', {
+          publicReportId,
+          source: coverSourceHint || null,
+          path: coverPath || null
+        });
+      }
     } catch (coverErr) {
-      console.warn('[public-report-view] Cover signed URL failed (non-fatal):', coverErr.message);
+      console.error('[public-report-view] Cover resolution failed:', {
+        publicReportId,
+        message: coverErr.message
+      });
+      printAssets.cover_image_error = coverErr.message || 'Cover resolution failed';
     }
 
     return res.status(200).json({

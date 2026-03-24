@@ -79,10 +79,46 @@ module.exports = async function handler(req, res) {
       return res.status(401).json({ error: 'Token expired' });
     }
 
+    // Optional: generate fresh signed URL for cover image (non-blocking)
+    let printAssets = {};
+    try {
+      const inputs = (row.report_payload && row.report_payload.inputs_summary) || {};
+      const coverPath = String(inputs.cover_image_path || '').trim();
+      if (coverPath && !/^https?:\/\//i.test(coverPath)) {
+        // Storage path → generate signed URL
+        const coverBucket = String(process.env.REPORT_COVER_BUCKET || 'report-cover-assets');
+        const encodedPath = coverPath.split('/').map(function(s) { return encodeURIComponent(s); }).join('/');
+        const signRes = await fetch(
+          supabaseUrl + '/storage/v1/object/sign/' + coverBucket + '/' + encodedPath,
+          {
+            method: 'POST',
+            headers: {
+              apikey: serviceKey,
+              Authorization: 'Bearer ' + serviceKey,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ expiresIn: 3600 })
+          }
+        );
+        if (signRes.ok) {
+          const signData = await signRes.json();
+          const sp = String(signData && (signData.signedURL || signData.signedUrl || signData.path) || '').trim();
+          if (sp) {
+            const coverUrl = /^https?:\/\//i.test(sp) ? sp
+              : supabaseUrl + (sp.startsWith('/storage/v1/') ? sp : '/storage/v1/' + sp.replace(/^\/+/, ''));
+            printAssets.cover_image_url = coverUrl;
+          }
+        }
+      }
+    } catch (coverErr) {
+      console.warn('[public-report-view] Cover signed URL failed (non-fatal):', coverErr.message);
+    }
+
     return res.status(200).json({
       ok: true,
       public_report_id: row.id,
-      report_payload: row.report_payload || {}
+      report_payload: row.report_payload || {},
+      print_assets: printAssets
     });
 
   } catch (error) {

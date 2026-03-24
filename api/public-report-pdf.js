@@ -10,7 +10,7 @@
  *   4. Construit l'URL de la page print dédiée
  *   5. Puppeteer ouvre la page, attend window.__REPORT_READY__
  *   6. Exporte en PDF A4
- *   7. Upload vers bucket public-reports
+ *   7. Upload vers bucket public-report-assets
  *   8. Signed URL 30 jours
  *   9. UPDATE public_reports : pdf_status='ready', efface le token
  *  10. UPDATE lead_submissions.pdf_url (best-effort)
@@ -20,15 +20,20 @@
  *  Erreur → pdf_status='failed', pdf_error=message
  *
  * Table   : public.public_reports
- * Bucket  : public-reports (public)
+ * Bucket  : public-report-assets (private)
  * Path    : reports/{year}/{month}/{public_report_id}/official.pdf
  */
 
 const crypto = require('crypto');
 const { renderPdfFromUrl } = require('./_lib/pdf-renderer');
-const { getRequiredServerSupabaseConfig } = require('./_lib/supabase-server');
+const {
+  assertStorageBucketExists,
+  describeServerSupabaseConfig,
+  fetchStorageJson,
+  getRequiredServerSupabaseConfig
+} = require('./_lib/supabase-server');
 
-const PUBLIC_REPORT_ASSETS_BUCKET = 'public-reports';
+const PUBLIC_REPORT_ASSETS_BUCKET = 'public-report-assets';
 const SIGNED_URL_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
 const TOKEN_TTL_SECONDS = 60 * 60 * 2;        // 2 h (print session)
 
@@ -74,6 +79,65 @@ const createHttpError = (statusCode, message) => {
   const e = new Error(message);
   e.statusCode = statusCode;
   return e;
+};
+
+const buildStorageErrorMessage = (fallbackMessage, result) => {
+  const parts = [fallbackMessage];
+  if (Number.isInteger(result?.status)) parts.push(`HTTP ${result.status}`);
+  if (result?.bodySummary) parts.push(result.bodySummary);
+  return parts.join(' - ');
+};
+
+const logStorageDebug = (label, payload) => {
+  console.log(`[public-report-pdf] storage-debug ${label}`, payload);
+};
+
+const checkStorageBucket = async ({
+  supabaseUrl,
+  serviceKey,
+  serviceKeySource,
+  bucketName,
+  bucketEnvName = null,
+  bucketEnvValue = null
+}) => {
+  const configDebug = describeServerSupabaseConfig({ supabaseUrl, serviceKey, serviceKeySource });
+  logStorageDebug('config', {
+    ...configDebug,
+    bucket: bucketName,
+    bucketSource: bucketEnvName ? 'env-or-fallback' : 'constant',
+    bucketEnvName,
+    bucketEnvValue: bucketEnvValue || null
+  });
+
+  try {
+    const bucketCheck = await assertStorageBucketExists({ supabaseUrl, serviceKey, bucketName });
+    logStorageDebug('buckets', {
+      listStatus: bucketCheck.listStatus,
+      visibleBuckets: bucketCheck.visibleBucketNames,
+      listBody: bucketCheck.listBodySummary || null
+    });
+    logStorageDebug('target-bucket', {
+      bucket: bucketName,
+      exists: true,
+      targetStatus: bucketCheck.targetStatus,
+      targetBody: bucketCheck.targetBodySummary || null
+    });
+    return bucketCheck;
+  } catch (error) {
+    const debug = error?.storageDebug || {};
+    logStorageDebug('buckets', {
+      listStatus: debug.listStatus ?? null,
+      visibleBuckets: debug.visibleBucketNames || [],
+      listBody: debug.listBodySummary || null
+    });
+    logStorageDebug('target-bucket', {
+      bucket: bucketName,
+      exists: false,
+      targetStatus: debug.targetStatus ?? null,
+      targetBody: debug.targetBodySummary || null
+    });
+    throw error;
+  }
 };
 
 const formatCurrency = (v) =>
@@ -186,44 +250,53 @@ const updateLeadSubmissionPdfUrl = async ({ supabaseUrl, serviceKey, leadSubmiss
 /* ─── Storage operations ─────────────────────────────────────────────────── */
 
 const uploadPdfToStorage = async ({ supabaseUrl, serviceKey, storagePath, pdfBuffer }) => {
-  const res = await fetch(
-    `${supabaseUrl}/storage/v1/object/${PUBLIC_REPORT_ASSETS_BUCKET}/${encodeStoragePath(storagePath)}`,
-    {
-      method: 'POST',
-      headers: createRestHeaders(serviceKey, {
-        'Content-Type': 'application/pdf',
-        'x-upsert': 'true'
-      }),
-      body: pdfBuffer
-    }
-  );
-  const raw = await res.text();
-  const data = raw ? safeJsonParse(raw) : null;
-  if (!res.ok) {
-    throw createHttpError(res.status, data?.message || data?.error || raw || 'Storage upload failed');
+  const result = await fetchStorageJson({
+    supabaseUrl,
+    serviceKey,
+    path: `object/${PUBLIC_REPORT_ASSETS_BUCKET}/${encodeStoragePath(storagePath)}`,
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/pdf',
+      'x-upsert': 'true'
+    },
+    body: pdfBuffer
+  });
+  if (!result.ok) {
+    console.error('[public-report-pdf] storage-debug upload-error', {
+      bucket: PUBLIC_REPORT_ASSETS_BUCKET,
+      storagePath,
+      status: result.status,
+      body: result.bodySummary || null,
+      url: result.url
+    });
+    throw createHttpError(result.status, buildStorageErrorMessage('Storage upload failed', result));
   }
-  return data;
+  return result.data;
 };
 
 const createSignedUrl = async ({ supabaseUrl, serviceKey, storagePath, expiresIn = SIGNED_URL_TTL_SECONDS }) => {
-  const res = await fetch(
-    `${supabaseUrl}/storage/v1/object/sign/${PUBLIC_REPORT_ASSETS_BUCKET}/${encodeStoragePath(storagePath)}`,
-    {
-      method: 'POST',
-      headers: createRestHeaders(serviceKey, { 'Content-Type': 'application/json' }),
-      body: JSON.stringify({ expiresIn })
-    }
-  );
+  const result = await fetchStorageJson({
+    supabaseUrl,
+    serviceKey,
+    path: `object/sign/${PUBLIC_REPORT_ASSETS_BUCKET}/${encodeStoragePath(storagePath)}`,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ expiresIn })
+  });
 
-  const raw = await res.text();
-  const data = raw ? safeJsonParse(raw) : null;
-
-  if (!res.ok) {
-    throw createHttpError(res.status, data?.message || data?.error || raw || 'Signed URL creation failed');
+  if (!result.ok) {
+    console.error('[public-report-pdf] storage-debug signed-url-error', {
+      bucket: PUBLIC_REPORT_ASSETS_BUCKET,
+      storagePath,
+      status: result.status,
+      body: result.bodySummary || null,
+      url: result.url
+    });
+    throw createHttpError(result.status, buildStorageErrorMessage('Signed URL creation failed', result));
   }
 
   const signedPath = String(
-    data?.signedURL || data?.signedUrl || data?.signed_url || data?.path || ''
+    result.data?.signedURL || result.data?.signedUrl || result.data?.signed_url || result.data?.path || ''
   ).trim();
 
   if (!signedPath) {
@@ -238,9 +311,6 @@ const createSignedUrl = async ({ supabaseUrl, serviceKey, storagePath, expiresIn
         ? `/storage/v1${signedPath}`
         : `/storage/v1/${signedPath.replace(/^\/+/, '')}`
     }`;
-  console.log('[public-report-pdf] signedPath:', signedPath);
-  console.log('[public-report-pdf] reportUrl:', reportUrl);
-
   return {
     reportUrl,
     expiresAt: new Date(Date.now() + expiresIn * 1000).toISOString()
@@ -337,7 +407,7 @@ module.exports = async function handler(req, res) {
     }
 
     supabaseCtx = getRequiredServerSupabaseConfig();
-    const { supabaseUrl, serviceKey } = supabaseCtx;
+    const { supabaseUrl, serviceKey, serviceKeySource } = supabaseCtx;
 
     // 1. Fetch lead record email as fallback
     let leadEmail = null;
@@ -404,9 +474,35 @@ module.exports = async function handler(req, res) {
       }
     });
 
-    // 6. Upload to public-reports
+    await checkStorageBucket({
+      supabaseUrl,
+      serviceKey,
+      serviceKeySource,
+      bucketName: PUBLIC_REPORT_ASSETS_BUCKET
+    });
+    logStorageDebug('upload-target', {
+      supabaseUrl,
+      bucket: PUBLIC_REPORT_ASSETS_BUCKET,
+      storagePath,
+      bufferBytes: pdfBuffer.length
+    });
+
+    // 6. Upload to public-report-assets
     await uploadPdfToStorage({ supabaseUrl, serviceKey, storagePath, pdfBuffer });
     console.log('[public-report-pdf] Uploaded:', storagePath);
+
+    await checkStorageBucket({
+      supabaseUrl,
+      serviceKey,
+      serviceKeySource,
+      bucketName: PUBLIC_REPORT_ASSETS_BUCKET
+    });
+    logStorageDebug('signed-url-target', {
+      supabaseUrl,
+      bucket: PUBLIC_REPORT_ASSETS_BUCKET,
+      storagePath,
+      expiresIn: SIGNED_URL_TTL_SECONDS
+    });
 
     // 7. Create signed URL (30 days)
     const { reportUrl, expiresAt } = await createSignedUrl({ supabaseUrl, serviceKey, storagePath });
@@ -472,6 +568,12 @@ module.exports = async function handler(req, res) {
 
     console.error('[public-report-pdf] status: failed —', error?.message || error);
     const statusCode = Number.isInteger(error?.statusCode) ? error.statusCode : 500;
+    console.error('[public-report-pdf] status: failed', {
+      statusCode,
+      message: error?.message || String(error),
+      publicReportId,
+      storageDebug: error?.storageDebug || null
+    });
     return res.status(statusCode).json({
       ok: false,
       error: error?.message || 'Public report PDF generation failed'

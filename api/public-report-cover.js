@@ -4,7 +4,12 @@
  * api/public-report-cover.js — Génération de couverture (Façade Panoramax ou Fallback IGN)
  */
 
-const { getRequiredServerSupabaseConfig } = require('./_lib/supabase-server');
+const {
+  assertStorageBucketExists,
+  describeServerSupabaseConfig,
+  fetchStorageJson,
+  getRequiredServerSupabaseConfig
+} = require('./_lib/supabase-server');
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
 
@@ -29,6 +34,65 @@ const createHttpError = (statusCode, message) => {
   const e = new Error(message);
   e.statusCode = statusCode;
   return e;
+};
+
+const buildStorageErrorMessage = (fallbackMessage, result) => {
+  const parts = [fallbackMessage];
+  if (Number.isInteger(result?.status)) parts.push(`HTTP ${result.status}`);
+  if (result?.bodySummary) parts.push(result.bodySummary);
+  return parts.join(' - ');
+};
+
+const logStorageDebug = (label, payload) => {
+  console.log(`[public-report-cover] storage-debug ${label}`, payload);
+};
+
+const checkStorageBucket = async ({
+  supabaseUrl,
+  serviceKey,
+  serviceKeySource,
+  bucketName,
+  bucketEnvName = null,
+  bucketEnvValue = null
+}) => {
+  const configDebug = describeServerSupabaseConfig({ supabaseUrl, serviceKey, serviceKeySource });
+  logStorageDebug('config', {
+    ...configDebug,
+    bucket: bucketName,
+    bucketSource: bucketEnvName ? 'env-or-fallback' : 'constant',
+    bucketEnvName,
+    bucketEnvValue: bucketEnvValue || null
+  });
+
+  try {
+    const bucketCheck = await assertStorageBucketExists({ supabaseUrl, serviceKey, bucketName });
+    logStorageDebug('buckets', {
+      listStatus: bucketCheck.listStatus,
+      visibleBuckets: bucketCheck.visibleBucketNames,
+      listBody: bucketCheck.listBodySummary || null
+    });
+    logStorageDebug('target-bucket', {
+      bucket: bucketName,
+      exists: true,
+      targetStatus: bucketCheck.targetStatus,
+      targetBody: bucketCheck.targetBodySummary || null
+    });
+    return bucketCheck;
+  } catch (error) {
+    const debug = error?.storageDebug || {};
+    logStorageDebug('buckets', {
+      listStatus: debug.listStatus ?? null,
+      visibleBuckets: debug.visibleBucketNames || [],
+      listBody: debug.listBodySummary || null
+    });
+    logStorageDebug('target-bucket', {
+      bucket: bucketName,
+      exists: false,
+      targetStatus: debug.targetStatus ?? null,
+      targetBody: debug.targetBodySummary || null
+    });
+    throw error;
+  }
 };
 
 /* ─── Supabase REST helpers ──────────────────────────────────────────────── */
@@ -69,41 +133,53 @@ const updatePublicReport = async ({ supabaseUrl, serviceKey, publicReportId, pat
 /* ─── Storage operations ─────────────────────────────────────────────────── */
 
 const uploadBufferToStorage = async ({ supabaseUrl, serviceKey, bucket, storagePath, buffer, contentType }) => {
-  const res = await fetch(
-    `${supabaseUrl}/storage/v1/object/${bucket}/${encodeStoragePath(storagePath)}`,
-    {
-      method: 'POST',
-      headers: createRestHeaders(serviceKey, {
-        'Content-Type': contentType,
-        'x-upsert': 'true'
-      }),
-      body: buffer
-    }
-  );
-  const raw = await res.text();
-  const data = raw ? safeJsonParse(raw) : null;
-  if (!res.ok) {
-    throw createHttpError(res.status, data?.message || data?.error || raw || 'Storage upload failed');
+  const result = await fetchStorageJson({
+    supabaseUrl,
+    serviceKey,
+    path: `object/${bucket}/${encodeStoragePath(storagePath)}`,
+    method: 'POST',
+    headers: {
+      'Content-Type': contentType,
+      'x-upsert': 'true'
+    },
+    body: buffer
+  });
+  if (!result.ok) {
+    console.error('[public-report-cover] storage-debug upload-error', {
+      bucket,
+      storagePath,
+      status: result.status,
+      body: result.bodySummary || null,
+      url: result.url
+    });
+    throw createHttpError(result.status, buildStorageErrorMessage('Storage upload failed', result));
   }
-  return data;
+  return result.data;
 };
 
 const createSignedUrl = async ({ supabaseUrl, serviceKey, bucket, storagePath, expiresIn = 3600 }) => {
-  const res = await fetch(
-    `${supabaseUrl}/storage/v1/object/sign/${bucket}/${encodeStoragePath(storagePath)}`,
-    {
-      method: 'POST',
-      headers: createRestHeaders(serviceKey, { 'Content-Type': 'application/json' }),
-      body: JSON.stringify({ expiresIn })
-    }
-  );
-  const raw = await res.text();
-  const data = raw ? safeJsonParse(raw) : null;
-  if (!res.ok) {
-    throw createHttpError(res.status, data?.message || data?.error || raw || 'Signed URL creation failed');
+  const result = await fetchStorageJson({
+    supabaseUrl,
+    serviceKey,
+    path: `object/sign/${bucket}/${encodeStoragePath(storagePath)}`,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ expiresIn })
+  });
+  if (!result.ok) {
+    console.error('[public-report-cover] storage-debug signed-url-error', {
+      bucket,
+      storagePath,
+      status: result.status,
+      body: result.bodySummary || null,
+      url: result.url
+    });
+    throw createHttpError(result.status, buildStorageErrorMessage('Signed URL creation failed', result));
   }
 
-  const signedPath = String(data?.signedURL || data?.signedUrl || data?.signed_url || data?.path || '').trim();
+  const signedPath = String(
+    result.data?.signedURL || result.data?.signedUrl || result.data?.signed_url || result.data?.path || ''
+  ).trim();
   if (!signedPath) throw createHttpError(500, 'Signed URL response missing path');
 
   const reportUrl = /^https?:\/\//i.test(signedPath)
@@ -267,8 +343,9 @@ module.exports = async function handler(req, res) {
     const publicReportId = String(payload.public_report_id || '').trim() || null;
 
     const supabaseCtx = getRequiredServerSupabaseConfig();
-    const { supabaseUrl, serviceKey } = supabaseCtx;
-    const bucketName = readEnv('REPORT_COVER_BUCKET') || 'report-cover-assets';
+    const { supabaseUrl, serviceKey, serviceKeySource } = supabaseCtx;
+    const configuredBucketName = readEnv('REPORT_COVER_BUCKET');
+    const bucketName = configuredBucketName || 'report-cover-assets';
 
     // 1. Gérer l'adresse et le statut initial
     if (publicReportId) {
@@ -347,6 +424,21 @@ module.exports = async function handler(req, res) {
     const ext = coverImage.contentType.includes('png') ? 'png' : 'jpg';
     const storagePath = `covers/${publicReportId || 'anon'}/${Date.now()}_cover.${ext}`;
 
+    await checkStorageBucket({
+      supabaseUrl,
+      serviceKey,
+      serviceKeySource,
+      bucketName,
+      bucketEnvName: 'REPORT_COVER_BUCKET',
+      bucketEnvValue: configuredBucketName || null
+    });
+    logStorageDebug('upload-target', {
+      supabaseUrl,
+      bucket: bucketName,
+      storagePath,
+      bufferBytes: coverImage.buffer.length,
+      contentType: coverImage.contentType
+    });
     await uploadBufferToStorage({
       supabaseUrl, serviceKey, bucket: bucketName,
       storagePath, buffer: coverImage.buffer, contentType: coverImage.contentType
@@ -373,6 +465,20 @@ module.exports = async function handler(req, res) {
     }
 
     // 7. Signed URL pour test immédiat
+    await checkStorageBucket({
+      supabaseUrl,
+      serviceKey,
+      serviceKeySource,
+      bucketName,
+      bucketEnvName: 'REPORT_COVER_BUCKET',
+      bucketEnvValue: configuredBucketName || null
+    });
+    logStorageDebug('signed-url-target', {
+      supabaseUrl,
+      bucket: bucketName,
+      storagePath,
+      expiresIn: 3600
+    });
     const signedUrl = await createSignedUrl({
       supabaseUrl, serviceKey, bucket: bucketName,
       storagePath, expiresIn: 3600
@@ -395,6 +501,11 @@ module.exports = async function handler(req, res) {
 
   } catch (error) {
     const statusCode = Number.isInteger(error?.statusCode) ? error.statusCode : 500;
+    console.error('[public-report-cover] status: failed', {
+      statusCode,
+      message: error?.message || String(error),
+      storageDebug: error?.storageDebug || null
+    });
     console.error('[public-report-cover] status: failed —', error?.message || error);
 
     const payload = asPlainObject(safeJsonParse(req.body) || req.body);

@@ -354,6 +354,7 @@ module.exports = async function handler(req, res) {
     }
 
     const emailMeta = extractEmailMeta(reportPayload);
+    const inputPayload = asPlainObject(reportPayload.inputs_summary);
     const finalEmail = emailMeta.email || String(leadEmail || '').trim() || null;
 
     // 2. Generate short-lived print token
@@ -367,11 +368,10 @@ module.exports = async function handler(req, res) {
         lead_submission_id: leadSubmissionId || null,
         email: finalEmail || null,
         site_name: emailMeta.siteName || null,
-        input_payload: asPlainObject(reportPayload.inputs_summary),
+        // Keep cover metadata in JSON payloads only: the deployed public_reports
+        // schema cannot be assumed to expose optional cover_* columns.
+        input_payload: inputPayload,
         report_payload: reportPayload,
-        cover_image_url: asPlainObject(reportPayload.inputs_summary).cover_image_path || null,
-        cover_image_source: asPlainObject(reportPayload.inputs_summary).cover_image_source || null,
-        cover_original_filename: asPlainObject(reportPayload.inputs_summary).cover_original_filename || null,
         pdf_status: 'generating',
         access_token_hash: token.hash,
         access_expires_at: token.expiresAt,

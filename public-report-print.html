@@ -430,6 +430,17 @@
       const budget     = buildBudget(actions, annualEuro);
       const projection = buildProjection({ totalCostEuroAn: totalCost, annualEuro, actions });
 
+      // ── CO₂ impact ────────────────────────────────────────────────────────
+      const elecKwhPr   = num(calc.elec_kwh_an?.value);
+      const gasKwhPr    = num(calc.gas_kwh_an?.value);
+      const totKnownPr  = elecKwhPr + gasKwhPr;
+      const co2FactorPr = totKnownPr > 0
+        ? (elecKwhPr / totKnownPr) * 0.079 + (gasKwhPr / totKnownPr) * 0.227
+        : 0.12;
+      const co2EvitePr  = Math.max(0, Math.round(annualKwh * co2FactorPr));
+      const co2ArbPr    = Math.round(co2EvitePr / 22);
+      const co2VoitPr   = Math.round((co2EvitePr / 2100) * 10) / 10;
+
       const location = [activity, surface > 0 ? fmtInt(surface, 'm²') : null,
         address || null, postalCode || null].filter(Boolean).join(' · ');
 
@@ -620,6 +631,79 @@
           </div>
 
           {/* ══════════════════════════════════════════════════
+              POSITIONNEMENT SECTORIEL
+          ═════════════════════════════════════════════════ */}
+          {benchMed > 0 && (() => {
+            const bLow  = num(bench.benchmark_low?.value);
+            const bHigh = num(bench.benchmark_high?.value);
+            if (!bLow || !bHigh) return null;
+            const gMin  = Math.max(0, bLow * 0.7);
+            const gMax  = Math.max(bHigh * 1.35, siteI, targetI);
+            const gSpan = Math.max(1, gMax - gMin);
+            const gp    = v => Math.min(100, Math.max(0, ((v - gMin) / gSpan) * 100));
+            const refs  = [
+              { pos: gp(bLow),    label: 'Bas secteur', sub: `${Math.round(bLow)}\u00a0kWh/m²`,    color: '#059669' },
+              { pos: gp(benchMed),label: 'Médiane',     sub: `${Math.round(benchMed)}\u00a0kWh/m²`, color: '#D97706' },
+              { pos: gp(bHigh),   label: 'Haut secteur',sub: `${Math.round(bHigh)}\u00a0kWh/m²`,   color: '#DC2626' },
+            ];
+            const gapText = siteI > benchMed
+              ? `+${Math.round(siteI - benchMed)}\u00a0kWh/m²/an au-dessus de la médiane sectorielle.`
+              : siteI < benchMed
+                ? `${Math.round(benchMed - siteI)}\u00a0kWh/m²/an en dessous de la médiane sectorielle.`
+                : 'Au niveau de la médiane sectorielle.';
+            return (
+              <Section title="Positionnement sectoriel" mb={18} avoidBreak={true}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: T.navy, marginBottom: 10 }}>{gapText}</div>
+                <div style={{ position: 'relative', paddingTop: 44, paddingBottom: 2 }}>
+                  {/* Reference labels above bar */}
+                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 40 }}>
+                    {refs.map((m, i) => (
+                      <div key={i} style={{ position: 'absolute', left: `${m.pos}%`, transform: 'translateX(-50%)', textAlign: 'center' }}>
+                        <div style={{ fontSize: 9, fontWeight: 700, color: m.color, whiteSpace: 'nowrap' }}>{m.label}</div>
+                        <div style={{ fontSize: 8, color: T.slate400, whiteSpace: 'nowrap' }}>{m.sub}</div>
+                        <div style={{ width: 1, height: 8, background: m.color, opacity: 0.5, margin: '2px auto 0' }} />
+                      </div>
+                    ))}
+                  </div>
+                  {/* Gradient bar */}
+                  <div style={{
+                    height: 18, borderRadius: 999, position: 'relative', overflow: 'visible',
+                    background: 'linear-gradient(to right, #DCFCE7 0%, #FEF3C7 50%, #FEE2E2 100%)',
+                    border: `1px solid ${T.slate200}`,
+                  }}>
+                    <div style={{ position: 'absolute', top: '50%', left: `${gp(siteI)}%`, transform: 'translate(-50%, -50%)' }}>
+                      <div style={{ width: 16, height: 16, borderRadius: '50%', background: T.navy, border: '2px solid white', boxShadow: '0 1px 4px rgba(0,0,0,0.22)' }} />
+                    </div>
+                    <div style={{ position: 'absolute', top: '50%', left: `${gp(targetI)}%`, transform: 'translate(-50%, -50%)' }}>
+                      <div style={{ width: 16, height: 16, borderRadius: '50%', background: '#059669', border: '2px solid white', boxShadow: '0 1px 4px rgba(0,0,0,0.22)' }} />
+                    </div>
+                  </div>
+                  {/* Labels below markers */}
+                  <div style={{ position: 'relative', minHeight: 42, marginTop: 2 }}>
+                    <div style={{ position: 'absolute', left: `${gp(siteI)}%`, transform: 'translateX(-50%)', textAlign: 'center' }}>
+                      <div style={{ width: 1, height: 5, background: T.navy, margin: '0 auto' }} />
+                      <div style={{ fontSize: 9, fontWeight: 800, whiteSpace: 'nowrap', background: T.navy, color: '#fff', padding: '1px 5px', borderRadius: 3, marginTop: 1 }}>
+                        {Math.round(siteI)}&nbsp;kWh/m²/an
+                      </div>
+                      <div style={{ fontSize: 8, color: T.slate400, marginTop: 2 }}>Niveau actuel</div>
+                    </div>
+                    <div style={{ position: 'absolute', left: `${gp(targetI)}%`, transform: 'translateX(-50%)', textAlign: 'center' }}>
+                      <div style={{ width: 1, height: 5, background: '#059669', margin: '0 auto' }} />
+                      <div style={{ fontSize: 9, fontWeight: 800, whiteSpace: 'nowrap', background: '#059669', color: '#fff', padding: '1px 5px', borderRadius: 3, marginTop: 1 }}>
+                        {Math.round(targetI)}&nbsp;kWh/m²/an
+                      </div>
+                      <div style={{ fontSize: 8, color: '#059669', marginTop: 2, fontWeight: 700 }}>Cible estimée</div>
+                    </div>
+                  </div>
+                </div>
+                <div style={{ fontSize: 10, color: T.slate400, marginTop: 4 }}>
+                  Source\u00a0: {String(bench.source_ref || 'Références sectorielles')}
+                </div>
+              </Section>
+            );
+          })()}
+
+          {/* ══════════════════════════════════════════════════
               ACTIONS — may span multiple pages
           ═════════════════════════════════════════════════ */}
           <Section
@@ -697,6 +781,62 @@
               ))}
             </div>
           </Section>
+
+          {/* ══════════════════════════════════════════════════
+              IMPACT ÉCOLOGIQUE
+          ═════════════════════════════════════════════════ */}
+          {co2EvitePr > 0 && (
+            <Section title="Impact écologique estimé" sub="À gains constants, ce plan réduit aussi les émissions liées à l'exploitation du site." mb={18} avoidBreak={true}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: 14 }}>
+                {/* CO₂ principal */}
+                <div style={{ background: '#F0FDF4', border: '2px solid #86EFAC', borderRadius: 14, padding: '18px 20px' }}>
+                  <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#16A34A', marginBottom: 8 }}>
+                    CO₂ évité estimé / an
+                  </div>
+                  <div style={{ fontSize: 28, fontWeight: 900, color: T.navy, lineHeight: 1 }}>
+                    {co2EvitePr.toLocaleString('fr-FR')}&nbsp;kgCO₂e
+                  </div>
+                  <div style={{ fontSize: 11, color: T.slate600, marginTop: 8, lineHeight: 1.5 }}>
+                    Réduction annuelle indicative associée aux actions prioritaires du plan.
+                  </div>
+                </div>
+                {/* Équivalences */}
+                <div style={{ display: 'grid', gap: 10 }}>
+                  {/* Arbres */}
+                  <div style={{ background: '#fff', border: `1px solid ${T.slate200}`, borderRadius: 12, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ width: 40, height: 40, borderRadius: 10, background: '#F0FDF4', border: '1px solid #BBF7D0', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <svg width="22" height="22" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <polygon points="14,2 20,11 17,11 21,19 16.5,19 16.5,26 11.5,26 11.5,19 7,19 11,11 8,11" fill="#16a34a"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 20, fontWeight: 900, color: T.navy, lineHeight: 1 }}>{co2ArbPr.toLocaleString('fr-FR')}</div>
+                      <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: T.slate600, marginTop: 3 }}>Arbres équiv. / an</div>
+                      <div style={{ fontSize: 9, color: T.slate400, marginTop: 2 }}>séquestration ADEME</div>
+                    </div>
+                  </div>
+                  {/* Voitures */}
+                  <div style={{ background: '#fff', border: `1px solid ${T.slate200}`, borderRadius: 12, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ width: 40, height: 40, borderRadius: 10, background: T.slate50, border: `1px solid ${T.slate200}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <svg width="22" height="22" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="3" y="14" width="22" height="7" rx="2" fill="#334155"/>
+                        <path d="M8 14L10 9h10l2 5H8z" fill="#475569"/>
+                        <circle cx="9" cy="21" r="3.5" fill="#0f172a"/>
+                        <circle cx="9" cy="21" r="1.4" fill="#94a3b8"/>
+                        <circle cx="20" cy="21" r="3.5" fill="#0f172a"/>
+                        <circle cx="20" cy="21" r="1.4" fill="#94a3b8"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 20, fontWeight: 900, color: T.navy, lineHeight: 1 }}>{co2VoitPr.toLocaleString('fr-FR', { minimumFractionDigits: 1 })}</div>
+                      <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: T.slate600, marginTop: 3 }}>Voitures retirées / an</div>
+                      <div style={{ fontSize: 9, color: T.slate400, marginTop: 2 }}>émissions moy. annuelles</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Section>
+          )}
 
           {/* ══════════════════════════════════════════════════
               HYPOTHESES + LIMITES — 2-col, avoid split

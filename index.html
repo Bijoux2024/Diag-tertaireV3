@@ -522,7 +522,10 @@
         }
 
         .new-diagnostic-report .report-hero-gradient {
-            background: linear-gradient(135deg, #0F172A 0%, #102A43 48%, #1D4ED8 100%);
+            background:
+                radial-gradient(circle at 14% 12%, rgba(96, 165, 250, 0.24) 0%, rgba(96, 165, 250, 0) 34%),
+                radial-gradient(circle at 84% 18%, rgba(52, 211, 153, 0.15) 0%, rgba(52, 211, 153, 0) 22%),
+                linear-gradient(135deg, #0B152A 0%, #102A43 48%, #1D4ED8 100%);
         }
 
         .new-diagnostic-report .report-glass-card {
@@ -3118,6 +3121,7 @@
             coverImagePath: '',
             coverImageSignedUrl: '',
             coverImageSelected: false,
+            coverSelectionManuallyDisabled: false,
             coverImageError: null,
             coverStepDismissed: false,
             coverParcelRef: '',
@@ -3607,6 +3611,7 @@
                     coverImageStatus: 'initial',
                     coverImageError: null,
                     coverImageSelected: false,
+                    coverSelectionManuallyDisabled: false,
                     coverStepDismissed: false,
                     coverImageSource: '',
                     coverImagePath: '',
@@ -3630,6 +3635,39 @@
                     coverStreetViewAvailable: false
                 }));
             };
+
+            useEffect(() => {
+                if (
+                    formData.coverImageStatus !== 'ready'
+                    || !formData.coverImageSignedUrl
+                    || formData.coverImageSelected
+                    || formData.coverSelectionManuallyDisabled
+                ) {
+                    return;
+                }
+
+                setFormData(prev => {
+                    if (
+                        prev.coverImageStatus !== 'ready'
+                        || !prev.coverImageSignedUrl
+                        || prev.coverImageSelected
+                        || prev.coverSelectionManuallyDisabled
+                    ) {
+                        return prev;
+                    }
+
+                    return {
+                        ...prev,
+                        coverImageSelected: true
+                    };
+                });
+            }, [
+                formData.coverImageStatus,
+                formData.coverImageSignedUrl,
+                formData.coverImageSelected,
+                formData.coverSelectionManuallyDisabled,
+                setFormData
+            ]);
 
             // --- Street View Control Debouncer ---
             // Évite de déclencher la facturation Google Image au moindre changement de valeur de range.
@@ -3670,6 +3708,7 @@
                         coverImageSource: '',
                         coverImagePath: '',
                         coverImageSignedUrl: '',
+                        coverSelectionManuallyDisabled: false,
                         coverParcelRef: '',
                         coverCoordinates: null,
                         coverBBox: null,
@@ -3697,6 +3736,7 @@
                         coverImageSource: '',
                         coverImagePath: '',
                         coverImageSignedUrl: '',
+                        coverSelectionManuallyDisabled: false,
                         coverParcelRef: '',
                         coverCoordinates: null,
                         coverBBox: null,
@@ -3723,6 +3763,7 @@
                     coverImageStatus: 'loading',
                     coverImageError: null,
                     coverImageSelected: false,
+                    coverSelectionManuallyDisabled: false,
                     coverStepDismissed: false,
                     coverImageSource: '',
                     coverImagePath: '',
@@ -3786,6 +3827,8 @@
                         coverImageSource: data.cover_image_source || 'upload',
                         coverImagePath: data.cover_image_path || '',
                         coverImageSignedUrl: data.cover_image_signed_url || '',
+                        coverImageSelected: true,
+                        coverSelectionManuallyDisabled: false,
                         coverUploadFileName: data.cover_original_filename || file.name,
                         coverUploadPreviewUrl: data.cover_image_signed_url, // Vraie source distante
                         coverImageError: null,
@@ -3811,6 +3854,7 @@
                         coverImageSource: '',
                         coverImagePath: '',
                         coverImageSignedUrl: '',
+                        coverSelectionManuallyDisabled: false,
                         coverUploadFileName: '',
                         coverUploadPreviewUrl: '',
                         coverPanX: 50,
@@ -3829,6 +3873,7 @@
                     coverImageStatus: 'loading', 
                     coverImageError: null, 
                     coverImageSelected: false,
+                    coverSelectionManuallyDisabled: false,
                     coverStepDismissed: false,
                     coverImageSource: '',
                     coverImagePath: '',
@@ -3883,6 +3928,8 @@
                             coverImageSource: 'google_streetview',
                             coverImagePath: proxyUrl, // L'URL proxy ne sera insérée que temporairement localement
                             coverImageSignedUrl: proxyUrl, // Utilisée uniquement pour la preview localement
+                            coverImageSelected: true,
+                            coverSelectionManuallyDisabled: false,
                             coverStreetViewAvailable: true,
                             coverStreetViewHeading: initialHeading,
                             coverStreetViewPitch: initialPitch,
@@ -3926,6 +3973,8 @@
                             coverImageSource: data.cover_image_source || '',
                             coverImagePath: data.cover_image_path || '',
                             coverImageSignedUrl: data.cover_image_signed_url || '',
+                            coverImageSelected: true,
+                            coverSelectionManuallyDisabled: false,
                             coverParcelRef: data.cover_parcel_ref || '',
                             coverCoordinates: data.coordinates || null,
                             coverBBox: data.bbox || null,
@@ -3955,6 +4004,7 @@
                         coverImageSource: '',
                         coverImagePath: '',
                         coverImageSignedUrl: '',
+                        coverSelectionManuallyDisabled: false,
                         coverParcelRef: '',
                         coverCoordinates: null,
                         coverBBox: null,
@@ -3981,6 +4031,7 @@
                     coverImageSource: '',
                     coverImagePath: '',
                     coverImageSignedUrl: '',
+                    coverSelectionManuallyDisabled: false,
                     coverParcelRef: '',
                     coverCoordinates: null,
                     coverBBox: null,
@@ -4202,7 +4253,7 @@
                                 {!formData.coverImageSelected ? (
                                     <button
                                         type="button"
-                                        onClick={() => setFormData(prev => ({ ...prev, coverImageSelected: true }))}
+                                        onClick={() => setFormData(prev => ({ ...prev, coverImageSelected: true, coverSelectionManuallyDisabled: false }))}
                                         className="flex items-center gap-2 bg-[#1D4ED8] text-white px-5 py-2.5 rounded-lg font-semibold shadow-sm hover:bg-blue-800 transition-colors"
                                     >
                                         <Icon icon="solar:check-circle-linear" className="text-lg" />
@@ -4211,7 +4262,7 @@
                                 ) : (
                                     <button
                                         type="button"
-                                        onClick={() => setFormData(prev => ({ ...prev, coverImageSelected: false }))}
+                                        onClick={() => setFormData(prev => ({ ...prev, coverImageSelected: false, coverSelectionManuallyDisabled: true }))}
                                         className="flex items-center gap-2 bg-white text-neutral-600 border border-neutral-200 px-4 py-2.5 rounded-lg font-medium hover:bg-neutral-50 transition-colors text-sm shadow-sm"
                                     >
                                         <Icon icon="solar:close-circle-linear" />
@@ -4436,6 +4487,7 @@
                     coverImagePath: '',
                     coverImageSignedUrl: '',
                     coverImageSelected: false,
+                    coverSelectionManuallyDisabled: false,
                     coverImageError: null,
                     coverStepDismissed: false,
                     coverParcelRef: '',
@@ -4493,6 +4545,7 @@
                         coverImagePath: '',
                         coverImageSignedUrl: '',
                         coverImageSelected: false,
+                        coverSelectionManuallyDisabled: false,
                         coverImageError: null,
                         coverStepDismissed: false,
                         coverParcelRef: '',
@@ -6393,7 +6446,7 @@
                     capex_per_kwc: 1200,
                     roi_method: 'simple_payback',
                     aid_tags: [],
-                    source_level_gain: 'hypothesis', source_ref_gain: 'Estimation autoconsommation tertiaire (70% taux)',
+                    source_level_gain: 'source_partial', source_ref_gain: 'PVGIS (JRC) + arrêté S21 du 26 mars 2025',
                     source_level_capex: 'source_partial', source_ref_capex: 'Prix marché PV 2025 — 1,20€/Wc installé',
                     source_level_roi: 'hypothesis'
                 }
@@ -6579,6 +6632,155 @@
             automation: 'elec',
         };
 
+        const NEW_DIAGNOSTIC_PV_SELF_CONSUMPTION_BY_ACTIVITY = {
+            offices: 0.65,
+            retail: 0.68,
+            hotel: 0.76,
+            restaurant: 0.79,
+            commerce_alim: 0.82,
+            health_local: 0.75,
+            education: 0.64,
+            light_warehouse: 0.48
+        };
+
+        const NEW_DIAGNOSTIC_PV_DEFAULT_YIELD_KWH_PER_KWC = 1220;
+        const NEW_DIAGNOSTIC_PV_BUILDING_SURPLUS_TARIFF_EUR_KWH = {
+            le9: 0.0400,
+            le100: 0.0761
+        };
+        const NEW_DIAGNOSTIC_PV_YIELD_BY_DEPARTMENT = [
+            { prefixes: ['20'], yield: 1450 },
+            { prefixes: ['06', '11', '13', '30', '34', '66', '83'], yield: 1380 },
+            { prefixes: ['09', '31', '32', '33', '40', '64', '65'], yield: 1330 },
+            { prefixes: ['12', '16', '17', '18', '19', '23', '24', '46', '47', '79', '81', '82', '86', '87'], yield: 1270 },
+            { prefixes: ['03', '04', '05', '07', '15', '21', '25', '26', '38', '39', '42', '43', '48', '58', '63', '69', '70', '71', '73', '74', '84', '90'], yield: 1210 },
+            { prefixes: ['14', '22', '27', '28', '29', '35', '36', '37', '41', '44', '45', '49', '50', '53', '56', '61', '72', '76', '85', '89'], yield: 1160 },
+            { prefixes: ['02', '08', '10', '51', '52', '54', '55', '57', '59', '60', '62', '67', '68', '77', '78', '80', '88', '91', '92', '93', '94', '95'], yield: 1110 }
+        ];
+
+        const newDiagnosticClamp = (value, min, max) => Math.min(max, Math.max(min, value));
+
+        const newDiagnosticExtractPostalPrefix = (postalCode) => String(postalCode || '').trim().slice(0, 2);
+
+        const newDiagnosticEstimatePhotovoltaicYield = (formData) => {
+            const lat = Number(formData?.lat);
+            const lon = Number(formData?.lon);
+            const postalPrefix = newDiagnosticExtractPostalPrefix(formData?.postalCode);
+            const deptRule = NEW_DIAGNOSTIC_PV_YIELD_BY_DEPARTMENT.find(rule => rule.prefixes.includes(postalPrefix));
+            const byDepartment = deptRule?.yield || NEW_DIAGNOSTIC_PV_DEFAULT_YIELD_KWH_PER_KWC;
+
+            // Approximation locale bornée sur les ordres de grandeur PVGIS (JRC / Commission européenne).
+            if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+                return byDepartment;
+            }
+
+            const latitudeComponent = (48.5 - lat) * 55;
+            const mediterraneanBoost = lon > 2 && lat < 45.8 ? 55 : 0;
+            const southWestBoost = lon < 0.5 && lat < 45.8 ? 32 : 0;
+            const northEastPenalty = lon > 5 && lat > 46.5 ? -18 : 0;
+            const corsicaBoost = postalPrefix === '20' ? 80 : 0;
+            const byCoordinates = newDiagnosticClamp(
+                Math.round(1180 + latitudeComponent + mediterraneanBoost + southWestBoost + northEastPenalty + corsicaBoost),
+                1050,
+                1450
+            );
+
+            return Math.round((byCoordinates * 0.65) + (byDepartment * 0.35));
+        };
+
+        const newDiagnosticEstimateSiteElectricityKwh = (formData, totalKwh, breakdown) => {
+            const explicitElecKwh = formData?.elecUsed ? (parseFloat(formData?.elecKwh || 0) || 0) : 0;
+            const heatingOnElectricity = formData?.mainHeating === 'electric' ? (breakdown?.heating_pct || 0) : 0;
+            const dhwOnElectricity = (
+                (!formData?.ecsSameSystem && formData?.ecsSystem === 'electric_boiler')
+                || (formData?.ecsSameSystem && formData?.mainHeating === 'electric')
+            ) ? (breakdown?.dhw_pct || 0) : 0;
+
+            const inferredElectricSharePct = (breakdown?.cooling_pct || 0)
+                + (breakdown?.vent_aux_pct || 0)
+                + (breakdown?.lighting_pct || 0)
+                + (breakdown?.other_specific_pct || 0)
+                + (breakdown?.cooking_pct || 0)
+                + heatingOnElectricity
+                + dhwOnElectricity;
+
+            const inferredElectricShare = newDiagnosticClamp(inferredElectricSharePct / 100, 0.22, 0.95);
+            const inferredElecKwh = totalKwh * inferredElectricShare;
+
+            return explicitElecKwh > 0 ? explicitElecKwh : Math.round(inferredElecKwh);
+        };
+
+        const newDiagnosticEstimatePhotovoltaicAutoconsumptionRate = (formData) => {
+            const activity = formData?.activity || 'offices';
+            if (activity !== 'mixed') {
+                return NEW_DIAGNOSTIC_PV_SELF_CONSUMPTION_BY_ACTIVITY[activity] || 0.65;
+            }
+
+            const mixedActivities = [formData?.mixedUsage1, formData?.mixedUsage2].filter(Boolean);
+            if (!mixedActivities.length) {
+                return 0.65;
+            }
+
+            const averageRate = mixedActivities.reduce((sum, current) => (
+                sum + (NEW_DIAGNOSTIC_PV_SELF_CONSUMPTION_BY_ACTIVITY[current] || 0.65)
+            ), 0) / mixedActivities.length;
+
+            return Math.round(averageRate * 100) / 100;
+        };
+
+        const newDiagnosticGetPhotovoltaicSurplusTariff = (installedKwc) => (
+            installedKwc <= 9
+                ? NEW_DIAGNOSTIC_PV_BUILDING_SURPLUS_TARIFF_EUR_KWH.le9
+                : NEW_DIAGNOSTIC_PV_BUILDING_SURPLUS_TARIFF_EUR_KWH.le100
+        );
+
+        const newDiagnosticEstimatePhotovoltaicScenario = ({ action, totalKwh, breakdown, surface, formData, ePrices }) => {
+            const safeSurface = Math.max(1, Number(surface || formData?.surface || 100));
+            const levels = Math.max(1, parseInt(formData?.levels || 1, 10) || 1);
+            const roofSurface = safeSurface / levels;
+            const usableRoofRatio = formData?.roofAccessible === 'yes' ? 0.60 : 0.48;
+            const usableRoofSurface = Math.max(0, roofSurface * usableRoofRatio);
+            const roofLimitedKwc = usableRoofSurface * 0.20;
+            const localYieldKwhPerKwc = newDiagnosticEstimatePhotovoltaicYield(formData);
+            const estimatedSiteElectricityKwh = Math.max(1, newDiagnosticEstimateSiteElectricityKwh(formData, totalKwh, breakdown));
+            const loadLimitedKwc = localYieldKwhPerKwc > 0 ? (estimatedSiteElectricityKwh * 1.10) / localYieldKwhPerKwc : roofLimitedKwc;
+            const installedKwc = Math.round(newDiagnosticClamp(Math.min(roofLimitedKwc, loadLimitedKwc, 100), 0.5, 100) * 10) / 10;
+            const annualProductionKwh = Math.max(0, Math.round(installedKwc * localYieldKwhPerKwc));
+            const autoconsumptionRate = newDiagnosticEstimatePhotovoltaicAutoconsumptionRate(formData);
+            const autoconsumedKwh = Math.max(0, Math.round(Math.min(annualProductionKwh * autoconsumptionRate, estimatedSiteElectricityKwh * 0.95)));
+            const surplusSoldKwh = Math.max(0, annualProductionKwh - autoconsumedKwh);
+            const surplusTariff = newDiagnosticGetPhotovoltaicSurplusTariff(installedKwc);
+            const selfConsumptionSavingsEuro = autoconsumedKwh * ePrices.elec;
+            const surplusRevenueEuro = surplusSoldKwh * surplusTariff;
+            const totalGainEuro = Math.round(selfConsumptionSavingsEuro + surplusRevenueEuro);
+            const capex = Math.round(installedKwc * (action.capex_per_kwc || 1200));
+            const aidPct = action.aid_pct || 0;
+            const capexNet = Math.round(capex * (1 - aidPct));
+            const aidAmount = Math.round(capex * aidPct);
+            const roiYears = totalGainEuro > 0 ? Math.round((capexNet / totalGainEuro) * 10) / 10 : null;
+            const hypothesisLabel = `Hypothèse de calcul : productible local ~${newDiagnosticFormatInteger(localYieldKwhPerKwc)} kWh/kWc/an, autoconsommation ${newDiagnosticFormatInteger(autoconsumptionRate * 100)} %, surplus valorisé à ${newDiagnosticFormatDecimal(surplusTariff, 3)} €/kWh.`;
+
+            return {
+                gainKwh: autoconsumedKwh,
+                gainEuro: totalGainEuro,
+                capex,
+                capexNet,
+                aidAmount,
+                aidPct,
+                roi_years: roiYears,
+                gain_pct_total: totalKwh > 0 ? autoconsumedKwh / totalKwh : 0,
+                extraAnnualRevenueEuro: Math.round(surplusRevenueEuro),
+                pv_hypothesis: hypothesisLabel,
+                energy_switch_note: `Productible local estimé : ${newDiagnosticFormatInteger(localYieldKwhPerKwc)} kWh/kWc/an. ${newDiagnosticFormatInteger(autoconsumedKwh)} kWh valorisés sur site et ${newDiagnosticFormatInteger(surplusSoldKwh)} kWh revendus en surplus.`,
+                pv_production_kwh_an: annualProductionKwh,
+                pv_surplus_kwh_an: surplusSoldKwh,
+                pv_surplus_revenue_euro_an: Math.round(surplusRevenueEuro),
+                pv_autoconsumption_rate: Math.round(autoconsumptionRate * 100),
+                pv_local_yield_kwh_kwc: localYieldKwhPerKwc,
+                pv_installed_kwc: installedKwc
+            };
+        };
+
         const newDiagnosticCalculateActionGain = (action, totalKwh, breakdown, avgPrice, surface, formData, energyPrices) => {
             let baseKwh = totalKwh;
             const ePrices = energyPrices || { elec: 0.206, gas: 0.108 };
@@ -6643,26 +6845,16 @@
                 capex = action.capex_med * 6;
             }
 
-            // Gain PV sur conso électrique seulement (ACT22)
+            // Gain PV : autoconsommation + valorisation du surplus (ACT22)
             if (action.id === 'ACT22' && action.gain_scope === 'elec_post') {
-                const elecConvValue = (formData && formData.elecUsed) ? (parseFloat((formData && formData.elecKwh) || 0) || 0) : 0;
-                const elecPct = totalKwh > 0 ? Math.max(0.3, Math.min(1.0, elecConvValue / totalKwh)) : 0.5;
-                const elecKwh = totalKwh * elecPct;
-                // Production estimée : surface_toit × 0.15 × 1100 kWh/kWc × 70% autoconsommation
-                const levels = Math.max(1, parseInt((formData && formData.levels) || 1));
-                const roofSurface = safeSurface / levels;
-                const pvProduction = roofSurface * 0.15 * 1100 * 0.70;
-                const pvGainKwh = Math.min(pvProduction, elecKwh * 0.30); // cap à 30% de la conso élec
-                return {
-                    gainKwh: Math.round(pvGainKwh),
-                    gainEuro: Math.round(pvGainKwh * ePrices.elec),
-                    capex: Math.round(roofSurface * 0.6 * 200 * 1.20), // 60% emprise × 200 Wc/m² × 1.20€/Wc
-                    capexNet: Math.round(roofSurface * 0.6 * 200 * 1.20 * (1 - (action.aid_pct || 0))),
-                    aidAmount: Math.round(roofSurface * 0.6 * 200 * 1.20 * (action.aid_pct || 0)),
-                    aidPct: action.aid_pct || 0,
-                    roi_years: pvGainKwh > 0 ? Math.round((roofSurface * 0.6 * 200 * 1.20 * (1 - (action.aid_pct || 0))) / (pvGainKwh * ePrices.elec) * 10) / 10 : null,
-                    gain_pct_total: totalKwh > 0 ? pvGainKwh / totalKwh : 0
-                };
+                return newDiagnosticEstimatePhotovoltaicScenario({
+                    action,
+                    totalKwh,
+                    breakdown,
+                    surface: safeSurface,
+                    formData,
+                    ePrices
+                });
             }
 
             // ==== Calcul CAPEX net (après aides) ====
@@ -6783,6 +6975,7 @@
             const calc = newDiagnosticCalculateActionGain(photovoltaicAction, totalKwh, breakdown, avgPrice, surface, formData, energyPrices);
 
             if (!calc || calc.gainKwh <= 0 || calc.gainEuro <= 0) return null;
+            if (calc.roi_years !== null && calc.roi_years <= 10) return null;
 
             return {
                 ...photovoltaicAction,
@@ -7057,7 +7250,8 @@
 
             const compositeSavingsPct = newDiagnosticCalculateCompositeSavings(topActions);
             const annualSavingsKwh = Math.round(totalKwh * compositeSavingsPct);
-            const annualSavingsEuro = Math.round(annualSavingsKwh * avgPrice);
+            const annualAdditionalRevenueEuro = topActions.reduce((sum, action) => sum + (action.extraAnnualRevenueEuro || 0), 0);
+            const annualSavingsEuro = Math.round((annualSavingsKwh * avgPrice) + annualAdditionalRevenueEuro);
 
             // ──────────────────────────────────────────────────────────────────────
             // 9. PROJECTIONS
@@ -7169,7 +7363,8 @@
                     aid_tags: a.aid_tags || [],
                     fiche_cee: a.fiche_cee || null,
                     intervenants: a.intervenants || null,
-                    energy_switch_note: a.energy_switch_note || null
+                    energy_switch_note: a.energy_switch_note || null,
+                    pv_hypothesis: a.pv_hypothesis || null
                 })),
 
                 complementary_opportunity: complementaryPhotovoltaic ? {
@@ -7184,7 +7379,8 @@
                     capex_net: { value: complementaryPhotovoltaic.capexNet || complementaryPhotovoltaic.capex, unit: '€' },
                     aid_amount: { value: complementaryPhotovoltaic.aidAmount || 0, unit: '€' },
                     aid_pct: complementaryPhotovoltaic.aidPct || 0,
-                    roi_years: { value: complementaryPhotovoltaic.roi_years, unit: 'ans' }
+                    roi_years: { value: complementaryPhotovoltaic.roi_years, unit: 'ans' },
+                    pv_hypothesis: complementaryPhotovoltaic.pv_hypothesis || null
                 } : null,
 
                 // Projections
@@ -7369,8 +7565,39 @@
         };
 
         const NewDiagnosticInactionGraph = ({ annualSavingsEuro, totalCostEuroAn, elecKwh = 0, gasKwh = 0, actions = [], totalCapex = 0 }) => {
-            const { ComposedChart, Line, XAxis, YAxis, CartesianGrid, Tooltip: GrTooltip, ReferenceLine, ResponsiveContainer: GrResponsive, Area } = window.Recharts;
+            const recharts = window.Recharts || {};
+            const { ComposedChart, Line, XAxis, YAxis, CartesianGrid, Tooltip: GrTooltip, ReferenceLine, Area } = recharts;
+            const chartHostRef = useRef(null);
+            const [chartWidth, setChartWidth] = useState(0);
             const projection = newDiagnosticBuildProjectionData({ annualSavingsEuro, totalCostEuroAn, elecKwh, gasKwh, actions });
+
+            useEffect(() => {
+                const updateWidth = () => {
+                    const nextWidth = chartHostRef.current?.clientWidth || 0;
+                    if (nextWidth > 0) {
+                        setChartWidth(nextWidth);
+                    }
+                };
+
+                updateWidth();
+
+                if (typeof ResizeObserver !== 'undefined' && chartHostRef.current) {
+                    const observer = new ResizeObserver(() => updateWidth());
+                    observer.observe(chartHostRef.current);
+                    return () => observer.disconnect();
+                }
+
+                window.addEventListener('resize', updateWidth);
+                return () => window.removeEventListener('resize', updateWidth);
+            }, []);
+
+            if (!ComposedChart || !Line || !XAxis || !YAxis || !CartesianGrid || !GrTooltip || !ReferenceLine || !Area) {
+                return (
+                    <div className="h-[340px] w-full rounded-2xl border border-dashed border-slate-200 bg-slate-50 flex items-center justify-center text-sm text-slate-500">
+                        Graphique temporairement indisponible.
+                    </div>
+                );
+            }
 
             return (
                 <div>
@@ -7392,9 +7619,9 @@
                         </div>
                         <span className="ml-auto text-[11px] text-slate-400 shrink-0">Inflation : {projection.tauxPct}%/an</span>
                     </div>
-                    <div className="h-[340px] w-full">
-                        <GrResponsive width="100%" height="100%">
-                            <ComposedChart data={projection.data} margin={{ top: 12, right: 24, bottom: 6, left: 2 }}>
+                    <div ref={chartHostRef} className="h-[340px] w-full">
+                        {chartWidth > 0 && (
+                            <ComposedChart width={chartWidth} height={340} data={projection.data} margin={{ top: 12, right: 24, bottom: 6, left: 2 }}>
                                 <defs>
                                     <linearGradient id="newDiagProjSans" x1="0" y1="0" x2="0" y2="1">
                                         <stop offset="5%" stopColor="#EF4444" stopOpacity={0.10} />
@@ -7432,7 +7659,7 @@
                                     />
                                 )}
                             </ComposedChart>
-                        </GrResponsive>
+                        )}
                     </div>
                 </div>
             );
@@ -8387,19 +8614,29 @@
                                     </div>
                                 </div>
 
-                                <div className="mt-8 grid gap-4 lg:grid-cols-[minmax(0,1fr)_180px_minmax(0,1fr)] items-stretch">
-                                    <EnergyScaleCard title="Étiquette actuelle" letterData={diagIndex} intensity={benchmark.site_intensity.value} />
-
-                                    <div className="report-glass-card rounded-2xl px-4 py-5 flex flex-col items-center justify-center text-center">
-                                        <div className="w-12 h-12 rounded-full bg-emerald-400/15 border border-emerald-300/20 flex items-center justify-center mb-3">
-                                            <Icon icon="solar:arrow-right-bold" className="text-2xl text-emerald-300" />
+                                <div className="mt-8 rounded-[28px] border border-white/10 bg-white/[0.04] p-4 md:p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+                                    <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+                                        <div className="min-w-0 flex-1">
+                                            <EnergyScaleCard title="Avant travaux" letterData={diagIndex} intensity={benchmark.site_intensity.value} />
                                         </div>
-                                        <p className="text-[11px] uppercase tracking-widest text-slate-300 font-bold">Amélioration estimée</p>
-                                        <p className="text-3xl font-black text-white mt-1">-{savingsPct}%</p>
-                                        <p className="text-xs text-slate-200 mt-2">{classGain > 0 ? `+${classGain} classe${classGain > 1 ? 's' : ''} estimée${classGain > 1 ? 's' : ''}` : 'Étiquette stable, intensité réduite'}</p>
-                                    </div>
 
-                                    <EnergyScaleCard title="Après travaux estimés" letterData={targetDiagIndex} intensity={targetIntensity} />
+                                        <div className="shrink-0 lg:w-[170px]">
+                                            <div className="rounded-[24px] border border-white/12 bg-slate-950/35 px-4 py-5 flex flex-col items-center justify-center text-center shadow-[0_18px_42px_rgba(15,23,42,0.18)] backdrop-blur">
+                                                <div className="w-11 h-11 rounded-full bg-emerald-400/15 border border-emerald-300/20 flex items-center justify-center mb-3">
+                                                    <Icon icon="solar:arrow-right-bold" className="text-[22px] text-emerald-300" />
+                                                </div>
+                                                <p className="text-[11px] uppercase tracking-[0.16em] text-slate-300 font-bold">Gain estimé</p>
+                                                <p className="text-[32px] leading-none font-black text-white mt-2">-{savingsPct}%</p>
+                                                <p className="text-xs text-slate-200 mt-2 leading-relaxed">
+                                                    {classGain > 0 ? `+${classGain} classe${classGain > 1 ? 's' : ''} estimée${classGain > 1 ? 's' : ''}` : 'Intensité réduite sans saut de classe estimé'}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div className="min-w-0 flex-1">
+                                            <EnergyScaleCard title="Après travaux estimés" letterData={targetDiagIndex} intensity={targetIntensity} />
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <p className="text-xs text-slate-300 mt-4">Étiquette estimative relative à votre activité. Elle n’a pas valeur de diagnostic réglementaire.</p>
@@ -8684,6 +8921,7 @@
                                             <td className="px-4 py-3.5 align-top" style={{ minWidth: '210px' }}>
                                                 <p className="font-semibold text-slate-900 leading-snug">{action.name}</p>
                                                 <p className="text-xs text-slate-500 mt-0.5">{catLabel}</p>
+                                                {action.pv_hypothesis && <p className="text-[11px] text-slate-500 mt-1 leading-snug">{action.pv_hypothesis}</p>}
                                                 <p className="text-xs text-slate-400 italic mt-1 leading-snug">{reason.why}</p>
                                             </td>
                                             <td className="px-4 py-3.5 align-top text-right whitespace-nowrap">
@@ -8720,6 +8958,7 @@
                                                 <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-slate-900 text-white text-xs font-black shrink-0 mt-0.5">{idx + 1}</span>
                                                 <div className="flex-1 min-w-0">
                                                     <p className="font-semibold text-slate-900 leading-snug">{action.name}</p>
+                                                    {action.pv_hypothesis && <p className="text-[11px] text-slate-500 mt-1 leading-snug">{action.pv_hypothesis}</p>}
                                                     <div className="flex flex-wrap gap-1.5 mt-1.5">
                                                         <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold border ${effort.className}`}>{effort.label}</span>
                                                         <span className={`text-[10px] font-medium self-center ${robustness.level === 'strong' ? 'text-green-600' : robustness.level === 'medium' ? 'text-amber-600' : 'text-orange-600'}`}>{robustness.label}</span>
@@ -8797,6 +9036,7 @@
                                 const complementaryRoi = complementaryRoiValue != null
                                     ? `${String(complementaryRoiValue).replace('.', ',')} ans`
                                     : 'À étudier';
+                                const complementaryHypothesis = complementaryOpportunity?.pv_hypothesis || '';
                                 const hasAny = lightGroup.length > 0 || heavyGroup.length > 0;
                                 return (
                                     <>
@@ -8831,6 +9071,7 @@
                                                         <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-amber-700">Opportunité complémentaire identifiée</p>
                                                         <h3 className="text-base md:text-lg font-bold text-slate-900 mt-1">{complementaryOpportunity.name}</h3>
                                                         <p className="text-sm text-slate-600 mt-2 leading-relaxed">{complementaryOpportunity.note}</p>
+                                                        {complementaryHypothesis && <p className="text-[11px] text-slate-500 mt-3 leading-relaxed">{complementaryHypothesis}</p>}
                                                         <div className="grid sm:grid-cols-3 gap-3 mt-4">
                                                             <div className="rounded-2xl border border-emerald-100 bg-white px-4 py-3">
                                                                 <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-700">Gain indicatif / an</p>

@@ -7239,6 +7239,17 @@
             const proLogoName = isProAuth ? resolveBrandName(settings, organization) : DEFAULT_WORKSPACE_BRAND_NAME;
             const hasCustomBranding = !!(proLogoImg || proLogoName !== DEFAULT_WORKSPACE_BRAND_NAME);
             const isLocalExample = !!c._isLocalExample;
+            const reportAccent = typeof settings?.accent === 'string' && settings.accent.trim()
+                ? settings.accent.trim()
+                : DEFAULT_WORKSPACE_ACCENT;
+            const withAccentAlpha = (alphaHex) => (
+                /^#[0-9A-Fa-f]{6}$/.test(reportAccent)
+                    ? `${reportAccent}${alphaHex}`
+                    : reportAccent
+            );
+            const reportAccentSoft = withAccentAlpha('22');
+            const reportAccentBorder = withAccentAlpha('38');
+            const reportAccentText = withAccentAlpha('CC');
             const canGenerateOfficialPdf = isProAuth && !sharedCase && !isLocalExample && !!c.reportRecordId && !!organization?.id;
             const hasOfficialPdfAvailable = !!(c.latestPdfFileId || officialPdfUrl);
             const isOfficialPdfBusy = officialPdfPending || c.pdfStatus === 'generating';
@@ -7588,7 +7599,7 @@
                         </div>
                     )}
 
-                    <div className="bg-gradient-to-br from-slate-900 to-blue-900 text-white rounded-2xl p-8 mb-8 print-page">
+                    <div className="text-white rounded-2xl p-8 mb-8 print-page" style={{ background: `linear-gradient(135deg, #0F172A 0%, #102A43 45%, ${reportAccent} 140%)` }}>
                         {hasCustomBranding && (
                             <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
                                 <div className="flex items-center gap-3">
@@ -7597,19 +7608,19 @@
                                         : <div className="text-white font-bold text-lg">{proLogoName}</div>
                                     }
                                 </div>
-                                <div className="text-blue-300 text-xs font-semibold uppercase tracking-wider">
+                                <div className="text-xs font-semibold uppercase tracking-wider" style={{ color: reportAccentText }}>
                                     Pre-diagnostic energetique
                                 </div>
                             </div>
                         )}
                         <div className="flex flex-col gap-4 md:flex-row justify-between">
                             <div className="min-w-0">
-                                <div className="text-blue-300 text-xs font-bold uppercase tracking-widest mb-2">Pre-diagnostic energetique</div>
+                                <div className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: reportAccentText }}>Pre-diagnostic energetique</div>
                                 <h1 className="text-2xl md:text-3xl font-extrabold mb-1 break-words">{isLocalExample ? (c.projectName || c.clientName || c.company || '-') : (c.clientName || c.company || c.projectName || '-')}</h1>
                                 <div className="text-slate-300 text-sm flex flex-wrap gap-x-1">{getProActivityLabel(c.formData?.activity || c.activityLabel || c.activity)} · {c.surfaceLabel || (c.buildingArea ? c.buildingArea.toLocaleString('fr-FR') + ' m²' : '')} · {c.postalCode || c.address || ''}</div>
                                 <div className="text-slate-400 text-xs mt-1">Généré le {c.createdAt} · Dossier {c.id}</div>
                             </div>
-                            <div className="flex flex-col items-center justify-center bg-white/10 rounded-xl px-8 py-5 shrink-0">
+                            <div className="flex flex-col items-center justify-center rounded-xl px-8 py-5 shrink-0" style={{ backgroundColor: reportAccentSoft, border: `1px solid ${reportAccentBorder}` }}>
                                 <div className="text-xs text-slate-300 font-bold uppercase mb-1">Indice DiagTertiaire</div>
                                 <div className={`text-6xl font-extrabold ${r ? (r.score === 'A' || r.score === 'B' ? 'text-emerald-400' : r.score === 'C' ? 'text-amber-400' : 'text-red-400') : 'text-slate-300'}`}>
                                     {r ? r.score : (c.score || '-')}
@@ -7714,7 +7725,7 @@
                         return (
                             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 mb-8">
                                 <h3 className="text-lg font-bold text-slate-800 mb-1 flex items-center gap-2">
-                                    <Icon icon="solar:tag-price-bold" className="text-blue-600" /> Indice DiagTertiaire - avant / après travaux
+                                    <Icon icon="solar:tag-price-bold" style={{ color: reportAccent }} /> Indice DiagTertiaire - avant / après travaux
                                 </h3>
                                 <p className="text-xs text-slate-400 mb-6">Indicateur indicatif — non opposable, hors cadre OPERAT.</p>
                                 <div className="flex flex-col items-center gap-6 sm:flex-row sm:justify-center">
@@ -7754,7 +7765,7 @@
                                 {/* G1 - Décomposition postes */}
                                 <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
                                     <h3 className="text-lg font-bold text-slate-800 mb-1 flex items-center gap-2">
-                                        <Icon icon="solar:pie-chart-2-bold" className="text-blue-600" /> Répartition des consommations par poste
+                                        <Icon icon="solar:pie-chart-2-bold" style={{ color: reportAccent }} /> Répartition des consommations par poste
                                     </h3>
                                     <p className="text-xs text-slate-400 mb-5">Estimation statistique basée sur l'activité. Zone {r.zone} · Correctif année ×{r.anneeCorr}</p>
                                     <div className="grid md:grid-cols-2 gap-6 items-center">
@@ -7782,7 +7793,7 @@
                                 {/* G2 - Benchmark */}
                                 <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
                                     <h3 className="text-lg font-bold text-slate-800 mb-1 flex items-center gap-2">
-                                        <Icon icon="solar:chart-square-bold" className="text-blue-600" /> Benchmark sectoriel
+                                        <Icon icon="solar:chart-square-bold" style={{ color: reportAccent }} /> Benchmark sectoriel
                                     </h3>
                                     <p className="text-xs text-slate-400 mb-5">{r.ref?.unit} - {r.ref?.scope} - Source : ADEME / Enquête ECNA 2022</p>
                                     <Recharts.ResponsiveContainer width="100%" height={220}>
@@ -7804,7 +7815,7 @@
                                 {r.topActions?.length > 0 && (
                                     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
                                         <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                                            <Icon icon="solar:magic-stick-3-bold" className="text-blue-600" /> Actions recommandées ({r.topActions.length})
+                                            <Icon icon="solar:magic-stick-3-bold" style={{ color: reportAccent }} /> Actions recommandées ({r.topActions.length})
                                         </h3>
                                         <div className="space-y-3">
                                             {r.topActions.map((a, i) => (
@@ -7831,11 +7842,11 @@
                                                 </div>
                                             ))}
                                         </div>
-                                        <div className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-100 text-xs text-blue-700">
+                                        <div className="mt-4 p-4 rounded-xl border text-xs text-slate-700" style={{ backgroundColor: reportAccentSoft, borderColor: reportAccentBorder }}>
                                             <strong>Invest. brut total :</strong> {getCapexBrutValue(r).toLocaleString('fr-FR')} € ·
                                             <strong> Aides estimées :</strong> {(Math.round(Number(r.aidesTotal || 0))).toLocaleString('fr-FR')} € ·
                                             <strong> Invest. net :</strong> {r.totalCapexNet?.toLocaleString('fr-FR')} €
-                                            <div className="mt-1 text-blue-500">Aides : TVA 5,5% + CEE plancher 1,5%. Montants réels pouvant être supérieurs - faire chiffrer par un installateur RGE.</div>
+                                            <div className="mt-1" style={{ color: reportAccent }}>Aides : TVA 5,5% + CEE plancher 1,5%. Montants réels pouvant être supérieurs - faire chiffrer par un installateur RGE.</div>
                                         </div>
                                     </div>
                                 )}
@@ -7844,7 +7855,7 @@
                                 {roiData.length > 0 && (
                                     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
                                         <h3 className="text-lg font-bold text-slate-800 mb-1 flex items-center gap-2">
-                                            <Icon icon="solar:chart-bold" className="text-blue-600" /> Retour sur investissement par action
+                                            <Icon icon="solar:chart-bold" style={{ color: reportAccent }} /> Retour sur investissement par action
                                         </h3>
                                         <p className="text-xs text-slate-400 mb-5">Trié du meilleur ROI au plus long. Actions filtrées selon les systèmes en place.</p>
                                         <Recharts.ResponsiveContainer width="100%" height={roiData.length * 52 + 40}>
@@ -7881,7 +7892,7 @@
                                 {r.graphiquePubliable && r.projectionData?.length > 2 && (
                                     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
                                         <h3 className="text-lg font-bold text-slate-800 mb-1 flex items-center gap-2">
-                                            <Icon icon="solar:graph-new-up-bold" className="text-blue-600" /> Projection financière sur {r.horizonAns} ans
+                                            <Icon icon="solar:graph-new-up-bold" style={{ color: reportAccent }} /> Projection financière sur {r.horizonAns} ans
                                         </h3>
                                         <p className="text-xs text-slate-400 mb-1">Inflation pondérée : {(r.tauxInflation * 100).toFixed(1)}%/an</p>
                                         <p className="text-xs text-slate-400 mb-5">Aides estimées déduites : TVA 5,5% + CEE plancher ({r.aidesTotal?.toLocaleString('fr-FR')} € estimés).</p>

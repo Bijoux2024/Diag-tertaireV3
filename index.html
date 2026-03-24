@@ -7688,9 +7688,9 @@
             const markersAreClose = Math.abs(posCurrent - posTarget) < 12;
 
             return (
-                <div className="relative px-3 pt-14 pb-2">
+                <div className="relative px-3" style={{ paddingTop: 48, paddingBottom: 2 }}>
                     {/* Étiquettes de référence au-dessus */}
-                    <div className="absolute top-0 left-3 right-3" style={{ height: 52 }}>
+                    <div className="absolute top-0 left-3 right-3" style={{ height: 46 }}>
                         {[
                             { pos: posLow,    label: `Bas secteur`,        sub: `${Math.round(low)} kWh/m²`, color: '#059669' },
                             { pos: posMedian, label: `Médiane`,            sub: `${Math.round(median)} kWh/m²`, color: '#D97706' },
@@ -7703,7 +7703,7 @@
                                     <p className="text-[10px] font-bold whitespace-nowrap" style={{ color }}>{label}</p>
                                     <p className="text-[9px] whitespace-nowrap text-slate-400">{sub}</p>
                                 </div>
-                                <div className="w-px h-3 mt-0.5 mx-auto" style={{ background: color, opacity: 0.4 }}></div>
+                                <div className="w-px h-2.5 mt-0.5 mx-auto" style={{ background: color, opacity: 0.4 }}></div>
                             </div>
                         )})}
                     </div>
@@ -7728,7 +7728,7 @@
                     </div>
 
                     {/* Labels en dessous des marqueurs */}
-                    <div className="relative" style={{ minHeight: 64 }}>
+                    <div className="relative" style={{ minHeight: 58 }}>
                         <div className="absolute" style={{ left: `${posCurrent}%`, transform: 'translateX(-50%)', top: markersAreClose && posCurrent > posTarget ? 18 : 0 }}>
                             <div className="w-px h-2 bg-slate-600"></div>
                             <div className="flex flex-col" style={{ alignItems: getLabelLayout(posCurrent, 42).alignItems, textAlign: getLabelLayout(posCurrent, 42).textAlign, transform: getLabelLayout(posCurrent, 42).transform }}>
@@ -8230,7 +8230,8 @@
             reportPayload,
             userEmail,
             onLeadSubmissionCreated,
-            setReportPayload = null
+            setReportPayload = null,
+            onEditReport = null
         }) => {
             const [isPDFGenerating, setIsPDFGenerating] = useState(false);
             const [serverPdfUrl, setServerPdfUrl] = useState((reportPayload && reportPayload.pdf_url) ? reportPayload.pdf_url : '');
@@ -8239,6 +8240,12 @@
             const [ctaMessage, setCtaMessage] = useState('');
             const [ctaSent, setCtaSent] = useState(false);
             const [brandLogoDataUrl, setBrandLogoDataUrl] = useState(null);
+            const [reportCoverPreview, setReportCoverPreview] = useState({
+                selected: false,
+                url: '',
+                source: '',
+                manuallyDisabled: false
+            });
             const ctaPanelRef = useRef(null);
             useEffect(() => {
                 setServerPdfUrl((reportPayload && reportPayload.pdf_url) ? reportPayload.pdf_url : '');
@@ -8255,6 +8262,53 @@
                     isCancelled = true;
                 };
             }, []);
+
+            useEffect(() => {
+                const inputs = (reportPayload && reportPayload.inputs_summary) || {};
+                const payloadSelected = !!inputs.cover_image_selected;
+                const payloadSource = String(inputs.cover_image_source || '').trim();
+                const payloadPath = String(inputs.cover_image_path || '').trim();
+                const isDirectUrl = /^https?:\/\//i.test(payloadPath)
+                    || payloadPath.startsWith('/api/')
+                    || payloadPath.startsWith('/');
+
+                const nextPreview = {
+                    selected: payloadSelected,
+                    url: payloadSelected && isDirectUrl ? payloadPath : '',
+                    source: payloadSource,
+                    manuallyDisabled: false
+                };
+
+                try {
+                    const saved = window.localStorage.getItem('newDiagnosticLatestSubmission');
+                    if (saved) {
+                        const parsed = JSON.parse(saved);
+                        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+                            const savedSelected = !!parsed.coverImageSelected;
+                            const savedUrl = String(parsed.coverImageSignedUrl || '').trim();
+                            const savedPath = String(parsed.coverImagePath || '').trim();
+                            const savedSource = String(parsed.coverImageSource || '').trim();
+                            const samePath = payloadPath && savedPath && payloadPath === savedPath;
+                            const sameSource = payloadSource && savedSource && payloadSource === savedSource;
+
+                            if (parsed.coverSelectionManuallyDisabled && !savedSelected) {
+                                nextPreview.manuallyDisabled = true;
+                            }
+
+                            if (payloadSelected && savedSelected && savedUrl && (samePath || sameSource || (!payloadPath && !payloadSource))) {
+                                nextPreview.selected = true;
+                                nextPreview.url = savedUrl;
+                                nextPreview.source = savedSource || nextPreview.source;
+                                nextPreview.manuallyDisabled = false;
+                            }
+                        }
+                    }
+                } catch (_) {
+                    // no-op
+                }
+
+                setReportCoverPreview(nextPreview);
+            }, [reportPayload]);
 
             const openCtaPanel = () => {
                 setShowCTAModal(true);
@@ -8403,6 +8457,26 @@
                 ? Math.max(0, Math.round(((benchmark.site_intensity.value - targetIntensity) / benchmark.site_intensity.value) * 100))
                 : 0;
             const brandFallbackLabel = NEW_DIAGNOSTIC_BRAND.name;
+            const reportCoverSourceLabels = {
+                google_streetview: 'Google Street View',
+                panoramax: 'Panoramax (Vue au sol)',
+                ign_ortho: 'IGN (Vue aérienne)',
+                ign_plan: 'IGN (Plan interactif)',
+                upload: 'Photo importée'
+            };
+            const hasSelectedCoverPreview = !!(reportCoverPreview.selected && reportCoverPreview.url);
+            const coverSourceLabel = reportCoverSourceLabels[reportCoverPreview.source] || 'Image de couverture';
+            const coverCtaTitle = reportCoverPreview.manuallyDisabled
+                ? 'Vous avez choisi de ne pas utiliser de visuel.'
+                : reportCoverPreview.selected
+                    ? "Le visuel retenu n'est pas disponible dans cette vue."
+                    : 'Ajoutez un visuel du bâtiment pour enrichir votre rapport.';
+            const coverCtaText = reportCoverPreview.manuallyDisabled
+                ? "Vous pouvez en ajouter un à tout moment depuis l'édition du rapport."
+                : reportCoverPreview.selected
+                    ? "Réouvrez l'édition pour recharger ou changer l'image de couverture."
+                    : 'Une façade, une vue aérienne ou une photo rend le rapport plus concret et plus lisible.';
+            const coverCtaLabel = reportCoverPreview.selected ? 'Réouvrir le visuel' : 'Ajouter un visuel';
 
             const EnergyScaleCard = ({ title, letterData, intensity }) => (
                 <div className="report-glass-card rounded-[24px] overflow-hidden border border-white/10">
@@ -8681,18 +8755,60 @@
                                 </div>
 
                                 <div className="grid lg:grid-cols-2 gap-5 mb-8 lg:items-start">
-                                    <div className="report-subcard p-5">
+                                    <div className="report-subcard p-5 h-full flex flex-col">
                                         <p className="text-xs font-bold uppercase tracking-wide text-slate-500 mb-1">Positionnement sectoriel</p>
-                                        <p className="text-base font-bold text-slate-900 mb-1">{benchmarkGapText}</p>
-                                        <NewDiagnosticPositioningGauge
-                                            intensity={benchmark.site_intensity.value}
-                                            low={benchmark.benchmark_low.value}
-                                            median={benchmark.benchmark_median.value}
-                                            high={benchmark.benchmark_high.value}
-                                            targetIntensity={targetIntensity}
-                                        />
-                                        <p className="text-sm text-slate-600 mt-1">{benchmarkComment}</p>
+                                        <p className="text-base font-bold text-slate-900">{benchmarkGapText}</p>
+                                        <p className="text-sm text-slate-500 mt-1 mb-3">{benchmarkComment}</p>
+                                        <div className="-mt-1">
+                                            <NewDiagnosticPositioningGauge
+                                                intensity={benchmark.site_intensity.value}
+                                                low={benchmark.benchmark_low.value}
+                                                median={benchmark.benchmark_median.value}
+                                                high={benchmark.benchmark_high.value}
+                                                targetIntensity={targetIntensity}
+                                            />
+                                        </div>
                                         <p className="text-[10px] text-slate-400 mt-2">Source : {benchmark.source_ref || 'Références sectorielles'}</p>
+                                        <div className="mt-4 pt-4 border-t border-slate-100">
+                                            {hasSelectedCoverPreview ? (
+                                                <div>
+                                                    <div className="flex items-center justify-between gap-3 mb-3">
+                                                        <div>
+                                                            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Visuel retenu pour le rapport</p>
+                                                            <p className="text-xs text-slate-500 mt-1">{coverSourceLabel}</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="relative overflow-hidden rounded-[22px] border border-slate-200 bg-slate-100 shadow-sm">
+                                                        <img
+                                                            src={reportCoverPreview.url}
+                                                            alt="Visuel du bâtiment"
+                                                            className="w-full h-44 md:h-48 object-cover"
+                                                        />
+                                                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/70 via-slate-950/10 to-transparent px-4 py-3">
+                                                            <span className="inline-flex items-center rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-bold text-slate-700 shadow-sm">
+                                                                {coverSourceLabel}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="rounded-[22px] border border-dashed border-slate-200 bg-gradient-to-br from-slate-50 via-white to-slate-50/70 p-4 md:p-5">
+                                                    <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500 mb-2">Visuel du bâtiment</p>
+                                                    <p className="text-sm font-semibold text-slate-900 leading-snug">{coverCtaTitle}</p>
+                                                    <p className="text-sm text-slate-500 mt-2 leading-relaxed">{coverCtaText}</p>
+                                                    {typeof onEditReport === 'function' && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={onEditReport}
+                                                            className="mt-4 inline-flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-semibold text-[#1D4ED8] hover:bg-blue-100 transition-colors"
+                                                        >
+                                                            <Icon icon="solar:camera-linear" className="text-base" />
+                                                            {coverCtaLabel}
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
 
                                     <div className="report-subcard p-5">
@@ -9519,23 +9635,36 @@
                 }
             };
 
-            const handleEdit = () => {
+            const handleEdit = (targetStep = 1, overrides = null) => {
                 try {
                     const saved = window.localStorage.getItem('newDiagnosticLatestSubmission');
                     if (saved) {
                         const parsed = JSON.parse(saved);
                         if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-                            setFormData({ ...NEW_DIAGNOSTIC_DEFAULT_FORM_DATA, ...parsed });
+                            setFormData({
+                                ...NEW_DIAGNOSTIC_DEFAULT_FORM_DATA,
+                                ...parsed,
+                                ...(overrides && typeof overrides === 'object' ? overrides : {})
+                            });
                         } else {
-                            setFormData(NEW_DIAGNOSTIC_DEFAULT_FORM_DATA);
+                            setFormData({
+                                ...NEW_DIAGNOSTIC_DEFAULT_FORM_DATA,
+                                ...(overrides && typeof overrides === 'object' ? overrides : {})
+                            });
                         }
                     } else {
-                        setFormData(NEW_DIAGNOSTIC_DEFAULT_FORM_DATA);
+                        setFormData({
+                            ...NEW_DIAGNOSTIC_DEFAULT_FORM_DATA,
+                            ...(overrides && typeof overrides === 'object' ? overrides : {})
+                        });
                     }
                 } catch (e) {
-                    setFormData(NEW_DIAGNOSTIC_DEFAULT_FORM_DATA);
+                    setFormData({
+                        ...NEW_DIAGNOSTIC_DEFAULT_FORM_DATA,
+                        ...(overrides && typeof overrides === 'object' ? overrides : {})
+                    });
                 }
-                setCurrentStep(1);
+                setCurrentStep(targetStep);
                 setReportPayload(null);
                 setSubmitError(null);
                 try {
@@ -9566,7 +9695,7 @@
                                 </button>
                                 <button
                                     type="button"
-                                    onClick={handleEdit}
+                                    onClick={() => handleEdit(1)}
                                     className="inline-flex items-center gap-2 bg-blue-50 text-[#1D4ED8] px-3.5 py-2 rounded-xl font-semibold border border-blue-200 hover:bg-blue-100 transition-colors text-sm"
                                 >
                                     <Icon icon="solar:pen-bold" className="text-base" />
@@ -9580,6 +9709,7 @@
                             reportPayload={reportPayload}
                             userEmail={formData.email}
                             setReportPayload={setReportPayload}
+                            onEditReport={() => handleEdit(2, { coverStepDismissed: false })}
                             onLeadSubmissionCreated={(leadSubmissionId) => {
                                 setReportPayload((prev) => {
                                     if (!prev || prev.lead_submission_id === leadSubmissionId) {

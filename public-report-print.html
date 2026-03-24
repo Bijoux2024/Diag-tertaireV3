@@ -156,10 +156,22 @@
       return r < 0.6 ? 'A' : r < 0.9 ? 'B' : r < 1.2 ? 'C' : r < 1.7 ? 'D' : 'E';
     };
 
-    // @sync — aides: 12% of gross capex (CEE / MPR indicatif)
+    // @sync — use per-action aid_amount.value when available (matches web newDiagnosticBuildProgramBudget)
+    // Fallback: TVA 5.5% formula (≈12.08%) + optional CEE plancher
+    const estimateAides = (actions) =>
+      Math.round(arr(actions).reduce((s, a) => {
+        const aidVal = a?.aid_amount?.value;
+        if (aidVal != null && num(aidVal) >= 0) return s + num(aidVal);
+        const capVal = num(a?.capex?.value);
+        let v = capVal * (0.20 - 0.055) / 1.20; // TVA 5.5%
+        if (arr(a?.aid_tags).includes('CEE')) v += capVal * 0.015;
+        return s + v;
+      }, 0));
+
     const buildBudget = (actions, annualEuro) => {
-      const capexBrut = arr(actions).reduce((s, a) => s + num(a?.capex?.value), 0);
-      const aides    = Math.round(capexBrut * 0.12);
+      const safeActs = arr(actions);
+      const capexBrut = safeActs.reduce((s, a) => s + num(a?.capex?.value), 0);
+      const aides    = estimateAides(safeActs);
       const capexNet = Math.max(0, Math.round(capexBrut - aides));
       const savings  = Math.max(0, Math.round(num(annualEuro)));
       const roi      = savings > 0 ? capexNet / savings : null;
@@ -169,44 +181,77 @@
       };
     };
 
-    // @sync — energy inflation: 4%/year
-    const buildProjection = ({ totalCostEuroAn, annualEuro, actions }) => {
-      const taux       = 0.04;
-      const safeActs   = arr(actions);
-      const capexBrut  = safeActs.reduce((s, a) => s + num(a?.capex?.value), 0);
-      const aides      = Math.round(capexBrut * 0.12);
-      const capexNet   = Math.max(0, Math.round(capexBrut - aides));
-      const base       = num(totalCostEuroAn);
-      const savings    = num(annualEuro);
+    // @sync — inflation rates from index.html INFLATION_ENERGIE (élec 3.5%, gaz 4.5%)
+    // @sync — energy prices from NEW_DIAGNOSTIC_ENERGY_PRICES (élec 0.206, gaz 0.108)
+    const INFLATION_ELEC  = 0.035;
+    const INFLATION_GAZ   = 0.045;
+    const ELEC_PRICE_KWH  = 0.206;
+    const GAS_PRICE_KWH   = 0.108;
 
-      // Scénario 2 : actions rapides seulement (tier=light)
-      const lightActs  = safeActs.filter(a => a?.tier === 'light' || (!a?.tier && num(a?.capex?.value) < 3000));
-      const lightSav   = lightActs.reduce((s, a) => s + num(a?.gain_euro_an?.value), 0);
-      const lightCapex = Math.max(0, Math.round(lightActs.reduce((s, a) => s + num(a?.capex?.value), 0) * 0.88));
-      const hasLight   = lightActs.length > 0 && lightActs.length < safeActs.length;
+    // @sync — cumulative projection matching newDiagnosticBuildProjectionData in index.html
+    // Y-axis = total € spent since year 0 (including initial investment), same as web chart
+    const buildProjection = ({ totalCostEuroAn, annualEuro, actions, elecKwh = 0, gasKwh = 0 }) => {
+      const safeActs = arr(actions);
 
-      const data = [];
-      for (let i = 0; i <= 10; i++) {
-        const f = Math.pow(1 + taux, i);
-        const row = {
-          annee: `A+${i}`,
-          sans_travaux: Math.round(base * f),
-          avec_travaux: i === 0
-            ? Math.round(base + capexNet)
-            : Math.round(Math.max(0, base - savings) * f),
-        };
-        if (hasLight) {
-          row.avec_actions_rapides = i === 0
-            ? Math.round(base + lightCapex)
-            : Math.round(Math.max(0, base - lightSav) * f);
-        }
-        data.push(row);
+      // Per-action aids (use aid_amount.value from payload — same as web projection)
+      const aidesTotal = Math.round(safeActs.reduce((s, a) => {
+        const v = a?.aid_amount?.value;
+        return s + (v != null && num(v) >= 0 ? num(v) : 0);
+      }, 0));
+      const capexBrut = safeActs.reduce((s, a) => s + num(a?.capex?.value), 0);
+      const capexNet  = Math.max(0, Math.round(capexBrut - aidesTotal));
+
+      // Weighted inflation by elec/gas mix (matches index.html logic)
+      const elecEur   = num(elecKwh) * ELEC_PRICE_KWH;
+      const gazEur    = num(gasKwh)  * GAS_PRICE_KWH;
+      const totalBase = Math.max(elecEur + gazEur, 1);
+      const partElec  = elecEur / totalBase;
+      const partGaz   = gazEur  / totalBase;
+      const taux      = partElec * INFLATION_ELEC + partGaz * INFLATION_GAZ
+                        + Math.max(0, 1 - partElec - partGaz) * INFLATION_ELEC;
+      const tauxPct   = +(taux * 100).toFixed(1);
+
+      // Light scenario (tier=light or untiered small capex)
+      const lightActs     = safeActs.filter(a => a?.tier === 'light' || (!a?.tier && num(a?.capex?.value) < 3000));
+      const lightSav      = lightActs.reduce((s, a) => s + num(a?.gain_euro_an?.value), 0);
+      const lightAides    = Math.round(lightActs.reduce((s, a) => {
+        const v = a?.aid_amount?.value;
+        return s + (v != null && num(v) >= 0 ? num(v) : 0);
+      }, 0));
+      const lightCapexNet = Math.max(0, Math.round(lightActs.reduce((s, a) => s + num(a?.capex?.value), 0) - lightAides));
+      const hasLight      = lightActs.length > 0 && lightActs.length < safeActs.length;
+
+      const base    = num(totalCostEuroAn);
+      const savings = num(annualEuro);
+
+      // Cumulative data — same structure as index.html (data[0]='Auj.', data[1]='A+1', …, data[10]='A+10')
+      const data = [{
+        annee: 'Auj.',
+        sans_travaux: 0,
+        avec_travaux: Math.round(capexNet),
+        avec_actions_rapides: hasLight ? Math.round(lightCapexNet) : undefined,
+      }];
+      let cumSans = 0, cumAvec = capexNet, cumLight = lightCapexNet;
+      let roiAnnee = null;
+      for (let an = 1; an <= 10; an++) {
+        const f   = Math.pow(1 + taux, an);
+        cumSans  += base * f;
+        cumAvec  += Math.max(0, base - savings) * f;
+        cumLight += Math.max(0, base - lightSav) * f;
+        const ecoNettes = Math.round(cumSans - cumAvec);
+        if (!roiAnnee && ecoNettes > 0) roiAnnee = `A+${an}`;
+        data.push({
+          annee: `A+${an}`,
+          sans_travaux: Math.round(cumSans),
+          avec_travaux: Math.round(cumAvec),
+          avec_actions_rapides: hasLight ? Math.round(cumLight) : undefined,
+        });
       }
-      const roiIdx = data.findIndex((d, i) => i > 0 && d.avec_travaux <= d.sans_travaux);
-      console.log('[print] projection points:', data.length,
-        '| A+0:', JSON.stringify(data[0]),
-        '| A+5:', JSON.stringify(data[5]));
-      return { data, taux: taux * 100, roiAnnee: roiIdx > 0 ? roiIdx : null, hasLight };
+
+      console.log('[print] projection cumul pts:', data.length,
+        '| A+1:', JSON.stringify(data[1]),
+        '| A+10:', JSON.stringify(data[10]));
+      return { data, taux: tauxPct, roiAnnee, hasLight, aidesTotal, capexNet, capexBrut: Math.round(capexBrut) };
     };
 
     const TIER_CONF = {

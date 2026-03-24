@@ -40,7 +40,7 @@ module.exports = async function handler(req, res) {
     const { supabaseUrl, serviceKey } = supabaseCtx;
 
     const dbRes = await fetch(
-      `${supabaseUrl}/rest/v1/public_reports?id=eq.${encodeQ(publicReportId)}&select=id,report_payload,access_token_hash,access_expires_at&limit=1`,
+      `${supabaseUrl}/rest/v1/public_reports?id=eq.${encodeQ(publicReportId)}&select=id,report_payload,access_token_hash,access_expires_at,cover_image_url,cover_image_source&limit=1`,
       {
         headers: {
           apikey: serviceKey,
@@ -80,12 +80,19 @@ module.exports = async function handler(req, res) {
     }
 
     // Optional: generate fresh signed URL for cover image (non-blocking)
+    // Priority: inputs_summary.cover_image_path → public_reports.cover_image_url (set by /api/public-report-cover)
     let printAssets = {};
     try {
       const inputs = (row.report_payload && row.report_payload.inputs_summary) || {};
-      const coverPath = String(inputs.cover_image_path || '').trim();
-      if (coverPath && !/^https?:\/\//i.test(coverPath)) {
-        // Storage path → generate signed URL
+      const coverPath = String(inputs.cover_image_path || row.cover_image_url || '').trim();
+      const coverSourceHint = String(inputs.cover_image_source || row.cover_image_source || '').trim();
+
+      if (coverPath && /^https?:\/\//i.test(coverPath)) {
+        // Already a full URL (e.g. Google Street View, signed URL) — use directly
+        printAssets.cover_image_url = coverPath;
+        printAssets.cover_image_source = coverSourceHint || 'url';
+      } else if (coverPath) {
+        // Storage path → generate fresh signed URL (1 hour TTL sufficient for print session)
         const coverBucket = String(process.env.REPORT_COVER_BUCKET || 'report-cover-assets');
         const encodedPath = coverPath.split('/').map(function(s) { return encodeURIComponent(s); }).join('/');
         const signRes = await fetch(
@@ -107,6 +114,7 @@ module.exports = async function handler(req, res) {
             const coverUrl = /^https?:\/\//i.test(sp) ? sp
               : supabaseUrl + (sp.startsWith('/storage/v1/') ? sp : '/storage/v1/' + sp.replace(/^\/+/, ''));
             printAssets.cover_image_url = coverUrl;
+            printAssets.cover_image_source = coverSourceHint || 'storage';
           }
         }
       }

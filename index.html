@@ -96,6 +96,23 @@
             touch-action: manipulation;
         }
 
+        .new-diagnostic-select-surface,
+        .new-diagnostic-select-surface option,
+        .new-diagnostic-select-surface optgroup {
+            background-color: #FFFFFF;
+            color: #0F172A;
+        }
+
+        .new-diagnostic-select-surface option[value=""] {
+            color: #64748B;
+        }
+
+        .new-diagnostic-select-surface option:checked,
+        .new-diagnostic-select-surface option:hover {
+            background: #EFF6FF linear-gradient(0deg, #EFF6FF, #EFF6FF);
+            color: #0F172A;
+        }
+
         :focus-visible {
             outline: 2px solid rgba(29, 78, 216, 0.45);
             outline-offset: 2px;
@@ -3413,7 +3430,7 @@
                     <select
                         value={value}
                         onChange={(e) => onChange(e.target.value)}
-                        className={`w-full px-4 appearance-none text-[15px] font-medium h-[52px] border-2 rounded-xl focus:outline-none transition-all duration-200 ${
+                        className={`new-diagnostic-select-surface w-full px-4 appearance-none text-[15px] font-medium h-[52px] border-2 rounded-xl focus:outline-none transition-all duration-200 ${
                             error
                             ? 'border-red-300 bg-red-50/50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10'
                             : 'border-slate-200 bg-white hover:border-slate-300 focus:border-[#1D4ED8] focus:ring-4 focus:ring-blue-500/10 focus:shadow-[0_0_20px_rgba(29,78,216,0.06)]'
@@ -5072,7 +5089,7 @@
                                 <select
                                     value={formData.vmcType}
                                     onChange={e => setFormData(p => ({ ...p, vmcType: e.target.value }))}
-                                    className="mt-2 w-full border border-[#E2E8F0] rounded-lg p-2.5 text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]"
+                                    className="new-diagnostic-select-surface mt-2 w-full border border-[#E2E8F0] rounded-lg p-2.5 text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]"
                                 >
                                     <option value="">-- Type de VMC --</option>
                                     <option value="simple_flux">Simple flux</option>
@@ -5148,7 +5165,7 @@
                                         <select
                                             value={formData.coldMaintenanceStatus}
                                             onChange={e => setFormData(p => ({ ...p, coldMaintenanceStatus: e.target.value }))}
-                                            className="w-full border border-[#E2E8F0] rounded-lg p-2.5 text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]"
+                                            className="new-diagnostic-select-surface w-full border border-[#E2E8F0] rounded-lg p-2.5 text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]"
                                         >
                                             <option value="">-- Sélectionner --</option>
                                             <option value="contract">Contrat de maintenance</option>
@@ -5181,7 +5198,7 @@
                                         <select
                                             value={formData.coldMaintenanceStatus}
                                             onChange={e => setFormData(p => ({ ...p, coldMaintenanceStatus: e.target.value }))}
-                                            className="w-full border border-[#E2E8F0] rounded-lg p-2.5 text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]"
+                                            className="new-diagnostic-select-surface w-full border border-[#E2E8F0] rounded-lg p-2.5 text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]"
                                         >
                                             <option value="">-- Sélectionner --</option>
                                             <option value="contract">Contrat de maintenance</option>
@@ -6750,6 +6767,30 @@
            HELPERS : GAINS COMPOSÉS + CAP
            ───────────────────────────────────────────────────────────────────────── */
 
+        const newDiagnosticGetComplementaryPhotovoltaicOpportunity = (formData, totalKwh, breakdown, avgPrice, topActions) => {
+            const photovoltaicAction = NEW_DIAGNOSTIC_ACTIONS_LIBRARY.actions.find(action => action.id === 'ACT22');
+            const surface = Math.max(1, Number(formData.surface || 100));
+
+            if (!photovoltaicAction) return null;
+            if ((topActions || []).some(action => action.id === photovoltaicAction.id)) return null;
+            if (surface < 300) return null;
+            if (formData.roofAccessible === 'no') return null;
+
+            const energyPrices = {
+                elec: NEW_DIAGNOSTIC_ENERGY_PRICES.electricity.price_default_eur_kwh,
+                gas: NEW_DIAGNOSTIC_ENERGY_PRICES.gas.price_default_eur_kwh
+            };
+            const calc = newDiagnosticCalculateActionGain(photovoltaicAction, totalKwh, breakdown, avgPrice, surface, formData, energyPrices);
+
+            if (!calc || calc.gainKwh <= 0 || calc.gainEuro <= 0) return null;
+
+            return {
+                ...photovoltaicAction,
+                ...calc,
+                note: "Le photovoltaïque peut constituer un levier complémentaire à étudier pour réduire une partie des consommations électriques en journée et valoriser le site."
+            };
+        };
+
         const newDiagnosticCalculateCompositeSavings = (actions) => {
             // Gains composés : 1 - Π(1 - g_i)
             let composite = 1;
@@ -7012,6 +7053,7 @@
             const avgPrice = Math.min(Math.max(calculatedAvgPrice, 0.05), 0.40);
 
             const topActions = newDiagnosticFilterAndScoreActions(formData, totalKwh, breakdown, avgPrice);
+            const complementaryPhotovoltaic = newDiagnosticGetComplementaryPhotovoltaicOpportunity(formData, totalKwh, breakdown, avgPrice, topActions);
 
             const compositeSavingsPct = newDiagnosticCalculateCompositeSavings(topActions);
             const annualSavingsKwh = Math.round(totalKwh * compositeSavingsPct);
@@ -7129,6 +7171,21 @@
                     intervenants: a.intervenants || null,
                     energy_switch_note: a.energy_switch_note || null
                 })),
+
+                complementary_opportunity: complementaryPhotovoltaic ? {
+                    id: complementaryPhotovoltaic.id,
+                    name: complementaryPhotovoltaic.name,
+                    category: complementaryPhotovoltaic.category,
+                    tier: complementaryPhotovoltaic.tier || 'heavy',
+                    note: complementaryPhotovoltaic.note,
+                    gain_kwh_an: { value: complementaryPhotovoltaic.gainKwh, unit: 'kWh/an' },
+                    gain_euro_an: { value: complementaryPhotovoltaic.gainEuro, unit: '€/an' },
+                    capex: { value: complementaryPhotovoltaic.capex, unit: '€' },
+                    capex_net: { value: complementaryPhotovoltaic.capexNet || complementaryPhotovoltaic.capex, unit: '€' },
+                    aid_amount: { value: complementaryPhotovoltaic.aidAmount || 0, unit: '€' },
+                    aid_pct: complementaryPhotovoltaic.aidPct || 0,
+                    roi_years: { value: complementaryPhotovoltaic.roi_years, unit: 'ans' }
+                } : null,
 
                 // Projections
                 projection_3y: projection3y,
@@ -8729,6 +8786,17 @@
                                     );
                                 };
 
+                                const complementaryOpportunity = reportPayload.complementary_opportunity?.id === 'ACT22'
+                                    ? reportPayload.complementary_opportunity
+                                    : null;
+                                const complementaryAid = complementaryOpportunity?.aid_amount?.value || 0;
+                                const complementaryCapexNet = complementaryOpportunity?.capex_net?.value != null
+                                    ? complementaryOpportunity.capex_net.value
+                                    : Math.max(0, (complementaryOpportunity?.capex?.value || 0) - complementaryAid);
+                                const complementaryRoiValue = complementaryOpportunity?.roi_years?.value;
+                                const complementaryRoi = complementaryRoiValue != null
+                                    ? `${String(complementaryRoiValue).replace('.', ',')} ans`
+                                    : 'À étudier';
                                 const hasAny = lightGroup.length > 0 || heavyGroup.length > 0;
                                 return (
                                     <>
@@ -8751,6 +8819,37 @@
                                         {!hasAny && (
                                             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 text-sm text-slate-700">
                                                 {actionCopy.empty}
+                                            </div>
+                                        )}
+                                        {complementaryOpportunity && (
+                                            <div className="mt-6 rounded-[22px] border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-amber-50/70 p-5 md:p-6">
+                                                <div className="flex items-start gap-4">
+                                                    <div className="w-11 h-11 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+                                                        <Icon icon="solar:sun-2-bold" className="text-xl" />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-amber-700">Opportunité complémentaire identifiée</p>
+                                                        <h3 className="text-base md:text-lg font-bold text-slate-900 mt-1">{complementaryOpportunity.name}</h3>
+                                                        <p className="text-sm text-slate-600 mt-2 leading-relaxed">{complementaryOpportunity.note}</p>
+                                                        <div className="grid sm:grid-cols-3 gap-3 mt-4">
+                                                            <div className="rounded-2xl border border-emerald-100 bg-white px-4 py-3">
+                                                                <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-700">Gain indicatif / an</p>
+                                                                <p className="text-lg font-black text-emerald-700 mt-1">{formatMoney(complementaryOpportunity.gain_euro_an?.value || 0)}</p>
+                                                                <p className="text-[11px] text-slate-400 mt-1">{(complementaryOpportunity.gain_kwh_an?.value || 0).toLocaleString('fr-FR')} kWh valorisables</p>
+                                                            </div>
+                                                            <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                                                                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Budget net indicatif</p>
+                                                                <p className="text-lg font-black text-slate-900 mt-1">{formatMoney(complementaryCapexNet)}</p>
+                                                                {complementaryAid > 0 && <p className="text-[11px] text-blue-600 mt-1">Aides estimées : {formatMoney(complementaryAid)}</p>}
+                                                            </div>
+                                                            <div className="rounded-2xl border border-amber-100 bg-white px-4 py-3">
+                                                                <p className="text-[10px] font-bold uppercase tracking-wide text-amber-700">ROI indicatif</p>
+                                                                <p className="text-lg font-black text-amber-700 mt-1">{complementaryRoi}</p>
+                                                                <p className="text-[11px] text-slate-400 mt-1">Levier complémentaire à confirmer sur site</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         )}
                                         {hasAny && (

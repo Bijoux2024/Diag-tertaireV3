@@ -75,9 +75,7 @@
     .kpi-row   { break-inside: avoid; page-break-inside: avoid; }
     .budget-row{ break-inside: avoid; page-break-inside: avoid; }
     .cols-2    { break-inside: avoid; page-break-inside: avoid; }
-    .section-intro,
-    .section-group,
-    .section-summary {
+    .section-intro {
       break-inside: avoid;
       page-break-inside: avoid;
     }
@@ -1339,6 +1337,8 @@
                 actions: heavyGroup
               } : null
             ].filter(Boolean);
+            const firstGroup = orderedGroups[0] || null;
+            const firstGroupLeadAction = firstGroup && firstGroup.actions.length > 0 ? firstGroup.actions[0] : null;
             const renderActionGroup = (group) => (
               <div key={group.key} className="section-group" style={{ marginBottom: group.key === 'light' && heavyGroup.length > 0 ? 16 : 6 }}>
                 <GroupHeader title={group.title} subtitle={group.subtitle} bg={group.bg} border={group.border} />
@@ -1350,11 +1350,21 @@
               <Section
                 title="Plan d'actions recommandé"
                 sub="Actions sélectionnées selon le rapport gain/effort et ROI ≤ 10 ans. Estimations indicatives avant audit."
-                intro={orderedGroups.length > 0 ? renderActionGroup(orderedGroups[0]) : null}
+                intro={firstGroup ? (
+                  <div style={{ marginBottom: firstGroup.actions.length > 1 || orderedGroups.length > 1 ? 12 : 0 }}>
+                    <GroupHeader title={firstGroup.title} subtitle={firstGroup.subtitle} bg={firstGroup.bg} border={firstGroup.border} />
+                    {firstGroupLeadAction && (
+                      <ActionRow action={firstGroupLeadAction} index={0} groupIndex={0} />
+                    )}
+                  </div>
+                ) : null}
               >
                 {!hasAny && (
                   <p style={{ fontSize: 12, color: T.slate600 }}>Aucune action exploitable avec ce niveau de données.</p>
                 )}
+                {firstGroup && firstGroup.actions.slice(1).map((action, index) => (
+                  <ActionRow key={action.id || `${firstGroup.key}-rest-${index}`} action={action} index={index + 1} groupIndex={index + 1} />
+                ))}
                 {orderedGroups.slice(1).map(renderActionGroup)}
 
                 {/* Budget recap */}

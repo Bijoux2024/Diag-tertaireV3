@@ -3601,7 +3601,78 @@
 
         // Composant facultatif Visuel du Bâtiment
         // Composant facultatif Visuel du Bâtiment
-        const NewDiagnosticCoverPreview = ({ formData, setFormData }) => {
+        const newDiagnosticIsDirectReportImageUrl = (value) => {
+            const path = String(value || '').trim();
+            return !!path && (/^https?:\/\//i.test(path) || path.startsWith('/api/') || path.startsWith('/'));
+        };
+
+        const newDiagnosticGetCoverModeFromSource = (source) => {
+            if (source === 'ign_ortho') return 'ign_ortho';
+            if (source === 'ign_plan') return 'ign_plan';
+            if (source === 'upload') return 'upload';
+            return 'panoramax';
+        };
+
+        const NEW_DIAGNOSTIC_COVER_STATE_KEYS = [
+            'coverMode',
+            'coverImageStatus',
+            'coverImageError',
+            'coverImageSource',
+            'coverImagePath',
+            'coverImageSignedUrl',
+            'coverImageSelected',
+            'coverSelectionManuallyDisabled',
+            'coverStepDismissed',
+            'coverParcelRef',
+            'coverCoordinates',
+            'coverBBox',
+            'coverGeneratedAt',
+            'coverUploadFileName',
+            'coverUploadPreviewUrl',
+            'coverPanX',
+            'coverPanY',
+            'coverZoom',
+            'coverIsPanoramic',
+            'coverCandidates',
+            'coverSelectedCandidateId',
+            'coverStreetViewHeading',
+            'coverStreetViewPitch',
+            'coverStreetViewFov',
+            'coverStreetViewPanoId',
+            'coverStreetViewAvailable',
+            'coverIsManual'
+        ];
+
+        const newDiagnosticPickCoverState = (source) => NEW_DIAGNOSTIC_COVER_STATE_KEYS.reduce((acc, key) => {
+            if (source && Object.prototype.hasOwnProperty.call(source, key)) {
+                acc[key] = source[key];
+            }
+            return acc;
+        }, {});
+
+        const newDiagnosticBuildReportCoverPreviewFromState = (source) => ({
+            selected: !!source?.coverImageSelected,
+            url: source?.coverImageSelected ? String(source?.coverImageSignedUrl || '').trim() : '',
+            source: String(source?.coverImageSource || '').trim(),
+            manuallyDisabled: !!source?.coverSelectionManuallyDisabled
+        });
+
+        const NewDiagnosticCoverPreview = ({
+            formData,
+            setFormData,
+            forceVisible = false,
+            onDismiss = null,
+            dismissLabel = 'Passer',
+            surface = 'inline'
+        }) => {
+            const isModalSurface = surface === 'modal';
+            const handleDismiss = () => {
+                if (typeof onDismiss === 'function') {
+                    onDismiss();
+                    return;
+                }
+                setFormData(prev => ({ ...prev, coverStepDismissed: true }));
+            };
             const handleModeChange = (newMode) => {
                 if (newMode === formData.coverMode) return;
                 setFormData(prev => ({
@@ -4069,10 +4140,10 @@
                 { id: 'upload', label: 'Téléverser' }
             ];
 
-            if (formData.coverStepDismissed) return null;
+            if (!forceVisible && formData.coverStepDismissed) return null;
 
             return (
-                <div className="mt-8 mb-6 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-6 shadow-sm overflow-hidden relative fade-in">
+                <div className={isModalSurface ? 'bg-[#F8FAFC] border border-[#E2E8F0] rounded-[24px] p-5 md:p-6 shadow-sm overflow-hidden relative' : 'mt-8 mb-6 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-6 shadow-sm overflow-hidden relative fade-in'}>
                     <div className="flex items-start gap-4 mb-4">
                         <div className="w-10 h-10 rounded-full bg-blue-100 text-[#1D4ED8] flex items-center justify-center shrink-0">
                             <Icon icon="solar:camera-linear" className="text-xl" />
@@ -4112,10 +4183,10 @@
                             </button>
                             <button
                                 type="button"
-                                onClick={() => setFormData(prev => ({ ...prev, coverStepDismissed: true }))}
+                                onClick={handleDismiss}
                                 className="flex items-center gap-2 text-neutral-500 px-4 py-2 hover:text-neutral-700 transition-colors text-sm font-medium"
                             >
-                                Passer
+                                {dismissLabel}
                             </button>
                         </div>
                     )}
@@ -4129,10 +4200,10 @@
                             </label>
                             <button
                                 type="button"
-                                onClick={() => setFormData(prev => ({ ...prev, coverStepDismissed: true }))}
+                                onClick={handleDismiss}
                                 className="flex items-center gap-2 text-neutral-500 px-4 py-2 hover:text-neutral-700 transition-colors text-sm font-medium"
                             >
-                                Passer
+                                {dismissLabel}
                             </button>
                         </div>
                     )}
@@ -4301,10 +4372,10 @@
                                 {!formData.coverImageSelected && formData.coverMode !== 'upload' && (
                                     <button
                                         type="button"
-                                        onClick={() => setFormData(prev => ({ ...prev, coverStepDismissed: true }))}
+                                        onClick={handleDismiss}
                                         className="flex items-center gap-2 text-neutral-500 px-3 py-2.5 hover:text-neutral-700 transition-colors text-sm font-medium ml-auto"
                                     >
-                                        Passer
+                                        {dismissLabel}
                                     </button>
                                 )}
                             </div>
@@ -8231,7 +8302,8 @@
             userEmail,
             onLeadSubmissionCreated,
             setReportPayload = null,
-            onEditReport = null
+            formData = null,
+            setFormData = null
         }) => {
             const [isPDFGenerating, setIsPDFGenerating] = useState(false);
             const [serverPdfUrl, setServerPdfUrl] = useState((reportPayload && reportPayload.pdf_url) ? reportPayload.pdf_url : '');
@@ -8240,6 +8312,8 @@
             const [ctaMessage, setCtaMessage] = useState('');
             const [ctaSent, setCtaSent] = useState(false);
             const [brandLogoDataUrl, setBrandLogoDataUrl] = useState(null);
+            const [isCoverModalOpen, setIsCoverModalOpen] = useState(false);
+            const [coverDraft, setCoverDraft] = useState(null);
             const [reportCoverPreview, setReportCoverPreview] = useState({
                 selected: false,
                 url: '',
@@ -8268,9 +8342,8 @@
                 const payloadSelected = !!inputs.cover_image_selected;
                 const payloadSource = String(inputs.cover_image_source || '').trim();
                 const payloadPath = String(inputs.cover_image_path || '').trim();
-                const isDirectUrl = /^https?:\/\//i.test(payloadPath)
-                    || payloadPath.startsWith('/api/')
-                    || payloadPath.startsWith('/');
+                const reportAddress = String(inputs.address || '').trim();
+                const isDirectUrl = newDiagnosticIsDirectReportImageUrl(payloadPath);
 
                 const nextPreview = {
                     selected: payloadSelected,
@@ -8283,7 +8356,9 @@
                     const saved = window.localStorage.getItem('newDiagnosticLatestSubmission');
                     if (saved) {
                         const parsed = JSON.parse(saved);
-                        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+                        const savedAddress = String(parsed?.address || '').trim();
+                        const sameAddress = !reportAddress || (!!savedAddress && savedAddress === reportAddress);
+                        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed) && sameAddress) {
                             const savedSelected = !!parsed.coverImageSelected;
                             const savedUrl = String(parsed.coverImageSignedUrl || '').trim();
                             const savedPath = String(parsed.coverImagePath || '').trim();
@@ -8309,6 +8384,170 @@
 
                 setReportCoverPreview(nextPreview);
             }, [reportPayload]);
+
+            useEffect(() => {
+                if (!isCoverModalOpen) return undefined;
+                const previousOverflow = document.body.style.overflow;
+                document.body.style.overflow = 'hidden';
+                const handleEscape = (event) => {
+                    if (event.key === 'Escape') {
+                        setIsCoverModalOpen(false);
+                    }
+                };
+                window.addEventListener('keydown', handleEscape);
+                return () => {
+                    document.body.style.overflow = previousOverflow;
+                    window.removeEventListener('keydown', handleEscape);
+                };
+            }, [isCoverModalOpen]);
+
+            const buildCoverEditorSeed = () => {
+                const inputs = (reportPayload && reportPayload.inputs_summary) || {};
+                const reportAddress = String(inputs.address || '').trim();
+                const sameAddress = (candidate) => {
+                    const candidateAddress = String(candidate?.address || '').trim();
+                    return !reportAddress || (!!candidateAddress && candidateAddress === reportAddress);
+                };
+                const fallbackSeed = {
+                    ...NEW_DIAGNOSTIC_DEFAULT_FORM_DATA,
+                    address: inputs.address || '',
+                    fullAddress: inputs.address || '',
+                    postalCode: inputs.postal_code || '',
+                    city: inputs.city || '',
+                    lat: inputs.lat || null,
+                    lon: inputs.lon || null,
+                    siteName: inputs.site_name || '',
+                    email: inputs.email || userEmail || '',
+                    phone: inputs.phone || '',
+                    publicReportId: reportPayload?.report_id || null,
+                    coverMode: newDiagnosticGetCoverModeFromSource(inputs.cover_image_source || ''),
+                    coverImageSource: inputs.cover_image_source || '',
+                    coverImagePath: inputs.cover_image_path || '',
+                    coverImageSignedUrl: newDiagnosticIsDirectReportImageUrl(inputs.cover_image_path) ? inputs.cover_image_path : '',
+                    coverImageSelected: !!inputs.cover_image_selected,
+                    coverSelectionManuallyDisabled: false,
+                    coverUploadFileName: inputs.cover_original_filename || '',
+                    coverIsManual: !!inputs.cover_is_manual,
+                    coverStepDismissed: false
+                };
+
+                let savedSubmission = null;
+                try {
+                    const rawSaved = window.localStorage.getItem('newDiagnosticLatestSubmission');
+                    if (rawSaved) {
+                        const parsed = JSON.parse(rawSaved);
+                        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed) && sameAddress(parsed)) {
+                            savedSubmission = parsed;
+                        }
+                    }
+                } catch (_) {
+                    savedSubmission = null;
+                }
+
+                const liveFormData = formData && typeof formData === 'object' && !Array.isArray(formData) && sameAddress(formData)
+                    ? formData
+                    : null;
+
+                const seed = {
+                    ...fallbackSeed,
+                    ...(savedSubmission || {}),
+                    ...(liveFormData || {})
+                };
+
+                if (!seed.coverMode) {
+                    seed.coverMode = newDiagnosticGetCoverModeFromSource(seed.coverImageSource || inputs.cover_image_source || '');
+                }
+                if (!seed.coverImageSignedUrl && newDiagnosticIsDirectReportImageUrl(seed.coverImagePath)) {
+                    seed.coverImageSignedUrl = seed.coverImagePath;
+                }
+                seed.coverImageStatus = seed.coverImageSignedUrl ? 'ready' : 'initial';
+                seed.coverStepDismissed = false;
+
+                return seed;
+            };
+
+            const openCoverModal = () => {
+                setCoverDraft(buildCoverEditorSeed());
+                setIsCoverModalOpen(true);
+            };
+
+            const applyCoverModal = () => {
+                if (!coverDraft) {
+                    setIsCoverModalOpen(false);
+                    return;
+                }
+
+                const nextCoverState = {
+                    ...newDiagnosticPickCoverState(coverDraft),
+                    coverStepDismissed: false
+                };
+                const nextPreview = newDiagnosticBuildReportCoverPreviewFromState(coverDraft);
+                const nextInputsSummary = {
+                    ...(reportPayload?.inputs_summary || {}),
+                    cover_image_source: coverDraft.coverImageSource || null,
+                    cover_image_path: coverDraft.coverImagePath || null,
+                    cover_image_selected: !!coverDraft.coverImageSelected,
+                    cover_original_filename: coverDraft.coverUploadFileName || null,
+                    cover_is_manual: !!coverDraft.coverIsManual
+                };
+
+                if (typeof setFormData === 'function') {
+                    setFormData(prev => ({
+                        ...((prev && typeof prev === 'object' && !Array.isArray(prev)) ? prev : NEW_DIAGNOSTIC_DEFAULT_FORM_DATA),
+                        address: coverDraft.address || prev?.address || '',
+                        fullAddress: coverDraft.fullAddress || coverDraft.address || prev?.fullAddress || prev?.address || '',
+                        postalCode: coverDraft.postalCode || prev?.postalCode || '',
+                        city: coverDraft.city || prev?.city || '',
+                        lat: coverDraft.lat ?? prev?.lat ?? null,
+                        lon: coverDraft.lon ?? prev?.lon ?? null,
+                        siteName: coverDraft.siteName || prev?.siteName || '',
+                        publicReportId: coverDraft.publicReportId || prev?.publicReportId || reportPayload?.report_id || null,
+                        ...nextCoverState
+                    }));
+                }
+
+                setReportCoverPreview(nextPreview);
+
+                if (typeof setReportPayload === 'function') {
+                    setReportPayload(prev => {
+                        const nextReport = prev
+                            ? { ...prev, inputs_summary: { ...(prev.inputs_summary || {}), ...nextInputsSummary } }
+                            : prev;
+
+                        if (nextReport) {
+                            try {
+                                if (nextReport.source !== NEW_DIAGNOSTIC_PUBLIC_EXAMPLE_SOURCE) {
+                                    window.localStorage.setItem('newDiagnosticLatestReport', JSON.stringify(nextReport));
+                                }
+                            } catch (_) {
+                                // no-op
+                            }
+                        }
+
+                        return nextReport;
+                    });
+                }
+
+                try {
+                    const persistedSubmission = {
+                        ...((formData && typeof formData === 'object' && !Array.isArray(formData)) ? formData : {}),
+                        address: coverDraft.address || formData?.address || '',
+                        fullAddress: coverDraft.fullAddress || coverDraft.address || formData?.fullAddress || formData?.address || '',
+                        postalCode: coverDraft.postalCode || formData?.postalCode || '',
+                        city: coverDraft.city || formData?.city || '',
+                        lat: coverDraft.lat ?? formData?.lat ?? null,
+                        lon: coverDraft.lon ?? formData?.lon ?? null,
+                        siteName: coverDraft.siteName || formData?.siteName || '',
+                        publicReportId: coverDraft.publicReportId || formData?.publicReportId || reportPayload?.report_id || null,
+                        ...nextCoverState
+                    };
+                    window.localStorage.setItem('newDiagnosticLatestSubmission', JSON.stringify(persistedSubmission));
+                } catch (_) {
+                    // no-op
+                }
+
+                setIsCoverModalOpen(false);
+            };
 
             const openCtaPanel = () => {
                 setShowCTAModal(true);
@@ -8472,9 +8711,9 @@
                     ? "Le visuel retenu n'est pas disponible dans cette vue."
                     : 'Ajoutez un visuel du bâtiment pour enrichir votre rapport.';
             const coverCtaText = reportCoverPreview.manuallyDisabled
-                ? "Vous pouvez en ajouter un à tout moment depuis l'édition du rapport."
+                ? "Vous pouvez en ajouter un à tout moment depuis le rapport, sans quitter cette page."
                 : reportCoverPreview.selected
-                    ? "Réouvrez l'édition pour recharger ou changer l'image de couverture."
+                    ? "Ouvrez le gestionnaire de visuel pour recharger ou changer l'image de couverture."
                     : 'Une façade, une vue aérienne ou une photo rend le rapport plus concret et plus lisible.';
             const coverCtaLabel = reportCoverPreview.selected ? 'Réouvrir le visuel' : 'Ajouter un visuel';
 
@@ -8777,6 +9016,14 @@
                                                             <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Visuel retenu pour le rapport</p>
                                                             <p className="text-xs text-slate-500 mt-1">{coverSourceLabel}</p>
                                                         </div>
+                                                        <button
+                                                            type="button"
+                                                            onClick={openCoverModal}
+                                                            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-sm"
+                                                        >
+                                                            <Icon icon="solar:pen-bold" className="text-sm" />
+                                                            Modifier
+                                                        </button>
                                                     </div>
                                                     <div className="relative overflow-hidden rounded-[22px] border border-slate-200 bg-slate-100 shadow-sm">
                                                         <img
@@ -8796,16 +9043,14 @@
                                                     <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500 mb-2">Visuel du bâtiment</p>
                                                     <p className="text-sm font-semibold text-slate-900 leading-snug">{coverCtaTitle}</p>
                                                     <p className="text-sm text-slate-500 mt-2 leading-relaxed">{coverCtaText}</p>
-                                                    {typeof onEditReport === 'function' && (
-                                                        <button
-                                                            type="button"
-                                                            onClick={onEditReport}
-                                                            className="mt-4 inline-flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-semibold text-[#1D4ED8] hover:bg-blue-100 transition-colors"
-                                                        >
-                                                            <Icon icon="solar:camera-linear" className="text-base" />
-                                                            {coverCtaLabel}
-                                                        </button>
-                                                    )}
+                                                    <button
+                                                        type="button"
+                                                        onClick={openCoverModal}
+                                                        className="mt-4 inline-flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-semibold text-[#1D4ED8] hover:bg-blue-100 transition-colors"
+                                                    >
+                                                        <Icon icon="solar:camera-linear" className="text-base" />
+                                                        {coverCtaLabel}
+                                                    </button>
                                                 </div>
                                             )}
                                         </div>
@@ -9437,14 +9682,75 @@
 
                         {/* ── Fin de document ── */}
                         <div className="mt-6 pt-5 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
-                            <div className="flex items-center gap-2.5 opacity-70">
-                                <DiagTertiaireBrand dark={true} size={18} />
-                                <span className="text-xs text-slate-400 font-medium">Pré-diagnostic énergétique · DiagTertiaire</span>
+                            <div className="flex items-center gap-2.5">
+                                <DiagTertiaireBrand dark={false} size={18} />
+                                <span className="text-xs text-slate-600 font-semibold">Pré-diagnostic énergétique · DiagTertiaire</span>
                             </div>
-                            <p className="text-[11px] text-slate-400 text-center sm:text-right leading-relaxed max-w-xs">
+                            <p className="text-[11px] text-slate-500 text-center sm:text-right leading-relaxed max-w-xs">
                                 Estimations fondées sur données déclaratives et références sectorielles. Non substitutif à un audit réglementaire.
                             </p>
                         </div>
+
+                        {isCoverModalOpen && coverDraft && (
+                            <div
+                                className="fixed inset-0 z-[120] bg-slate-950/55 backdrop-blur-sm p-3 md:p-6"
+                                onClick={() => setIsCoverModalOpen(false)}
+                            >
+                                <div className="h-full max-w-4xl mx-auto flex items-center justify-center">
+                                    <div
+                                        className="w-full max-h-[92vh] overflow-hidden rounded-[30px] border border-slate-200 bg-white shadow-[0_30px_80px_rgba(15,23,42,0.24)]"
+                                        onClick={(event) => event.stopPropagation()}
+                                    >
+                                        <div className="flex items-start justify-between gap-4 px-5 py-4 md:px-6 md:py-5 border-b border-slate-200 bg-gradient-to-r from-slate-50 via-white to-blue-50/60">
+                                            <div>
+                                                <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#1D4ED8]">Visuel du rapport</p>
+                                                <h3 className="text-lg font-bold text-slate-900 mt-1">Ajouter ou modifier l'image de couverture</h3>
+                                                <p className="text-sm text-slate-500 mt-1">Le rapport est mis à jour immédiatement après validation, sans quitter cette page.</p>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsCoverModalOpen(false)}
+                                                className="inline-flex items-center justify-center w-10 h-10 rounded-2xl border border-slate-200 bg-white text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-colors shrink-0"
+                                                aria-label="Fermer la gestion du visuel"
+                                            >
+                                                <Icon icon="solar:close-circle-linear" className="text-xl" />
+                                            </button>
+                                        </div>
+                                        <div className="max-h-[calc(92vh-170px)] overflow-y-auto px-5 py-5 md:px-6 md:py-6">
+                                            <NewDiagnosticCoverPreview
+                                                formData={coverDraft}
+                                                setFormData={setCoverDraft}
+                                                forceVisible={true}
+                                                onDismiss={() => setIsCoverModalOpen(false)}
+                                                dismissLabel="Fermer"
+                                                surface="modal"
+                                            />
+                                        </div>
+                                        <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 px-5 py-4 md:px-6 border-t border-slate-200 bg-slate-50/80">
+                                            <p className="text-xs text-slate-500 leading-relaxed">Façade, vue aérienne, plan ou photo importée : choisissez le visuel le plus utile pour votre rapport.</p>
+                                            <div className="flex flex-col-reverse sm:flex-row gap-2 sm:justify-end">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setIsCoverModalOpen(false)}
+                                                    className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
+                                                >
+                                                    Annuler
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={applyCoverModal}
+                                                    disabled={coverDraft.coverImageStatus === 'loading'}
+                                                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#1D4ED8] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#1E40AF] disabled:opacity-60 disabled:cursor-not-allowed transition-colors shadow-sm"
+                                                >
+                                                    <Icon icon="solar:check-circle-linear" className="text-base" />
+                                                    Appliquer au rapport
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                     </div>
                 </div>
@@ -9708,8 +10014,9 @@
                         <NewDiagnosticReportScreen
                             reportPayload={reportPayload}
                             userEmail={formData.email}
+                            formData={formData}
+                            setFormData={setFormData}
                             setReportPayload={setReportPayload}
-                            onEditReport={() => handleEdit(2, { coverStepDismissed: false })}
                             onLeadSubmissionCreated={(leadSubmissionId) => {
                                 setReportPayload((prev) => {
                                     if (!prev || prev.lead_submission_id === leadSubmissionId) {

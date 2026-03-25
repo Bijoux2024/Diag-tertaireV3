@@ -30,8 +30,8 @@
       width: 100%;
       background: #fff;
       font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif;
-      font-size: 12px;
-      line-height: 1.55;
+      font-size: 11.5px;
+      line-height: 1.5;
       color: #0F172A;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
@@ -73,8 +73,15 @@
 
     /* Rows & grids that must stay whole */
     .kpi-row   { break-inside: avoid; page-break-inside: avoid; }
-    .budget-row{ break-inside: avoid; page-break-inside: avoid; }
-    .cols-2    { break-inside: avoid; page-break-inside: avoid; }
+    .budget-row,
+    .cols-2,
+    .section-group,
+    .section-summary {
+      break-inside: auto;
+      page-break-inside: auto;
+    }
+    .section-head,
+    .section-first-block,
     .section-intro {
       break-inside: avoid;
       page-break-inside: avoid;
@@ -134,6 +141,7 @@
     };
 
     const scoreConf = l => SCORE_MAP[String(l || 'C').toUpperCase()] || SCORE_MAP['C'];
+    const SCORE_ORDER = ['A', 'B', 'C', 'D', 'E'];
 
     // Normalise site name vs address — prevents duplicate display in hero
     const normalizeSiteDisplay = (rawSiteName, address, postalCode) => {
@@ -306,20 +314,20 @@
           flex: 1,
           background: 'rgba(255,255,255,0.11)',
           border: '1.5px solid ' + cfg.border,
-          borderRadius: 10,
-          padding: '10px 12px',
+          borderRadius: 9,
+          padding: '8px 10px',
           textAlign: 'center',
         }}>
           <div style={{
-            fontSize: 9, fontWeight: 700, textTransform: 'uppercase',
-            letterSpacing: '0.08em', color: 'rgba(255,255,255,0.6)', marginBottom: 4,
+            fontSize: 8, fontWeight: 700, textTransform: 'uppercase',
+            letterSpacing: '0.06em', color: 'rgba(255,255,255,0.6)', marginBottom: 3, whiteSpace: 'nowrap',
           }}>{title}</div>
-          <div style={{ fontSize: 46, fontWeight: 900, color: cfg.color, lineHeight: 1 }}>
+          <div style={{ fontSize: 40, fontWeight: 900, color: cfg.color, lineHeight: 1 }}>
             {letter}
           </div>
-          <div style={{ fontSize: 10, color: '#fff', marginTop: 4 }}>{cfg.label}</div>
+          <div style={{ fontSize: 9, color: '#fff', marginTop: 3 }}>{cfg.label}</div>
           {num(intensity) > 0 && (
-            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.55)', marginTop: 2 }}>
+            <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.55)', marginTop: 2 }}>
               {Math.round(num(intensity))}&nbsp;kWh/m²/an
             </div>
           )}
@@ -341,54 +349,78 @@
       radius:   14,
       radiusLg: 18,
     };
+    const DIAGTERTIAIRE_LOGO_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="7" fill="#1D4ED8"/><path d="M6 25V11l10-3.5L26 11v14" stroke="white" stroke-width="1.9" stroke-linejoin="round" fill="none"/><rect x="13" y="17" width="6" height="8" rx="1.2" fill="white" opacity="0.95"/><path d="M6 14h20" stroke="white" stroke-width="1.1" opacity="0.35"/><circle cx="10" cy="18" r="1.1" fill="white" opacity="0.65"/><circle cx="22" cy="18" r="1.1" fill="white" opacity="0.65"/></svg>';
+    const DiagTertiairePrintBrand = ({ dark = true, size = 26 }) => (
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+        <span
+          style={{ width: size, height: size, flexShrink: 0, display: 'inline-block' }}
+          dangerouslySetInnerHTML={{ __html: DIAGTERTIAIRE_LOGO_SVG }}
+        />
+        <span style={{
+          fontWeight: 800,
+          fontSize: 18,
+          letterSpacing: '-0.03em',
+          lineHeight: 1,
+          color: dark ? '#FFFFFF' : T.navy,
+        }}>
+          DiagTertiaire
+        </span>
+      </span>
+    );
 
     /* ═══════════════════════════════════════════════════════
        SECTION WRAPPER
     ═══════════════════════════════════════════════════════ */
-    const Section = ({ title, sub, intro = null, children, mb = 18, avoidBreak = false }) => (
-      <div
-        className={avoidBreak ? 'pba' : ''}
-        style={{
-          background: '#fff',
-          border: `1px solid ${T.slate200}`,
-          borderRadius: T.radiusLg,
-          marginBottom: mb,
-          overflow: 'hidden',
-        }}
-      >
-        {/* Coloured top bar */}
-        <div style={{ height: 3, background: `linear-gradient(90deg, ${T.blue} 0%, #6366F1 100%)` }} />
-        <div style={{ padding: '20px 24px 22px' }}>
-          {intro ? (
-            <div className="section-intro" style={{ marginBottom: children ? 14 : 0 }}>
-              <div className="section-title" style={{
-                fontSize: 16, fontWeight: 800, color: T.navy,
-                letterSpacing: '-0.3px', marginBottom: sub ? 4 : 16,
-              }}>{title}</div>
-              {sub && (
-                <div style={{ fontSize: 11, color: T.slate600, marginBottom: 16, lineHeight: 1.6 }}>
-                  {sub}
-                </div>
-              )}
-              {intro}
-            </div>
-          ) : (
-            <>
-              <div className="section-title" style={{
-                fontSize: 16, fontWeight: 800, color: T.navy,
-                letterSpacing: '-0.3px', marginBottom: sub ? 4 : 16,
-              }}>{title}</div>
-              {sub && (
-                <div style={{ fontSize: 11, color: T.slate600, marginBottom: 16, lineHeight: 1.6 }}>
-                  {sub}
-                </div>
-              )}
-            </>
-          )}
-          {children}
+    const Section = ({ title, sub, intro = null, children, mb = 18, avoidBreak = false }) => {
+      const childList = React.Children.toArray(children).filter(Boolean);
+      const firstChild = !intro && avoidBreak ? (childList.shift() || null) : null;
+      const titleNode = (
+        <div className="section-title" style={{
+          fontSize: 14.5, fontWeight: 800, color: T.navy,
+          letterSpacing: '-0.28px', marginBottom: sub ? 3 : 12,
+        }}>{title}</div>
+      );
+      const subNode = sub ? (
+        <div style={{ fontSize: 10.2, color: T.slate600, marginBottom: 12, lineHeight: 1.55 }}>
+          {sub}
         </div>
-      </div>
-    );
+      ) : null;
+
+      return (
+        <div
+          style={{
+            background: '#fff',
+            border: `1px solid ${T.slate200}`,
+            borderRadius: T.radiusLg,
+            marginBottom: mb,
+            overflow: 'hidden',
+          }}
+        >
+          <div style={{ height: 3, background: `linear-gradient(90deg, ${T.blue} 0%, #6366F1 100%)` }} />
+          <div style={{ padding: '16px 18px 18px' }}>
+            {intro ? (
+              <div className="section-intro" style={{ marginBottom: childList.length ? 12 : 0 }}>
+                {titleNode}
+                {subNode}
+                {intro}
+              </div>
+            ) : firstChild ? (
+              <div className="section-first-block" style={{ marginBottom: childList.length ? 12 : 0 }}>
+                {titleNode}
+                {subNode}
+                {firstChild}
+              </div>
+            ) : (
+              <div className="section-head" style={{ marginBottom: childList.length ? 12 : 0 }}>
+                {titleNode}
+                {subNode}
+              </div>
+            )}
+            {childList}
+          </div>
+        </div>
+      );
+    };
 
     /* ═══════════════════════════════════════════════════════
        COVER IMAGE — print-safe building photo block
@@ -480,17 +512,17 @@
         background: '#fff',
         border: `1px solid ${T.slate200}`,
         borderRadius: T.radius,
-        padding: '20px 22px',
-        borderTop: `3px solid ${accent}`,
+        padding: '15px 16px',
+        borderTop: `2.5px solid ${accent}`,
       }}>
         <div style={{
-          fontSize: 9, fontWeight: 800, textTransform: 'uppercase',
-          letterSpacing: '0.1em', color: accent, marginBottom: 8,
+          fontSize: 8, fontWeight: 800, textTransform: 'uppercase',
+          letterSpacing: '0.09em', color: accent, marginBottom: 6,
         }}>{label}</div>
-        <div style={{ fontSize: 28, fontWeight: 900, color: T.navy, lineHeight: 1, marginBottom: 5 }}>
+        <div style={{ fontSize: 24, fontWeight: 900, color: T.navy, lineHeight: 1, marginBottom: 4 }}>
           {value}
         </div>
-        {sub && <div style={{ fontSize: 11, color: T.slate400, lineHeight: 1.4 }}>{sub}</div>}
+        {sub && <div style={{ fontSize: 10, color: T.slate400, lineHeight: 1.35 }}>{sub}</div>}
       </div>
     );
 
@@ -512,37 +544,37 @@
 
       return (
         <div className="pba" style={{
-          display: 'flex', gap: 14,
-          padding: '14px 16px',
+          display: 'flex', gap: 12,
+          padding: '12px 14px',
           background: T.slate50,
           borderRadius: 12,
           border: `1px solid ${T.slate200}`,
-          marginBottom: 10,
+          marginBottom: 8,
         }}>
           {/* Number badge */}
           <div style={{
-            width: 28, height: 28, borderRadius: '50%',
+            width: 26, height: 26, borderRadius: '50%',
             background: T.blue, color: '#fff',
-            fontSize: 12, fontWeight: 800,
+            fontSize: 11, fontWeight: 800,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             flexShrink: 0, marginTop: 2,
           }}>{badgeNum}</div>
 
           <div style={{ flex: 1 }}>
             {/* Name + tier badge */}
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 5, flexWrap: 'wrap' }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: T.navy }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
+              <div style={{ fontSize: 11.2, fontWeight: 700, color: T.navy }}>
                 {action.name || 'Action recommandée'}
               </div>
               <span style={{
                 padding: '2px 7px', borderRadius: 20,
-                fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em',
+                fontSize: 8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em',
                 background: tier.bg, color: tier.color, border: `1px solid ${tier.border}`,
                 flexShrink: 0,
               }}>{tier.label}</span>
             </div>
             {/* Metrics row */}
-            <div style={{ display: 'flex', gap: 20, fontSize: 11, color: T.slate600, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: 16, fontSize: 10.2, color: T.slate600, flexWrap: 'wrap', lineHeight: 1.45 }}>
               <span>
                 Gain&nbsp;
                 <strong style={{ color: '#15803D', fontWeight: 800 }}>{fmtEur(gainEuro)}/an</strong>
@@ -661,7 +693,7 @@
       const seriesMeta = [
         { key: 'sans_travaux', label: 'Situation actuelle', stroke: '#EA580C', dash: '6 4', fill: 'url(#printProjSans)' },
         ...(hasLight ? [{ key: 'avec_actions_rapides', label: 'Actions sans travaux', stroke: '#F59E0B', dash: '9 4', fill: null }] : []),
-        { key: 'avec_travaux', label: 'Actions légères + travaux', stroke: T.blue, dash: null, fill: 'url(#printProjAvec)' },
+        { key: 'avec_travaux', label: 'Actions légères + travaux', stroke: '#059669', dash: null, fill: 'url(#printProjAvec)' },
       ];
       const series = seriesMeta.map(meta => ({
         ...meta,
@@ -702,8 +734,8 @@
                 <stop offset="100%" stopColor="#EA580C" stopOpacity="0.02" />
               </linearGradient>
               <linearGradient id="printProjAvec" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={T.blue} stopOpacity="0.18" />
-                <stop offset="100%" stopColor={T.blue} stopOpacity="0.02" />
+                <stop offset="0%" stopColor="#059669" stopOpacity="0.18" />
+                <stop offset="100%" stopColor="#059669" stopOpacity="0.02" />
               </linearGradient>
             </defs>
 
@@ -764,9 +796,9 @@
 
             {roiX !== null && (
               <g>
-                <line x1={roiX} y1={margin.top} x2={roiX} y2={baseLineY} stroke={T.blue} strokeWidth="1.5" strokeDasharray="4 4" />
-                <rect x={clamp(roiX - 44, margin.left, margin.left + plotWidth - 88)} y={6} width="88" height="20" rx="10" fill="#DBEAFE" stroke="#93C5FD" />
-                <text x={clamp(roiX, margin.left + 44, margin.left + plotWidth - 44)} y={20} textAnchor="middle" fontSize="10" fontWeight="700" fill={T.blue}>
+                <line x1={roiX} y1={margin.top} x2={roiX} y2={baseLineY} stroke="#059669" strokeWidth="1.5" strokeDasharray="4 4" />
+                <rect x={clamp(roiX - 44, margin.left, margin.left + plotWidth - 88)} y={6} width="88" height="20" rx="10" fill="#D1FAE5" stroke="#6EE7B7" />
+                <text x={clamp(roiX, margin.left + 44, margin.left + plotWidth - 44)} y={20} textAnchor="middle" fontSize="10" fontWeight="700" fill="#047857">
                   Rentabilité : {roiLabel}
                 </text>
               </g>
@@ -932,6 +964,29 @@
 
       const locationMeta = [activity, surface > 0 ? fmtInt(surface, 'm²') : null].filter(Boolean).join(' · ');
       const heroSubLine  = [locationMeta, addressLine].filter(Boolean).join(' · ');
+      const benchmarkLow = num(bench.benchmark_low?.value);
+      const benchmarkGap = Math.round(siteI - benchMed);
+      const benchmarkGapText = benchmarkGap > 0
+        ? `Vous êtes à +${fmtInt(benchmarkGap)} kWh/m²/an au-dessus de la médiane sectorielle.`
+        : benchmarkGap < 0
+          ? `Vous êtes à ${fmtInt(Math.abs(benchmarkGap))} kWh/m²/an sous la médiane sectorielle.`
+          : 'Vous êtes au niveau de la médiane sectorielle.';
+      const benchmarkComment = targetI <= benchmarkLow
+        ? 'La cible suggérée vous rapproche de la zone basse du secteur.'
+        : targetI <= benchMed
+          ? 'La cible suggérée vous rapproche du cœur de marché.'
+          : "La cible suggérée réduit déjà significativement l'écart de performance.";
+      const keyBusinessSentence = (score === 'A' || score === 'B')
+        ? 'Le site est déjà bien placé. L’enjeu est de capter des gains ciblés sans surinvestir.'
+        : score === 'C'
+          ? 'Le site est dans la médiane. Un plan sélectif peut réduire durablement les charges.'
+          : 'Le site est en retrait par rapport au marché. Les premiers leviers doivent être priorisés rapidement.';
+      const currentRank = SCORE_ORDER.indexOf(score);
+      const targetRank = SCORE_ORDER.indexOf(targetScore);
+      const classGain = Math.max(0, currentRank - targetRank);
+      const savingsPct = siteI > 0
+        ? Math.max(0, Math.round(((siteI - targetI) / siteI) * 100))
+        : 0;
 
       /* ── KPI data ─────────────────────────────────────────────── */
       const kpis = [
@@ -966,7 +1021,7 @@
       /* ── Budget recap cells ──────────────────────────────────── */
       const budgetCells = [
         { label: 'Travaux bruts',    value: fmtEur(budget.capexBrut), bg: T.slate50,  bd: T.slate200, c: T.navy    },
-        { label: 'Aides CEE / MPR', value: `– ${fmtEur(budget.aides)}`, bg: '#EFF6FF', bd: '#BFDBFE', c: T.blue   },
+        { label: 'Aides CEE / MPR*', value: `– ${fmtEur(budget.aides)}`, bg: '#EFF6FF', bd: '#BFDBFE', c: T.blue   },
         { label: 'Reste à charge',  value: fmtEur(budget.capexNet),  bg: '#EEF2FF',  bd: '#C7D2FE', c: '#4338CA' },
         { label: 'Économies / an',  value: fmtEur(budget.savings),   bg: '#F0FDF4',  bd: '#86EFAC', c: '#15803D' },
       ];
@@ -981,71 +1036,112 @@
             background: `linear-gradient(135deg, ${T.navy} 0%, #1D4ED8 60%, #0F2236 100%)`,
             color: '#fff',
             borderRadius: 20,
-            padding: '28px 30px',
-            marginBottom: 18,
+            padding: '22px 24px',
+            marginBottom: 16,
           }}>
-            {/* Top label */}
-            <div style={{
-              fontSize: 9, fontWeight: 700, textTransform: 'uppercase',
-              letterSpacing: '0.16em', opacity: 0.55, marginBottom: 6,
-            }}>
-              Pré-diagnostic énergétique tertiaire · DiagTertiaire
-            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1.15fr 220px', gap: 18, alignItems: 'start' }}>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 10 }}>
+                  <DiagTertiairePrintBrand dark={true} size={28} />
+                  <span style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    padding: '4px 10px',
+                    borderRadius: 999,
+                    background: 'rgba(255,255,255,0.10)',
+                    border: '1px solid rgba(255,255,255,0.14)',
+                    fontSize: 8,
+                    fontWeight: 700,
+                    letterSpacing: '0.12em',
+                    textTransform: 'uppercase',
+                    color: 'rgba(255,255,255,0.78)',
+                  }}>
+                    Pré-diagnostic énergétique tertiaire
+                  </span>
+                </div>
 
-            <div style={{ minWidth: 0 }}>
-              <div style={{
-                fontSize: 26, fontWeight: 900, lineHeight: 1.1,
-                letterSpacing: '-0.6px', marginBottom: 6,
-              }}>{displayTitle}</div>
+                <div style={{
+                  fontSize: 24, fontWeight: 900, lineHeight: 1.08,
+                  letterSpacing: '-0.55px', marginBottom: 5,
+                }}>{displayTitle}</div>
 
-              <div style={{
-                fontSize: 12, color: 'rgba(255,255,255,0.70)',
-                lineHeight: 1.7, marginBottom: 18,
-              }}>
-                {heroSubLine}{heroSubLine ? ' · ' : ''}Généré le {fmtDate(rp.generated_at)}
+                <div style={{
+                  fontSize: 10.5, color: 'rgba(255,255,255,0.72)',
+                  lineHeight: 1.6,
+                }}>
+                  {heroSubLine}{heroSubLine ? ' · ' : ''}Généré le {fmtDate(rp.generated_at)}
+                </div>
               </div>
 
               <div style={{
-                background: 'rgba(255,255,255,0.09)',
-                border: '1px solid rgba(255,255,255,0.12)',
-                borderRadius: 12,
-                padding: '14px 18px',
+                background: 'rgba(255,255,255,0.10)',
+                border: '1px solid rgba(255,255,255,0.14)',
+                borderRadius: 14,
+                padding: '12px 14px',
+                textAlign: 'center',
               }}>
                 <div style={{
-                  fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
-                  letterSpacing: '0.08em', color: 'rgba(255,255,255,0.5)', marginBottom: 12,
-                }}>Positionnement énergétique</div>
-                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                  {[
-                    { label: 'Conso actuelle',  value: fmtInt(siteI,    'kWh/m²/an') },
-                    { label: 'Médiane secteur', value: fmtInt(benchMed, 'kWh/m²/an') },
-                    { label: 'Cible estimée',   value: fmtInt(targetI,  'kWh/m²/an') },
-                    { label: 'Économies/an',    value: fmtEur(annualEuro)             },
-                  ].map(ic => (
-                    <div key={ic.label} style={{
-                      flex: '1 1 90px',
-                      background: 'rgba(255,255,255,0.08)',
-                      border: '1px solid rgba(255,255,255,0.1)',
-                      borderRadius: 9, padding: '9px 12px',
-                    }}>
-                      <div style={{
-                        fontSize: 8, fontWeight: 700, textTransform: 'uppercase',
-                        color: 'rgba(255,255,255,0.45)', marginBottom: 5,
-                      }}>{ic.label}</div>
-                      <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', lineHeight: 1 }}>
-                        {ic.value}
-                      </div>
-                    </div>
-                  ))}
+                  fontSize: 8,
+                  fontWeight: 700,
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                  color: 'rgba(255,255,255,0.62)',
+                  marginBottom: 5,
+                }}>
+                  Baisse estimée
+                </div>
+                <div style={{ fontSize: 30, fontWeight: 900, lineHeight: 1, color: '#6EE7B7' }}>
+                  -{savingsPct}%
+                </div>
+                <div style={{ fontSize: 9.5, color: '#FFFFFF', lineHeight: 1.4, marginTop: 5 }}>
+                  {classGain > 0 ? `+${classGain} classe${classGain > 1 ? 's' : ''} estimée${classGain > 1 ? 's' : ''}` : 'Intensité réduite estimée'}
+                </div>
+                <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.72)', marginTop: 6 }}>
+                  Potentiel : {fmtEur(annualEuro)}/an
                 </div>
               </div>
             </div>
 
-            {/* Energy labels: before → after */}
-            <div style={{ marginTop: 14, display: 'flex', gap: 10, alignItems: 'stretch' }}>
+            <div style={{
+              marginTop: 14,
+              background: 'rgba(255,255,255,0.09)',
+              border: '1px solid rgba(255,255,255,0.12)',
+              borderRadius: 12,
+              padding: '11px 14px',
+            }}>
+              <div style={{
+                fontSize: 8, fontWeight: 700, textTransform: 'uppercase',
+                letterSpacing: '0.08em', color: 'rgba(255,255,255,0.52)', marginBottom: 8,
+              }}>Lecture rapide du site</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+                {[
+                  { label: 'Conso actuelle', value: fmtInt(siteI, 'kWh/m²/an') },
+                  { label: 'Médiane secteur', value: fmtInt(benchMed, 'kWh/m²/an') },
+                  { label: 'Cible estimée', value: fmtInt(targetI, 'kWh/m²/an') },
+                  { label: 'Économies/an', value: fmtEur(annualEuro) },
+                ].map(ic => (
+                  <div key={ic.label} style={{
+                    background: 'rgba(255,255,255,0.08)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: 9,
+                    padding: '8px 10px',
+                  }}>
+                    <div style={{
+                      fontSize: 7.5, fontWeight: 700, textTransform: 'uppercase',
+                      color: 'rgba(255,255,255,0.48)', marginBottom: 4,
+                    }}>{ic.label}</div>
+                    <div style={{ fontSize: 12.5, fontWeight: 800, color: '#fff', lineHeight: 1.1 }}>
+                      {ic.value}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ marginTop: 12, display: 'flex', gap: 8, alignItems: 'stretch' }}>
               <EnergyLabelMini letter={score} intensity={siteI} title="Étiquette actuelle" />
               <div style={{
-                width: 32, flexShrink: 0,
+                width: 28, flexShrink: 0,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
@@ -1057,26 +1153,26 @@
               <EnergyLabelMini letter={targetScore} intensity={targetI} title="Après travaux" />
             </div>
 
-            {/* Potential highlight bar */}
             <div style={{
-              marginTop: 18,
+              marginTop: 14,
               background: 'rgba(255,255,255,0.10)',
               border: '1px solid rgba(255,255,255,0.14)',
               borderRadius: 10,
-              padding: '11px 18px',
-              display: 'flex', alignItems: 'center', gap: 10,
+              padding: '9px 14px',
+              display: 'flex', alignItems: 'center', gap: 9,
             }}>
               <div style={{
                 width: 8, height: 8, borderRadius: '50%', background: '#6EE7B7', flexShrink: 0,
               }} />
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)' }}>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.86)', lineHeight: 1.5 }}>
                 Potentiel d'économies estimé&nbsp;
-                <strong style={{ color: '#6EE7B7', fontSize: 14 }}>{fmtEur(annualEuro)}/an</strong>
+                <strong style={{ color: '#6EE7B7', fontSize: 12.5 }}>{fmtEur(annualEuro)}/an</strong>
+                <span style={{ opacity: 0.76 }}> · baisse cible -{savingsPct}%</span>
                 {annualKwh > 0 && (
-                  <span style={{ opacity: 0.7 }}> · {fmtInt(annualKwh, 'kWh')} évités</span>
+                  <span style={{ opacity: 0.72 }}> · {fmtInt(annualKwh, 'kWh')} évités</span>
                 )}
                 {budget.roiYears !== null && (
-                  <span style={{ opacity: 0.7 }}> · retour estimé {String(budget.roiYears).replace('.', ',')} ans</span>
+                  <span style={{ opacity: 0.72 }}> · retour estimé {String(budget.roiYears).replace('.', ',')} ans</span>
                 )}
               </div>
             </div>
@@ -1098,8 +1194,8 @@
           <div className="kpi-row" style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(2, 1fr)',
-            gap: 14,
-            marginBottom: 18,
+            gap: 10,
+            marginBottom: 14,
           }}>
             {kpis.map(k => (
               <KpiCard key={k.label} label={k.label} value={k.value} sub={k.sub} accent={k.accent} />
@@ -1110,6 +1206,25 @@
               SYNTHÈSE RAPIDE — diagnostic / risque / opportunité
               @sync — buildDecisionReadout mirrors newDiagnosticBuildDecisionReadout
           ═════════════════════════════════════════════════ */}
+          <div className="pba" style={{
+            background: '#fff',
+            border: `1px solid ${T.slate200}`,
+            borderLeft: `4px solid ${scoreConf(score).color}`,
+            borderRadius: 14,
+            padding: '13px 15px',
+            marginBottom: 14,
+          }}>
+            <div style={{ fontSize: 8, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.09em', color: T.slate400, marginBottom: 5 }}>
+              Synthèse rapide
+            </div>
+            <div style={{ fontSize: 15, fontWeight: 800, color: T.navy, lineHeight: 1.35 }}>
+              {keyBusinessSentence}
+            </div>
+            <div style={{ fontSize: 10.4, color: T.slate600, lineHeight: 1.55, marginTop: 5 }}>
+              {benchmarkGapText} {benchmarkComment}
+            </div>
+          </div>
+
           {(() => {
             const dr = buildDecisionReadout(rp);
             const cards = [
@@ -1118,13 +1233,13 @@
               { title: 'Opportunité', text: dr.opportunity, topColor: '#059669' },
             ];
             return (
-              <div className="pba" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 18 }}>
+              <div className="pba" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 16 }}>
                 {cards.map(c => (
                   <div key={c.title} style={{ background: '#fff', border: `1px solid ${T.slate200}`, borderRadius: 14, overflow: 'hidden' }}>
                     <div style={{ height: 3, background: c.topColor }} />
-                    <div style={{ padding: '12px 14px' }}>
-                      <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: c.topColor, marginBottom: 7 }}>{c.title}</div>
-                      <div style={{ fontSize: 11, color: '#374151', lineHeight: 1.65 }}>{c.text}</div>
+                    <div style={{ padding: '11px 12px' }}>
+                      <div style={{ fontSize: 8, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.09em', color: c.topColor, marginBottom: 6 }}>{c.title}</div>
+                      <div style={{ fontSize: 10.4, color: '#374151', lineHeight: 1.55 }}>{c.text}</div>
                     </div>
                   </div>
                 ))}
@@ -1258,7 +1373,7 @@
             )}
           >
             {/* Résumé chiffré — valeurs cumulatives, même logique que web */}
-            <div className="section-summary" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginTop: 14 }}>
+            <div className="section-summary" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginTop: 12 }}>
               {(() => {
                 const d1  = projection.data[1]  || {};
                 const d3  = projection.data[3]  || {};
@@ -1275,20 +1390,20 @@
                   <div key={i} className="pba" style={{
                     background: i === 3 ? '#F0FDF4' : T.slate50,
                     border: `1px solid ${i === 3 ? '#86EFAC' : T.slate200}`,
-                    borderRadius: 10, padding: '10px 12px',
+                    borderRadius: 10, padding: '9px 10px',
                   }}>
-                    <div style={{ fontSize: 8, fontWeight: 700, textTransform: 'uppercase', color: i === 3 ? '#15803D' : T.slate400, marginBottom: 6 }}>{c.label}</div>
+                    <div style={{ fontSize: 7.6, fontWeight: 700, textTransform: 'uppercase', color: i === 3 ? '#15803D' : T.slate400, marginBottom: 5 }}>{c.label}</div>
                     {c.special ? (
                       <>
-                        <div style={{ fontSize: 16, fontWeight: 900, color: '#15803D' }}>{c.special}</div>
-                        {c.roi && <div style={{ fontSize: 10, color: T.blue, marginTop: 4, fontWeight: 700 }}>Rentabilité : {c.roi}</div>}
+                        <div style={{ fontSize: 15, fontWeight: 900, color: '#15803D' }}>{c.special}</div>
+                        {c.roi && <div style={{ fontSize: 9.5, color: '#047857', marginTop: 4, fontWeight: 700 }}>Rentabilité : {c.roi}</div>}
                       </>
                     ) : (
                       <>
-                        <div style={{ fontSize: 13, fontWeight: 800, color: '#374151' }}>{c.main}</div>
-                        <div style={{ fontSize: 10, color: T.slate400, marginTop: 1 }}>{c.note}</div>
-                        {c.diff  != null && c.diff  > 0 && <div style={{ fontSize: 11, fontWeight: 700, color: '#059669', marginTop: 3 }}>Économies : {fmtEur(c.diff)}</div>}
-                        {c.diffAbs != null && <div style={{ fontSize: 11, fontWeight: 700, color: '#059669', marginTop: 3 }}>Avec actions : {c.diffAbs}</div>}
+                        <div style={{ fontSize: 12.2, fontWeight: 800, color: '#374151' }}>{c.main}</div>
+                        <div style={{ fontSize: 9.4, color: T.slate400, marginTop: 1 }}>{c.note}</div>
+                        {c.diff  != null && c.diff  > 0 && <div style={{ fontSize: 10.2, fontWeight: 700, color: '#059669', marginTop: 3 }}>Économies : {fmtEur(c.diff)}</div>}
+                        {c.diffAbs != null && <div style={{ fontSize: 10.2, fontWeight: 700, color: '#059669', marginTop: 3 }}>Avec actions : {c.diffAbs}</div>}
                       </>
                     )}
                   </div>
@@ -1312,10 +1427,10 @@
             const hasAny      = lightGroup.length > 0 || heavyGroup.length > 0;
 
             const GroupHeader = ({ title, subtitle, bg, border }) => (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 10, marginBottom: 10, background: bg, border: `1px solid ${border}` }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderRadius: 10, marginBottom: 8, background: bg, border: `1px solid ${border}` }}>
                 <div>
-                  <div style={{ fontSize: 12, fontWeight: 800, color: T.navy }}>{title}</div>
-                  <div style={{ fontSize: 10, color: T.slate600 }}>{subtitle}</div>
+                  <div style={{ fontSize: 11.2, fontWeight: 800, color: T.navy }}>{title}</div>
+                  <div style={{ fontSize: 9.4, color: T.slate600 }}>{subtitle}</div>
                 </div>
               </div>
             );
@@ -1368,13 +1483,16 @@
                 {orderedGroups.slice(1).map(renderActionGroup)}
 
                 {/* Budget recap */}
-                <div className="budget-row section-summary" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginTop: 18 }}>
+                <div className="budget-row section-summary" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginTop: 14 }}>
                   {budgetCells.map(cell => (
-                    <div key={cell.label} className="pba" style={{ borderRadius: 10, padding: '14px 16px', background: cell.bg, border: `1px solid ${cell.bd}` }}>
-                      <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: cell.c, marginBottom: 6 }}>{cell.label}</div>
-                      <div style={{ fontSize: 18, fontWeight: 900, color: cell.c }}>{cell.value}</div>
+                    <div key={cell.label} className="pba" style={{ borderRadius: 10, padding: '12px 13px', background: cell.bg, border: `1px solid ${cell.bd}` }}>
+                      <div style={{ fontSize: 8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: cell.c, marginBottom: 5 }}>{cell.label}</div>
+                      <div style={{ fontSize: 16, fontWeight: 900, color: cell.c }}>{cell.value}</div>
                     </div>
                   ))}
+                </div>
+                <div style={{ fontSize: 9, color: T.slate400, marginTop: 7, lineHeight: 1.45 }}>
+                  * MPR : MaPrimeRénov’
                 </div>
               </Section>
             );
@@ -1441,56 +1559,59 @@
           ═════════════════════════════════════════════════ */}
           <div className="pba" style={{
             background: 'linear-gradient(135deg, #1E3A5F 0%, #2563EB 100%)',
-            borderRadius: 10,
-            padding: '22px 26px',
-            marginBottom: 18,
+            borderRadius: 12,
+            padding: '18px 20px',
+            marginBottom: 16,
             color: '#fff',
             pageBreakInside: 'avoid'
           }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 18 }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
               {/* Icône */}
               <div style={{
                 flexShrink: 0,
-                width: 48,
-                height: 48,
-                borderRadius: '50%',
+                width: 42,
+                height: 42,
+                borderRadius: 12,
                 background: 'rgba(255,255,255,0.15)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: 22
-              }}>💬</div>
+              }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path d="M7 8.5h10M7 12h7m-7 3.5h4M6.8 18.8 4 21V6.8A2.8 2.8 0 0 1 6.8 4h10.4A2.8 2.8 0 0 1 20 6.8v8.4a2.8 2.8 0 0 1-2.8 2.8H6.8Z" stroke="#FFFFFF" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
               {/* Contenu */}
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.65)', marginBottom: 4 }}>
+                <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.65)', marginBottom: 4 }}>
                   Prochaine étape
                 </div>
-                <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 8, lineHeight: 1.25 }}>
+                <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 7, lineHeight: 1.25 }}>
                   Confirmez vos leviers avec un expert
                 </div>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.85)', lineHeight: 1.55, marginBottom: 12 }}>
-                  Chaque bâtiment est différent. Un échange de 20 à 30 minutes avec un ingénieur énergie
+                <div style={{ fontSize: 10.3, color: 'rgba(255,255,255,0.85)', lineHeight: 1.5, marginBottom: 10 }}>
+                  Chaque bâtiment est différent. Un échange de 20 à 30 minutes avec un expert
                   permet de valider les pistes identifiées ici, et d'affiner le chiffrage avant tout engagement.
                 </div>
                 {/* 4 bullets */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 16px', marginBottom: 12 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 14px', marginBottom: 10 }}>
                   {[
                     'Confirmer les postes d\'économie prioritaires',
                     'Affiner le budget et les aides mobilisables',
                     'Identifier les actions réalisables rapidement',
                     'Structurer un plan d\'action sur mesure'
                   ].map((b, i) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 7, fontSize: 10.5, color: '#fff', lineHeight: 1.4 }}>
+                    <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 7, fontSize: 9.8, color: '#fff', lineHeight: 1.35 }}>
                       <span style={{
                         flexShrink: 0,
-                        width: 17,
-                        height: 17,
+                        width: 16,
+                        height: 16,
                         borderRadius: '50%',
                         background: 'rgba(255,255,255,0.2)',
                         display: 'inline-flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        fontSize: 9,
+                        fontSize: 8,
                         fontWeight: 700,
                         marginTop: 1
                       }}>{i + 1}</span>
@@ -1505,8 +1626,8 @@
                   gap: 6,
                   background: 'rgba(255,255,255,0.12)',
                   borderRadius: 20,
-                  padding: '5px 12px',
-                  fontSize: 10,
+                  padding: '5px 11px',
+                  fontSize: 9.5,
                   fontWeight: 600,
                   color: '#fff'
                 }}>
@@ -1530,18 +1651,18 @@
               overflow: 'hidden',
             }}>
               <div style={{ height: 3, background: '#6366F1' }} />
-              <div style={{ padding: '18px 20px 20px' }}>
+              <div style={{ padding: '15px 16px 16px' }}>
                 <div className="section-title" style={{
-                  fontSize: 14, fontWeight: 800, color: T.navy, marginBottom: 4,
+                  fontSize: 13, fontWeight: 800, color: T.navy, marginBottom: 3,
                 }}>Hypothèses de calcul</div>
-                <div style={{ fontSize: 11, color: T.slate600, marginBottom: 12, lineHeight: 1.5 }}>
+                <div style={{ fontSize: 10, color: T.slate600, marginBottom: 10, lineHeight: 1.45 }}>
                   À affiner lors d'un audit sur site.
                 </div>
                 <ul style={{ listStyle: 'none' }}>
                   {(assumes.length ? assumes : ['Hypothèses à confirmer sur site.']).map((item, i) => (
                     <li key={i} className="pba" style={{
-                      display: 'flex', gap: 9, fontSize: 11, color: '#475569',
-                      lineHeight: 1.55, marginBottom: 7,
+                      display: 'flex', gap: 8, fontSize: 10, color: '#475569',
+                      lineHeight: 1.5, marginBottom: 6,
                     }}>
                       <span style={{
                         width: 6, height: 6, borderRadius: '50%',
@@ -1562,18 +1683,18 @@
               overflow: 'hidden',
             }}>
               <div style={{ height: 3, background: '#F97316' }} />
-              <div style={{ padding: '18px 20px 20px' }}>
+              <div style={{ padding: '15px 16px 16px' }}>
                 <div className="section-title" style={{
-                  fontSize: 14, fontWeight: 800, color: T.navy, marginBottom: 4,
+                  fontSize: 13, fontWeight: 800, color: T.navy, marginBottom: 3,
                 }}>Limites de lecture</div>
-                <div style={{ fontSize: 11, color: T.slate600, marginBottom: 12, lineHeight: 1.5 }}>
+                <div style={{ fontSize: 10, color: T.slate600, marginBottom: 10, lineHeight: 1.45 }}>
                   Ce pré-diagnostic est indicatif et non opposable.
                 </div>
                 <ul style={{ listStyle: 'none' }}>
                   {(limits.length ? limits : ['Limites à confirmer avec un expert.']).map((item, i) => (
                     <li key={i} className="pba" style={{
-                      display: 'flex', gap: 9, fontSize: 11, color: '#475569',
-                      lineHeight: 1.55, marginBottom: 7,
+                      display: 'flex', gap: 8, fontSize: 10, color: '#475569',
+                      lineHeight: 1.5, marginBottom: 6,
                     }}>
                       <span style={{
                         width: 6, height: 6, borderRadius: '50%',

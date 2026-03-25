@@ -1,6 +1,6 @@
 // Note a moi-meme ne pas supprimer
 
- Visualiser en local
+Visualiser en local
 npx serve .
 Ouvre http://localhost:3000 dans ton navigateur.
 

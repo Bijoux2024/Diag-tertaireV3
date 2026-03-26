@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Politique de cookies - DiagTertiaire</title>
+
+    <!-- Polices -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <!-- TailwindCSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+
+    <style>
+        :root {
+            --bg: #F8FAFC;
+            --text: #0F172A;
+            --muted: #64748B;
+            --border: #E2E8F0;
+            --blue-action: #1D4ED8;
+            --blue-hover: #1E40AF;
+            --site-gutter: clamp(1rem, 3vw, 1.5rem);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            line-height: 1.7;
+        }
+
+        h1, h2, h3 {
+            letter-spacing: -0.02em;
+        }
+
+        a {
+            color: var(--blue-action);
+            text-decoration: underline;
+            text-underline-offset: 4px;
+            transition: color 0.2s;
+        }
+
+        a:hover {
+            color: var(--blue-hover);
+        }
+
+        .legal-card {
+            background: #FFFFFF;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(15, 23, 42, 0.03);
+            margin-bottom: 2rem;
+        }
+
+        .legal-section-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .legal-content {
+            color: #334155;
+            font-size: 0.95rem;
+        }
+
+        .legal-content p {
+            margin-bottom: 0.75rem;
+        }
+
+        .legal-content p:last-child {
+            margin-bottom: 0;
+        }
+
+        .legal-content ul {
+            list-style-type: disc;
+            padding-left: 1.5rem;
+            margin-top: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        /* Tableau des traceurs */
+        .cookie-table-wrap {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin-top: 1rem;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+
+        .cookie-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+            min-width: 640px;
+        }
+
+        .cookie-table th {
+            background: #F1F5F9;
+            font-weight: 600;
+            color: #0F172A;
+            padding: 0.7rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+        .cookie-table td {
+            padding: 0.7rem 1rem;
+            border-bottom: 1px solid #F1F5F9;
+            color: #334155;
+            vertical-align: top;
+        }
+
+        .cookie-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .cookie-table tr:hover td {
+            background: #FAFBFC;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .badge-green  { background: #DCFCE7; color: #15803D; }
+        .badge-blue   { background: #DBEAFE; color: #1D4ED8; }
+        .badge-amber  { background: #FEF3C7; color: #92400E; }
+        .badge-slate  { background: #F1F5F9; color: #475569; }
+
+        /* Bouton préférences */
+        .pref-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 1.25rem;
+            background: #1D4ED8;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background 0.15s;
+            margin-top: 1rem;
+        }
+
+        .pref-btn:hover { background: #1E40AF; }
+        .pref-btn:focus-visible { outline: 2px solid #1D4ED8; outline-offset: 2px; }
+
+        .pref-btn-outline {
+            background: transparent;
+            border: 1.5px solid #CBD5E1;
+            color: #334155;
+            margin-left: 0.625rem;
+        }
+
+        .pref-btn-outline:hover { background: #F1F5F9; }
+
+        @media (max-width: 768px) {
+            .legal-card {
+                padding: 1.5rem;
+                border-radius: 12px;
+            }
+        }
+    </style>
+
+    <!-- Vercel Analytics — chargé conditionnellement via cookie-consent.js -->
+    <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+    <script src="./cookie-consent.js"></script>
+</head>
+
+<body class="flex flex-col min-h-screen">
+
+    <!-- Header simple -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 h-[74px] flex items-center justify-between">
+            <a href="/" class="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                style="text-decoration: none;">
+                <div class="w-8 h-8 bg-blue-600/10 rounded-lg flex items-center justify-center">
+                    <iconify-icon icon="solar:buildings-2-linear"
+                        style="color: #1D4ED8; font-size: 18px;"></iconify-icon>
+                </div>
+                <span class="font-bold text-slate-900 text-lg">DiagTertiaire</span>
+            </a>
+            <a href="/"
+                class="text-sm font-semibold text-slate-500 hover:text-slate-900 flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 px-4 py-2 rounded-lg transition-colors"
+                style="text-decoration: none;">
+                <iconify-icon icon="solar:arrow-left-linear" class="text-lg"></iconify-icon>
+                Retour
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 py-12 md:py-20 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-3xl mx-auto">
+
+            <!-- Titre -->
+            <div class="mb-10 text-center">
+                <div
+                    class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-sm font-semibold mb-4 border border-blue-100">
+                    <iconify-icon icon="solar:shield-check-linear"></iconify-icon>
+                    Transparence &amp; confidentialité
+                </div>
+                <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 mb-4">Politique de cookies</h1>
+                <p class="text-slate-500 text-lg">Informations sur les traceurs utilisés par DiagTertiaire et la gestion
+                    de vos préférences.</p>
+                <p class="text-slate-400 text-sm mt-2">Dernière mise à jour : mars 2026</p>
+            </div>
+
+            <!-- 1. Qu'est-ce qu'un cookie -->
+            <div class="legal-card">
+                <h2 class="legal-section-title">
+                    <iconify-icon icon="solar:info-square-linear" class="text-blue-600"></iconify-icon>
+                    Qu'est-ce qu'un cookie ou un traceur&nbsp;?
+                </h2>
+                <div class="legal-content">
+                    <p>Un <strong>cookie</strong> est un petit fichier texte déposé dans votre navigateur lorsque vous
+                        visitez un site web. D'autres mécanismes similaires — comme le stockage local (<em>localStorage</em>),
+                        le stockage de session (<em>sessionStorage</em>) ou les scripts de mesure d'audience — sont
+                        regroupés sous le terme générique de <strong>traceurs</strong>.</p>
+                    <p>Ces technologies peuvent avoir des finalités très différentes : fonctionnement du service,
+                        mémorisation de préférences, mesure de fréquentation, ou encore publicité ciblée.</p>
+                    <p>La réglementation française (loi Informatique et Libertés, transposant la directive ePrivacy) et
+                        les recommandations de la <strong>CNIL</strong> encadrent strictement l'utilisation de ces
+                        traceurs, notamment en exigeant votre consentement préalable pour ceux qui ne sont pas
+                        strictement nécessaires au fonctionnement du service.</p>
+                </div>
+            </div>
+
+            <!-- 2. Ce que DiagTertiaire utilise -->
+            <div class="legal-card">
+                <h2 class="legal-section-title">
+                    <iconify-icon icon="solar:file-check-linear" class="text-blue-600"></iconify-icon>
+                    Ce que DiagTertiaire utilise réellement
+                </h2>
+                <div class="legal-content">
+                    <p>DiagTertiaire est une application web buildless, sans tracking publicitaire, sans pixel
+                        marketing et sans outil de CRM tiers. L'audit technique du code source identifie les traceurs
+                        suivants :</p>
+                </div>
+
+                <!-- Tableau des traceurs -->
+                <div class="cookie-table-wrap">
+                    <table class="cookie-table" aria-label="Liste des traceurs utilisés par DiagTertiaire">
+                        <thead>
+                            <tr>
+                                <th>Nom / identifiant</th>
+                                <th>Fournisseur</th>
+                                <th>Finalité</th>
+                                <th>Durée / type</th>
+                                <th>Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Traceurs fonctionnels -->
+                            <tr>
+                                <td><code>proAuth</code><br><code>proCases</code><br><code>proCasesRaw</code><br><code>proDiagDraft</code></td>
+                                <td>DiagTertiaire<br><small class="text-slate-400">(stockage local)</small></td>
+                                <td>Session et données de l'Espace Pro : authentification, dossiers, brouillon de
+                                    diagnostic en cours. Strictement nécessaires au fonctionnement du service.</td>
+                                <td>localStorage<br>Persistant</td>
+                                <td><span class="badge badge-green">Nécessaire</span></td>
+                            </tr>
+                            <tr>
+                                <td><code>proAccent</code><br><code>proLogoImg</code><br><code>proLogoName</code></td>
+                                <td>DiagTertiaire<br><small class="text-slate-400">(stockage local)</small></td>
+                                <td>Préférences d'interface de l'Espace Pro : couleur d'accent, logo et nom
+                                    personnalisés. Ces données ne quittent pas votre appareil.</td>
+                                <td>localStorage<br>Persistant</td>
+                                <td><span class="badge badge-green">Nécessaire</span></td>
+                            </tr>
+                            <tr>
+                                <td><code>pro_pending_confirm_email</code></td>
+                                <td>DiagTertiaire<br><small class="text-slate-400">(stockage de session)</small></td>
+                                <td>Conservation temporaire de l'email pendant le flux de confirmation par lien magique.
+                                    Effacé à la fermeture de l'onglet.</td>
+                                <td>sessionStorage<br>Durée de session</td>
+                                <td><span class="badge badge-green">Nécessaire</span></td>
+                            </tr>
+                            <tr>
+                                <td><code>sb-*-auth-token</code></td>
+                                <td>Supabase Inc.<br><small class="text-slate-400">(stockage local)</small></td>
+                                <td>Jeton d'authentification de l'Espace Pro géré par le SDK Supabase. Strictement
+                                    nécessaire à la connexion sécurisée.</td>
+                                <td>localStorage<br>Durée de session / refresh token</td>
+                                <td><span class="badge badge-green">Nécessaire</span></td>
+                            </tr>
+                            <tr>
+                                <td><code>dt_cookie_consent</code></td>
+                                <td>DiagTertiaire<br><small class="text-slate-400">(stockage local)</small></td>
+                                <td>Mémorisation de votre choix de consentement concernant les cookies. Strictement
+                                    nécessaire au respect de vos préférences.</td>
+                                <td>localStorage<br>6 mois max</td>
+                                <td><span class="badge badge-green">Nécessaire</span></td>
+                            </tr>
+
+                            <!-- Traceur soumis à consentement -->
+                            <tr>
+                                <td><strong>Vercel Analytics</strong><br><code>/_vercel/insights/script.js</code></td>
+                                <td>Vercel Inc.<br>340 Pine Street Suite 701<br>San Francisco, CA 94104 — États-Unis</td>
+                                <td>Mesure d'audience : pages visitées, Core Web Vitals (performances), pays de
+                                    connexion (IP anonymisée). <strong>Aucun cookie HTTP n'est déposé dans votre
+                                    navigateur.</strong> Les données sont transmises aux serveurs de Vercel (US).
+                                    <br><a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer">Politique de confidentialité Vercel</a></td>
+                                <td>Script externe<br>Données côté serveur Vercel</td>
+                                <td><span class="badge badge-amber">Consentement requis</span></td>
+                            </tr>
+
+                            <!-- Ressources externes sans cookie -->
+                            <tr>
+                                <td>Google Fonts<br><small class="text-slate-400">(fonts.googleapis.com)</small></td>
+                                <td>Google LLC</td>
+                                <td>Chargement de la police Inter. Connexion réseau transmettant l'IP à Google lors du
+                                    chargement de la page. Aucun cookie HTTP déposé dans votre navigateur par ce
+                                    mécanisme.</td>
+                                <td>Ressource réseau<br>(non localStorage)</td>
+                                <td><span class="badge badge-slate">Info</span></td>
+                            </tr>
+                            <tr>
+                                <td>CDN techniques<br><small class="text-slate-400">(unpkg.com, cdn.tailwindcss.com, cdn.jsdelivr.net)</small></td>
+                                <td>Fournisseurs CDN tiers</td>
+                                <td>Chargement des bibliothèques techniques (React, Recharts, Tailwind CSS, Supabase JS).
+                                    Ces CDN peuvent enregistrer des logs d'accès mais ne déposent pas de cookies dans
+                                    votre navigateur.</td>
+                                <td>Ressource réseau<br>(non localStorage)</td>
+                                <td><span class="badge badge-slate">Info</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 3. Gestion de vos préférences -->
+            <div class="legal-card">
+                <h2 class="legal-section-title">
+                    <iconify-icon icon="solar:settings-linear" class="text-blue-600"></iconify-icon>
+                    Gérer vos préférences
+                </h2>
+                <div class="legal-content">
+                    <p>Lors de votre première visite, un bandeau vous propose d'<strong>accepter</strong> ou de
+                        <strong>refuser</strong> Vercel Analytics. Votre choix est mémorisé pendant <strong>6
+                        mois</strong> dans le stockage local de votre navigateur (<code>dt_cookie_consent</code>).</p>
+
+                    <p>Vous pouvez revenir sur votre choix à tout moment via le lien <strong>« Gestion des
+                        cookies »</strong> présent dans le pied de page du site, ou en utilisant les boutons
+                        ci-dessous.</p>
+
+                    <p>En cas de refus, Vercel Analytics n'est pas chargé et aucune donnée de navigation n'est
+                        transmise. En cas d'acceptation, le script est chargé et les données sont envoyées à Vercel
+                        conformément à leur politique de confidentialité.</p>
+                </div>
+                <div>
+                    <button type="button" class="pref-btn" onclick="window.dtCookies && window.dtCookies.open()">
+                        <iconify-icon icon="solar:settings-minimalistic-linear"></iconify-icon>
+                        Modifier mes préférences
+                    </button>
+                    <button type="button" class="pref-btn pref-btn-outline"
+                        onclick="window.dtCookies && window.dtCookies.reset()">
+                        Réinitialiser mon choix
+                    </button>
+                </div>
+            </div>
+
+            <!-- 4. Traceurs exemptés vs soumis à consentement -->
+            <div class="legal-card">
+                <h2 class="legal-section-title">
+                    <iconify-icon icon="solar:shield-minimalistic-linear" class="text-blue-600"></iconify-icon>
+                    Traceurs nécessaires vs traceurs soumis à consentement
+                </h2>
+                <div class="legal-content">
+                    <p>Conformément aux recommandations de la CNIL, certains traceurs sont <strong>strictement
+                        nécessaires</strong> au fonctionnement du service et ne requièrent pas votre consentement
+                        préalable :</p>
+                    <ul>
+                        <li>Le stockage local des données de votre Espace Pro (dossiers, session, préférences
+                            d'interface)</li>
+                        <li>Le jeton de session Supabase permettant votre authentification</li>
+                        <li>La mémorisation de votre choix de consentement</li>
+                    </ul>
+                    <p>En revanche, <strong>Vercel Analytics</strong> est un outil de mesure d'audience tiers dont les
+                        données sont transmises à Vercel Inc. (États-Unis). Il n'est pas référencé comme exempté de
+                        consentement par la CNIL. C'est pourquoi nous vous demandons votre accord avant de le
+                        charger.</p>
+                    <p>DiagTertiaire ne dépose <strong>aucun cookie HTTP</strong> dans votre navigateur. L'ensemble
+                        des données fonctionnelles est stocké exclusivement dans le stockage local (<em>localStorage</em>
+                        / <em>sessionStorage</em>) de votre appareil et ne quitte pas celui-ci, sauf pour les données
+                        expressément transmises à Supabase dans le cadre de l'Espace Pro.</p>
+                </div>
+            </div>
+
+            <!-- 5. Gestion via le navigateur -->
+            <div class="legal-card">
+                <h2 class="legal-section-title">
+                    <iconify-icon icon="solar:laptop-minimalistic-linear" class="text-blue-600"></iconify-icon>
+                    Gestion via votre navigateur
+                </h2>
+                <div class="legal-content">
+                    <p>Vous pouvez également contrôler ou supprimer les données stockées localement depuis les outils
+                        de développement de votre navigateur (<strong>Application → Stockage local / Stockage de
+                        session</strong>).</p>
+                    <p>Pour en savoir plus sur la gestion des cookies et traceurs dans votre navigateur :</p>
+                    <ul>
+                        <li><a href="https://support.google.com/chrome/answer/95647" target="_blank" rel="noopener noreferrer">Google Chrome</a></li>
+                        <li><a href="https://support.mozilla.org/fr/kb/protection-renforcee-contre-le-pistage-firefox" target="_blank" rel="noopener noreferrer">Mozilla Firefox</a></li>
+                        <li><a href="https://support.apple.com/fr-fr/guide/safari/sfri11471/mac" target="_blank" rel="noopener noreferrer">Apple Safari</a></li>
+                        <li><a href="https://support.microsoft.com/fr-fr/windows/supprimer-et-g%C3%A9rer-les-cookies-168dab11-0753-043d-7c16-ede5947fc64d" target="_blank" rel="noopener noreferrer">Microsoft Edge</a></li>
+                    </ul>
+                    <p>La désactivation du stockage local dans votre navigateur peut nuire au bon fonctionnement de
+                        l'Espace Pro DiagTertiaire, notamment pour la sauvegarde de vos dossiers et de votre
+                        session.</p>
+                </div>
+            </div>
+
+            <!-- 6. Contact et politique de confidentialité -->
+            <div class="legal-card">
+                <h2 class="legal-section-title">
+                    <iconify-icon icon="solar:letter-linear" class="text-blue-600"></iconify-icon>
+                    Contact et informations complémentaires
+                </h2>
+                <div class="legal-content">
+                    <p>Pour toute question relative à l'utilisation des cookies et traceurs sur DiagTertiaire, ou pour
+                        l'exercice de vos droits, vous pouvez nous contacter :</p>
+                    <p><strong>Email :</strong> <a href="mailto:contact@diag-tertiaire.fr">contact@diag-tertiaire.fr</a>
+                    </p>
+                    <p>Pour en savoir plus sur la façon dont nous traitons vos données personnelles, consultez notre
+                        <a href="./politique-confidentialite.html">Politique de confidentialité</a>.</p>
+                    <p>Pour plus d'informations générales sur vos droits concernant les cookies, vous pouvez consulter
+                        le site de la <a href="https://www.cnil.fr/fr/cookies-et-autres-traceurs" target="_blank" rel="noopener noreferrer">CNIL</a>.</p>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer simple cohérent -->
+    <footer class="bg-[#0F172A] py-8 border-t border-white/5 mt-auto">
+        <div
+            class="max-w-4xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-[#475569]">
+            <p>© 2026 DiagTertiaire • Tous droits réservés.</p>
+            <div class="flex flex-wrap items-center gap-3">
+                <a href="./mentions-legales.html"
+                    class="hover:text-slate-300 transition-colors" style="text-decoration: none;">Mentions légales</a>
+                <span>·</span>
+                <a href="./politique-confidentialite.html"
+                    class="hover:text-slate-300 transition-colors" style="text-decoration: none;">Confidentialité</a>
+                <span>·</span>
+                <button type="button" onclick="window.dtCookies && window.dtCookies.open()"
+                    class="hover:text-slate-300 transition-colors bg-transparent border-none p-0 cursor-pointer font-inherit text-xs text-[#475569]">Gestion
+                    des cookies</button>
+                <span>·</span>
+                <span class="bg-white/5 px-2.5 py-1.5 rounded-lg font-medium">SSL</span>
+                <span class="bg-white/5 px-2.5 py-1.5 rounded-lg font-medium">RGPD</span>
+                <span class="bg-white/5 px-2.5 py-1.5 rounded-lg font-medium">🇫🇷 FR</span>
+            </div>
+        </div>
+    </footer>
+
+</body>
+
+</html>

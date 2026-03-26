@@ -639,11 +639,9 @@
             }
         }
     </style>
-    <!-- Vercel Analytics -->
-    <script>
-        window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
-    </script>
-    <script defer src="/_vercel/insights/script.js"></script>
+    <!-- Vercel Analytics — chargé conditionnellement selon le consentement (cookie-consent.js) -->
+    <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+    <script src="./cookie-consent.js"></script>
 </head>
 
 <body class="antialiased text-[#374151] bg-[#F8F9FA]">
@@ -10274,7 +10272,8 @@
                                             <li><a href="./mentions-legales.html" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Mentions légales</a></li>
                                             <li><a href="./politique-confidentialite.html" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Politique de confidentialité</a></li>
                                             <li><a href="./conditions-generales-utilisation.html" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">CGU</a></li>
-                                            <li><button type="button" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Gestion des cookies</button></li>
+                                            <li><a href="./cookies.html" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Politique cookies</a></li>
+                                            <li><button type="button" onClick={() => window.dtCookies && window.dtCookies.open()} className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Gestion des cookies</button></li>
                                         </ul>
                                     </div>
 

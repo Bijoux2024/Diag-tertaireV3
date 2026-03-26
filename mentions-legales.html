@@ -99,11 +99,9 @@
             }
         }
     </style>
-    <!-- Vercel Analytics -->
-    <script>
-        window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
-    </script>
-    <script defer src="/_vercel/insights/script.js"></script>
+    <!-- Vercel Analytics — chargé conditionnellement selon le consentement (cookie-consent.js) -->
+    <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+    <script src="./cookie-consent.js"></script>
 </head>
 
 <body class="flex flex-col min-h-screen">
@@ -360,7 +358,14 @@
         <div
             class="max-w-4xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-[#475569]">
             <p>© 2026 DiagTertiaire • Tous droits réservés.</p>
-            <div class="flex items-center gap-3">
+            <div class="flex flex-wrap items-center gap-3">
+                <a href="./cookies.html" class="hover:text-slate-300 transition-colors"
+                    style="text-decoration: none;">Cookies</a>
+                <span>·</span>
+                <button type="button" onclick="window.dtCookies && window.dtCookies.open()"
+                    class="hover:text-slate-300 transition-colors bg-transparent border-none p-0 cursor-pointer font-inherit text-xs text-[#475569]">Gestion
+                    des cookies</button>
+                <span>·</span>
                 <span class="bg-white/5 px-2.5 py-1.5 rounded-lg font-medium">SSL</span>
                 <span class="bg-white/5 px-2.5 py-1.5 rounded-lg font-medium">RGPD</span>
                 <span class="bg-white/5 px-2.5 py-1.5 rounded-lg font-medium">🇫🇷 FR</span>

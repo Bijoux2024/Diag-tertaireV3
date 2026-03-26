@@ -851,11 +851,9 @@
             font-family: 'Inter', sans-serif;
         }
     </style>
-    <!-- Vercel Analytics -->
-    <script>
-        window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
-    </script>
-    <script defer src="/_vercel/insights/script.js"></script>
+    <!-- Vercel Analytics — chargé conditionnellement selon le consentement (cookie-consent.js) -->
+    <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+    <script src="./cookie-consent.js"></script>
 </head>
 
 <body>
@@ -10575,6 +10573,8 @@
                                 <button type="button" onClick={() => onOpenLegalModal?.('mentions')} className="hover:text-slate-700 transition-colors">Mentions légales</button>
                                 <button type="button" onClick={() => onOpenLegalModal?.('privacy')} className="hover:text-slate-700 transition-colors">Politique de confidentialité</button>
                                 <a href="./conditions-generales-utilisation.html" className="hover:text-slate-700 transition-colors">CGU</a>
+                                <a href="./cookies.html" className="hover:text-slate-700 transition-colors">Cookies</a>
+                                <button type="button" onClick={() => window.dtCookies && window.dtCookies.open()} className="hover:text-slate-700 transition-colors">Gestion des cookies</button>
                                 <button type="button" onClick={onClearPersonalData} className="hover:text-slate-700 transition-colors">Effacer mes données</button>
                             </div>
                         </div>
@@ -11528,6 +11528,8 @@
                                     <button type="button" onClick={() => setLegalModalKey('mentions')} className="hover:text-slate-600 transition-colors">Mentions légales</button>
                                     <button type="button" onClick={() => setLegalModalKey('privacy')} className="hover:text-slate-600 transition-colors">Politique de confidentialité</button>
                                     <a href="./conditions-generales-utilisation.html" className="hover:text-slate-600 transition-colors">CGU</a>
+                                    <a href="./cookies.html" className="hover:text-slate-600 transition-colors">Cookies</a>
+                                    <button type="button" onClick={() => window.dtCookies && window.dtCookies.open()} className="hover:text-slate-600 transition-colors">Gestion des cookies</button>
                                     <button type="button" onClick={handleClearPersonalData} className="hover:text-slate-600 transition-colors">Effacer mes données</button>
                                 </div>
                             </div>

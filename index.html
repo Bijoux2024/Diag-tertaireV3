@@ -6721,6 +6721,178 @@
             { prefixes: ['02', '08', '10', '51', '52', '54', '55', '57', '59', '60', '62', '67', '68', '77', '78', '80', '88', '91', '92', '93', '94', '95'], yield: 1110 }
         ];
 
+        /* ─────────────────────────────────────────────────────────────────────────
+           TABLE : RÉPARTITION GAZ PAR ACTIVITÉ
+           Comment le gaz se distribue entre chauffage et ECS.
+           Source : CEREN 2019 + ADEME répartition usages tertiaire
+           Note : le gaz ne sert physiquement QU'au chauffage et à l'ECS
+           ───────────────────────────────────────────────────────────────────────── */
+        const NEW_DIAGNOSTIC_GAS_SPLIT_BY_ACTIVITY = {
+            offices:         { heating_pct: 88, ecs_pct: 12 },
+            bureau:          { heating_pct: 88, ecs_pct: 12 },
+            retail:          { heating_pct: 92, ecs_pct: 8 },
+            commerce_non_alim:{ heating_pct: 92, ecs_pct: 8 },
+            hotel:           { heating_pct: 60, ecs_pct: 40 },
+            restaurant:      { heating_pct: 65, ecs_pct: 35 },
+            restauration:    { heating_pct: 65, ecs_pct: 35 },
+            education:       { heating_pct: 90, ecs_pct: 10 },
+            enseignement:    { heating_pct: 90, ecs_pct: 10 },
+            health_local:    { heating_pct: 78, ecs_pct: 22 },
+            sante:           { heating_pct: 78, ecs_pct: 22 },
+            light_warehouse: { heating_pct: 95, ecs_pct: 5 },
+            entrepot_non_chauffe: { heating_pct: 95, ecs_pct: 5 },
+            entrepot_chauffe: { heating_pct: 95, ecs_pct: 5 },
+            commerce_alim:   { heating_pct: 90, ecs_pct: 10 }
+        };
+
+        /* ─────────────────────────────────────────────────────────────────────────
+           TABLE : RÉPARTITION ÉLECTRICITÉ NON-THERMIQUE PAR ACTIVITÉ
+           % appliqués à l'élec HORS chauffage et ECS (déjà déduits)
+           Source : ADEME chiffres clés 2018, CEREN répartition usages élec tertiaire
+           Note : "other" inclut bureautique, froid commercial, cuisson élec, process
+           ───────────────────────────────────────────────────────────────────────── */
+        const NEW_DIAGNOSTIC_ELEC_SPLIT_BY_ACTIVITY = {
+            offices:         { lighting_pct: 30, cooling_pct: 18, ventilation_pct: 15, other_pct: 37 },
+            bureau:          { lighting_pct: 30, cooling_pct: 18, ventilation_pct: 15, other_pct: 37 },
+            retail:          { lighting_pct: 48, cooling_pct: 15, ventilation_pct: 10, other_pct: 27 },
+            commerce_non_alim:{ lighting_pct: 48, cooling_pct: 15, ventilation_pct: 10, other_pct: 27 },
+            hotel:           { lighting_pct: 28, cooling_pct: 12, ventilation_pct: 18, other_pct: 42 },
+            restaurant:      { lighting_pct: 20, cooling_pct: 8,  ventilation_pct: 22, other_pct: 50 },
+            restauration:    { lighting_pct: 20, cooling_pct: 8,  ventilation_pct: 22, other_pct: 50 },
+            education:       { lighting_pct: 42, cooling_pct: 8,  ventilation_pct: 15, other_pct: 35 },
+            enseignement:    { lighting_pct: 42, cooling_pct: 8,  ventilation_pct: 15, other_pct: 35 },
+            health_local:    { lighting_pct: 22, cooling_pct: 12, ventilation_pct: 28, other_pct: 38 },
+            sante:           { lighting_pct: 22, cooling_pct: 12, ventilation_pct: 28, other_pct: 38 },
+            light_warehouse: { lighting_pct: 55, cooling_pct: 0,  ventilation_pct: 8,  other_pct: 37 },
+            entrepot_non_chauffe: { lighting_pct: 55, cooling_pct: 0, ventilation_pct: 8, other_pct: 37 },
+            entrepot_chauffe: { lighting_pct: 45, cooling_pct: 0, ventilation_pct: 10, other_pct: 45 },
+            // commerce_alim : froid commercial dans "other" (usage spécifique, pas climato de confort)
+            commerce_alim:   { lighting_pct: 25, cooling_pct: 5,  ventilation_pct: 8,  other_pct: 62 }
+        };
+
+        /* ─────────────────────────────────────────────────────────────────────────
+           NOUVELLE FONCTION PRINCIPALE : SÉPARATION FLUX ÉLEC / GAZ
+           Remplace la logique totalKwh + breakdown%.
+           Principe : le gaz ne chauffe que (chauffage + ECS).
+                      l'élec alimente tout le reste.
+           ───────────────────────────────────────────────────────────────────────── */
+        const newDiagnosticSplitByEnergySource = (formData, elecKwh, gasKwh, activity) => {
+            const elec = Math.max(0, elecKwh || 0);
+            const gas  = Math.max(0, gasKwh  || 0);
+            const mainHeating = formData.mainHeating || 'gas';
+
+            // Déterminer la source du chauffage
+            const heatingIsGas  = ['gas', 'fuel', 'other'].includes(mainHeating);
+            const heatingIsElec = ['electric', 'pac'].includes(mainHeating);
+
+            // Déterminer la source de l'ECS
+            const ecsSameAsHeating = formData.ecsSameSystem !== false;
+            const ecsIsGas = ecsSameAsHeating
+                ? heatingIsGas
+                : ['gas_boiler', 'gas_instant'].includes(formData.ecsSystem);
+            const ecsIsElec = !ecsIsGas;
+
+            // ── FLUX GAZ ──────────────────────────────────────────────────────────
+            let gasHeatingKwh = 0;
+            let gasEcsKwh = 0;
+
+            if (heatingIsGas && gas > 0) {
+                const gasSplit = NEW_DIAGNOSTIC_GAS_SPLIT_BY_ACTIVITY[activity]
+                    || { heating_pct: 85, ecs_pct: 15 };
+
+                if (ecsIsGas) {
+                    gasHeatingKwh = Math.round(gas * gasSplit.heating_pct / 100);
+                    gasEcsKwh = gas - gasHeatingKwh;
+                } else {
+                    gasHeatingKwh = gas; // tout le gaz va au chauffage
+                    gasEcsKwh = 0;
+                }
+            }
+
+            // ── FLUX ÉLEC ─────────────────────────────────────────────────────────
+            let elecForHeating = 0;
+            let elecForEcs = 0;
+
+            if (heatingIsElec && elec > 0) {
+                // Estimer la part chauffage dans l'élec (issus des breakdowns globaux)
+                const breakdown = newDiagnosticGetUsageBreakdown(activity, formData);
+                const elecHeatingShare = (breakdown.heating_pct || 0) / 100;
+                elecForHeating = Math.round(elec * elecHeatingShare);
+            }
+
+            if (ecsIsElec && elec > 0) {
+                const breakdown = newDiagnosticGetUsageBreakdown(activity, formData);
+                const elecEcsShare = (breakdown.dhw_pct || 0) / 100;
+                elecForEcs = Math.round(elec * elecEcsShare);
+            }
+
+            const elecForOtherUses = Math.max(0, elec - elecForHeating - elecForEcs);
+
+            // Répartition de l'élec non-thermique entre les usages
+            const elecSplit = NEW_DIAGNOSTIC_ELEC_SPLIT_BY_ACTIVITY[activity]
+                || { lighting_pct: 35, cooling_pct: 15, ventilation_pct: 12, other_pct: 38 };
+
+            const elecLightingKwh    = Math.round(elecForOtherUses * elecSplit.lighting_pct    / 100);
+            const elecCoolingKwh     = Math.round(elecForOtherUses * elecSplit.cooling_pct     / 100);
+            const elecVentilationKwh = Math.round(elecForOtherUses * elecSplit.ventilation_pct / 100);
+            const elecOtherKwh       = Math.max(0, elecForOtherUses - elecLightingKwh - elecCoolingKwh - elecVentilationKwh);
+
+            const totalKwh = elec + gas;
+
+            const heatingKwh = gasHeatingKwh + elecForHeating;
+            const ecsKwh     = gasEcsKwh + elecForEcs;
+
+            return {
+                // Flux bruts
+                elecKwh: elec,
+                gasKwh:  gas,
+                totalKwh,
+
+                // Postes avec leur source et prix
+                posts: {
+                    heating:     { kwh: heatingKwh,       source: heatingIsGas ? 'gas' : 'elec', pricePerKwh: heatingIsGas ? 0.108 : 0.206 },
+                    ecs:         { kwh: ecsKwh,           source: ecsIsGas ? 'gas' : 'elec',     pricePerKwh: ecsIsGas ? 0.108 : 0.206 },
+                    lighting:    { kwh: elecLightingKwh,  source: 'elec', pricePerKwh: 0.206 },
+                    cooling:     { kwh: elecCoolingKwh,   source: 'elec', pricePerKwh: 0.206 },
+                    ventilation: { kwh: elecVentilationKwh, source: 'elec', pricePerKwh: 0.206 },
+                    other:       { kwh: elecOtherKwh,     source: 'elec', pricePerKwh: 0.206 }
+                },
+
+                // Pourcentages pour l'affichage du rapport (% du total toutes sources)
+                breakdown_pct: {
+                    heating_pct:        totalKwh > 0 ? Math.round(heatingKwh       / totalKwh * 100) : 0,
+                    dhw_pct:            totalKwh > 0 ? Math.round(ecsKwh           / totalKwh * 100) : 0,
+                    lighting_pct:       totalKwh > 0 ? Math.round(elecLightingKwh / totalKwh * 100) : 0,
+                    cooling_pct:        totalKwh > 0 ? Math.round(elecCoolingKwh  / totalKwh * 100) : 0,
+                    vent_aux_pct:       totalKwh > 0 ? Math.round(elecVentilationKwh / totalKwh * 100) : 0,
+                    other_specific_pct: totalKwh > 0 ? Math.round(elecOtherKwh    / totalKwh * 100) : 0
+                },
+
+                // Métadonnées
+                heatingSource: heatingIsGas ? 'gas' : 'elec',
+                ecsSource:     ecsIsGas ? 'gas' : 'elec'
+            };
+        };
+
+        /* ─────────────────────────────────────────────────────────────────────────
+           HELPER PV : CIBLE ÉLEC POST-TRAVAUX
+           Si PAC recommandée, la conso élec augmente → PV dimensionné sur la vraie
+           consommation future.
+           ───────────────────────────────────────────────────────────────────────── */
+        const newDiagnosticEstimatePvSizing = (splitResult, topActions) => {
+            let targetElecKwh = splitResult.elecKwh;
+
+            // Si PAC dans les actions : la conso élec augmente (COP 3.5)
+            const pacAction = (topActions || []).find(a => a.id === 'ACT13');
+            if (pacAction && splitResult.heatingSource === 'gas') {
+                const heatingGasKwh = splitResult.posts.heating.kwh;
+                const heatingElecWithPac = Math.round(heatingGasKwh / 3.5);
+                targetElecKwh = splitResult.elecKwh + heatingElecWithPac;
+            }
+
+            return Math.max(1, targetElecKwh);
+        };
+
         const newDiagnosticClamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
         const newDiagnosticExtractPostalPrefix = (postalCode) => String(postalCode || '').trim().slice(0, 2);
@@ -6805,8 +6977,15 @@
             const usableRoofSurface = Math.max(0, roofSurface * usableRoofRatio);
             const roofLimitedKwc = usableRoofSurface * 0.20;
             const localYieldKwhPerKwc = newDiagnosticEstimatePhotovoltaicYield(formData);
-            const estimatedSiteElectricityKwh = Math.max(1, newDiagnosticEstimateSiteElectricityKwh(formData, totalKwh, breakdown));
-            const loadLimitedKwc = localYieldKwhPerKwc > 0 ? (estimatedSiteElectricityKwh * 1.10) / localYieldKwhPerKwc : roofLimitedKwc;
+            // Cible élec post-travaux (si PAC recommandée, la conso élec augmente)
+            // Note : à ce stade l'appel vient de calculateActionGain qui passe splitResult via ePrices.targetElecKwh
+            const estimatedSiteElectricityKwh = Math.max(1,
+                ePrices && ePrices.targetElecKwh
+                    ? ePrices.targetElecKwh
+                    : newDiagnosticEstimateSiteElectricityKwh(formData, totalKwh, breakdown)
+            );
+            // ×0.90 pour maximiser l'autoconsommation (pas surdimensionnement pour la revente)
+            const loadLimitedKwc = localYieldKwhPerKwc > 0 ? (estimatedSiteElectricityKwh * 0.90) / localYieldKwhPerKwc : roofLimitedKwc;
             const installedKwc = Math.round(newDiagnosticClamp(Math.min(roofLimitedKwc, loadLimitedKwc, 100), 0.5, 100) * 10) / 10;
             const annualProductionKwh = Math.max(0, Math.round(installedKwc * localYieldKwhPerKwc));
             const autoconsumptionRate = newDiagnosticEstimatePhotovoltaicAutoconsumptionRate(formData);
@@ -6857,15 +7036,47 @@
             };
         };
 
-        const newDiagnosticCalculateActionGain = (action, totalKwh, breakdown, avgPrice, surface, formData, energyPrices) => {
-            let baseKwh = totalKwh;
+        const newDiagnosticCalculateActionGain = (action, splitResult, surface, formData, energyPrices) => {
             const ePrices = energyPrices || { elec: 0.206, gas: 0.108 };
+            const totalKwh = splitResult.totalKwh;
+            const posts = splitResult.posts;
 
-            // Si gain sur poste spécifique
-            if (action.gain_scope !== 'total' && action.gain_scope.endsWith('_post')) {
-                const postKey = action.gain_scope.replace('_post', '_pct');
-                const postPct = breakdown[postKey] || 0;
-                baseKwh = totalKwh * (postPct / 100);
+            // Déterminer le poste ciblé et son prix par source
+            let baseKwh = 0;
+            let actionPrice = ePrices.elec;
+
+            switch (action.gain_scope) {
+                case 'heating_post':
+                    baseKwh = posts.heating.kwh;
+                    actionPrice = posts.heating.pricePerKwh;
+                    break;
+                case 'dhw_post':
+                    baseKwh = posts.ecs.kwh;
+                    actionPrice = posts.ecs.pricePerKwh;
+                    break;
+                case 'lighting_post':
+                    baseKwh = posts.lighting.kwh;
+                    actionPrice = 0.206;
+                    break;
+                case 'cooling_post':
+                    baseKwh = posts.cooling.kwh;
+                    actionPrice = 0.206;
+                    break;
+                case 'vent_aux_post':
+                    baseKwh = posts.ventilation.kwh;
+                    actionPrice = 0.206;
+                    break;
+                case 'elec_post':
+                    baseKwh = splitResult.elecKwh;
+                    actionPrice = 0.206;
+                    break;
+                case 'total':
+                default:
+                    baseKwh = totalKwh;
+                    actionPrice = totalKwh > 0
+                        ? ((splitResult.elecKwh * 0.206) + (splitResult.gasKwh * 0.108)) / totalKwh
+                        : 0.206;
+                    break;
             }
 
             // === Gain conditionnel PAC (ACT13) ===
@@ -6873,21 +7084,13 @@
             if (action.id === 'ACT13' && formData) {
                 const mh = formData.mainHeating || 'gas';
                 const ba = formData.boilerAge || 'under5';
-                if (mh === 'other') gainPctMed = 0.60;       // fioul/autre
+                if (mh === 'other') gainPctMed = 0.60;
                 else if (mh === 'gas' && ['15to20', 'over20'].includes(ba)) gainPctMed = 0.55;
                 else if (mh === 'gas') gainPctMed = 0.45;
                 else if (mh === 'electric') gainPctMed = 0.35;
             }
 
-            // Calcul gain (médian ajusté)
             const gainKwh = Math.round(baseKwh * gainPctMed);
-
-            // Prix par type d'énergie
-            const energyType = NEW_DIAGNOSTIC_ACTION_ENERGY_MAP[action.category] || 'avg';
-            const actionPrice = energyType === 'elec' ? ePrices.elec
-                : energyType === 'heating_energy'
-                    ? (['gas', 'other'].includes(formData && formData.mainHeating) ? ePrices.gas : ePrices.elec)
-                    : avgPrice;
             const gainEuro = Math.round(gainKwh * actionPrice);
 
             // CAPEX (médian)
@@ -6895,38 +7098,31 @@
             const safeSurface = Math.max(1, Number(surface || 100));
 
             // PAC air/eau — CAPEX par tranches marginales (ACT13)
-            const newDiagnosticCalculatePacCapex = (surface) => {
-                const s = Math.max(1, surface);
+            const newDiagnosticCalculatePacCapex = (s) => {
+                const sz = Math.max(1, s);
                 let c = 0;
-                const t1 = Math.min(s, 200);
-                c += t1 * 95;
-                if (s > 200) { const t2 = Math.min(s - 200, 400); c += t2 * 65; }
-                if (s > 600) { c += (s - 600) * 45; }
+                c += Math.min(sz, 200) * 95;
+                if (sz > 200) c += Math.min(sz - 200, 400) * 65;
+                if (sz > 600) c += (sz - 600) * 45;
                 return Math.max(10000, Math.round(c));
             };
             if (action.id === 'ACT13') {
                 capex = newDiagnosticCalculatePacCapex(safeSurface);
             }
-
             // CAPEX proportionnel à la surface (ACT14 GTB, etc.)
             else if (action.capex_per_m2) {
                 capex = Math.max(action.capex_min || action.capex_low, Math.round(safeSurface * action.capex_per_m2));
             }
-            // Si capex par m²
             else if (action.capex_unit === '€/m²') {
                 capex = action.capex_med * safeSurface;
             }
-            // Si capex par radiateur
             else if (action.capex_unit === '€/radiateur') {
-                const estimatedRadiators = Math.max(6, Math.round(safeSurface / 15));
-                capex = action.capex_med * estimatedRadiators;
+                capex = action.capex_med * Math.max(6, Math.round(safeSurface / 15));
             }
 
-            // CAPEX façade (ACT16)
-            if (action.capex_unit === '€/m² de façade' || action.capex_unit === '€/m²' && action.category === 'envelope_walls') {
+            if (action.capex_unit === '€/m² de façade' || (action.capex_unit === '€/m²' && action.category === 'envelope_walls')) {
                 capex = action.capex_med * safeSurface * 0.6;
             }
-            // CAPEX vitrages (ACT17) — ratio surface vitrée modulé par activité
             if (action.capex_unit === '€/m² vitré') {
                 const NEW_DIAGNOSTIC_GLAZING_RATIO_BY_ACTIVITY = {
                     warehouse: 0.05, light_warehouse: 0.05,
@@ -6936,32 +7132,29 @@
                     mixed: 0.20
                 };
                 const activity = (formData && formData.activity) || 'offices';
-                const glazingRatio = NEW_DIAGNOSTIC_GLAZING_RATIO_BY_ACTIVITY[activity] || 0.20;
-                capex = action.capex_med * safeSurface * glazingRatio;
+                capex = action.capex_med * safeSurface * (NEW_DIAGNOSTIC_GLAZING_RATIO_BY_ACTIVITY[activity] || 0.20);
             }
-            // CAPEX €/ml
             if (action.capex_unit === '€/ml') {
                 capex = action.capex_med * 6;
             }
 
             // Gain PV : autoconsommation + valorisation du surplus (ACT22)
             if (action.id === 'ACT22' && action.gain_scope === 'elec_post') {
+                // Calculer la cible élec post-travaux (si PAC dans les actions précédentes)
+                const targetElecKwh = splitResult.elecKwh;
                 return newDiagnosticEstimatePhotovoltaicScenario({
                     action,
                     totalKwh,
-                    breakdown,
+                    breakdown: splitResult.breakdown_pct,
                     surface: safeSurface,
                     formData,
-                    ePrices
+                    ePrices: { ...ePrices, targetElecKwh }
                 });
             }
 
-            // ==== Calcul CAPEX net (après aides) ====
             const aidPct = action.aid_pct || 0;
             const capexNet = Math.round(capex * (1 - aidPct));
             const aidAmount = Math.round(capex * aidPct);
-
-            // ROI sur CAPEX net (après aides)
             const roi_years = gainEuro > 0 ? Math.round((capexNet / gainEuro) * 10) / 10 : null;
 
             return {
@@ -6976,7 +7169,7 @@
             };
         };
 
-        const newDiagnosticFilterAndScoreActions = (formData, totalKwh, breakdown, avgPrice) => {
+        const newDiagnosticFilterAndScoreActions = (formData, splitResult) => {
             const worksDone = formData.worksDone || [];
             const surface = Math.max(1, Number(formData.surface || 100));
             const buildingAge = formData.buildingAge || '2006_2012';
@@ -7017,7 +7210,7 @@
 
             const energyPrices = { elec: NEW_DIAGNOSTIC_ENERGY_PRICES.electricity.price_default_eur_kwh, gas: NEW_DIAGNOSTIC_ENERGY_PRICES.gas.price_default_eur_kwh };
             const scoredActions = eligibleActions.map(action => {
-                const calc = newDiagnosticCalculateActionGain(action, totalKwh, breakdown, avgPrice, surface, formData, energyPrices);
+                const calc = newDiagnosticCalculateActionGain(action, splitResult, surface, formData, energyPrices);
 
                 let feasibility = 1.0;
                 if (action.category?.includes('envelope')) feasibility = 0.55;
@@ -7059,7 +7252,7 @@
            HELPERS : GAINS COMPOSÉS + CAP
            ───────────────────────────────────────────────────────────────────────── */
 
-        const newDiagnosticGetComplementaryPhotovoltaicOpportunity = (formData, totalKwh, breakdown, avgPrice, topActions) => {
+        const newDiagnosticGetComplementaryPhotovoltaicOpportunity = (formData, splitResult, topActions) => {
             const photovoltaicAction = NEW_DIAGNOSTIC_ACTIONS_LIBRARY.actions.find(action => action.id === 'ACT22');
             const surface = Math.max(1, Number(formData.surface || 100));
 
@@ -7070,14 +7263,15 @@
 
             const energyPrices = {
                 elec: NEW_DIAGNOSTIC_ENERGY_PRICES.electricity.price_default_eur_kwh,
-                gas: NEW_DIAGNOSTIC_ENERGY_PRICES.gas.price_default_eur_kwh
+                gas: NEW_DIAGNOSTIC_ENERGY_PRICES.gas.price_default_eur_kwh,
+                targetElecKwh: newDiagnosticEstimatePvSizing(splitResult, topActions)
             };
-            const calc = newDiagnosticCalculateActionGain(photovoltaicAction, totalKwh, breakdown, avgPrice, surface, formData, energyPrices);
+            const calc = newDiagnosticCalculateActionGain(photovoltaicAction, splitResult, surface, formData, energyPrices);
 
             if (!calc || calc.gainKwh <= 0 || calc.gainEuro <= 0) return null;
-            // Afficher en complémentaire uniquement si ROI entre 10 et 15 ans
+            // Afficher en complémentaire uniquement si ROI strictement entre 10 et 15 ans
             if (calc.roi_years === null) return null;
-            if (calc.roi_years <= 10) return null;  // déjà dans topActions
+            if (calc.roi_years < 10) return null;  // trop bon ROI, devrait déjà être dans topActions
             if (calc.roi_years > 15) return null;   // trop long, pas pertinent
 
             return {
@@ -7087,23 +7281,20 @@
             };
         };
 
-        const newDiagnosticCalculateCompositeSavings = (actions) => {
+        const newDiagnosticCalculateCompositeSavings = (actions, totalKwh) => {
             // Gains composés : 1 - Π(1 - g_i)
+            // gainPct = gainKwh / totalKwh (toutes sources confondues pour l'intensité)
             let composite = 1;
 
             for (const action of actions) {
-                const gainPct = Math.max(0, Math.min(0.65, Number(
-                    action && typeof action.gain_pct_total === 'number'
-                        ? action.gain_pct_total
-                        : (action && action.gainKwh && action.totalKwh ? action.gainKwh / action.totalKwh : 0)
-                ) || 0));
+                const gainPct = totalKwh > 0
+                    ? Math.max(0, Math.min(0.65, (action.gainKwh || 0) / totalKwh))
+                    : 0;
                 composite *= (1 - gainPct);
             }
 
-            const totalGainPct = 1 - composite;
-
             // Cap max 65%
-            return Math.min(totalGainPct, NEW_DIAGNOSTIC_MAX_TOTAL_SAVINGS_PCT);
+            return Math.min(1 - composite, NEW_DIAGNOSTIC_MAX_TOTAL_SAVINGS_PCT);
         };
 
         /* ─────────────────────────────────────────────────────────────────────────
@@ -7265,7 +7456,18 @@
             }
 
             // ──────────────────────────────────────────────────────────────────────
-            // 3. INTENSITÉ kWh/m²/an
+            // 2bis. SÉPARATION PAR SOURCE D'ÉNERGIE (NOUVEAU PIPELINE)
+            // Chaque poste reçoit ses propres kWh avec le bon prix
+            // ──────────────────────────────────────────────────────────────────────
+            const splitResult = newDiagnosticSplitByEnergySource(
+                formData,
+                elecConversion.value,
+                gasConversion.value,
+                activity
+            );
+
+            // ──────────────────────────────────────────────────────────────────────
+            // 3. INTENSITÉ kWh/m²/an (inchangée — totalKwh = élec + gaz)
             // ──────────────────────────────────────────────────────────────────────
             const intensity_kwh_m2_an = surface > 0 ? Math.round(totalKwh / surface) : 0;
 
@@ -7280,81 +7482,49 @@
             if (intensity_kwh_m2_an > benchmark.high_kwh_m2_an * 1.2) benchmarkPosition = 'far_above_range';
 
             // ──────────────────────────────────────────────────────────────────────
-            // 5. RÉPARTITION POSTES
+            // 5. RÉPARTITION POSTES (issue du splitResult, en énergie finale)
             // ──────────────────────────────────────────────────────────────────────
-            let breakdown = newDiagnosticGetUsageBreakdown(activity, formData);
-
-            // Correctif âge bâtiment sur le poste chauffage
-            const AGE_HEATING_COEFF = {
-                pre1948: 1.50, '1948_1974': 1.35, '1975_1988': 1.15,
-                '1989_2005': 1.05, '2006_2012': 1.00, post2012: 0.75, unknown: 1.10
-            };
-            const ageCoeff = AGE_HEATING_COEFF[formData.buildingAge] || 1.0;
-            if (formData.buildingAge && formData.buildingAge !== 'unknown' && ageCoeff !== 1.0) {
-                const origHeating = breakdown.heating_pct;
-                const adjHeating = Math.min(75, Math.round(origHeating * ageCoeff));
-                const delta = adjHeating - origHeating;
-                breakdown = {
-                    ...breakdown,
-                    heating_pct: adjHeating,
-                    other_specific_pct: Math.max(0, breakdown.other_specific_pct - delta),
-                    _age_coeff_applied: ageCoeff
-                };
-                const total = Object.keys(breakdown)
-                    .filter(k => k.endsWith('_pct') && !k.startsWith('_'))
-                    .reduce((s, k) => s + breakdown[k], 0);
-                if (total > 100) {
-                    breakdown = { ...breakdown, other_specific_pct: Math.max(0, breakdown.other_specific_pct - (total - 100)) };
-                }
-            }
-
+            const breakdown = splitResult.breakdown_pct;
             const breakdownKwh = {
-                heating: Math.round(totalKwh * breakdown.heating_pct / 100),
-                cooling: Math.round(totalKwh * breakdown.cooling_pct / 100),
-                vent_aux: Math.round(totalKwh * breakdown.vent_aux_pct / 100),
-                lighting: Math.round(totalKwh * breakdown.lighting_pct / 100),
-                dhw: Math.round(totalKwh * breakdown.dhw_pct / 100),
-                cooking: Math.round(totalKwh * breakdown.cooking_pct / 100),
-                other_specific: Math.round(totalKwh * breakdown.other_specific_pct / 100)
+                heating:        splitResult.posts.heating.kwh,
+                cooling:        splitResult.posts.cooling.kwh,
+                vent_aux:       splitResult.posts.ventilation.kwh,
+                lighting:       splitResult.posts.lighting.kwh,
+                dhw:            splitResult.posts.ecs.kwh,
+                cooking:        0, // cuisson incluse dans "other" pour l'instant
+                other_specific: splitResult.posts.other.kwh
             };
 
             // ──────────────────────────────────────────────────────────────────────
-            // 6-8. ACTIONS + GAINS + TRI
+            // 6-8. ACTIONS + GAINS + TRI (avec splitResult)
             // ──────────────────────────────────────────────────────────────────────
 
-            // Calcul du prix moyen pondéré (avgPrice) — T03: use energy-specific fallback if only kWh
-            let calculatedAvgPrice = 0.20; // Prix moyen par défaut (mix)
+            // avgPrice pour l'indicateur total_cost_euro_an uniquement
             const elecPrice = NEW_DIAGNOSTIC_ENERGY_PRICES.electricity.price_default_eur_kwh;
-            const gasPrice = NEW_DIAGNOSTIC_ENERGY_PRICES.gas.price_default_eur_kwh;
-
-            if (totalKwh > 0) {
-                let totalEuro = 0;
-
-                // Coût élec : utiliser le montant € saisi, ou prix de référence × kWh
-                if (formData.elecUsed) {
-                    if (formData.elecEuro && parseFloat(formData.elecEuro) > 0) totalEuro += Number(formData.elecEuro);
-                    else totalEuro += elecConversion.value * elecPrice;
-                }
-
-                // Coût gaz : utiliser le montant € saisi, ou prix de référence × kWh
-                if (formData.gasUsed) {
-                    if (formData.gasEuro && parseFloat(formData.gasEuro) > 0) totalEuro += Number(formData.gasEuro);
-                    else totalEuro += gasConversion.value * gasPrice;
-                }
-
-                calculatedAvgPrice = totalKwh > 0 ? totalEuro / totalKwh : elecPrice;
+            const gasPrice  = NEW_DIAGNOSTIC_ENERGY_PRICES.gas.price_default_eur_kwh;
+            let totalEuro = 0;
+            if (formData.elecUsed) {
+                totalEuro += (formData.elecEuro && parseFloat(formData.elecEuro) > 0)
+                    ? Number(formData.elecEuro)
+                    : elecConversion.value * elecPrice;
             }
+            if (formData.gasUsed) {
+                totalEuro += (formData.gasEuro && parseFloat(formData.gasEuro) > 0)
+                    ? Number(formData.gasEuro)
+                    : gasConversion.value * gasPrice;
+            }
+            const avgPrice = totalKwh > 0
+                ? Math.min(Math.max(totalEuro / totalKwh, 0.05), 0.40)
+                : elecPrice;
 
-            // Sécurité : garder le prix entre 0.05 et 0.40 pour éviter les aberrations
-            const avgPrice = Math.min(Math.max(calculatedAvgPrice, 0.05), 0.40);
+            const topActions = newDiagnosticFilterAndScoreActions(formData, splitResult);
+            const complementaryPhotovoltaic = newDiagnosticGetComplementaryPhotovoltaicOpportunity(formData, splitResult, topActions);
 
-            const topActions = newDiagnosticFilterAndScoreActions(formData, totalKwh, breakdown, avgPrice);
-            const complementaryPhotovoltaic = newDiagnosticGetComplementaryPhotovoltaicOpportunity(formData, totalKwh, breakdown, avgPrice, topActions);
-
-            const compositeSavingsPct = newDiagnosticCalculateCompositeSavings(topActions);
+            const compositeSavingsPct = newDiagnosticCalculateCompositeSavings(topActions, totalKwh);
             const annualSavingsKwh = Math.round(totalKwh * compositeSavingsPct);
             const annualAdditionalRevenueEuro = topActions.reduce((sum, action) => sum + (action.extraAnnualRevenueEuro || 0), 0);
-            const annualSavingsEuro = Math.round((annualSavingsKwh * avgPrice) + annualAdditionalRevenueEuro);
+            // annualSavingsEuro = somme des gainEuro individuels (chacun valorisé au bon prix)
+            const annualSavingsEuro = topActions.reduce((sum, a) => sum + (a.gainEuro || 0), 0) + annualAdditionalRevenueEuro;
 
             // ──────────────────────────────────────────────────────────────────────
             // 9. PROJECTIONS
@@ -7378,8 +7548,24 @@
             // ──────────────────────────────────────────────────────────────────────
             return {
                 report_id: reportId,
-                version_tag: 'v1.0-2026',
+                version_tag: 'v2.0-2026-energy-split',
                 generated_at: generatedAt,
+
+                // Source d'énergie (diagnostic)
+                energy_split: {
+                    elec_kwh:       { value: splitResult.elecKwh,  unit: 'kWh/an' },
+                    gas_kwh:        { value: splitResult.gasKwh,   unit: 'kWh/an' },
+                    heating_source: splitResult.heatingSource,
+                    ecs_source:     splitResult.ecsSource,
+                    posts: {
+                        heating:     { kwh: splitResult.posts.heating.kwh,     price: splitResult.posts.heating.pricePerKwh },
+                        ecs:         { kwh: splitResult.posts.ecs.kwh,          price: splitResult.posts.ecs.pricePerKwh },
+                        lighting:    { kwh: splitResult.posts.lighting.kwh,    price: 0.206 },
+                        cooling:     { kwh: splitResult.posts.cooling.kwh,     price: 0.206 },
+                        ventilation: { kwh: splitResult.posts.ventilation.kwh, price: 0.206 },
+                        other:       { kwh: splitResult.posts.other.kwh,       price: 0.206 }
+                    }
+                },
 
                 // Inputs summary
                 inputs_summary: {

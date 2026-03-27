@@ -6771,64 +6771,121 @@
         };
 
         /* ─────────────────────────────────────────────────────────────────────────
-           NOUVELLE FONCTION PRINCIPALE : SÉPARATION FLUX ÉLEC / GAZ
-           Remplace la logique totalKwh + breakdown%.
-           Principe : le gaz ne chauffe que (chauffage + ECS).
-                      l'élec alimente tout le reste.
+           INVARIANT : tolérance de conservation kWh
+           ───────────────────────────────────────────────────────────────────────── */
+        const NEW_DIAGNOSTIC_KWH_CONSERVATION_TOLERANCE = 1; // kWh
+
+        /* ─────────────────────────────────────────────────────────────────────────
+           FONCTION PRINCIPALE : SÉPARATION FLUX ÉLEC / GAZ (v2.1 — 4 cas exhaustifs)
+           Règle : tout kWh entré doit se retrouver dans un poste (conservation stricte)
            ───────────────────────────────────────────────────────────────────────── */
         const newDiagnosticSplitByEnergySource = (formData, elecKwh, gasKwh, activity) => {
             const elec = Math.max(0, elecKwh || 0);
             const gas  = Math.max(0, gasKwh  || 0);
             const mainHeating = formData.mainHeating || 'gas';
+            const ecsSystem = formData.ecsSystem;
 
-            // Déterminer la source du chauffage
+            // Noms inchangés
             const heatingIsGas  = ['gas', 'fuel', 'other'].includes(mainHeating);
             const heatingIsElec = ['electric', 'pac'].includes(mainHeating);
 
-            // Déterminer la source de l'ECS
+            // Warnings produits par ce split (fusionnés dans buildReport)
+            const warnings = [];
+
+            // ─ Cas “réseau chaleur” : non modélisé, warning + fallback
+            if (mainHeating === 'network') {
+                warnings.push({
+                    code: 'HEATING_NETWORK_NOT_MODELED',
+                    severity: 'warning',
+                    message: 'Chauffage réseau non modélisé (moteur limité à élec/gaz). Répartition conservatrice appliquée.',
+                    energy: 'heat_network'
+                });
+            }
+
+            // Déterminer ecsIsGas — gère explicitement les entrées non supportées
+            let ecsIsGas = false;
             const ecsSameAsHeating = formData.ecsSameSystem !== false;
-            const ecsIsGas = ecsSameAsHeating
-                ? heatingIsGas
-                : ['gas_boiler', 'gas_instant'].includes(formData.ecsSystem);
+
+            if (ecsSameAsHeating) {
+                if (mainHeating === 'network') {
+                    ecsIsGas = false; // fallback élec
+                    warnings.push({
+                        code: 'ECS_SAME_AS_HEATING_NETWORK_FALLBACK_ELEC',
+                        severity: 'warning',
+                        message: 'ECS "même système" avec chauffage réseau non supporté. Fallback élec.',
+                        energy: 'dhw_network'
+                    });
+                } else {
+                    ecsIsGas = heatingIsGas;
+                }
+            } else {
+                if (ecsSystem === 'network_dedicated') {
+                    ecsIsGas = false; // fallback élec
+                    warnings.push({
+                        code: 'ECS_NETWORK_DEDICATED_NOT_SUPPORTED_FALLBACK_ELEC',
+                        severity: 'warning',
+                        message: 'ECS réseau dédié non supporté : fallback électricité (répartition statistique).',
+                        energy: 'dhw_network'
+                    });
+                } else {
+                    ecsIsGas = ['gas_boiler', 'gas_instant'].includes(ecsSystem);
+                }
+            }
             const ecsIsElec = !ecsIsGas;
 
-            // ── FLUX GAZ ──────────────────────────────────────────────────────────
+            // ── FLUX GAZ — 4 CAS EXHAUSTIFS (BUGFIX PRINCIPAL) ───────────────────────────
             let gasHeatingKwh = 0;
             let gasEcsKwh = 0;
 
-            if (heatingIsGas && gas > 0) {
-                const gasSplit = NEW_DIAGNOSTIC_GAS_SPLIT_BY_ACTIVITY[activity]
-                    || { heating_pct: 85, ecs_pct: 15 };
+            if (gas > 0) {
+                const gasSplit = NEW_DIAGNOSTIC_GAS_SPLIT_BY_ACTIVITY[activity] || { heating_pct: 85, ecs_pct: 15 };
+                const heatingPct = Math.max(0, Math.min(100, typeof gasSplit.heating_pct === 'number' ? gasSplit.heating_pct : 85));
 
-                if (ecsIsGas) {
-                    gasHeatingKwh = Math.round(gas * gasSplit.heating_pct / 100);
-                    gasEcsKwh = gas - gasHeatingKwh;
-                } else {
-                    gasHeatingKwh = gas; // tout le gaz va au chauffage
+                if (heatingIsGas && ecsIsGas) {
+                    // Cas 1 : chauffage gaz + ECS gaz → split par table activité
+                    gasHeatingKwh = Math.round(gas * heatingPct / 100);
+                    gasEcsKwh = gas - gasHeatingKwh; // conservation garantie
+
+                } else if (heatingIsGas && !ecsIsGas) {
+                    // Cas 2 : chauffage gaz + ECS non gaz → tout au chauffage
+                    gasHeatingKwh = gas;
                     gasEcsKwh = 0;
+
+                } else if (!heatingIsGas && ecsIsGas) {
+                    // Cas 3 : chauffage non gaz + ECS gaz → tout à l'ECS (BUGFIX)
+                    gasHeatingKwh = 0;
+                    gasEcsKwh = gas;
+
+                } else {
+                    // Cas 4 : chauffage non gaz + ECS non gaz avec gaz saisi → incohérent
+                    // Fallback conservatif : tout au chauffage + warning
+                    gasHeatingKwh = gas;
+                    gasEcsKwh = 0;
+                    warnings.push({
+                        code: 'GAS_PROVIDED_BUT_NO_GAS_END_USE',
+                        severity: 'warning',
+                        message: `Gaz saisi (${gas} kWh) mais ni chauffage ni ECS ne sont déclarés au gaz. Alloué au chauffage par défaut. Vérifier mainHeating/ecsSystem.`,
+                        energy: 'gas'
+                    });
                 }
             }
 
-            // ── FLUX ÉLEC ─────────────────────────────────────────────────────────
+            // ── FLUX ÉLEC ──────────────────────────────────────────────────────────
             let elecForHeating = 0;
             let elecForEcs = 0;
 
             if (heatingIsElec && elec > 0) {
-                // Estimer la part chauffage dans l'élec (issus des breakdowns globaux)
                 const breakdown = newDiagnosticGetUsageBreakdown(activity, formData);
-                const elecHeatingShare = (breakdown.heating_pct || 0) / 100;
-                elecForHeating = Math.round(elec * elecHeatingShare);
+                elecForHeating = Math.round(elec * (breakdown.heating_pct || 0) / 100);
             }
 
             if (ecsIsElec && elec > 0) {
                 const breakdown = newDiagnosticGetUsageBreakdown(activity, formData);
-                const elecEcsShare = (breakdown.dhw_pct || 0) / 100;
-                elecForEcs = Math.round(elec * elecEcsShare);
+                elecForEcs = Math.round(elec * (breakdown.dhw_pct || 0) / 100);
             }
 
             const elecForOtherUses = Math.max(0, elec - elecForHeating - elecForEcs);
 
-            // Répartition de l'élec non-thermique entre les usages
             const elecSplit = NEW_DIAGNOSTIC_ELEC_SPLIT_BY_ACTIVITY[activity]
                 || { lighting_pct: 35, cooling_pct: 15, ventilation_pct: 12, other_pct: 38 };
 
@@ -6837,41 +6894,162 @@
             const elecVentilationKwh = Math.round(elecForOtherUses * elecSplit.ventilation_pct / 100);
             const elecOtherKwh       = Math.max(0, elecForOtherUses - elecLightingKwh - elecCoolingKwh - elecVentilationKwh);
 
+            // ── CONSTRUCTION DES POSTES ────────────────────────────────────────────────
             const totalKwh = elec + gas;
 
-            const heatingKwh = gasHeatingKwh + elecForHeating;
-            const ecsKwh     = gasEcsKwh + elecForEcs;
+            const posts = {
+                heating:     { kwh: gasHeatingKwh + elecForHeating, source: heatingIsGas ? 'gas' : 'elec', pricePerKwh: heatingIsGas ? 0.108 : 0.206 },
+                ecs:         { kwh: gasEcsKwh + elecForEcs,         source: ecsIsGas ? 'gas' : 'elec',     pricePerKwh: ecsIsGas ? 0.108 : 0.206 },
+                lighting:    { kwh: elecLightingKwh,               source: 'elec', pricePerKwh: 0.206 },
+                cooling:     { kwh: elecCoolingKwh,                source: 'elec', pricePerKwh: 0.206 },
+                ventilation: { kwh: elecVentilationKwh,            source: 'elec', pricePerKwh: 0.206 },
+                other:       { kwh: elecOtherKwh,                  source: 'elec', pricePerKwh: 0.206 }
+            };
+
+            // ── INVARIANT CONSERVATION ───────────────────────────────────────────────
+            const tolerance = NEW_DIAGNOSTIC_KWH_CONSERVATION_TOLERANCE;
+            const getSum = () => Object.values(posts).reduce((s, p) => s + (p.kwh || 0), 0);
+            let delta = totalKwh - getSum();
+
+            if (Math.abs(delta) > tolerance) {
+                warnings.push({
+                    code: 'KWH_CONSERVATION_VIOLATION',
+                    severity: 'warning',
+                    message: `Conservation kWh : total=${totalKwh}, somme postes=${getSum()}, delta=${delta}. Correction automatique.`,
+                    energy: 'all'
+                });
+
+                // Priorité : ECS si ecsIsGas, sinon chauffage si heatingIsGas, sinon other (dont arrondi élec)
+                const correctionOrder = ecsIsGas
+                    ? ['ecs', 'other', 'heating', 'lighting', 'cooling', 'ventilation']
+                    : heatingIsGas
+                        ? ['heating', 'other', 'ecs', 'lighting', 'cooling', 'ventilation']
+                        : ['other', 'heating', 'ecs', 'lighting', 'cooling', 'ventilation'];
+
+                for (const key of correctionOrder) {
+                    if (Math.abs(delta) <= tolerance) break;
+                    const next = Math.max(0, posts[key].kwh + delta);
+                    delta -= (next - posts[key].kwh);
+                    posts[key].kwh = next;
+                }
+
+                if (Math.abs(delta) > tolerance) {
+                    warnings.push({
+                        code: 'KWH_CONSERVATION_CORRECTION_PARTIAL',
+                        severity: 'warning',
+                        message: `Correction partielle : delta restant=${delta} kWh.`,
+                        energy: 'all'
+                    });
+                }
+            }
+
+            // ── WARNINGS DÉTAILLÉS : allocation incomplète ───────────────────────────
+            const gasAllocated = gasHeatingKwh + gasEcsKwh;
+            if (gas > 0 && Math.abs(gas - gasAllocated) > tolerance) {
+                warnings.push({
+                    code: 'GAS_NOT_FULLY_ALLOCATED',
+                    severity: 'warning',
+                    message: `Gaz partiellement affecté : saisi=${gas}, alloué=${gasAllocated}, delta=${gas - gasAllocated} kWh.`,
+                    energy: 'gas'
+                });
+            }
+
+            const breakdown_pct = {
+                heating_pct:        totalKwh > 0 ? Math.round(posts.heating.kwh     / totalKwh * 100) : 0,
+                dhw_pct:            totalKwh > 0 ? Math.round(posts.ecs.kwh         / totalKwh * 100) : 0,
+                lighting_pct:       totalKwh > 0 ? Math.round(posts.lighting.kwh    / totalKwh * 100) : 0,
+                cooling_pct:        totalKwh > 0 ? Math.round(posts.cooling.kwh     / totalKwh * 100) : 0,
+                vent_aux_pct:       totalKwh > 0 ? Math.round(posts.ventilation.kwh / totalKwh * 100) : 0,
+                other_specific_pct: totalKwh > 0 ? Math.round(posts.other.kwh       / totalKwh * 100) : 0
+            };
 
             return {
-                // Flux bruts
                 elecKwh: elec,
                 gasKwh:  gas,
                 totalKwh,
-
-                // Postes avec leur source et prix
-                posts: {
-                    heating:     { kwh: heatingKwh,       source: heatingIsGas ? 'gas' : 'elec', pricePerKwh: heatingIsGas ? 0.108 : 0.206 },
-                    ecs:         { kwh: ecsKwh,           source: ecsIsGas ? 'gas' : 'elec',     pricePerKwh: ecsIsGas ? 0.108 : 0.206 },
-                    lighting:    { kwh: elecLightingKwh,  source: 'elec', pricePerKwh: 0.206 },
-                    cooling:     { kwh: elecCoolingKwh,   source: 'elec', pricePerKwh: 0.206 },
-                    ventilation: { kwh: elecVentilationKwh, source: 'elec', pricePerKwh: 0.206 },
-                    other:       { kwh: elecOtherKwh,     source: 'elec', pricePerKwh: 0.206 }
-                },
-
-                // Pourcentages pour l'affichage du rapport (% du total toutes sources)
-                breakdown_pct: {
-                    heating_pct:        totalKwh > 0 ? Math.round(heatingKwh       / totalKwh * 100) : 0,
-                    dhw_pct:            totalKwh > 0 ? Math.round(ecsKwh           / totalKwh * 100) : 0,
-                    lighting_pct:       totalKwh > 0 ? Math.round(elecLightingKwh / totalKwh * 100) : 0,
-                    cooling_pct:        totalKwh > 0 ? Math.round(elecCoolingKwh  / totalKwh * 100) : 0,
-                    vent_aux_pct:       totalKwh > 0 ? Math.round(elecVentilationKwh / totalKwh * 100) : 0,
-                    other_specific_pct: totalKwh > 0 ? Math.round(elecOtherKwh    / totalKwh * 100) : 0
-                },
-
-                // Métadonnées
+                posts,
+                breakdown_pct,
                 heatingSource: heatingIsGas ? 'gas' : 'elec',
-                ecsSource:     ecsIsGas ? 'gas' : 'elec'
+                ecsSource:     ecsIsGas ? 'gas' : 'elec',
+                warnings // NOUVEAU — à fusionner dans buildReport
             };
+        };
+
+        /* ─────────────────────────────────────────────────────────────────────────
+           TESTS UNITAIRES — Appeler dans la console : newDiagnosticRunSplitUnitTests()
+           Ne s’exécutent pas automatiquement.
+           ───────────────────────────────────────────────────────────────────────── */
+        const newDiagnosticAssertEqual = (label, actual, expected) => {
+            if (actual !== expected) throw new Error(`[TEST FAIL] ${label} — expected=${expected}, actual=${actual}`);
+        };
+        const newDiagnosticAssertIncludes = (label, arr, needle) => {
+            if (!Array.isArray(arr) || !arr.some(x => x && x.code === needle))
+                throw new Error(`[TEST FAIL] ${label} — expected warnings to include code=${needle}`);
+        };
+
+        const newDiagnosticRunSplitUnitTests = () => {
+            // Usage : évaluer les breakdowns hotel depuis la table réelle (pour élec)
+            const hotelBreakdown = newDiagnosticGetUsageBreakdown('hotel', {});
+            const heatPct = hotelBreakdown.heating_pct || 0;
+            const dhwPct  = hotelBreakdown.dhw_pct || 0;
+
+            const TESTS = [
+                {
+                    name: 'T1 — Hôtel : chauffage élec + ECS gaz (BUGFIX)',
+                    fd: { mainHeating: 'electric', ecsSameSystem: false, ecsSystem: 'gas_boiler' },
+                    elec: 20000, gas: 50000, activity: 'hotel',
+                    check: (r) => {
+                        // Tout le gaz doit aller à l’ECS
+                        newDiagnosticAssertEqual('T1 ecs.kwh', r.posts.ecs.kwh, 50000 + Math.round(20000 * dhwPct / 100) - Math.round(20000 * dhwPct / 100)); // flexible
+                        if (r.posts.ecs.kwh < 49999) throw new Error(`T1 FAIL : ecs.kwh=${r.posts.ecs.kwh} (attendu ~50000, tout le gaz)`);
+                        if (r.posts.heating.kwh < 1) throw new Error(`T1 FAIL : heating.kwh=${r.posts.heating.kwh} (attendu > 0 car élec)`);
+                        const sum = Object.values(r.posts).reduce((s,p) => s + p.kwh, 0);
+                        newDiagnosticAssertEqual('T1 conservation', sum, r.totalKwh);
+                    }
+                },
+                {
+                    name: 'T2 — Hôtel : chauffage gaz + ECS gaz (split table)',
+                    fd: { mainHeating: 'gas', ecsSameSystem: true },
+                    elec: 20000, gas: 50000, activity: 'hotel',
+                    check: (r) => {
+                        // Split hotel : 60% chauffage, 40% ECS
+                        const expectedHeat = Math.round(50000 * 60 / 100);
+                        const expectedEcs  = 50000 - expectedHeat;
+                        newDiagnosticAssertEqual('T2 heating.kwh', r.posts.heating.kwh, expectedHeat);
+                        newDiagnosticAssertEqual('T2 ecs.kwh gas part', gasEcsKwh => gasEcsKwh, expectedEcs); // approx
+                        const sum = Object.values(r.posts).reduce((s,p) => s + p.kwh, 0);
+                        newDiagnosticAssertEqual('T2 conservation', sum, r.totalKwh);
+                    }
+                },
+                {
+                    name: 'T3 — Hôtel : ECS réseau dédié (warning attendu)',
+                    fd: { mainHeating: 'gas', ecsSameSystem: false, ecsSystem: 'network_dedicated' },
+                    elec: 20000, gas: 50000, activity: 'hotel',
+                    check: (r) => {
+                        // Tout le gaz doit aller au chauffage (fallback), warning obligatoire
+                        newDiagnosticAssertEqual('T3 heating.kwh', r.posts.heating.kwh, 50000);
+                        newDiagnosticAssertIncludes('T3 warnings', r.warnings, 'ECS_NETWORK_DEDICATED_NOT_SUPPORTED_FALLBACK_ELEC');
+                        const sum = Object.values(r.posts).reduce((s,p) => s + p.kwh, 0);
+                        newDiagnosticAssertEqual('T3 conservation', sum, r.totalKwh);
+                    }
+                }
+            ];
+
+            const results = [];
+            for (const t of TESTS) {
+                try {
+                    const r = newDiagnosticSplitByEnergySource(t.fd, t.elec, t.gas, t.activity);
+                    t.check(r);
+                    results.push({ name: t.name, status: 'PASS', heating: r.posts.heating.kwh, ecs: r.posts.ecs.kwh, total: r.totalKwh, warnings: (r.warnings||[]).map(w=>w.code).join(', ') });
+                } catch(e) {
+                    results.push({ name: t.name, status: 'FAIL', error: e.message });
+                    console.error(e.message);
+                }
+            }
+            console.table(results);
+            const allPass = results.every(r => r.status === 'PASS');
+            console.info(allPass ? '[OK] newDiagnosticRunSplitUnitTests — tous les tests réussis' : '[FAIL] Des tests ont échoué');
+            return results;
         };
 
         /* ─────────────────────────────────────────────────────────────────────────
@@ -7539,7 +7717,10 @@
             // ──────────────────────────────────────────────────────────────────────
             // WARNINGS & CONFIANCE
             // ──────────────────────────────────────────────────────────────────────
-            const warnings = newDiagnosticGenerateWarnings(formData, { elec: elecConversion, gas: gasConversion });
+            const warnings = [
+                ...newDiagnosticGenerateWarnings(formData, { elec: elecConversion, gas: gasConversion }),
+                ...(splitResult.warnings || [])
+            ];
             const confidence = newDiagnosticCalculateConfidenceScore(formData, { elec: elecConversion, gas: gasConversion });
             const leadScore = newDiagnosticCalculateLeadScore(formData, compositeSavingsPct);
 

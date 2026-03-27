@@ -6348,10 +6348,9 @@
                     trigger_rules: ['mainHeating === gas', 'boilerAge >= 15to20'],
                     gain_scope: 'heating_post',
                     gain_pct_low: 0.35, gain_pct_med: 0.50, gain_pct_high: 0.65,
-                    capex_low: 15000, capex_med: 25000, capex_high: 40000,
+                    capex_low: 10000, capex_med: 19000, capex_high: 40000,
                     capex_unit: '€',
-                    capex_per_m2: 35,
-                    capex_min: 15000,
+                    capex_method: 'pac_tranches',
                     roi_method: 'simple_payback',
                     aid_tags: ['CEE', 'MaPrimeRenov'],
                     source_level_gain: 'source_strong', source_ref_gain: 'ADEME - PAC air/eau vs chaudière gaz',
@@ -6502,7 +6501,7 @@
                     category: 'production',
                     tier: 'heavy',
                     aid_pct: 0.10,
-                    trigger_rules: ['surface > 300', 'roofAccessible !== no'],
+                    trigger_rules: ['surface > 100', 'roofAccessible !== no'],
                     gain_scope: 'elec_post',
                     gain_pct_low: 0.10, gain_pct_med: 0.20, gain_pct_high: 0.30,
                     capex_low: 8000, capex_med: 15000, capex_high: 30000,
@@ -6817,10 +6816,23 @@
             const selfConsumptionSavingsEuro = autoconsumedKwh * ePrices.elec;
             const surplusRevenueEuro = surplusSoldKwh * surplusTariff;
             const totalGainEuro = Math.round(selfConsumptionSavingsEuro + surplusRevenueEuro);
-            const capex = Math.round(installedKwc * (action.capex_per_kwc || 1200));
-            const aidPct = action.aid_pct || 0;
-            const capexNet = Math.round(capex * (1 - aidPct));
-            const aidAmount = Math.round(capex * aidPct);
+            const newDiagnosticGetPvCapexPerKwc = (kwc) => {
+                if (kwc <= 9) return 1400;
+                if (kwc <= 36) return 1200;
+                return 1050; // 36-100 kWc
+            };
+            const capexPerKwc = newDiagnosticGetPvCapexPerKwc(installedKwc);
+            const capex = Math.round(installedKwc * capexPerKwc);
+
+            const newDiagnosticGetPvAutoconoPrime = (kwc) => {
+                if (kwc <= 9) return 260;   // €/kWc
+                if (kwc <= 36) return 190;
+                return 100; // 36-100 kWc
+            };
+            const primePerKwc = newDiagnosticGetPvAutoconoPrime(installedKwc);
+            const aidAmount = Math.round(installedKwc * primePerKwc);
+            const capexNet = Math.max(0, capex - aidAmount);
+            const aidPct = capex > 0 ? aidAmount / capex : 0;
             const roiYears = totalGainEuro > 0 ? Math.round((capexNet / totalGainEuro) * 10) / 10 : null;
             const hypothesisLabel = `Hypothèse de calcul : productible local ~${newDiagnosticFormatInteger(localYieldKwhPerKwc)} kWh/kWc/an, autoconsommation ${newDiagnosticFormatInteger(autoconsumptionRate * 100)} %, surplus valorisé à ${newDiagnosticFormatDecimal(surplusTariff, 3)} €/kWh.`;
 
@@ -6882,8 +6894,22 @@
             let capex = action.capex_med;
             const safeSurface = Math.max(1, Number(surface || 100));
 
-            // CAPEX proportionnel à la surface (ACT13 PAC, ACT14 GTB)
-            if (action.capex_per_m2) {
+            // PAC air/eau — CAPEX par tranches marginales (ACT13)
+            const newDiagnosticCalculatePacCapex = (surface) => {
+                const s = Math.max(1, surface);
+                let c = 0;
+                const t1 = Math.min(s, 200);
+                c += t1 * 95;
+                if (s > 200) { const t2 = Math.min(s - 200, 400); c += t2 * 65; }
+                if (s > 600) { c += (s - 600) * 45; }
+                return Math.max(10000, Math.round(c));
+            };
+            if (action.id === 'ACT13') {
+                capex = newDiagnosticCalculatePacCapex(safeSurface);
+            }
+
+            // CAPEX proportionnel à la surface (ACT14 GTB, etc.)
+            else if (action.capex_per_m2) {
                 capex = Math.max(action.capex_min || action.capex_low, Math.round(safeSurface * action.capex_per_m2));
             }
             // Si capex par m²
@@ -6900,9 +6926,18 @@
             if (action.capex_unit === '€/m² de façade' || action.capex_unit === '€/m²' && action.category === 'envelope_walls') {
                 capex = action.capex_med * safeSurface * 0.6;
             }
-            // CAPEX vitrages (ACT17) — estimé 20% de la surface
+            // CAPEX vitrages (ACT17) — ratio surface vitrée modulé par activité
             if (action.capex_unit === '€/m² vitré') {
-                capex = action.capex_med * safeSurface * 0.2;
+                const NEW_DIAGNOSTIC_GLAZING_RATIO_BY_ACTIVITY = {
+                    warehouse: 0.05, light_warehouse: 0.05,
+                    offices: 0.20, coworking: 0.20, education: 0.20,
+                    health: 0.15, hotel: 0.15,
+                    retail: 0.35, commerce_alim: 0.35, restaurant: 0.30,
+                    mixed: 0.20
+                };
+                const activity = (formData && formData.activity) || 'offices';
+                const glazingRatio = NEW_DIAGNOSTIC_GLAZING_RATIO_BY_ACTIVITY[activity] || 0.20;
+                capex = action.capex_med * safeSurface * glazingRatio;
             }
             // CAPEX €/ml
             if (action.capex_unit === '€/ml') {
@@ -6959,6 +6994,7 @@
                 if (worksDone.includes('gtb_done') && action.category === 'pilotage') return false;
                 if (worksDone.includes('dhw_done') && action.category === 'dhw') return false;
                 if (worksDone.includes('vmc_df_done') && action.category === 'ventilation') return false;
+                if (worksDone.includes('pv_done') && action.id === 'ACT22') return false;
 
                 // EXCLUSIONS PAR ÉTAT DU BÂTIMENT
                 if (!formData.hasCooling && ['ACT19', 'ACT20'].includes(action.id)) return false;
@@ -6970,7 +7006,7 @@
                 if (formData.ecsSystem !== 'electric_boiler' && !formData.ecsSameSystem && action.id === 'ACT18') return false;
                 if (action.id === 'ACT18' && formData.ecsSameSystem) return false;
                 // ACT22 conditions
-                if (action.id === 'ACT22' && surface < 300) return false;
+                if (action.id === 'ACT22' && surface < 100) return false;
                 if (action.id === 'ACT22' && formData.roofAccessible === 'no') return false;
 
                 return true;
@@ -7029,7 +7065,7 @@
 
             if (!photovoltaicAction) return null;
             if ((topActions || []).some(action => action.id === photovoltaicAction.id)) return null;
-            if (surface < 300) return null;
+            if (surface < 100) return null;
             if (formData.roofAccessible === 'no') return null;
 
             const energyPrices = {
@@ -7039,7 +7075,10 @@
             const calc = newDiagnosticCalculateActionGain(photovoltaicAction, totalKwh, breakdown, avgPrice, surface, formData, energyPrices);
 
             if (!calc || calc.gainKwh <= 0 || calc.gainEuro <= 0) return null;
-            if (calc.roi_years !== null && calc.roi_years <= 10) return null;
+            // Afficher en complémentaire uniquement si ROI entre 10 et 15 ans
+            if (calc.roi_years === null) return null;
+            if (calc.roi_years <= 10) return null;  // déjà dans topActions
+            if (calc.roi_years > 15) return null;   // trop long, pas pertinent
 
             return {
                 ...photovoltaicAction,
@@ -7428,7 +7467,13 @@
                     fiche_cee: a.fiche_cee || null,
                     intervenants: a.intervenants || null,
                     energy_switch_note: a.energy_switch_note || null,
-                    pv_hypothesis: a.pv_hypothesis || null
+                    pv_hypothesis: a.pv_hypothesis || null,
+                    pv_production_kwh_an: a.pv_production_kwh_an || null,
+                    pv_autoconsumption_rate: a.pv_autoconsumption_rate || null,
+                    pv_surplus_kwh_an: a.pv_surplus_kwh_an || null,
+                    pv_surplus_revenue_euro_an: a.pv_surplus_revenue_euro_an || null,
+                    pv_installed_kwc: a.pv_installed_kwc || null,
+                    extraAnnualRevenueEuro: a.extraAnnualRevenueEuro || null
                 })),
 
                 complementary_opportunity: complementaryPhotovoltaic ? {
@@ -7444,7 +7489,13 @@
                     aid_amount: { value: complementaryPhotovoltaic.aidAmount || 0, unit: '€' },
                     aid_pct: complementaryPhotovoltaic.aidPct || 0,
                     roi_years: { value: complementaryPhotovoltaic.roi_years, unit: 'ans' },
-                    pv_hypothesis: complementaryPhotovoltaic.pv_hypothesis || null
+                    pv_hypothesis: complementaryPhotovoltaic.pv_hypothesis || null,
+                    pv_production_kwh_an: complementaryPhotovoltaic.pv_production_kwh_an || null,
+                    pv_autoconsumption_rate: complementaryPhotovoltaic.pv_autoconsumption_rate || null,
+                    pv_surplus_kwh_an: complementaryPhotovoltaic.pv_surplus_kwh_an || null,
+                    pv_surplus_revenue_euro_an: complementaryPhotovoltaic.pv_surplus_revenue_euro_an || null,
+                    pv_installed_kwc: complementaryPhotovoltaic.pv_installed_kwc || null,
+                    extraAnnualRevenueEuro: complementaryPhotovoltaic.extraAnnualRevenueEuro || null
                 } : null,
 
                 // Projections
@@ -8283,6 +8334,31 @@
                                 <div className="flex gap-2">
                                     <Icon icon="solar:lightning-bold" className="text-[#16A34A] text-sm flex-shrink-0 mt-0.5" />
                                     <p className="text-xs text-[#475569]">Économie : {Math.round(action.gain_kwh_an.value).toLocaleString('fr-FR')} kWh/an</p>
+                                </div>
+                            )}
+                            {action.id === 'ACT22' && action.pv_production_kwh_an && (
+                                <div className="space-y-1.5 p-2 bg-[#F0F9FF] border border-[#BAE6FD] rounded-lg">
+                                    <div className="flex gap-2">
+                                        <Icon icon="solar:sun-bold" className="text-[#F59E0B] text-sm flex-shrink-0 mt-0.5" />
+                                        <p className="text-xs text-[#475569]">Production annuelle estimée : <strong>{Math.round(action.pv_production_kwh_an).toLocaleString('fr-FR')} kWh/an</strong></p>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <Icon icon="solar:home-bold" className="text-[#1D4ED8] text-sm flex-shrink-0 mt-0.5" />
+                                        <p className="text-xs text-[#475569]">Autoconsommation : {action.pv_autoconsumption_rate}% — {action.gain_kwh_an?.value ? Math.round(action.gain_kwh_an.value).toLocaleString('fr-FR') : '—'} kWh valorisés sur site</p>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <Icon icon="solar:bolt-circle-bold" className="text-[#7C3AED] text-sm flex-shrink-0 mt-0.5" />
+                                        <p className="text-xs text-[#475569]">Surplus revendu : {Math.round(action.pv_surplus_kwh_an).toLocaleString('fr-FR')} kWh — {Math.round(action.pv_surplus_revenue_euro_an).toLocaleString('fr-FR')} €/an</p>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <Icon icon="solar:wallet-bold" className="text-[#16A34A] text-sm flex-shrink-0 mt-0.5" />
+                                        <p className="text-xs text-[#475569]">Économie autoconso : {(action.gain_euro_an?.value && action.pv_surplus_revenue_euro_an) ? Math.round(action.gain_euro_an.value - action.pv_surplus_revenue_euro_an).toLocaleString('fr-FR') : '—'} €/an · Revenu surplus : {Math.round(action.pv_surplus_revenue_euro_an).toLocaleString('fr-FR')} €/an</p>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <Icon icon="solar:chart-bold" className="text-[#16A34A] text-sm flex-shrink-0 mt-0.5" />
+                                        <p className="text-xs text-[#475569] font-semibold">Gain total : {action.gain_euro_an?.value ? Math.round(action.gain_euro_an.value).toLocaleString('fr-FR') : '—'} €/an (autoconso + surplus)</p>
+                                    </div>
+                                    {action.pv_hypothesis && <p className="text-[11px] text-[#64748B] mt-1 leading-snug italic">{action.pv_hypothesis}</p>}
                                 </div>
                             )}
                         </div>

@@ -71,18 +71,19 @@
       page-break-inside: avoid !important;
     }
 
-    /* Rows & grids that must stay whole */
+    /* Keep only the section opening together; let the rest flow naturally */
     .kpi-row   { break-inside: avoid; page-break-inside: avoid; }
     .budget-row,
     .cols-2,
     .section-group,
-    .section-summary {
-      break-inside: auto;
-      page-break-inside: auto;
-    }
+    .section-summary,
     .section-head,
     .section-first-block,
     .section-intro {
+      break-inside: auto;
+      page-break-inside: auto;
+    }
+    .section-start {
       break-inside: avoid;
       page-break-inside: avoid;
     }
@@ -385,6 +386,24 @@
           {sub}
         </div>
       ) : null;
+      const leadNode = intro ? (
+        <div className="section-intro">
+          {titleNode}
+          {subNode}
+          {intro}
+        </div>
+      ) : firstChild ? (
+        <div className="section-first-block">
+          {titleNode}
+          {subNode}
+          {firstChild}
+        </div>
+      ) : (
+        <div className="section-head">
+          {titleNode}
+          {subNode}
+        </div>
+      );
 
       return (
         <div
@@ -396,28 +415,17 @@
             overflow: 'hidden',
           }}
         >
-          <div style={{ height: 3, background: `linear-gradient(90deg, ${T.blue} 0%, #6366F1 100%)` }} />
-          <div style={{ padding: '16px 18px 18px' }}>
-            {intro ? (
-              <div className="section-intro" style={{ marginBottom: childList.length ? 12 : 0 }}>
-                {titleNode}
-                {subNode}
-                {intro}
-              </div>
-            ) : firstChild ? (
-              <div className="section-first-block" style={{ marginBottom: childList.length ? 12 : 0 }}>
-                {titleNode}
-                {subNode}
-                {firstChild}
-              </div>
-            ) : (
-              <div className="section-head" style={{ marginBottom: childList.length ? 12 : 0 }}>
-                {titleNode}
-                {subNode}
-              </div>
-            )}
-            {childList}
+          <div className="section-start">
+            <div style={{ height: 3, background: `linear-gradient(90deg, ${T.blue} 0%, #6366F1 100%)` }} />
+            <div style={{ padding: `16px 18px ${childList.length ? 12 : 18}px` }}>
+              {leadNode}
+            </div>
           </div>
+          {childList.length > 0 && (
+            <div style={{ padding: '0 18px 18px' }}>
+              {childList}
+            </div>
+          )}
         </div>
       );
     };
@@ -592,6 +600,18 @@
                 Retour&nbsp;<strong style={{ color: T.navy }}>{roi}</strong>
               </span>
             </div>
+            {/* PV detail (ACT22) */}
+            {action.id === 'ACT22' && action.pv_production_kwh_an && (
+              <div style={{ marginTop: 6, padding: '6px 8px', background: '#F0F9FF', border: '1px solid #BAE6FD', borderRadius: 8, fontSize: 9.5, color: T.slate600, lineHeight: 1.55 }}>
+                <div>Production annuelle : <strong>{Math.round(action.pv_production_kwh_an).toLocaleString('fr-FR')} kWh/an</strong>
+                  {action.pv_installed_kwc && <span> ({action.pv_installed_kwc} kWc installés)</span>}
+                </div>
+                <div>Autoconsommation : {action.pv_autoconsumption_rate}% — {action.gain_kwh_an?.value ? Math.round(action.gain_kwh_an.value).toLocaleString('fr-FR') : '—'} kWh valorisés sur site</div>
+                <div>Surplus revendu : {Math.round(action.pv_surplus_kwh_an).toLocaleString('fr-FR')} kWh — {Math.round(action.pv_surplus_revenue_euro_an).toLocaleString('fr-FR')} €/an</div>
+                <div>Gain total : <strong style={{ color: '#15803D' }}>{fmtEur(gainEuro)}/an</strong> (autoconso + surplus)</div>
+                {action.pv_hypothesis && <div style={{ fontStyle: 'italic', marginTop: 2 }}>{action.pv_hypothesis}</div>}
+              </div>
+            )}
           </div>
         </div>
       );
@@ -703,7 +723,7 @@
       const roiX = roiIndex >= 0 ? getX(roiIndex) : null;
 
       return (
-        <div className="chart-host pba" data-report-chart="projection">
+        <div className="chart-host" data-report-chart="projection">
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, marginBottom: 10, alignItems: 'center' }}>
             {series.map(meta => (
               <div key={meta.key} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -1176,11 +1196,11 @@
                 )}
               </div>
             </div>
-          </div>
 
           {/* ══════════════════════════════════════════════════
               COVER IMAGE — building photo (if available)
           ═════════════════════════════════════════════════ */}
+          </div>
           <CoverImageBlock
             selected={coverImageSelected}
             url={coverImageUrl}
@@ -1557,18 +1577,17 @@
           {/* ══════════════════════════════════════════════════
               PROCHAINE ÉTAPE
           ═════════════════════════════════════════════════ */}
-          <div className="pba" style={{
+          <div style={{
             background: 'linear-gradient(135deg, #1E3A5F 0%, #2563EB 100%)',
             borderRadius: 12,
             padding: '18px 20px',
             marginBottom: 16,
-            color: '#fff',
-            pageBreakInside: 'avoid'
+            color: '#fff'
           }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+            <div className="section-start" style={{ marginBottom: 10 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '42px 1fr', gap: 14, alignItems: 'start' }}>
               {/* Icône */}
               <div style={{
-                flexShrink: 0,
                 width: 42,
                 height: 42,
                 borderRadius: 12,
@@ -1582,7 +1601,7 @@
                 </svg>
               </div>
               {/* Contenu */}
-              <div style={{ flex: 1 }}>
+              <div>
                 <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.65)', marginBottom: 4 }}>
                   Prochaine étape
                 </div>
@@ -1593,6 +1612,10 @@
                   Chaque bâtiment est différent. Un échange de 20 à 30 minutes avec un expert
                   permet de valider les pistes identifiées ici, et d'affiner le chiffrage avant tout engagement.
                 </div>
+              </div>
+            </div>
+            </div>
+            <div style={{ paddingLeft: 56 }}>
                 {/* 4 bullets */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 14px', marginBottom: 10 }}>
                   {[

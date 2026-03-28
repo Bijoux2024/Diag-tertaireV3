@@ -14,7 +14,9 @@
       "Bash(cp \"api/.claude/commands/.claude/commands/.claude/commands/.claude/commands/check.md\" /tmp/check.md)",
       "Bash(mv /tmp/fix.md api/.claude/commands/fix.md)",
       "Bash(mv /tmp/feature.md api/.claude/commands/feature.md)",
-      "Bash(mv /tmp/check.md api/.claude/commands/check.md)"
+      "Bash(mv /tmp/check.md api/.claude/commands/check.md)",
+      "Read(//c/tmp/**)",
+      "Read(//c/Users/yanni/Downloads/Diag-tertaireV3/$TEMP/**)"
     ],
     "additionalDirectories": [
       "C:\\Users\\yanni\\Downloads\\Diag-tertaireV3\\api\\.claude\\commands\\.claude"

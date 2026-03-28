@@ -173,9 +173,10 @@ const renderPdfFromUrl = async (url, {
 
   let browser = null;
 
+  let page;
   try {
     browser = await launchChromiumBrowser();
-    const page = await browser.newPage();
+    page = await browser.newPage();
 
     page.setDefaultNavigationTimeout(timeoutMs);
     page.setDefaultTimeout(timeoutMs);
@@ -220,6 +221,14 @@ const renderPdfFromUrl = async (url, {
 
     const message = String(error?.message || 'PDF rendering failed');
     if (error?.name === 'TimeoutError' || /timed out/i.test(message)) {
+      try {
+        if (page) {
+          const html = await page.content();
+          console.error('[pdf-renderer] Timeout! HTML snapshot:', html.substring(0, 1500));
+        }
+      } catch (e) {
+        console.error('[pdf-renderer] Could not get HTML snaphsot:', e.message);
+      }
       throw createPdfRenderError('PDF rendering timeout', 504);
     }
 

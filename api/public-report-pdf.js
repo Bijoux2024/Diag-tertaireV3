@@ -145,11 +145,18 @@ const formatCurrency = (v) =>
 
 /* ─── Base URL ───────────────────────────────────────────────────────────── */
 
-const getBaseUrl = () => {
+const getBaseUrl = (req) => {
   const explicit = readEnv('APP_BASE_URL');
   if (explicit) return explicit.replace(/\/$/, '');
+  
+  if (req && req.headers && req.headers.host) {
+    const protocol = req.headers['x-forwarded-proto'] || 'https';
+    return `${protocol}://${req.headers.host}`;
+  }
+  
   const vercelUrl = readEnv('VERCEL_URL');
   if (vercelUrl) return `https://${vercelUrl}`;
+  
   return 'http://localhost:3000';
 };
 
@@ -455,7 +462,7 @@ module.exports = async function handler(req, res) {
     }
 
     // 4. Build print URL and storage path
-    const baseUrl = getBaseUrl();
+    const baseUrl = getBaseUrl(req);
     const printUrl = `${baseUrl}/public-report-print.html?public_report_id=${encodeQ(publicReportId)}&token=${encodeQ(token.raw)}`;
     const storagePath = buildStoragePath(publicReportId);
     console.log('[public-report-pdf] Print URL:', printUrl);

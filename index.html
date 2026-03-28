@@ -3347,10 +3347,10 @@
                                     <div className="flex flex-col items-center gap-2 relative z-10">
                                         <div
                                             className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center font-bold text-[15px] sm:text-base border-[3px] transition-all duration-300 ${isPast
-                                                    ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm'
-                                                    : isActive
-                                                        ? 'bg-white border-[#1D4ED8] text-[#1D4ED8] shadow-[0_0_15px_rgba(29,78,216,0.3)]'
-                                                        : 'bg-white border-slate-200 text-slate-400'
+                                                ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm'
+                                                : isActive
+                                                    ? 'bg-white border-[#1D4ED8] text-[#1D4ED8] shadow-[0_0_15px_rgba(29,78,216,0.3)]'
+                                                    : 'bg-white border-slate-200 text-slate-400'
                                                 }`}
                                         >
                                             {isPast ? <Icon icon="solar:check-read-bold" className="text-xl" /> : step}
@@ -3397,8 +3397,8 @@
                         placeholder={placeholder}
                         disabled={disabled}
                         className={`w-full px-4 text-[15px] font-medium h-[52px] border-2 rounded-xl focus:outline-none transition-all duration-200 ${error
-                                ? 'border-red-300 bg-red-50/50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10'
-                                : 'border-slate-200 bg-white hover:border-slate-300 focus:border-[#1D4ED8] focus:ring-4 focus:ring-blue-500/10 focus:shadow-[0_0_20px_rgba(29,78,216,0.06)]'
+                            ? 'border-red-300 bg-red-50/50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10'
+                            : 'border-slate-200 bg-white hover:border-slate-300 focus:border-[#1D4ED8] focus:ring-4 focus:ring-blue-500/10 focus:shadow-[0_0_20px_rgba(29,78,216,0.06)]'
                             } ${disabled ? 'bg-slate-50 text-slate-400 cursor-not-allowed border-slate-100 hover:border-slate-100' : 'text-slate-800'}`}
                     />
                     {suffix && (
@@ -3431,8 +3431,8 @@
                         value={value}
                         onChange={(e) => onChange(e.target.value)}
                         className={`new-diagnostic-select-surface w-full px-4 appearance-none text-[15px] font-medium h-[52px] border-2 rounded-xl focus:outline-none transition-all duration-200 ${error
-                                ? 'border-red-300 bg-red-50/50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10'
-                                : 'border-slate-200 bg-white hover:border-slate-300 focus:border-[#1D4ED8] focus:ring-4 focus:ring-blue-500/10 focus:shadow-[0_0_20px_rgba(29,78,216,0.06)]'
+                            ? 'border-red-300 bg-red-50/50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10'
+                            : 'border-slate-200 bg-white hover:border-slate-300 focus:border-[#1D4ED8] focus:ring-4 focus:ring-blue-500/10 focus:shadow-[0_0_20px_rgba(29,78,216,0.06)]'
                             } ${!value ? 'text-slate-400' : 'text-slate-800'}`}
                     >
                         <option value="" disabled>{placeholder}</option>
@@ -3465,8 +3465,8 @@
                                 key={option.id}
                                 onClick={() => onChange(option.id)}
                                 className={`relative p-5 rounded-2xl border-2 transition-all duration-300 text-left flex flex-col h-full focus:outline-none active:scale-[0.98] ${isSelected
-                                        ? 'border-[#1D4ED8] bg-[#EFF6FF] shadow-[0_8px_20px_-6px_rgba(29,78,216,0.2)] z-10'
-                                        : 'border-slate-200 bg-white hover:border-[#1D4ED8]/40 hover:bg-slate-50 hover:shadow-sm'
+                                    ? 'border-[#1D4ED8] bg-[#EFF6FF] shadow-[0_8px_20px_-6px_rgba(29,78,216,0.2)] z-10'
+                                    : 'border-slate-200 bg-white hover:border-[#1D4ED8]/40 hover:bg-slate-50 hover:shadow-sm'
                                     }`}
                             >
                                 {isSelected && (
@@ -4155,8 +4155,8 @@
                                 type="button"
                                 onClick={() => handleModeChange(m.id)}
                                 className={`px-4 py-2 text-sm font-semibold rounded-lg shrink-0 transition-colors ${formData.coverMode === m.id
-                                        ? 'bg-blue-50 text-[#1D4ED8]'
-                                        : 'text-neutral-500 hover:bg-neutral-50 hover:text-neutral-700'
+                                    ? 'bg-blue-50 text-[#1D4ED8]'
+                                    : 'text-neutral-500 hover:bg-neutral-50 hover:text-neutral-700'
                                     }`}
                             >
                                 {m.label}
@@ -6118,10 +6118,10 @@
         NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.restauration = NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.restaurant;
         NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.sante = NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.health_local;
         NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.enseignement = NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.education;
-        NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.entrepot_chauffe = { ...NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.light_warehouse, heating_pct: 50, lighting_pct: 30, vent_aux_pct: 5, other_specific_pct: 15 };
+        NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.entrepot_chauffe = { ...NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.light_warehouse, heating_pct: 50, lighting_pct: 28, vent_aux_pct: 5, other_specific_pct: 15 };
         NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.entrepot_non_chauffe = NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.light_warehouse;
         NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.commerce_non_alim = NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.retail;
-        NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.commerce_alim = { ...NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.retail, cooling_pct: 35, heating_pct: 12, lighting_pct: 25, cooking_pct: 5, other_specific_pct: 14 };
+        NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.commerce_alim = { ...NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.retail, cooling_pct: 35, heating_pct: 12, lighting_pct: 24, cooking_pct: 5, other_specific_pct: 14 };
 
         /* ─────────────────────────────────────────────────────────────────────────
            TABLE 4 : NEW_DIAGNOSTIC_ACTIONS_LIBRARY
@@ -6728,21 +6728,21 @@
            Note : le gaz ne sert physiquement QU'au chauffage et à l'ECS
            ───────────────────────────────────────────────────────────────────────── */
         const NEW_DIAGNOSTIC_GAS_SPLIT_BY_ACTIVITY = {
-            offices:         { heating_pct: 88, ecs_pct: 12 },
-            bureau:          { heating_pct: 88, ecs_pct: 12 },
-            retail:          { heating_pct: 92, ecs_pct: 8 },
-            commerce_non_alim:{ heating_pct: 92, ecs_pct: 8 },
-            hotel:           { heating_pct: 60, ecs_pct: 40 },
-            restaurant:      { heating_pct: 65, ecs_pct: 35 },
-            restauration:    { heating_pct: 65, ecs_pct: 35 },
-            education:       { heating_pct: 90, ecs_pct: 10 },
-            enseignement:    { heating_pct: 90, ecs_pct: 10 },
-            health_local:    { heating_pct: 78, ecs_pct: 22 },
-            sante:           { heating_pct: 78, ecs_pct: 22 },
+            offices: { heating_pct: 88, ecs_pct: 12 },
+            bureau: { heating_pct: 88, ecs_pct: 12 },
+            retail: { heating_pct: 92, ecs_pct: 8 },
+            commerce_non_alim: { heating_pct: 92, ecs_pct: 8 },
+            hotel: { heating_pct: 60, ecs_pct: 40 },
+            restaurant: { heating_pct: 65, ecs_pct: 35 },
+            restauration: { heating_pct: 65, ecs_pct: 35 },
+            education: { heating_pct: 90, ecs_pct: 10 },
+            enseignement: { heating_pct: 90, ecs_pct: 10 },
+            health_local: { heating_pct: 78, ecs_pct: 22 },
+            sante: { heating_pct: 78, ecs_pct: 22 },
             light_warehouse: { heating_pct: 95, ecs_pct: 5 },
             entrepot_non_chauffe: { heating_pct: 95, ecs_pct: 5 },
             entrepot_chauffe: { heating_pct: 95, ecs_pct: 5 },
-            commerce_alim:   { heating_pct: 90, ecs_pct: 10 }
+            commerce_alim: { heating_pct: 90, ecs_pct: 10 }
         };
 
         /* ─────────────────────────────────────────────────────────────────────────
@@ -6752,304 +6752,170 @@
            Note : "other" inclut bureautique, froid commercial, cuisson élec, process
            ───────────────────────────────────────────────────────────────────────── */
         const NEW_DIAGNOSTIC_ELEC_SPLIT_BY_ACTIVITY = {
-            offices:         { lighting_pct: 30, cooling_pct: 18, ventilation_pct: 15, other_pct: 37 },
-            bureau:          { lighting_pct: 30, cooling_pct: 18, ventilation_pct: 15, other_pct: 37 },
-            retail:          { lighting_pct: 48, cooling_pct: 15, ventilation_pct: 10, other_pct: 27 },
-            commerce_non_alim:{ lighting_pct: 48, cooling_pct: 15, ventilation_pct: 10, other_pct: 27 },
-            hotel:           { lighting_pct: 28, cooling_pct: 12, ventilation_pct: 18, other_pct: 42 },
-            restaurant:      { lighting_pct: 20, cooling_pct: 8,  ventilation_pct: 22, other_pct: 50 },
-            restauration:    { lighting_pct: 20, cooling_pct: 8,  ventilation_pct: 22, other_pct: 50 },
-            education:       { lighting_pct: 42, cooling_pct: 8,  ventilation_pct: 15, other_pct: 35 },
-            enseignement:    { lighting_pct: 42, cooling_pct: 8,  ventilation_pct: 15, other_pct: 35 },
-            health_local:    { lighting_pct: 22, cooling_pct: 12, ventilation_pct: 28, other_pct: 38 },
-            sante:           { lighting_pct: 22, cooling_pct: 12, ventilation_pct: 28, other_pct: 38 },
-            light_warehouse: { lighting_pct: 55, cooling_pct: 0,  ventilation_pct: 8,  other_pct: 37 },
+            offices: { lighting_pct: 30, cooling_pct: 18, ventilation_pct: 15, other_pct: 37 },
+            bureau: { lighting_pct: 30, cooling_pct: 18, ventilation_pct: 15, other_pct: 37 },
+            retail: { lighting_pct: 48, cooling_pct: 15, ventilation_pct: 10, other_pct: 27 },
+            commerce_non_alim: { lighting_pct: 48, cooling_pct: 15, ventilation_pct: 10, other_pct: 27 },
+            hotel: { lighting_pct: 28, cooling_pct: 12, ventilation_pct: 18, other_pct: 42 },
+            restaurant: { lighting_pct: 20, cooling_pct: 8, ventilation_pct: 22, other_pct: 50 },
+            restauration: { lighting_pct: 20, cooling_pct: 8, ventilation_pct: 22, other_pct: 50 },
+            education: { lighting_pct: 42, cooling_pct: 8, ventilation_pct: 15, other_pct: 35 },
+            enseignement: { lighting_pct: 42, cooling_pct: 8, ventilation_pct: 15, other_pct: 35 },
+            health_local: { lighting_pct: 22, cooling_pct: 12, ventilation_pct: 28, other_pct: 38 },
+            sante: { lighting_pct: 22, cooling_pct: 12, ventilation_pct: 28, other_pct: 38 },
+            light_warehouse: { lighting_pct: 55, cooling_pct: 0, ventilation_pct: 8, other_pct: 37 },
             entrepot_non_chauffe: { lighting_pct: 55, cooling_pct: 0, ventilation_pct: 8, other_pct: 37 },
             entrepot_chauffe: { lighting_pct: 45, cooling_pct: 0, ventilation_pct: 10, other_pct: 45 },
             // commerce_alim : froid commercial dans "other" (usage spécifique, pas climato de confort)
-            commerce_alim:   { lighting_pct: 25, cooling_pct: 5,  ventilation_pct: 8,  other_pct: 62 }
+            commerce_alim: { lighting_pct: 25, cooling_pct: 5, ventilation_pct: 8, other_pct: 62 }
         };
 
         /* ─────────────────────────────────────────────────────────────────────────
-           INVARIANT : tolérance de conservation kWh
-           ───────────────────────────────────────────────────────────────────────── */
-        const NEW_DIAGNOSTIC_KWH_CONSERVATION_TOLERANCE = 1; // kWh
-
-        /* ─────────────────────────────────────────────────────────────────────────
-           FONCTION PRINCIPALE : SÉPARATION FLUX ÉLEC / GAZ (v2.1 — 4 cas exhaustifs)
-           Règle : tout kWh entré doit se retrouver dans un poste (conservation stricte)
+           NOUVELLE FONCTION PRINCIPALE : SÉPARATION FLUX ÉLEC / GAZ
+           Remplace la logique totalKwh + breakdown%.
+           Principe : le gaz ne chauffe que (chauffage + ECS).
+                      l'élec alimente tout le reste.
            ───────────────────────────────────────────────────────────────────────── */
         const newDiagnosticSplitByEnergySource = (formData, elecKwh, gasKwh, activity) => {
             const elec = Math.max(0, elecKwh || 0);
-            const gas  = Math.max(0, gasKwh  || 0);
-            const mainHeating = formData.mainHeating || 'gas';
-            const ecsSystem = formData.ecsSystem;
-
-            // Noms inchangés
-            const heatingIsGas  = ['gas', 'fuel', 'other'].includes(mainHeating);
-            const heatingIsElec = ['electric', 'pac'].includes(mainHeating);
-
-            // Warnings produits par ce split (fusionnés dans buildReport)
-            const warnings = [];
-
-            // ─ Cas “réseau chaleur” : non modélisé, warning + fallback
-            if (mainHeating === 'network') {
-                warnings.push({
-                    code: 'HEATING_NETWORK_NOT_MODELED',
-                    severity: 'warning',
-                    message: 'Chauffage réseau non modélisé (moteur limité à élec/gaz). Répartition conservatrice appliquée.',
-                    energy: 'heat_network'
-                });
-            }
-
-            // Déterminer ecsIsGas — gère explicitement les entrées non supportées
-            let ecsIsGas = false;
-            const ecsSameAsHeating = formData.ecsSameSystem !== false;
-
-            if (ecsSameAsHeating) {
-                if (mainHeating === 'network') {
-                    ecsIsGas = false; // fallback élec
-                    warnings.push({
-                        code: 'ECS_SAME_AS_HEATING_NETWORK_FALLBACK_ELEC',
-                        severity: 'warning',
-                        message: 'ECS "même système" avec chauffage réseau non supporté. Fallback élec.',
-                        energy: 'dhw_network'
-                    });
-                } else {
-                    ecsIsGas = heatingIsGas;
-                }
-            } else {
-                if (ecsSystem === 'network_dedicated') {
-                    ecsIsGas = false; // fallback élec
-                    warnings.push({
-                        code: 'ECS_NETWORK_DEDICATED_NOT_SUPPORTED_FALLBACK_ELEC',
-                        severity: 'warning',
-                        message: 'ECS réseau dédié non supporté : fallback électricité (répartition statistique).',
-                        energy: 'dhw_network'
-                    });
-                } else {
-                    ecsIsGas = ['gas_boiler', 'gas_instant'].includes(ecsSystem);
-                }
-            }
-            const ecsIsElec = !ecsIsGas;
-
-            // ── FLUX GAZ — 4 CAS EXHAUSTIFS (BUGFIX PRINCIPAL) ───────────────────────────
-            let gasHeatingKwh = 0;
-            let gasEcsKwh = 0;
-
-            if (gas > 0) {
-                const gasSplit = NEW_DIAGNOSTIC_GAS_SPLIT_BY_ACTIVITY[activity] || { heating_pct: 85, ecs_pct: 15 };
-                const heatingPct = Math.max(0, Math.min(100, typeof gasSplit.heating_pct === 'number' ? gasSplit.heating_pct : 85));
-
-                if (heatingIsGas && ecsIsGas) {
-                    // Cas 1 : chauffage gaz + ECS gaz → split par table activité
-                    gasHeatingKwh = Math.round(gas * heatingPct / 100);
-                    gasEcsKwh = gas - gasHeatingKwh; // conservation garantie
-
-                } else if (heatingIsGas && !ecsIsGas) {
-                    // Cas 2 : chauffage gaz + ECS non gaz → tout au chauffage
-                    gasHeatingKwh = gas;
-                    gasEcsKwh = 0;
-
-                } else if (!heatingIsGas && ecsIsGas) {
-                    // Cas 3 : chauffage non gaz + ECS gaz → tout à l'ECS (BUGFIX)
-                    gasHeatingKwh = 0;
-                    gasEcsKwh = gas;
-
-                } else {
-                    // Cas 4 : chauffage non gaz + ECS non gaz avec gaz saisi → incohérent
-                    // Fallback conservatif : tout au chauffage + warning
-                    gasHeatingKwh = gas;
-                    gasEcsKwh = 0;
-                    warnings.push({
-                        code: 'GAS_PROVIDED_BUT_NO_GAS_END_USE',
-                        severity: 'warning',
-                        message: `Gaz saisi (${gas} kWh) mais ni chauffage ni ECS ne sont déclarés au gaz. Alloué au chauffage par défaut. Vérifier mainHeating/ecsSystem.`,
-                        energy: 'gas'
-                    });
-                }
-            }
-
-            // ── FLUX ÉLEC ──────────────────────────────────────────────────────────
-            let elecForHeating = 0;
-            let elecForEcs = 0;
-
-            if (heatingIsElec && elec > 0) {
-                const breakdown = newDiagnosticGetUsageBreakdown(activity, formData);
-                elecForHeating = Math.round(elec * (breakdown.heating_pct || 0) / 100);
-            }
-
-            if (ecsIsElec && elec > 0) {
-                const breakdown = newDiagnosticGetUsageBreakdown(activity, formData);
-                elecForEcs = Math.round(elec * (breakdown.dhw_pct || 0) / 100);
-            }
-
-            const elecForOtherUses = Math.max(0, elec - elecForHeating - elecForEcs);
-
-            const elecSplit = NEW_DIAGNOSTIC_ELEC_SPLIT_BY_ACTIVITY[activity]
-                || { lighting_pct: 35, cooling_pct: 15, ventilation_pct: 12, other_pct: 38 };
-
-            const elecLightingKwh    = Math.round(elecForOtherUses * elecSplit.lighting_pct    / 100);
-            const elecCoolingKwh     = Math.round(elecForOtherUses * elecSplit.cooling_pct     / 100);
-            const elecVentilationKwh = Math.round(elecForOtherUses * elecSplit.ventilation_pct / 100);
-            const elecOtherKwh       = Math.max(0, elecForOtherUses - elecLightingKwh - elecCoolingKwh - elecVentilationKwh);
-
-            // ── CONSTRUCTION DES POSTES ────────────────────────────────────────────────
+            const gas = Math.max(0, gasKwh || 0);
             const totalKwh = elec + gas;
+            const mainHeating = formData.mainHeating || 'gas';
 
-            const posts = {
-                heating:     { kwh: gasHeatingKwh + elecForHeating, source: heatingIsGas ? 'gas' : 'elec', pricePerKwh: heatingIsGas ? 0.108 : 0.206 },
-                ecs:         { kwh: gasEcsKwh + elecForEcs,         source: ecsIsGas ? 'gas' : 'elec',     pricePerKwh: ecsIsGas ? 0.108 : 0.206 },
-                lighting:    { kwh: elecLightingKwh,               source: 'elec', pricePerKwh: 0.206 },
-                cooling:     { kwh: elecCoolingKwh,                source: 'elec', pricePerKwh: 0.206 },
-                ventilation: { kwh: elecVentilationKwh,            source: 'elec', pricePerKwh: 0.206 },
-                other:       { kwh: elecOtherKwh,                  source: 'elec', pricePerKwh: 0.206 }
-            };
+            // ──────────────────────────────────────────────────────────────────
+            // ÉTAPE 1 : Répartition de RÉFÉRENCE du secteur (fixe)
+            // ──────────────────────────────────────────────────────────────────
+            const ref = newDiagnosticGetUsageBreakdown(activity, formData);
+            const heatingPct = ref.heating_pct || 0;
+            const ecsPct = ref.dhw_pct || 0;
+            const lightingPct = ref.lighting_pct || 0;
+            const coolingPct = ref.cooling_pct || 0;
+            const ventPct = ref.vent_aux_pct || 0;
+            const cookingPct = ref.cooking_pct || 0;
+            const otherPct = ref.other_specific_pct || 0;
 
-            // ── INVARIANT CONSERVATION ───────────────────────────────────────────────
-            const tolerance = NEW_DIAGNOSTIC_KWH_CONSERVATION_TOLERANCE;
-            const getSum = () => Object.values(posts).reduce((s, p) => s + (p.kwh || 0), 0);
-            let delta = totalKwh - getSum();
+            // Garde-fou : vérifier que la table totalise 100%
+            const sumPct = heatingPct + ecsPct + lightingPct + coolingPct + ventPct + cookingPct + otherPct;
+            if (Math.abs(sumPct - 100) > 1) {
+                console.warn(`[DiagTertiaire] Table breakdown "${activity}" totalise ${sumPct}% au lieu de 100%. Résultats potentiellement incohérents.`);
+            }
 
-            if (Math.abs(delta) > tolerance) {
-                warnings.push({
-                    code: 'KWH_CONSERVATION_VIOLATION',
-                    severity: 'warning',
-                    message: `Conservation kWh : total=${totalKwh}, somme postes=${getSum()}, delta=${delta}. Correction automatique.`,
-                    energy: 'all'
-                });
+            // ──────────────────────────────────────────────────────────────────
+            // ÉTAPE 2 : kWh par poste (totalKwh × % de référence)
+            // ──────────────────────────────────────────────────────────────────
+            const heatingKwh = Math.round(totalKwh * heatingPct / 100);
+            const ecsKwh = Math.round(totalKwh * ecsPct / 100);
+            const lightingKwh = Math.round(totalKwh * lightingPct / 100);
+            const coolingKwh = Math.round(totalKwh * coolingPct / 100);
+            const ventKwh = Math.round(totalKwh * ventPct / 100);
+            const cookingKwh = Math.round(totalKwh * cookingPct / 100);
+            // "other" absorbe le résidu d'arrondi pour garantir la conservation
+            const otherKwh = Math.max(0, totalKwh - heatingKwh - ecsKwh - lightingKwh
+                - coolingKwh - ventKwh - cookingKwh);
 
-                // Priorité : ECS si ecsIsGas, sinon chauffage si heatingIsGas, sinon other (dont arrondi élec)
-                const correctionOrder = ecsIsGas
-                    ? ['ecs', 'other', 'heating', 'lighting', 'cooling', 'ventilation']
-                    : heatingIsGas
-                        ? ['heating', 'other', 'ecs', 'lighting', 'cooling', 'ventilation']
-                        : ['other', 'heating', 'ecs', 'lighting', 'cooling', 'ventilation'];
+            // ──────────────────────────────────────────────────────────────────
+            // ÉTAPE 3 : Déterminer la SOURCE de chaque poste
+            // ──────────────────────────────────────────────────────────────────
 
-                for (const key of correctionOrder) {
-                    if (Math.abs(delta) <= tolerance) break;
-                    const next = Math.max(0, posts[key].kwh + delta);
-                    delta -= (next - posts[key].kwh);
-                    posts[key].kwh = next;
-                }
+            // Source du chauffage
+            const heatingIsGas = ['gas', 'fuel', 'other', 'network'].includes(mainHeating);
+            const heatingIsElec = ['electric', 'pac'].includes(mainHeating);
+            const heatingIsNetwork = mainHeating === 'network';
 
-                if (Math.abs(delta) > tolerance) {
-                    warnings.push({
-                        code: 'KWH_CONSERVATION_CORRECTION_PARTIAL',
-                        severity: 'warning',
-                        message: `Correction partielle : delta restant=${delta} kWh.`,
-                        energy: 'all'
-                    });
+            // Source de l'ECS
+            const ecsSameAsHeating = formData.ecsSameSystem !== false;
+            let ecsSource;
+            if (ecsSameAsHeating) {
+                ecsSource = heatingIsGas ? (heatingIsNetwork ? 'network' : 'gas') : 'elec';
+            } else {
+                const ecsSystem = formData.ecsSystem || '';
+                if (['gas_boiler', 'gas_instant'].includes(ecsSystem)) {
+                    ecsSource = 'gas';
+                } else if (['electric_boiler', 'heat_pump'].includes(ecsSystem)) {
+                    ecsSource = 'elec';
+                } else if (['solar'].includes(ecsSystem)) {
+                    ecsSource = 'solar';
+                } else if (['network_dedicated'].includes(ecsSystem)) {
+                    ecsSource = 'network';
+                } else {
+                    ecsSource = 'elec'; // fallback
                 }
             }
 
-            // ── WARNINGS DÉTAILLÉS : allocation incomplète ───────────────────────────
-            const gasAllocated = gasHeatingKwh + gasEcsKwh;
-            if (gas > 0 && Math.abs(gas - gasAllocated) > tolerance) {
-                warnings.push({
-                    code: 'GAS_NOT_FULLY_ALLOCATED',
-                    severity: 'warning',
-                    message: `Gaz partiellement affecté : saisi=${gas}, alloué=${gasAllocated}, delta=${gas - gasAllocated} kWh.`,
-                    energy: 'gas'
-                });
-            }
+            // Source du chauffage (simplifiée pour le prix)
+            const heatingSource = heatingIsNetwork ? 'network'
+                : heatingIsGas ? 'gas' : 'elec';
 
-            const breakdown_pct = {
-                heating_pct:        totalKwh > 0 ? Math.round(posts.heating.kwh     / totalKwh * 100) : 0,
-                dhw_pct:            totalKwh > 0 ? Math.round(posts.ecs.kwh         / totalKwh * 100) : 0,
-                lighting_pct:       totalKwh > 0 ? Math.round(posts.lighting.kwh    / totalKwh * 100) : 0,
-                cooling_pct:        totalKwh > 0 ? Math.round(posts.cooling.kwh     / totalKwh * 100) : 0,
-                vent_aux_pct:       totalKwh > 0 ? Math.round(posts.ventilation.kwh / totalKwh * 100) : 0,
-                other_specific_pct: totalKwh > 0 ? Math.round(posts.other.kwh       / totalKwh * 100) : 0
+            // ──────────────────────────────────────────────────────────────────
+            // ÉTAPE 4 : Prix par poste selon la source
+            // ──────────────────────────────────────────────────────────────────
+            const PRICE = {
+                elec: 0.206,
+                gas: 0.108,
+                network: 0.085,
+                solar: 0.02   // quasi gratuit, juste maintenance
             };
 
+            const heatingPrice = PRICE[heatingSource] || PRICE.gas;
+            const ecsPrice = PRICE[ecsSource] || PRICE.elec;
+
+            // Postes toujours électriques
+            const elecPrice = PRICE.elec;
+
+            // ──────────────────────────────────────────────────────────────────
+            // ÉTAPE 5 : Vérification de cohérence (warning, pas bloquant)
+            // ──────────────────────────────────────────────────────────────────
+            // Calculer combien de kWh "devraient" être gaz vs élec selon les sources
+            const kwhOnGas = (heatingSource === 'gas' || heatingSource === 'network' ? heatingKwh : 0)
+                + (ecsSource === 'gas' || ecsSource === 'network' ? ecsKwh : 0);
+            const kwhOnElec = totalKwh - kwhOnGas
+                - (ecsSource === 'solar' ? ecsKwh : 0);
+
+            // Warning si la répartition théorique dépasse les kWh déclarés par source
+            const warnings = [];
+            if (gas > 0 && kwhOnGas > gas * 1.3) {
+                warnings.push(`Les postes gaz estimés (${kwhOnGas} kWh) dépassent le gaz déclaré (${gas} kWh). La répartition sectorielle peut être approximative pour ce bâtiment.`);
+            }
+            if (elec > 0 && kwhOnElec > elec * 1.3) {
+                warnings.push(`Les postes élec estimés (${kwhOnElec} kWh) dépassent l'élec déclaré (${elec} kWh). La répartition sectorielle peut être approximative pour ce bâtiment.`);
+            }
+            if (warnings.length > 0) {
+                console.warn('[DiagTertiaire] Cohérence énergétique :', warnings.join(' | '));
+            }
+
+            // ──────────────────────────────────────────────────────────────────
+            // RETOUR
+            // ──────────────────────────────────────────────────────────────────
             return {
                 elecKwh: elec,
-                gasKwh:  gas,
+                gasKwh: gas,
                 totalKwh,
-                posts,
-                breakdown_pct,
-                heatingSource: heatingIsGas ? 'gas' : 'elec',
-                ecsSource:     ecsIsGas ? 'gas' : 'elec',
-                warnings // NOUVEAU — à fusionner dans buildReport
+
+                posts: {
+                    heating: { kwh: heatingKwh, source: heatingSource, pricePerKwh: heatingPrice },
+                    ecs: { kwh: ecsKwh, source: ecsSource, pricePerKwh: ecsPrice },
+                    lighting: { kwh: lightingKwh, source: 'elec', pricePerKwh: elecPrice },
+                    cooling: { kwh: coolingKwh, source: 'elec', pricePerKwh: elecPrice },
+                    ventilation: { kwh: ventKwh, source: 'elec', pricePerKwh: elecPrice },
+                    cooking: { kwh: cookingKwh, source: 'elec', pricePerKwh: elecPrice },
+                    other: { kwh: otherKwh, source: 'elec', pricePerKwh: elecPrice }
+                },
+
+                // Pourcentages = TOUJOURS les % de référence du secteur
+                breakdown_pct: {
+                    heating_pct: heatingPct,
+                    dhw_pct: ecsPct,
+                    lighting_pct: lightingPct,
+                    cooling_pct: coolingPct,
+                    vent_aux_pct: ventPct,
+                    cooking_pct: cookingPct,
+                    other_specific_pct: otherPct
+                },
+
+                heatingSource,
+                ecsSource,
+                warnings
             };
-        };
-
-        /* ─────────────────────────────────────────────────────────────────────────
-           TESTS UNITAIRES — Appeler dans la console : newDiagnosticRunSplitUnitTests()
-           Ne s’exécutent pas automatiquement.
-           ───────────────────────────────────────────────────────────────────────── */
-        const newDiagnosticAssertEqual = (label, actual, expected) => {
-            if (actual !== expected) throw new Error(`[TEST FAIL] ${label} — expected=${expected}, actual=${actual}`);
-        };
-        const newDiagnosticAssertIncludes = (label, arr, needle) => {
-            if (!Array.isArray(arr) || !arr.some(x => x && x.code === needle))
-                throw new Error(`[TEST FAIL] ${label} — expected warnings to include code=${needle}`);
-        };
-
-        const newDiagnosticRunSplitUnitTests = () => {
-            // Usage : évaluer les breakdowns hotel depuis la table réelle (pour élec)
-            const hotelBreakdown = newDiagnosticGetUsageBreakdown('hotel', {});
-            const heatPct = hotelBreakdown.heating_pct || 0;
-            const dhwPct  = hotelBreakdown.dhw_pct || 0;
-
-            const TESTS = [
-                {
-                    name: 'T1 — Hôtel : chauffage élec + ECS gaz (BUGFIX)',
-                    fd: { mainHeating: 'electric', ecsSameSystem: false, ecsSystem: 'gas_boiler' },
-                    elec: 20000, gas: 50000, activity: 'hotel',
-                    check: (r) => {
-                        // Tout le gaz doit aller à l’ECS
-                        newDiagnosticAssertEqual('T1 ecs.kwh', r.posts.ecs.kwh, 50000 + Math.round(20000 * dhwPct / 100) - Math.round(20000 * dhwPct / 100)); // flexible
-                        if (r.posts.ecs.kwh < 49999) throw new Error(`T1 FAIL : ecs.kwh=${r.posts.ecs.kwh} (attendu ~50000, tout le gaz)`);
-                        if (r.posts.heating.kwh < 1) throw new Error(`T1 FAIL : heating.kwh=${r.posts.heating.kwh} (attendu > 0 car élec)`);
-                        const sum = Object.values(r.posts).reduce((s,p) => s + p.kwh, 0);
-                        newDiagnosticAssertEqual('T1 conservation', sum, r.totalKwh);
-                    }
-                },
-                {
-                    name: 'T2 — Hôtel : chauffage gaz + ECS gaz (split table)',
-                    fd: { mainHeating: 'gas', ecsSameSystem: true },
-                    elec: 20000, gas: 50000, activity: 'hotel',
-                    check: (r) => {
-                        // Split hotel : 60% chauffage, 40% ECS
-                        const expectedHeat = Math.round(50000 * 60 / 100);
-                        const expectedEcs  = 50000 - expectedHeat;
-                        newDiagnosticAssertEqual('T2 heating.kwh', r.posts.heating.kwh, expectedHeat);
-                        newDiagnosticAssertEqual('T2 ecs.kwh gas part', gasEcsKwh => gasEcsKwh, expectedEcs); // approx
-                        const sum = Object.values(r.posts).reduce((s,p) => s + p.kwh, 0);
-                        newDiagnosticAssertEqual('T2 conservation', sum, r.totalKwh);
-                    }
-                },
-                {
-                    name: 'T3 — Hôtel : ECS réseau dédié (warning attendu)',
-                    fd: { mainHeating: 'gas', ecsSameSystem: false, ecsSystem: 'network_dedicated' },
-                    elec: 20000, gas: 50000, activity: 'hotel',
-                    check: (r) => {
-                        // Tout le gaz doit aller au chauffage (fallback), warning obligatoire
-                        newDiagnosticAssertEqual('T3 heating.kwh', r.posts.heating.kwh, 50000);
-                        newDiagnosticAssertIncludes('T3 warnings', r.warnings, 'ECS_NETWORK_DEDICATED_NOT_SUPPORTED_FALLBACK_ELEC');
-                        const sum = Object.values(r.posts).reduce((s,p) => s + p.kwh, 0);
-                        newDiagnosticAssertEqual('T3 conservation', sum, r.totalKwh);
-                    }
-                }
-            ];
-
-            const results = [];
-            for (const t of TESTS) {
-                try {
-                    const r = newDiagnosticSplitByEnergySource(t.fd, t.elec, t.gas, t.activity);
-                    t.check(r);
-                    results.push({ name: t.name, status: 'PASS', heating: r.posts.heating.kwh, ecs: r.posts.ecs.kwh, total: r.totalKwh, warnings: (r.warnings||[]).map(w=>w.code).join(', ') });
-                } catch(e) {
-                    results.push({ name: t.name, status: 'FAIL', error: e.message });
-                    console.error(e.message);
-                }
-            }
-            console.table(results);
-            const allPass = results.every(r => r.status === 'PASS');
-            console.info(allPass ? '[OK] newDiagnosticRunSplitUnitTests — tous les tests réussis' : '[FAIL] Des tests ont échoué');
-            return results;
         };
 
         /* ─────────────────────────────────────────────────────────────────────────
@@ -7664,12 +7530,12 @@
             // ──────────────────────────────────────────────────────────────────────
             const breakdown = splitResult.breakdown_pct;
             const breakdownKwh = {
-                heating:        splitResult.posts.heating.kwh,
-                cooling:        splitResult.posts.cooling.kwh,
-                vent_aux:       splitResult.posts.ventilation.kwh,
-                lighting:       splitResult.posts.lighting.kwh,
-                dhw:            splitResult.posts.ecs.kwh,
-                cooking:        0, // cuisson incluse dans "other" pour l'instant
+                heating: splitResult.posts.heating.kwh,
+                cooling: splitResult.posts.cooling.kwh,
+                vent_aux: splitResult.posts.ventilation.kwh,
+                lighting: splitResult.posts.lighting.kwh,
+                dhw: splitResult.posts.ecs.kwh,
+                cooking: 0, // cuisson incluse dans "other" pour l'instant
                 other_specific: splitResult.posts.other.kwh
             };
 
@@ -7679,7 +7545,7 @@
 
             // avgPrice pour l'indicateur total_cost_euro_an uniquement
             const elecPrice = NEW_DIAGNOSTIC_ENERGY_PRICES.electricity.price_default_eur_kwh;
-            const gasPrice  = NEW_DIAGNOSTIC_ENERGY_PRICES.gas.price_default_eur_kwh;
+            const gasPrice = NEW_DIAGNOSTIC_ENERGY_PRICES.gas.price_default_eur_kwh;
             let totalEuro = 0;
             if (formData.elecUsed) {
                 totalEuro += (formData.elecEuro && parseFloat(formData.elecEuro) > 0)
@@ -7717,10 +7583,7 @@
             // ──────────────────────────────────────────────────────────────────────
             // WARNINGS & CONFIANCE
             // ──────────────────────────────────────────────────────────────────────
-            const warnings = [
-                ...newDiagnosticGenerateWarnings(formData, { elec: elecConversion, gas: gasConversion }),
-                ...(splitResult.warnings || [])
-            ];
+            const warnings = newDiagnosticGenerateWarnings(formData, { elec: elecConversion, gas: gasConversion });
             const confidence = newDiagnosticCalculateConfidenceScore(formData, { elec: elecConversion, gas: gasConversion });
             const leadScore = newDiagnosticCalculateLeadScore(formData, compositeSavingsPct);
 
@@ -7734,17 +7597,17 @@
 
                 // Source d'énergie (diagnostic)
                 energy_split: {
-                    elec_kwh:       { value: splitResult.elecKwh,  unit: 'kWh/an' },
-                    gas_kwh:        { value: splitResult.gasKwh,   unit: 'kWh/an' },
+                    elec_kwh: { value: splitResult.elecKwh, unit: 'kWh/an' },
+                    gas_kwh: { value: splitResult.gasKwh, unit: 'kWh/an' },
                     heating_source: splitResult.heatingSource,
-                    ecs_source:     splitResult.ecsSource,
+                    ecs_source: splitResult.ecsSource,
                     posts: {
-                        heating:     { kwh: splitResult.posts.heating.kwh,     price: splitResult.posts.heating.pricePerKwh },
-                        ecs:         { kwh: splitResult.posts.ecs.kwh,          price: splitResult.posts.ecs.pricePerKwh },
-                        lighting:    { kwh: splitResult.posts.lighting.kwh,    price: 0.206 },
-                        cooling:     { kwh: splitResult.posts.cooling.kwh,     price: 0.206 },
+                        heating: { kwh: splitResult.posts.heating.kwh, price: splitResult.posts.heating.pricePerKwh },
+                        ecs: { kwh: splitResult.posts.ecs.kwh, price: splitResult.posts.ecs.pricePerKwh },
+                        lighting: { kwh: splitResult.posts.lighting.kwh, price: 0.206 },
+                        cooling: { kwh: splitResult.posts.cooling.kwh, price: 0.206 },
                         ventilation: { kwh: splitResult.posts.ventilation.kwh, price: 0.206 },
-                        other:       { kwh: splitResult.posts.other.kwh,       price: 0.206 }
+                        other: { kwh: splitResult.posts.other.kwh, price: 0.206 }
                     }
                 },
 

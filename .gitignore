@@ -7,3 +7,17 @@ package-lock.json
 
 # Workspace scratch (never deploy / never commit)
 scratch/
+
+# Archives et backups (déjà dans Git history)
+*.bak
+*.final
+__archive_tmp/
+
+# Logs Vercel locaux
+vercel_deployments*.txt
+vercel_inspect*.txt
+
+# Scripts de debug ponctuels
+scan*.txt
+search.txt
+search.js

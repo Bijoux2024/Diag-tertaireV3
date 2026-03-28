@@ -6106,16 +6106,16 @@
                 validity_limits: 'Entrepôt logistique standard'
             },
 
-            // Aliases pour les nouveaux IDs du tunnel formulaire
-            bureau: null,         // alias -> offices
-            hotel: null,          // alias -> hotel (même clé)
-            restauration: null,   // alias -> restaurant
-            sante: null,          // alias -> health_local
-            enseignement: null,   // alias -> education
-            entrepot_chauffe: null,      // alias -> warehouse_heated (chauffé)
-            entrepot_non_chauffe: null,  // alias -> light_warehouse
-            commerce_non_alim: null,     // alias -> retail
-            commerce_alim: null          // alias -> retail (+ froid)
+            // Aliases — résolus après la déclaration (lignes ci-dessous)
+            // NB : "hotel" n'a pas d'alias car la clé existe déjà
+            bureau: null,
+            restauration: null,
+            sante: null,
+            enseignement: null,
+            entrepot_chauffe: null,
+            entrepot_non_chauffe: null,
+            commerce_non_alim: null,
+            commerce_alim: null
         };
 
         // Résolution des aliases dans NEW_DIAGNOSTIC_USAGE_BREAKDOWNS
@@ -6132,7 +6132,7 @@
         (function validateUsageBreakdowns() {
             const KEYS = ['heating_pct','cooling_pct','vent_aux_pct','lighting_pct','dhw_pct','cooking_pct','other_specific_pct'];
             Object.entries(NEW_DIAGNOSTIC_USAGE_BREAKDOWNS).forEach(([activity, data]) => {
-                if (typeof data !== 'object' || activity === 'version_tag' || activity === 'last_updated') return;
+                if (!data || typeof data !== 'object' || activity === 'version_tag' || activity === 'last_updated') return;
                 const sum = KEYS.reduce((s, k) => s + (data[k] || 0), 0);
                 if (Math.abs(sum - 100) > 0.5) {
                     console.error(`[USAGE_BREAKDOWNS] ${activity} totalise ${sum}% au lieu de 100%`);

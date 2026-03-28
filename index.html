@@ -5843,13 +5843,13 @@
             last_updated: '2026-03-23',
 
             electricity: {
-                price_default_eur_kwh: 0.206,
+                price_default_eur_kwh: 0.1960,
                 price_min_eur_kwh: 0.15,
                 price_max_eur_kwh: 0.30,
                 unit: '€/kWh TTC',
                 source_level: 'source_partial',
-                source_ref: 'CRE - TRVE S1 2026 (post hausse fév 2025)',
-                source_note: 'Ordre de grandeur TTC retenu : 0,206 €/kWh, hors abonnement',
+                source_ref: 'CRE - TRVE fév 2026, profil professionnel ≤ 36 kVA (baisse -15% fév 2025, stable fév 2026)',
+                source_note: 'Ordre de grandeur TTC retenu : 0,196 €/kWh, hors abonnement. Moyenne tertiaire petit site.',
                 validity_limits: 'Tertiaire < 36 kVA, périmètre France métropolitaine',
                 subscription_excluded: true
             },
@@ -5867,7 +5867,12 @@
             },
             heat_network: { price_default_eur_kwh: 0.095 },
             fuel_oil: { price_default_eur_kwh: 0.125 },
-            wood_pellets: { price_default_eur_kwh: 0.068 }
+            wood_pellets: { price_default_eur_kwh: 0.068 },
+            solar_thermal: {
+                price_default_eur_kwh: 0.02,
+                source_ref: 'Estimation produit — maintenance annuelle ramenée au kWh',
+                source_note: 'Quasi nul, seule la maintenance du système est comptée'
+            }
         };
 
         const INFLATION_ENERGIE = {
@@ -6335,23 +6340,6 @@
                     source_level_roi: 'hypothesis'
                 },
                 {
-                    id: 'ACT12',
-                    name: 'Isolation toiture (si travaux prévus)',
-                    category: 'envelope',
-                    tier: 'heavy',
-                    aid_pct: 0.35,
-                    trigger_rules: ['heating_post > 35%', 'no_envelope_done', 'age_building > 15'],
-                    gain_scope: 'heating_post',
-                    gain_pct_low: 0.15, gain_pct_med: 0.20, gain_pct_high: 0.30,
-                    capex_low: 40, capex_med: 80, capex_high: 120,
-                    capex_unit: '€/m²',
-                    roi_method: 'simple_payback',
-                    aid_tags: ['CEE', 'MaPrimeRenov'],
-                    source_level_gain: 'source_strong', source_ref_gain: 'ADEME - Isolation toiture tertiaire',
-                    source_level_capex: 'source_partial', source_ref_capex: 'Prix marché isolation + MO',
-                    source_level_roi: 'hypothesis'
-                },
-                {
                     id: 'ACT13',
                     name: 'Remplacement chaudière gaz par PAC air/eau',
                     category: 'heating',
@@ -6651,14 +6639,23 @@
                 const data1 = NEW_DIAGNOSTIC_USAGE_BREAKDOWNS[u1] || NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.offices;
                 const data2 = NEW_DIAGNOSTIC_USAGE_BREAKDOWNS[u2] || NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.retail;
 
+                const h = Math.round(data1.heating_pct * p1 + data2.heating_pct * p2);
+                const c = Math.round(data1.cooling_pct * p1 + data2.cooling_pct * p2);
+                const v = Math.round(data1.vent_aux_pct * p1 + data2.vent_aux_pct * p2);
+                const l = Math.round(data1.lighting_pct * p1 + data2.lighting_pct * p2);
+                const d = Math.round(data1.dhw_pct * p1 + data2.dhw_pct * p2);
+                const k = Math.round(data1.cooking_pct * p1 + data2.cooking_pct * p2);
+                // other absorbe le résidu d'arrondi pour garantir 100%
+                const o = Math.max(0, 100 - h - c - v - l - d - k);
+
                 return {
-                    heating_pct: Math.round(data1.heating_pct * p1 + data2.heating_pct * p2),
-                    cooling_pct: Math.round(data1.cooling_pct * p1 + data2.cooling_pct * p2),
-                    vent_aux_pct: Math.round(data1.vent_aux_pct * p1 + data2.vent_aux_pct * p2),
-                    lighting_pct: Math.round(data1.lighting_pct * p1 + data2.lighting_pct * p2),
-                    dhw_pct: Math.round(data1.dhw_pct * p1 + data2.dhw_pct * p2),
-                    cooking_pct: Math.round(data1.cooking_pct * p1 + data2.cooking_pct * p2),
-                    other_specific_pct: Math.round(data1.other_specific_pct * p1 + data2.other_specific_pct * p2),
+                    heating_pct: h,
+                    cooling_pct: c,
+                    vent_aux_pct: v,
+                    lighting_pct: l,
+                    dhw_pct: d,
+                    cooking_pct: k,
+                    other_specific_pct: o,
                     source_level: 'hypothesis',
                     source_ref: `Pondération ${Math.round(p1 * 100)}/${Math.round(p2 * 100)} : ${u1} + ${u2}`,
                     breakdown_mode: 'coarse_statistical'
@@ -6720,8 +6717,8 @@
 
         const NEW_DIAGNOSTIC_PV_DEFAULT_YIELD_KWH_PER_KWC = 1220;
         const NEW_DIAGNOSTIC_PV_BUILDING_SURPLUS_TARIFF_EUR_KWH = {
-            le9: 0.0400,
-            le100: 0.0761
+            le9: 0.0400,    // CRE S21 T2 2026 — stable depuis T3 2025
+            le100: 0.0473   // CRE S21 T2 2026 — anciennement 0.0761, baissé significativement
         };
         const NEW_DIAGNOSTIC_PV_YIELD_BY_DEPARTMENT = [
             { prefixes: ['20'], yield: 1450 },
@@ -6862,10 +6859,10 @@
             // ÉTAPE 4 : Prix par poste selon la source
             // ──────────────────────────────────────────────────────────────────
             const PRICE = {
-                elec: 0.206,
-                gas: 0.108,
-                network: 0.085,
-                solar: 0.02   // quasi gratuit, juste maintenance
+                elec: NEW_DIAGNOSTIC_ENERGY_PRICES.electricity.price_default_eur_kwh,
+                gas: NEW_DIAGNOSTIC_ENERGY_PRICES.gas.price_default_eur_kwh,
+                network: NEW_DIAGNOSTIC_ENERGY_PRICES.heat_network.price_default_eur_kwh,
+                solar: 0.02  // quasi gratuit, maintenance seule (pas de table centralisée pour solaire thermique)
             };
 
             let heatingPrice = PRICE[heatingSource] || PRICE.gas;
@@ -6873,7 +6870,7 @@
 
             // Ajuster le prix si chauffage fioul
             if (mainHeating === 'fuel' || mainHeating === 'fioul') {
-                const fuelPrice = 0.118; // €/kWh fioul PCI
+                const fuelPrice = NEW_DIAGNOSTIC_ENERGY_PRICES.fuel_oil.price_default_eur_kwh;
                 if (heatingSource === 'gas') heatingPrice = fuelPrice;
                 if (ecsSource === 'gas' && ecsSameAsHeating) ecsPrice = fuelPrice;
             }
@@ -7056,12 +7053,13 @@
                     ? ePrices.targetElecKwh
                     : newDiagnosticEstimateSiteElectricityKwh(formData, totalKwh, breakdown)
             );
-            // ×0.90 pour maximiser l'autoconsommation (pas surdimensionnement pour la revente)
-            const loadLimitedKwc = localYieldKwhPerKwc > 0 ? (estimatedSiteElectricityKwh * 0.90) / localYieldKwhPerKwc : roofLimitedKwc;
+            // Réduire le facteur de dimensionnement si autoconsommation attendue faible
+            const autoRate = newDiagnosticEstimatePhotovoltaicAutoconsumptionRate(formData);
+            const sizingFactor = autoRate < 0.55 ? 0.75 : 0.90;
+            const loadLimitedKwc = localYieldKwhPerKwc > 0 ? (estimatedSiteElectricityKwh * sizingFactor) / localYieldKwhPerKwc : roofLimitedKwc;
             const installedKwc = Math.round(newDiagnosticClamp(Math.min(roofLimitedKwc, loadLimitedKwc, 100), 0.5, 100) * 10) / 10;
             const annualProductionKwh = Math.max(0, Math.round(installedKwc * localYieldKwhPerKwc));
-            const autoconsumptionRate = newDiagnosticEstimatePhotovoltaicAutoconsumptionRate(formData);
-            const autoconsumedKwh = Math.max(0, Math.round(Math.min(annualProductionKwh * autoconsumptionRate, estimatedSiteElectricityKwh * 0.95)));
+            const autoconsumedKwh = Math.max(0, Math.round(Math.min(annualProductionKwh * autoRate, estimatedSiteElectricityKwh * 0.95)));
             const surplusSoldKwh = Math.max(0, annualProductionKwh - autoconsumedKwh);
             const surplusTariff = newDiagnosticGetPhotovoltaicSurplusTariff(installedKwc);
             const selfConsumptionSavingsEuro = autoconsumedKwh * ePrices.elec;
@@ -7076,16 +7074,16 @@
             const capex = Math.round(installedKwc * capexPerKwc);
 
             const newDiagnosticGetPvAutoconoPrime = (kwc) => {
-                if (kwc <= 9) return 260;   // €/kWc
-                if (kwc <= 36) return 190;
-                return 100; // 36-100 kWc
+                if (kwc <= 9) return 80;    // €/kWc — CRE T1-T2 2026 (arrêté 26 mars 2025)
+                if (kwc <= 36) return 70;   // €/kWc — CRE T2 2026
+                return 60;                  // 36-100 kWc — CRE T2 2026
             };
             const primePerKwc = newDiagnosticGetPvAutoconoPrime(installedKwc);
             const aidAmount = Math.round(installedKwc * primePerKwc);
             const capexNet = Math.max(0, capex - aidAmount);
             const aidPct = capex > 0 ? aidAmount / capex : 0;
             const roiYears = totalGainEuro > 0 ? Math.round((capexNet / totalGainEuro) * 10) / 10 : null;
-            const hypothesisLabel = `Hypothèse de calcul : productible local ~${newDiagnosticFormatInteger(localYieldKwhPerKwc)} kWh/kWc/an, autoconsommation ${newDiagnosticFormatInteger(autoconsumptionRate * 100)} %, surplus valorisé à ${newDiagnosticFormatDecimal(surplusTariff, 3)} €/kWh.`;
+            const hypothesisLabel = `Hypothèse de calcul : productible local ~${newDiagnosticFormatInteger(localYieldKwhPerKwc)} kWh/kWc/an, autoconsommation ${newDiagnosticFormatInteger(autoRate * 100)} %, surplus valorisé à ${newDiagnosticFormatDecimal(surplusTariff, 3)} €/kWh.`;
 
             return {
                 gainKwh: autoconsumedKwh,
@@ -7102,14 +7100,14 @@
                 pv_production_kwh_an: annualProductionKwh,
                 pv_surplus_kwh_an: surplusSoldKwh,
                 pv_surplus_revenue_euro_an: Math.round(surplusRevenueEuro),
-                pv_autoconsumption_rate: Math.round(autoconsumptionRate * 100),
+                pv_autoconsumption_rate: Math.round(autoRate * 100),
                 pv_local_yield_kwh_kwc: localYieldKwhPerKwc,
                 pv_installed_kwc: installedKwc
             };
         };
 
         const newDiagnosticCalculateActionGain = (action, splitResult, surface, formData, energyPrices) => {
-            const ePrices = energyPrices || { elec: 0.206, gas: 0.108 };
+            const ePrices = energyPrices || { elec: NEW_DIAGNOSTIC_ENERGY_PRICES.electricity.price_default_eur_kwh, gas: NEW_DIAGNOSTIC_ENERGY_PRICES.gas.price_default_eur_kwh };
             const totalKwh = splitResult.totalKwh;
             const posts = splitResult.posts;
             const safeSurface = Math.max(1, Number(surface || 100));
@@ -7524,12 +7522,24 @@
                     }
                 },
                 {
-                    name: 'T7 — Fioul : prix chauffage doit être 0.118, pas 0.108',
+                    name: 'T7 — Fioul : prix chauffage doit être 0.125 (table centralisée)',
                     fd: { mainHeating: 'fuel', ecsSameSystem: true },
                     elec: 15000, gas: 40000, activity: 'offices',
                     check: (r) => {
-                        if (Math.abs(r.posts.heating.pricePerKwh - 0.118) > 0.001) {
-                            throw new Error(`Prix chauffage fioul = ${r.posts.heating.pricePerKwh} (attendu 0.118)`);
+                        const expected = NEW_DIAGNOSTIC_ENERGY_PRICES.fuel_oil.price_default_eur_kwh;
+                        if (Math.abs(r.posts.heating.pricePerKwh - expected) > 0.001) {
+                            throw new Error(`Prix chauffage fioul = ${r.posts.heating.pricePerKwh} (attendu ${expected})`);
+                        }
+                    }
+                },
+                {
+                    name: 'T8 — Réseau chaleur : prix dans split = prix table centralisée',
+                    fd: { mainHeating: 'network', ecsSameSystem: true },
+                    elec: 20000, gas: 0, activity: 'offices',
+                    check: (r) => {
+                        const expected = NEW_DIAGNOSTIC_ENERGY_PRICES.heat_network.price_default_eur_kwh;
+                        if (Math.abs(r.posts.heating.pricePerKwh - expected) > 0.001) {
+                            throw new Error(`Prix réseau chaleur = ${r.posts.heating.pricePerKwh} (attendu ${expected})`);
                         }
                     }
                 }
@@ -7864,11 +7874,11 @@
                     posts: {
                         heating: { kwh: splitResult.posts.heating.kwh, price: splitResult.posts.heating.pricePerKwh },
                         ecs: { kwh: splitResult.posts.ecs.kwh, price: splitResult.posts.ecs.pricePerKwh },
-                        lighting: { kwh: splitResult.posts.lighting.kwh, price: 0.206 },
-                        cooling: { kwh: splitResult.posts.cooling.kwh, price: 0.206 },
-                        ventilation: { kwh: splitResult.posts.ventilation.kwh, price: 0.206 },
-                        cooking: { kwh: splitResult.posts.cooking.kwh, price: 0.206 },
-                        other: { kwh: splitResult.posts.other.kwh, price: 0.206 }
+                        lighting: { kwh: splitResult.posts.lighting.kwh, price: NEW_DIAGNOSTIC_ENERGY_PRICES.electricity.price_default_eur_kwh },
+                        cooling: { kwh: splitResult.posts.cooling.kwh, price: NEW_DIAGNOSTIC_ENERGY_PRICES.electricity.price_default_eur_kwh },
+                        ventilation: { kwh: splitResult.posts.ventilation.kwh, price: NEW_DIAGNOSTIC_ENERGY_PRICES.electricity.price_default_eur_kwh },
+                        cooking: { kwh: splitResult.posts.cooking.kwh, price: NEW_DIAGNOSTIC_ENERGY_PRICES.electricity.price_default_eur_kwh },
+                        other: { kwh: splitResult.posts.other.kwh, price: NEW_DIAGNOSTIC_ENERGY_PRICES.electricity.price_default_eur_kwh }
                     }
                 },
 

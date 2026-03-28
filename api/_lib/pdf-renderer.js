@@ -178,6 +178,13 @@ const renderPdfFromUrl = async (url, {
     browser = await launchChromiumBrowser();
     page = await browser.newPage();
 
+    const pageErrors = [];
+    page.on('pageerror', err => pageErrors.push(err.message));
+    page.on('console', msg => {
+      if (msg.type() === 'error') pageErrors.push(msg.text());
+    });
+    page._pageErrors = pageErrors;
+
     page.setDefaultNavigationTimeout(timeoutMs);
     page.setDefaultTimeout(timeoutMs);
 
@@ -221,15 +228,19 @@ const renderPdfFromUrl = async (url, {
 
     const message = String(error?.message || 'PDF rendering failed');
     if (error?.name === 'TimeoutError' || /timed out/i.test(message)) {
+      let debugInfo = '';
       try {
         if (page) {
+          debugInfo = (page._pageErrors || []).join(' | ');
           const html = await page.content();
           console.error('[pdf-renderer] Timeout! HTML snapshot:', html.substring(0, 1500));
         }
       } catch (e) {
-        console.error('[pdf-renderer] Could not get HTML snaphsot:', e.message);
+        console.error('[pdf-renderer] Could not get HTML snapshot:', e.message);
       }
-      throw createPdfRenderError('PDF rendering timeout', 504);
+      
+      const errorStr = debugInfo ? `PDF rendering timeout. Browser errors: ${debugInfo}` : 'PDF rendering timeout';
+      throw createPdfRenderError(errorStr, 504);
     }
 
     throw createPdfRenderError(message, 500);

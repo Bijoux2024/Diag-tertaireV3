@@ -183,7 +183,7 @@ const renderPdfFromUrl = async (url, {
     await page.emulateMediaType(normalizeMediaType(mediaType));
 
     await page.goto(url, {
-      waitUntil: ['load', 'networkidle2'],
+      waitUntil: 'domcontentloaded',
       timeout: timeoutMs
     });
 

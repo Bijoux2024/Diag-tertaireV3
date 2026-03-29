@@ -2088,7 +2088,7 @@
            HELPERS EXEMPLE DE RAPPORT
            ───────────────────────────────────────────────────────────────────────── */
 
-        const NEW_DIAGNOSTIC_PUBLIC_EXAMPLE_SOURCE = 'public_example';
+        const NEW_DIAGNOSTIC_PUBLIC_EXAMPLE_SOURCE = 'public_example_v2';
 
         const newDiagnosticReadStoredReportPayload = () => {
             try {
@@ -2114,37 +2114,35 @@
             // Sinon, on génère un exemple fictif réaliste (épicerie bio 290m², Lyon)
             const exampleFormData = {
                 ...NEW_DIAGNOSTIC_DEFAULT_FORM_DATA,
-                address: '22 avenue Gambetta, 69003 Lyon',
-                email: 'contact@epicerie-gambetta.fr',
-                role: 'owner', postalCode: '69003',
-                activity: 'commerce_alim',
+                address: "47 cours de l'Intendance, 33000 Bordeaux",
+                email: 'contact@cabinet-intendance.fr',
+                role: 'owner', postalCode: '33000',
+                activity: 'offices',
 
-                surface: '290',
-                buildingAge: '1975_1988',
-                roofInsulation: 'none',
-                wallInsulation: 'partial',
-                mainHeating: 'electric',
+                surface: '420',
+                buildingAge: '1989_2005',
+                roofInsulation: 'unknown',
+                wallInsulation: 'unknown',
+                mainHeating: 'gas',
+                boilerAge: 'over20',
                 hasCooling: true,
                 ecsSameSystem: false,
                 ecsSystem: 'electric_boiler',
                 hasVmc: true,
                 vmcType: 'simple_flux',
                 roofAccessible: 'yes',
-                usageIntensity: 'high',
-
-                coldEquipmentType: 'open_shelves',
-                coldEquipmentAge: 'over15',
-                coldMaintenanceStatus: 'occasional',
+                usageIntensity: 'standard',
 
                 hasGtb: false,
                 hasExteriorLighting: true,
 
                 elecUsed: true,
-                elecKwh: '189000', elecEuro: '37044',
-                gasUsed: false,
+                elecKwh: '31500', elecEuro: '6174',
+                gasUsed: true,
+                gasKwh: '54600', gasEuro: '5733',
 
                 projectObjective: 'reduce_costs',
-                decisionHorizon: '3to6months',
+                decisionHorizon: 'immediate',
                 budgetRange: '20to80k',
                 isDecisionMaker: 'yes',
 
@@ -8545,6 +8543,8 @@
                 success: 'Votre demande est enregistrée. Un partenaire qualifié vous contactera sous 48h avec une première orientation adaptée à votre site.'
             }
         };
+
+        NEW_DIAGNOSTIC_REPORT_COPY.example.subtitle = "Exemple simulé pour des bureaux de 420 m² à Bordeaux, avec des gains plausibles et actionnables sans surpromesse.";
 
         const NEW_DIAGNOSTIC_BRAND = {
             name: 'DiagTertiaire',

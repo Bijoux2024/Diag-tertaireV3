@@ -19,6 +19,24 @@ const {
   fetchStorageJson,
   getRequiredServerSupabaseConfig
 } = require('./_lib/supabase-server');
+const {
+  assertAllowedContentType,
+  assertMaxBodyBytes,
+  assertMaxContentLength,
+  assertUuidLike,
+  createHttpError,
+  enforceRateLimit,
+  normalizeContentType
+} = require('./_lib/request-guard');
+
+const MAX_FILE_BYTES = Math.floor(3.5 * 1024 * 1024);
+const MAX_REQUEST_BYTES = 5 * 1024 * 1024;
+const ALLOWED_IMAGE_CONTENT_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const EXT_BY_CONTENT_TYPE = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp'
+};
 
 const safeJsonParse = (value) => {
   if (typeof value !== 'string') return value;
@@ -34,12 +52,6 @@ const encodeStoragePath = (path) =>
     .split('/')
     .map(segment => encodeURIComponent(segment))
     .join('/');
-
-const createHttpError = (statusCode, message) => {
-  const error = new Error(message);
-  error.statusCode = statusCode;
-  return error;
-};
 
 const buildStorageErrorMessage = (fallbackMessage, result) => {
   const parts = [fallbackMessage];
@@ -179,30 +191,48 @@ async function handler(req, res) {
   }
 
   try {
+    enforceRateLimit(req, {
+      scope: 'public-report-cover-upload',
+      windowMs: 10 * 60 * 1000,
+      maxHits: 8,
+      message: 'Too many cover upload requests. Please retry later.'
+    });
+    assertMaxContentLength(req, MAX_REQUEST_BYTES, 'File too large (max 3.5 MB)');
+
     let buffer;
     let fileName = 'upload.jpg';
     let contentType = 'image/jpeg';
     let reportIdStr = `anon_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+    const requestContentType = normalizeContentType(req.headers['content-type']);
 
     // Si le client choisit de confier la lecture complète au req.body JSON (base64)
-    if (req.headers['content-type'] && req.headers['content-type'].includes('application/json')) {
-      const payload = asPlainObject(req.body) || safeJsonParse(req.body);
+    if (requestContentType === 'application/json') {
+      const rawBody = Buffer.isBuffer(req.body) ? req.body : await getRawBody(req);
+      assertMaxBodyBytes(rawBody, MAX_REQUEST_BYTES, 'File too large (max 3.5 MB)');
+      const parsedBody = asPlainObject(safeJsonParse(rawBody.toString('utf8')));
+      const payload = parsedBody;
       if (!payload.file_base64) throw createHttpError(400, 'Missing file_base64 in JSON payload');
       
       const match = payload.file_base64.match(/^data:(image\/[^;]+);base64,(.+)$/);
       if (!match) throw createHttpError(400, 'Invalid base64 Data URL format');
       
-      contentType = match[1];
+      contentType = assertAllowedContentType(match[1], ALLOWED_IMAGE_CONTENT_TYPES, {
+        fieldName: 'file image type'
+      });
       buffer = Buffer.from(match[2], 'base64');
       fileName = payload.file_name || 'upload.jpg';
-      if (payload.report_id) reportIdStr = payload.report_id;
+      if (payload.report_id) reportIdStr = assertUuidLike(payload.report_id, 'report_id');
     } else {
       // Sinon on traite le stream binaire raw !
+      contentType = assertAllowedContentType(req.headers['x-file-type'] || 'image/jpeg', ALLOWED_IMAGE_CONTENT_TYPES, {
+        fieldName: 'file image type'
+      });
       buffer = Buffer.isBuffer(req.body) ? req.body : await getRawBody(req);
       const rawFileName = req.headers['x-file-name'] || 'upload.jpg';
       fileName = decodeURIComponent(rawFileName).replace(/[^a-zA-Z0-9.\-_]/g, '');
-      contentType = req.headers['x-file-type'] || 'image/jpeg';
-      reportIdStr = req.headers['x-public-report-id'] || reportIdStr;
+      if (req.headers['x-public-report-id']) {
+        reportIdStr = assertUuidLike(req.headers['x-public-report-id'], 'x-public-report-id');
+      }
     }
 
     if (!buffer || buffer.length === 0) {
@@ -210,7 +240,7 @@ async function handler(req, res) {
     }
 
     // 3.5 Mo maximum (pour rester sous 4.5 Mo de Vercel Request Limit une fois en Base64)
-    if (buffer.length > 3.5 * 1024 * 1024) {
+    if (buffer.length > MAX_FILE_BYTES) {
       throw createHttpError(413, 'File too large (max 3.5 MB)');
     }
 
@@ -218,8 +248,7 @@ async function handler(req, res) {
     const configuredBucketName = readEnv('REPORT_COVER_BUCKET');
     const bucketName = configuredBucketName || 'report-cover-assets';
 
-    const extMatch = fileName.match(/\.([^.]+)$/);
-    const ext = extMatch ? extMatch[1].toLowerCase() : 'jpg';
+    const ext = EXT_BY_CONTENT_TYPE[contentType] || 'jpg';
 
     // Chemin propre et déterministe
     const storagePath = `covers/manual/${reportIdStr}/${Date.now()}_cover.${ext}`;
@@ -277,6 +306,9 @@ async function handler(req, res) {
     });
 
   } catch (error) {
+    if (Number.isInteger(error?.rateLimit?.retryAfterSeconds)) {
+      res.setHeader('Retry-After', String(error.rateLimit.retryAfterSeconds));
+    }
     console.error('[public-report-cover-upload] status: failed', {
       statusCode: Number.isInteger(error?.statusCode) ? error.statusCode : 500,
       message: error?.message || String(error),

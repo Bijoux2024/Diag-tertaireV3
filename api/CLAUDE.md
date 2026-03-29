@@ -20,7 +20,8 @@ Stabiliser les routes `/api/*` qui soutiennent la pre-production de l'espace pro
 ## Endpoints a connaitre
 
 - `api/public-config.js`
-- `api/pdf.js`
+- `api/public-report-pdf.js`
+- `api/public-report-view.js`
 - `api/pro-report-pdf.js`
 - `api/pro-delete-case.js`
 

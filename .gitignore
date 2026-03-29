@@ -1,5 +1,6 @@
 .vercel
 .env*.local
+.env*.tmp
 node_modules/
 package-lock.json
 

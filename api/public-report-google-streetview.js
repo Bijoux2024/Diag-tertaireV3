@@ -14,12 +14,11 @@
  */
 
 const readEnv = (key) => String(process.env[key] || '').trim();
-
-const createHttpError = (statusCode, message) => {
-  const error = new Error(message);
-  error.statusCode = statusCode;
-  return error;
-};
+const {
+  assertNumberInRange,
+  createHttpError,
+  enforceRateLimit
+} = require('./_lib/request-guard');
 
 // Limiteur rudimentaire "Soft Cap" Vercel : 
 // En serverless, ce compteur est global au "container" Vercel. Dès que le container meurt (Cold Start), 
@@ -35,6 +34,21 @@ module.exports = async function handler(req, res) {
   }
 
   try {
+    const action = String(req.query.action || '').trim().toLowerCase();
+    const lat = assertNumberInRange(req.query.lat, { fieldName: 'lat', min: -90, max: 90 });
+    const lon = assertNumberInRange(req.query.lon, { fieldName: 'lon', min: -180, max: 180 });
+
+    if (action !== 'meta' && action !== 'image') {
+      throw createHttpError(400, 'Invalid action parameter. Must be "meta" or "image".');
+    }
+
+    enforceRateLimit(req, {
+      scope: `public-report-google-streetview:${action}`,
+      windowMs: 10 * 60 * 1000,
+      maxHits: action === 'image' ? 20 : 60,
+      message: 'Too many Street View requests. Please retry later.'
+    });
+
     const currentDay = new Date().getDate();
     if (currentDay !== svLastResetDay) {
       svDailyCounter = 0;
@@ -54,12 +68,6 @@ module.exports = async function handler(req, res) {
     const apiKey = readEnv('GOOGLE_STREETVIEW_SERVER_KEY');
     if (!apiKey) {
       throw createHttpError(500, 'GOOGLE_STREETVIEW_SERVER_KEY is not configured on server.');
-    }
-
-    const { action, lat, lon, heading, pitch, fov } = req.query;
-
-    if (!lat || !lon) {
-      throw createHttpError(400, 'Missing lat or lon parameters');
     }
 
     if (action === 'meta') {
@@ -95,9 +103,9 @@ module.exports = async function handler(req, res) {
 
     } else if (action === 'image') {
       // 2. Fetch du binaire d'image final sans dévoiler la clé Google au frontend
-      const h = heading || '0';
-      const p = pitch || '0';
-      const f = fov || '90';
+      const h = assertNumberInRange(req.query.heading, { fieldName: 'heading', min: -360, max: 360, optional: true }) ?? 0;
+      const p = assertNumberInRange(req.query.pitch, { fieldName: 'pitch', min: -90, max: 90, optional: true }) ?? 0;
+      const f = assertNumberInRange(req.query.fov, { fieldName: 'fov', min: 10, max: 120, optional: true }) ?? 90;
       const size = '600x400';
 
       const imageUrl = `https://maps.googleapis.com/maps/api/streetview?size=${size}&location=${lat},${lon}&heading=${h}&pitch=${p}&fov=${f}&return_error_code=true&key=${apiKey}`;
@@ -122,6 +130,9 @@ module.exports = async function handler(req, res) {
     }
 
   } catch (error) {
+    if (Number.isInteger(error?.rateLimit?.retryAfterSeconds)) {
+      res.setHeader('Retry-After', String(error.rateLimit.retryAfterSeconds));
+    }
     console.error('[public-report-google-streetview] Error:', error);
     const statusCode = Number.isInteger(error?.statusCode) ? error.statusCode : 500;
     return res.status(statusCode).json({

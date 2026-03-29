@@ -10,6 +10,16 @@ const {
   fetchStorageJson,
   getRequiredServerSupabaseConfig
 } = require('./_lib/supabase-server');
+const {
+  assertMaxBodyBytes,
+  assertMaxContentLength,
+  assertUuidLike,
+  createHttpError,
+  enforceRateLimit
+} = require('./_lib/request-guard');
+
+const MAX_COVER_REQUEST_BYTES = 20_000;
+const ALLOWED_PREFERRED_SOURCES = new Set(['', 'panoramax', 'ign_ortho', 'ign_plan']);
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
 
@@ -29,12 +39,6 @@ const encodeQ = (v) => encodeURIComponent(String(v ?? ''));
 
 const encodeStoragePath = (value) =>
   String(value || '').split('/').map(s => encodeURIComponent(s)).join('/');
-
-const createHttpError = (statusCode, message) => {
-  const e = new Error(message);
-  e.statusCode = statusCode;
-  return e;
-};
 
 const buildStorageErrorMessage = (fallbackMessage, result) => {
   const parts = [fallbackMessage];
@@ -338,9 +342,21 @@ module.exports = async function handler(req, res) {
   };
 
   try {
+    enforceRateLimit(req, {
+      scope: 'public-report-cover',
+      windowMs: 10 * 60 * 1000,
+      maxHits: 8,
+      message: 'Too many cover generation requests. Please retry later.'
+    });
+    assertMaxContentLength(req, MAX_COVER_REQUEST_BYTES, 'Payload too large');
+    assertMaxBodyBytes(req.body, MAX_COVER_REQUEST_BYTES, 'Payload too large');
+
     const payload = asPlainObject(safeJsonParse(req.body) || req.body);
     let address = String(payload.address || '').trim();
-    const publicReportId = String(payload.public_report_id || '').trim() || null;
+    const publicReportId = assertUuidLike(payload.public_report_id, 'public_report_id', { optional: true });
+    if (address.length > 500) {
+      throw createHttpError(400, 'Invalid address');
+    }
 
     const supabaseCtx = getRequiredServerSupabaseConfig();
     const { supabaseUrl, serviceKey, serviceKeySource } = supabaseCtx;
@@ -385,7 +401,8 @@ module.exports = async function handler(req, res) {
     if (parcelRef) log(`Parcel found: ${parcelRef}`);
 
     // 4. Sélection du provider d'image via preferred_source
-    const preferredSource = String(payload.preferred_source || '').trim();
+    const preferredSourceRaw = String(payload.preferred_source || '').trim();
+    const preferredSource = ALLOWED_PREFERRED_SOURCES.has(preferredSourceRaw) ? preferredSourceRaw : '';
     let coverImage = null;
 
     if (preferredSource === 'ign_ortho') {
@@ -500,6 +517,9 @@ module.exports = async function handler(req, res) {
     });
 
   } catch (error) {
+    if (Number.isInteger(error?.rateLimit?.retryAfterSeconds)) {
+      res.setHeader('Retry-After', String(error.rateLimit.retryAfterSeconds));
+    }
     const statusCode = Number.isInteger(error?.statusCode) ? error.statusCode : 500;
     console.error('[public-report-cover] status: failed', {
       statusCode,

@@ -16,7 +16,7 @@
  *   6. browser.close()           → Ferme Chromium (libère la mémoire)
  *
  * CONTRAINTES VERCEL :
- *   - Lambda timeout : 30s max (configuré dans api/pdf.js)
+ *   - Lambda timeout : pilote par la route serverless appelante
  *   - Mémoire : @sparticuz/chromium est optimisé pour les lambdas (< 50MB)
  *   - Le navigateur est mis en cache entre les appels (cachedPuppeteerCore / cachedChromiumRuntime)
  *     pour éviter de recharger les modules à chaque invocation.

@@ -11,6 +11,11 @@
  */
 
 const crypto = require('crypto');
+const {
+  assertHexToken,
+  assertUuidLike,
+  enforceRateLimit
+} = require('./_lib/request-guard');
 const { getRequiredServerSupabaseConfig } = require('./_lib/supabase-server');
 
 const encodeQ = (v) => encodeURIComponent(String(v ?? ''));
@@ -38,11 +43,34 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const publicReportId = String(req.query.public_report_id || '').trim();
-  const token = String(req.query.token || '').trim();
+  const rawPublicReportId = String(req.query.public_report_id || '').trim();
+  const rawToken = String(req.query.token || '').trim();
 
-  if (!publicReportId || !token) {
+  if (!rawPublicReportId || !rawToken) {
     return res.status(400).json({ error: 'Missing public_report_id or token' });
+  }
+
+  let publicReportId;
+  let token;
+  try {
+    enforceRateLimit(req, {
+      scope: 'public-report-view',
+      windowMs: 10 * 60 * 1000,
+      maxHits: 120,
+      message: 'Too many report access attempts. Please retry later.'
+    });
+    publicReportId = assertUuidLike(rawPublicReportId, 'public_report_id');
+    token = assertHexToken(rawToken, {
+      fieldName: 'token',
+      statusCode: 401,
+      message: 'Invalid token'
+    });
+  } catch (error) {
+    if (Number.isInteger(error?.rateLimit?.retryAfterSeconds)) {
+      res.setHeader('Retry-After', String(error.rateLimit.retryAfterSeconds));
+    }
+    const statusCode = Number.isInteger(error?.statusCode) ? error.statusCode : 400;
+    return res.status(statusCode).json({ error: error.message || 'Invalid request' });
   }
 
   let supabaseCtx;
@@ -178,6 +206,9 @@ module.exports = async function handler(req, res) {
     });
 
   } catch (error) {
+    if (Number.isInteger(error?.rateLimit?.retryAfterSeconds)) {
+      res.setHeader('Retry-After', String(error.rateLimit.retryAfterSeconds));
+    }
     console.error('[public-report-view] Unexpected error:', error.message);
     return res.status(500).json({ error: 'Internal server error' });
   }

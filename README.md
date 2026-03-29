@@ -43,16 +43,23 @@ Configuration minimale Supabase :
 3. `supabase/migrations/20260311_storage_assets.sql`
 4. `supabase/migrations/20260311_report_pdf_persistence.sql`
 5. `supabase/migrations/20260312_case_secure_deletion.sql`
-6. `supabase/migrations/20260316_public_report_pdfs.sql`
+6. `supabase/migrations/20260316_public_report_pdfs.sql` (compat legacy)
+7. `supabase/migrations/20260319_public_reports.sql`
+8. `supabase/migrations/20260322_add_cover_columns_to_public_reports.sql`
 
-## Bucket public-reports (rapport public PDF)
+Important :
+- `public_reports` est la table canonique pour les rapports publics.
+- `public_report_pdfs` reste un artefact legacy de compatibilite, pas la source de verite.
+- Le repo ne versionne pas encore le schema live exact de `lead_submissions`, `partner_lead_submissions` et `pro_interest_submissions`. Ne pas recreer ces tables sans export exact du schema et des policies deployes.
 
-A creer manuellement dans Supabase Dashboard -> Storage :
-1. Cliquer "New bucket"
-2. Nom : `public-reports`
-3. Cocher "Public bucket" : OUI
-4. File size limit : 10 MB
-5. Allowed MIME types : `application/pdf`
+## Bucket public-report-assets (rapport public PDF)
+
+Le runtime public PDF vise :
+1. table `public.public_reports`
+2. bucket prive `public-report-assets`
+3. URLs signees a duree limitee pour la consultation
+
+La migration `supabase/migrations/20260319_public_reports.sql` cree le bucket prive `public-report-assets` si besoin.
 
 ### Route canonique PDF public
 
@@ -61,7 +68,7 @@ A creer manuellement dans Supabase Dashboard -> Storage :
 - Serveur genere un token temporaire, INSERT `public_reports` (status=generating)
 - Construit l'URL de la page print `public-report-print.html?token=...`
 - Puppeteer ouvre la page, attend `window.__REPORT_READY__`
-- Export PDF A4 -> upload bucket `public-reports` (PUBLIC)
+- Export PDF A4 -> upload bucket `public-report-assets` (PRIVE)
 - URL signee 30 jours -> UPDATE `public_reports` (status=ready)
 - UPDATE `lead_submissions.pdf_url` (best-effort)
 - Email Resend (fire-and-forget)
@@ -129,3 +136,4 @@ Checklist preview detaillee :
 - Le frontend reste buildless. Les dependances npm servent uniquement au runtime serveur `/api/*`.
 - Aucune cle serveur n'est exposee au navigateur.
 - La route documentaire et runtime a retenir pour l'espace pro est `index.saaspro.html`.
+- `tmp.js` et `tmp_pdf.js` sont des artefacts de debug non branches sur le runtime public/pro actuel.

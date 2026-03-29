@@ -27,6 +27,13 @@
 const crypto = require('crypto');
 const { renderPdfFromUrl } = require('./_lib/pdf-renderer');
 const {
+  assertMaxBodyBytes,
+  assertMaxContentLength,
+  assertUuidLike,
+  createHttpError,
+  enforceRateLimit
+} = require('./_lib/request-guard');
+const {
   assertStorageBucketExists,
   describeServerSupabaseConfig,
   fetchStorageJson,
@@ -36,6 +43,7 @@ const {
 const PUBLIC_REPORT_ASSETS_BUCKET = 'public-report-assets';
 const SIGNED_URL_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
 const TOKEN_TTL_SECONDS = 60 * 60 * 2;        // 2 h (print session)
+const MAX_PUBLIC_REPORT_PAYLOAD_BYTES = 2_000_000;
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
 
@@ -73,12 +81,6 @@ const sanitizeFileSegment = (value, fallback = 'rapport') => {
   const n = String(value || '').trim().toLowerCase()
     .replace(/[^\w.-]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
   return n || fallback;
-};
-
-const createHttpError = (statusCode, message) => {
-  const e = new Error(message);
-  e.statusCode = statusCode;
-  return e;
 };
 
 const buildStorageErrorMessage = (fallbackMessage, result) => {
@@ -404,13 +406,26 @@ module.exports = async function handler(req, res) {
   let supabaseCtx = null;
 
   try {
-    const body = safeJsonParse(req.body);
-    const payload = asPlainObject(body);
-    const leadSubmissionId = String(payload.lead_submission_id || '').trim() || null;
-    const reportPayload = asPlainObject(payload.report_payload);
+    enforceRateLimit(req, {
+      scope: 'public-report-pdf',
+      windowMs: 10 * 60 * 1000,
+      maxHits: 5,
+      message: 'Too many PDF generation requests. Please retry in a few minutes.'
+    });
+    assertMaxContentLength(req, MAX_PUBLIC_REPORT_PAYLOAD_BYTES, 'Payload too large');
 
-    if (!reportPayload.report_id) {
+    const body = safeJsonParse(req.body);
+    assertMaxBodyBytes(body ?? req.body, MAX_PUBLIC_REPORT_PAYLOAD_BYTES, 'Payload too large');
+    const payload = asPlainObject(body);
+    const leadSubmissionId = assertUuidLike(payload.lead_submission_id, 'lead_submission_id', { optional: true });
+    const reportPayload = asPlainObject(payload.report_payload);
+    const reportId = String(reportPayload.report_id || '').trim();
+
+    if (!reportId) {
       throw createHttpError(400, 'Missing report_payload.report_id');
+    }
+    if (reportId.length > 160) {
+      throw createHttpError(400, 'Invalid report_payload.report_id');
     }
 
     supabaseCtx = getRequiredServerSupabaseConfig();
@@ -559,6 +574,9 @@ module.exports = async function handler(req, res) {
     });
 
   } catch (error) {
+    if (Number.isInteger(error?.rateLimit?.retryAfterSeconds)) {
+      res.setHeader('Retry-After', String(error.rateLimit.retryAfterSeconds));
+    }
     if (publicReportId && supabaseCtx) {
       updatePublicReport({
         supabaseUrl: supabaseCtx.supabaseUrl,

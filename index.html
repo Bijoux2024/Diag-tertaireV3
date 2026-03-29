@@ -1933,6 +1933,9 @@
                             <p style={{ fontSize: '0.875rem', color: '#334455', lineHeight: 1.75 }}>
                                 <strong>Note de confiance :</strong> ce pré-diagnostic est un outil d'aide à la décision, non certifiant, basé sur vos données déclaratives. Il ne remplace pas un audit réglementaire ni une visite technique sur site.
                             </p>
+                            <p className="text-[#475569] text-sm md:text-base">
+                                {NEW_DIAGNOSTIC_REPORT_COPY.example.subtitle}
+                            </p>
                         </div>
                     </div>
                 </section>
@@ -2111,7 +2114,7 @@
             if (flatPayload && newDiagnosticIsFlatExampleReportPayload(flatPayload)) {
                 return newDiagnosticBuildReportData(flatPayload);
             }
-            // Sinon, on génère un exemple fictif réaliste (épicerie bio 290m², Lyon)
+            // Sinon, on génère un exemple fictif réaliste (bureaux 420 m², Bordeaux)
             const exampleFormData = {
                 ...NEW_DIAGNOSTIC_DEFAULT_FORM_DATA,
                 address: "47 cours de l'Intendance, 33000 Bordeaux",
@@ -2189,7 +2192,7 @@
                                 {NEW_DIAGNOSTIC_REPORT_COPY.example.title}
                             </h1>
                             <p className="text-[#475569] text-sm md:text-base">
-                                Exemple simulé pour une épicerie bio de 290 m² à Lyon — meubles froids ouverts, toiture non isolée, ballon électrique, propriétaire décideur. Illustre les 3 niveaux d'actions, du quick-win froid commercial au chantier d'isolation.
+                                {NEW_DIAGNOSTIC_REPORT_COPY.example.subtitle}
                             </p>
                         </div>
                     </section>
@@ -8495,7 +8498,7 @@
         const NEW_DIAGNOSTIC_REPORT_COPY = {
             example: {
                 title: "À quoi ressemble votre rapport",
-                subtitle: "Exemple simulé pour une brasserie de 220 m² à Lyon, avec une performance dégradée mais crédible."
+                subtitle: "Exemple simulé pour des bureaux de 420 m² à Bordeaux, dans un immeuble tertiaire de la fin des années 1990 avec chauffage gaz, climatisation ponctuelle et ventilation simple flux. Le scénario illustre des actions progressives, crédibles et directement exploitables."
             },
             actions: {
                 title: 'Actions prioritaires',
@@ -8543,8 +8546,6 @@
                 success: 'Votre demande est enregistrée. Un partenaire qualifié vous contactera sous 48h avec une première orientation adaptée à votre site.'
             }
         };
-
-        NEW_DIAGNOSTIC_REPORT_COPY.example.subtitle = "Exemple simulé pour des bureaux de 420 m² à Bordeaux, avec des gains plausibles et actionnables sans surpromesse.";
 
         const NEW_DIAGNOSTIC_BRAND = {
             name: 'DiagTertiaire',

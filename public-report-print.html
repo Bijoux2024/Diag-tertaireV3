@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DiagTertiaire — Rapport PDF</title>
+  <title>DiagTertiaire - Rapport PDF</title>
 
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -610,8 +610,8 @@
                 <div>Production annuelle : <strong>{Math.round(action.pv_production_kwh_an).toLocaleString('fr-FR')} kWh/an</strong>
                   {action.pv_installed_kwc && <span> ({action.pv_installed_kwc} kWc installés)</span>}
                 </div>
-                <div>Autoconsommation : {action.pv_autoconsumption_rate}% — {action.gain_kwh_an?.value ? Math.round(action.gain_kwh_an.value).toLocaleString('fr-FR') : '—'} kWh valorisés sur site</div>
-                <div>Surplus revendu : {Math.round(action.pv_surplus_kwh_an).toLocaleString('fr-FR')} kWh — {Math.round(action.pv_surplus_revenue_euro_an).toLocaleString('fr-FR')} €/an</div>
+                <div>Autoconsommation : {action.pv_autoconsumption_rate}%, soit {action.gain_kwh_an?.value ? Math.round(action.gain_kwh_an.value).toLocaleString('fr-FR') : '—'} kWh valorisés sur site</div>
+                <div>Surplus revendu : {Math.round(action.pv_surplus_kwh_an).toLocaleString('fr-FR')} kWh, soit {Math.round(action.pv_surplus_revenue_euro_an).toLocaleString('fr-FR')} €/an</div>
                 <div>Gain total : <strong style={{ color: '#15803D' }}>{fmtEur(gainEuro)}/an</strong> (autoconso + surplus)</div>
                 {action.pv_hypothesis && <div style={{ fontStyle: 'italic', marginTop: 2 }}>{action.pv_hypothesis}</div>}
               </div>

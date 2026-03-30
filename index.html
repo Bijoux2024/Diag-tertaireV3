@@ -1418,32 +1418,7 @@
            
            ═══════════════════════════════════════════════════════════════════════════ */
 
-        /* ═══════════════════════════════════════════════════════════════════════════
-           COPY: SOURCE UNIQUE DE TEXTES MARKETING (LP)
-           Toutes les modifications de textes de la landing page se font ici.
-           ═══════════════════════════════════════════════════════════════════════════ */
-        const COPY = {
-            cta: {
-                primary: "Recevoir mon pré-diagnostic gratuit",
-                secondaryHome: "",
-                secondaryReport: "",
-            },
-            home: {
-                h1: "Faut-il vraiment lancer une étude pour votre local tertiaire ?",
-                subtitle: "Pré-diagnostic gratuit, non réglementaire, en 3 minutes.",
-                badges: [],
-                segmentation: {},
-                sections: {
-                    getResults: [],
-                    howItWorks: [],
-                    useCasesTitle: "",
-                    useCases: [],
-                    proTitle: "",
-                    proLink: "",
-                },
-                faq: [],
-            },
-        };
+        /* COPY object removed — all marketing text is now inline in JSX components. */
 
         /* ═══════════════════════════════════════════════════════════════════════════
            SECTION 7: PAGES
@@ -1486,12 +1461,12 @@
 
                                 {/* Titre — signature */}
                                 <h1 style={{ fontSize: 'clamp(1.95rem, 8.2vw, 3.75rem)', lineHeight: 1.04, fontWeight: 800, letterSpacing: '-1.5px', color: '#0A1929', marginBottom: 'clamp(1rem, 5vw, 1.875rem)', maxWidth: '30rem' }}>
-                                    Pré-diagnostic énergétique tertiaire gratuit
+                                    Votre bâtiment tertiaire consomme-t-il trop ?
                                 </h1>
 
                                 {/* Sous-titre — densité réduite par largeur */}
                                 <p style={{ maxWidth: '28rem', fontSize: 'clamp(1rem, 2.7vw, 1.0625rem)', lineHeight: 1.8, color: '#4B5B71', marginBottom: 'clamp(1.5rem, 6vw, 3.25rem)' }}>
-                                    En 3 minutes, estimez si un audit réglementaire est pertinent pour votre bâtiment. Ce pré-diagnostic gratuit compare votre niveau de consommation à des références adaptées à votre activité.
+                                    Comparez votre consommation aux références de votre secteur. Résultat gratuit en PDF, en 3 minutes.
                                 </p>
 
                                 {/* Zone CTA — air maximal autour */}
@@ -1502,17 +1477,17 @@
                                         className="btn-primary"
                                         style={{ display: 'inline-flex', alignItems: 'center', gap: '10px' }}
                                     >
-                                        Lancer mon diagnostic gratuit
+                                        Lancer le pré-diagnostic gratuit
                                         <Icon icon="solar:arrow-right-linear" width="20" height="20" />
                                     </button>
-                                    <p style={{ marginTop: '1.25rem', fontSize: '0.8125rem', color: '#64748B', fontWeight: 500, letterSpacing: '0.01em' }}>3 minutes • Sans engagement • Rapport PDF par mail</p>
+                                    <p style={{ marginTop: '1.25rem', fontSize: '0.8125rem', color: '#64748B', fontWeight: 500, letterSpacing: '0.01em' }}>Sans engagement. Rapport PDF immédiat.</p>
                                 </div>
 
                                 {/* Réassurance */}
                                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', paddingTop: 'clamp(1rem, 4vw, 1.5rem)', borderTop: '1px solid #D6E1F0' }}>
                                     <Icon icon="solar:star-bold" style={{ color: '#F59E0B', fontSize: '1rem', flexShrink: 0, marginTop: '2px' }} />
                                     <p style={{ fontSize: '0.875rem', color: '#334455', fontWeight: 500, lineHeight: 1.65 }}>
-                                        Pensé pour les propriétaires, exploitants et petits bailleurs de bâtiments tertiaires de moins de 1 000 m².
+                                        Pour les locaux tertiaires de moins de 1 000 m².
                                     </p>
                                 </div>
                             </div>
@@ -1798,73 +1773,18 @@
                     </div>
                 </section>
 
-                {/* TRANSITION CTA — avant audit */}
-                <section style={{ padding: '0 0 clamp(1.25rem, 4vw, 3rem)', background: '#FFFFFF' }}>
-                    <div className="max-w-6xl mx-auto px-4">
-                        <div
-                            className="rounded-[20px] border border-[#E2E8F0] px-4 py-5 md:px-6 md:py-6"
-                            style={{
-                                background: 'linear-gradient(180deg, rgba(248,250,252,0.92) 0%, #FFFFFF 100%)',
-                                boxShadow: '0 10px 28px rgba(15,23,42,0.05)'
-                            }}
-                        >
-                            <div className="flex flex-col gap-4 md:gap-5">
-                                <h2 style={{ fontSize: 'clamp(1.35rem, 3vw, 2rem)', fontWeight: 750, color: '#0C1D30', lineHeight: 1.15, letterSpacing: '-0.04em', margin: 0, maxWidth: '42rem' }}>
-                                    Avant d’engager un audit complet, vérifiez d’abord s’il est vraiment nécessaire.
-                                </h2>
-
-                                <ul className="grid gap-3 md:grid-cols-3" style={{ margin: 0, padding: 0, listStyle: 'none' }}>
-                                    {[
-                                        "Le tertiaire a ses propres repères.",
-                                        "Comparer au résidentiel peut conduire à une mauvaise décision.",
-                                        "Commencez par un premier cadrage en 3 minutes."
-                                    ].map((item, i) => (
-                                        <li
-                                            key={i}
-                                            className="rounded-[14px] border border-[#E2E8F0] px-4 py-3"
-                                            style={{
-                                                display: 'flex',
-                                                alignItems: 'flex-start',
-                                                gap: '0.75rem',
-                                                background: 'rgba(255,255,255,0.84)',
-                                                color: '#334155',
-                                                fontSize: '0.9375rem',
-                                                lineHeight: 1.6
-                                            }}
-                                        >
-                                            <span
-                                                aria-hidden="true"
-                                                style={{
-                                                    width: '8px',
-                                                    height: '8px',
-                                                    borderRadius: '999px',
-                                                    background: '#1D4ED8',
-                                                    flexShrink: 0,
-                                                    marginTop: '0.45rem'
-                                                }}
-                                            />
-                                            <span>{item}</span>
-                                        </li>
-                                    ))}
-                                </ul>
-
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                {/* BENEFITS — verrouillé, moment de valeur perçue */}
+                {/* BENEFITS */}
                 <section style={{ padding: 'clamp(1.75rem, 5vw, 6.5rem) 0', background: '#FFFFFF' }}>
                     <div className="max-w-6xl mx-auto px-4">
                         <div style={{ textAlign: 'center', marginBottom: 'clamp(2rem, 5vw, 4.25rem)' }}>
-                            <h2 style={{ fontSize: 'clamp(1.5rem, 4.2vw, 2.25rem)', fontWeight: 700, color: '#0A1929', marginBottom: '1rem', letterSpacing: '-0.8px', lineHeight: 1.15 }}>Un rapport utile pour décider avant d'engager un budget</h2>
-                            <p style={{ fontSize: '1rem', color: '#64748B', maxWidth: '33rem', margin: '0 auto', lineHeight: 1.75 }}>Trois informations concrètes pour savoir quoi faire ensuite</p>
+                            <h2 style={{ fontSize: 'clamp(1.5rem, 4.2vw, 2.25rem)', fontWeight: 700, color: '#0A1929', marginBottom: '1rem', letterSpacing: '-0.8px', lineHeight: 1.15 }}>Un rapport utile avant d'engager un budget</h2>
+                            <p style={{ fontSize: '1rem', color: '#64748B', maxWidth: '33rem', margin: '0 auto', lineHeight: 1.75 }}>Le tertiaire a ses propres repères. Trois informations concrètes pour savoir quoi faire ensuite.</p>
                         </div>
                         <div className="grid sm:grid-cols-3 gap-7">
                             {[
                                 { icon: 'solar:buildings-2-linear', color: '#1D4ED8', bg: '#EBF1FF', title: 'Vous situer face à votre activité', desc: 'Comparez votre niveau de consommation à des références cohérentes avec votre usage et votre typologie de local.' },
                                 { icon: 'solar:target-bold', color: '#1D4ED8', bg: '#EBF1FF', title: 'Identifier les priorités', desc: 'Repérez rapidement les premiers leviers de travaux à envisager en priorité selon votre situation.' },
-                                { icon: 'solar:graph-new-up-bold', color: '#1D4ED8', bg: '#EBF1FF', title: 'Estimer le potentiel d\'économie', desc: 'Visualisez un premier niveau de gain énergétique et financier avant d\'aller plus loin.' }
+                                { icon: 'solar:graph-new-up-bold', color: '#1D4ED8', bg: '#EBF1FF', title: 'Estimer le potentiel d\'économie', desc: 'Estimez les gains énergétiques et financiers possibles avant d\'aller plus loin.' }
                             ].map((item, i) => (
                                 <div key={i} style={{
                                     background: '#FCFCFF',
@@ -1895,12 +1815,8 @@
                         <div className="grid lg:grid-cols-2 gap-14 lg:gap-20 items-center">
                             {/* Left: Text */}
                             <div>
-                                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(29,78,216,0.10)', color: '#1E3A6E', padding: '4px 14px', borderRadius: '999px', fontSize: '11px', fontWeight: 700, marginBottom: '1.375rem', letterSpacing: '0.05em', textTransform: 'uppercase', border: '1px solid rgba(29,78,216,0.12)' }}>
-                                    <Icon icon="solar:bolt-linear" style={{ fontSize: '12px', color: '#1D4ED8' }} />
-                                    MODÈLE ULTRA EFFICACE
-                                </div>
                                 <h2 style={{ fontSize: 'clamp(1.5rem, 3.5vw, 2rem)', fontWeight: 700, color: '#102A43', marginBottom: '1rem', letterSpacing: '-0.5px', lineHeight: 1.2 }}>Une analyse simple, rapide et immédiatement exploitable</h2>
-                                <p style={{ fontSize: '0.9375rem', color: '#475569', lineHeight: 1.75, marginBottom: '1.75rem' }}>DiagTertiaire fournit un premier niveau de lecture clair, sans rendez-vous ni démarche complexe. Vous obtenez une base utile pour décider rapidement à partir de quelques informations accessibles.</p>
+                                <p style={{ fontSize: '0.9375rem', color: '#475569', lineHeight: 1.75, marginBottom: '1.75rem' }}>DiagTertiaire fournit une estimation claire, sans rendez-vous ni démarche complexe. Quelques informations suffisent pour décider.</p>
                                 <ul style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
                                     {[
                                         'Rapport généré automatiquement et disponible en téléchargement',
@@ -1966,7 +1882,7 @@
                                             <div style={{ background: '#F1F5F9', borderRadius: '8px', padding: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem', border: '1px dashed #CBD5E1' }}>
                                                 <Icon icon="solar:file-download-bold" style={{ color: '#1D4ED8', fontSize: '1.5rem', flexShrink: 0 }} />
                                                 <div style={{ flex: 1 }}>
-                                                    <p style={{ fontSize: '11px', fontWeight: 700, color: '#0F172A' }}>Synthese_Immo.pdf</p>
+                                                    <p style={{ fontSize: '11px', fontWeight: 700, color: '#0F172A' }}>DiagTertiaire_Rapport.pdf</p>
                                                     <p style={{ fontSize: '10px', color: '#64748B' }}>1.2 MB • 4 pages</p>
                                                 </div>
                                                 <Icon icon="solar:download-minimalistic-linear" style={{ color: '#64748B', fontSize: '1rem' }} />
@@ -2044,8 +1960,8 @@
                         <div style={{ position: 'absolute', bottom: '-80px', left: '-80px', width: '280px', height: '280px', background: 'rgba(255,255,255,0.035)', borderRadius: '50%', filter: 'blur(50px)' }} />
                     </div>
                     <div className="max-w-4xl mx-auto px-4 text-center" style={{ position: 'relative', zIndex: 1 }}>
-                        <h2 style={{ fontSize: 'clamp(1.75rem, 4.5vw, 2.625rem)', fontWeight: 800, color: 'white', marginBottom: '1.125rem', lineHeight: 1.12, letterSpacing: '-0.8px' }}>Vérifiez d'abord si un audit complet est vraiment nécessaire.</h2>
-                        <p style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.78)', marginBottom: '2.25rem', lineHeight: 1.7 }}>Un premier niveau de clarté avant d'engager plus de temps, plus de budget, ou plus de travaux.</p>
+                        <h2 style={{ fontSize: 'clamp(1.75rem, 4.5vw, 2.625rem)', fontWeight: 800, color: 'white', marginBottom: '1.125rem', lineHeight: 1.12, letterSpacing: '-0.8px' }}>Prêt à comparer votre consommation ?</h2>
+                        <p style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.78)', marginBottom: '2.25rem', lineHeight: 1.7 }}>Une estimation concrète avant d'engager du temps ou du budget.</p>
                         <button
                             type="button"
                             onClick={() => navigate('diagnostic')}
@@ -2063,9 +1979,9 @@
                             onMouseLeave={e => { e.currentTarget.style.background = '#FFFFFF'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 5px 20px rgba(0,0,0,0.25), 0 2px 6px rgba(0,0,0,0.12)'; }}
                         >
                             <Icon icon="solar:rocket-linear" style={{ fontSize: '1rem' }} />
-                            Lancer mon diagnostic gratuit
+                            Lancer le pré-diagnostic gratuit
                         </button>
-                        <p style={{ marginTop: '1.25rem', fontSize: '0.8125rem', color: 'rgba(255,255,255,0.58)', fontWeight: 500 }}>3 minutes • Sans engagement • Rapport PDF disponible en téléchargement</p>
+                        <p style={{ marginTop: '1.25rem', fontSize: '0.8125rem', color: 'rgba(255,255,255,0.58)', fontWeight: 500 }}>Sans engagement. Rapport PDF immédiat.</p>
                     </div>
                 </section>
 
@@ -2150,8 +2066,8 @@
                         <div className="mt-5 bg-white rounded-2xl border border-[#E2E8F0] p-5">
                             <h3 className="text-sm font-semibold text-[#102A43] mb-2">Pourquoi ce pré-diagnostic existe</h3>
                             <p className="text-sm text-[#475569] leading-relaxed">
-                                L’objectif est de vous donner un <strong>premier niveau de lecture fiable</strong> avant d’engager du temps,
-                                un budget d’audit ou des travaux. Vous obtenez un cadrage rapide pour décider plus sereinement.
+                                L’objectif : une <strong>estimation fiable</strong> avant d’engager du temps,
+                                un budget d’audit ou des travaux. Un cadrage rapide pour décider sereinement.
                             </p>
                         </div>
                     </div>
@@ -2428,7 +2344,7 @@
                                 </h1>
 
                                 <p className="text-lg md:text-xl text-[#EFF6FF] max-w-3xl mx-auto leading-relaxed mb-8">
-                                    Proposez un service premium à vos clients avec votre identité visuelle. Qualifiez vos prospects en 5 minutes.
+                                    Proposez un diagnostic personnalisé à vos clients, sous votre marque. Qualification rapide, rapport professionnel.
                                 </p>
 
                                 <div className="flex flex-wrap items-center justify-center gap-8 text-sm text-white/90 mb-12 py-4 px-6 bg-white/5 rounded-xl border border-white/10 max-w-3xl mx-auto">
@@ -2440,11 +2356,6 @@
                                     <div className="flex items-center gap-2">
                                         <Icon icon="solar:rocket-bold" className="text-[#16A34A] text-lg" />
                                         <span><strong>Déploiement immédiat</strong></span>
-                                    </div>
-                                    <div className="w-px h-6 bg-white/20"></div>
-                                    <div className="flex items-center gap-2">
-                                        <Icon icon="solar:users-group-rounded-bold" className="text-[#16A34A] text-lg" />
-                                        <span><strong>+80 pros utilisent</strong></span>
                                     </div>
                                 </div>
                             </div>
@@ -2491,7 +2402,7 @@
                                                         <Icon icon="solar:upload-linear" className="text-5xl text-[#475569] mb-3 block mx-auto" />
                                                     )}
                                                     <p className="text-sm font-semibold text-[#0F172A]">
-                                                        {demoLogo ? 'Changer le logo' : 'Cliquez pour uploader votre logo'}
+                                                        {demoLogo ? 'Changer le logo' : 'Déposez votre logo ici'}
                                                     </p>
                                                     <p className="text-xs text-[#475569] mt-2">PNG, JPG, SVG - Max 2MB</p>
                                                 </label>
@@ -2598,7 +2509,7 @@
                                                     Restez en contrôle
                                                 </p>
                                                 <p className="text-xs text-[#475569]">
-                                                    Uploadez votre logo et choisissez une couleur<br />pour générer un aperçu du rapport
+                                                    Déposez votre logo et choisissez une couleur<br />pour générer un aperçu du rapport
                                                 </p>
                                             </div>
                                         )}
@@ -2646,7 +2557,7 @@
                                     </div>
 
                                     <div className="text-center mb-6">
-                                        <h3 className="text-2xl font-bold text-[#102A43] mb-2">Starter</h3>
+                                        <h3 className="text-2xl font-bold text-[#102A43] mb-2">Essentiel</h3>
                                         <p className="text-sm text-[#475569]">Démarrez rapidement</p>
                                     </div>
 
@@ -2688,7 +2599,7 @@
 
                                     <ul className="space-y-3 mb-6">
                                         {[
-                                            { text: 'Tout Starter +', available: true },
+                                            { text: 'Tout Essentiel +', available: true },
                                             { text: 'Multi-utilisateurs (5 comptes)', available: false },
                                             { text: 'Base de données clients', available: false },
                                             { text: 'Export Excel & CSV', available: false },
@@ -2724,7 +2635,7 @@
                                     </div>
 
                                     <div className="text-center mb-6">
-                                        <h3 className="text-2xl font-bold text-[#102A43] mb-2">Enterprise</h3>
+                                        <h3 className="text-2xl font-bold text-[#102A43] mb-2">Sur mesure</h3>
                                         <p className="text-sm text-[#475569]">Solutions sur mesure</p>
                                     </div>
 
@@ -2735,8 +2646,8 @@
                                             { text: 'SSO / Active Directory', available: false },
                                             { text: 'Utilisateurs illimités', available: false },
                                             { text: 'Diagnostics illimités', available: false },
-                                            { text: 'SLA garanti 99.9%', available: false },
-                                            { text: 'Account manager dédié', available: false }
+                                            { text: 'Disponibilité garantie 99,9 %', available: false },
+                                            { text: 'Référent dédié', available: false }
                                         ].map((feature, i) => (
                                             <li key={i} className="flex items-start gap-2 text-sm">
                                                 <Icon
@@ -2779,22 +2690,22 @@
                                         icon: 'solar:calculator-minimalistic-linear',
                                         title: 'Experts-comptables',
                                         desc: 'Proposez un service premium à vos clients tertiaires. Démarquez-vous avec un outil digital professionnel.',
-                                        testimonial: '"On a qualifié 12 prospects en 1 mois. L\'outil paie son abonnement tout seul."',
-                                        author: 'Cabinet MGF, Paris'
+                                        testimonial: '"Qualification rapide : identifiez en quelques minutes si un dossier mérite un audit approfondi."',
+                                        author: ''
                                     },
                                     {
                                         icon: 'solar:buildings-3-linear',
                                         title: 'Bureaux d\'études',
                                         desc: 'Qualifiez vos prospects en 5 minutes avant audit. Gagnez du temps sur les premiers contacts.',
-                                        testimonial: '"Avant on perdait 2h par prospect. Maintenant 15 min suffisent pour savoir si ça vaut le coup."',
-                                        author: 'ThermoConseil, Lyon'
+                                        testimonial: '"Gain de temps : remplacez les premiers rendez-vous exploratoires par un rapport structuré."',
+                                        author: ''
                                     },
                                     {
                                         icon: 'solar:hammer-linear',
                                         title: 'Artisans & installateurs',
                                         desc: 'Démontrez votre expertise avec un rapport professionnel. Facilitez la prise de décision client.',
-                                        testimonial: '"Mes clients adorent recevoir un PDF avec mon logo. Ça fait sérieux et ça convertit mieux."',
-                                        author: 'ÉcoTherm 33, Bordeaux'
+                                        testimonial: '"Image professionnelle : remettez un rapport à vos couleurs, prêt à partager."',
+                                        author: ''
                                     }
                                 ].map((usecase, i) => (
                                     <div key={i} className="bg-white rounded-xl p-6 shadow-sm hover:shadow-lg transition-shadow">
@@ -2833,7 +2744,7 @@
                                 {[
                                     {
                                         q: 'Puis-je tester avant de m\'engager ?',
-                                        r: 'Oui, vous pouvez essayer la démo interactive ci-dessus gratuitement. Nous proposons également un essai gratuit de 14 jours sur l\'offre Starter.'
+                                        r: 'Oui, vous pouvez essayer la démo interactive ci-dessus gratuitement. Nous proposons également un essai gratuit de 14 jours sur l\'offre Essentiel.'
                                     },
                                     {
                                         q: 'Comment fonctionne la marque blanche ?',
@@ -2841,19 +2752,19 @@
                                     },
                                     {
                                         q: 'Que se passe-t-il si je dépasse mon quota de diagnostics ?',
-                                        r: 'Vous recevez une notification à 80% puis 100% de votre quota. Vous pouvez upgrader à tout moment ou acheter un pack supplémentaire.'
+                                        r: 'Vous recevez une notification à 80% puis 100% de votre quota. Vous pouvez passer à l\'offre supérieure à tout moment ou ajouter un forfait complémentaire.'
                                     },
                                     {
                                         q: 'Les fonctionnalités "en développement" sont-elles garanties ?',
-                                        r: 'Notre roadmap est indicative. Si une fonctionnalité annoncée n\'est pas livrée dans les 6 mois suivant la date prévue, nous proposons un remboursement ou une migration gratuite.'
+                                        r: 'Notre roadmap est indicative. Si une fonctionnalité annoncée n\'est pas livrée dans les 6 mois suivant la date prévue, nous proposons un remboursement ou un accompagnement gratuit vers une autre offre.'
                                     },
                                     {
                                         q: 'Puis-je migrer d\'une offre à l\'autre ?',
-                                        r: 'Oui, vous pouvez upgrader ou downgrader à tout moment. Le changement est effectif le mois suivant, au prorata.'
+                                        r: 'Oui, vous pouvez passer à l\'offre supérieure ou revenir à l\'offre précédente à tout moment. Le changement prend effet le mois suivant, au prorata.'
                                     },
                                     {
                                         q: 'Proposez-vous des formations ?',
-                                        r: 'Oui, chaque abonnement inclut un webinaire d\'onboarding de 30 minutes. L\'offre Enterprise inclut une formation sur site si besoin.'
+                                        r: 'Oui, chaque abonnement inclut un session de prise en main de 30 minutes. L\'offre Sur mesure inclut une formation sur site si besoin.'
                                     }
                                 ].map((faq, i) => (
                                     <details key={i} className="group border-l-4 border-[#E2E8F0] border border-[#E2E8F0] bg-white rounded-lg overflow-hidden hover:border-l-[#1D4ED8] hover:shadow-md transition-all">
@@ -2896,7 +2807,7 @@
                                     Rejoignez les pros qui font confiance à DiagTertiaire
                                 </h2>
                                 <p className="text-lg text-[#EFF6FF] max-w-2xl mx-auto">
-                                    Qualifiez vos prospects 5x plus vite avec un outil professionnel. Équipe visible dans 24h.
+                                    Un outil professionnel pour qualifier vos dossiers tertiaires. Mise en place sous 24h.
                                 </p>
                             </div>
 
@@ -3004,7 +2915,7 @@
                                     <div className="space-y-3 mb-8 text-sm text-[#475569]">
                                         <div className="flex items-center justify-center gap-2">
                                             <Icon icon="solar:check-circle-bold" className="text-[#16A34A]" />
-                                            <span>Un account manager dédié</span>
+                                            <span>Un référent dédié</span>
                                         </div>
                                         <div className="flex items-center justify-center gap-2">
                                             <Icon icon="solar:check-circle-bold" className="text-[#16A34A]" />
@@ -10896,7 +10807,7 @@
                                         onClick={() => navigate('diagnostic')}
                                         className="btn-primary inline-flex items-center justify-center px-5 py-2.5 text-sm font-bold rounded-xl"
                                     >
-                                        Lancer mon diagnostic gratuit
+                                        Lancer le pré-diagnostic gratuit
                                     </button>
                                 </div>
 
@@ -10924,7 +10835,7 @@
                                         onClick={() => navigate('diagnostic')}
                                         className="btn-primary mt-3 w-full inline-flex items-center justify-center px-5 py-3 text-sm font-bold rounded-xl"
                                     >
-                                        Lancer mon diagnostic gratuit
+                                        Lancer le pré-diagnostic gratuit
                                     </button>
                                 </div>
                             </div>
@@ -10973,7 +10884,7 @@
                                         <p className="text-sm text-[#64748B] leading-relaxed mb-4">Pré-diagnostic énergétique tertiaire orienté décision, basé sur références sectorielles.</p>
                                         <div className="space-y-2">
                                             <button type="button" onClick={() => navigate('home')} className="block text-sm text-slate-400 hover:text-white transition-colors font-medium">A propos</button>
-                                            <button type="button" className="block text-sm text-slate-400 hover:text-white transition-colors font-medium">Notre méthodologie</button>
+                                            <button type="button" onClick={() => navigate('methode')} className="block text-sm text-slate-400 hover:text-white transition-colors font-medium">Notre méthodologie</button>
                                             <a href="mailto:contact@diag-tertiaire.fr" className="block text-sm text-slate-400 hover:text-white transition-colors font-medium">Contact</a>
                                         </div>
                                     </div>
@@ -10981,9 +10892,6 @@
                                     <div>
                                         <h4 className="text-sm font-bold text-white mb-4">Ressources</h4>
                                         <ul className="space-y-2.5">
-                                            <li><button type="button" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Guide du décret tertiaire</button></li>
-                                            <li><button type="button" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Références sectorielles</button></li>
-                                            <li><button type="button" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Blog</button></li>
                                             <li><button type="button" onClick={() => navigate('exemple')} className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Exemple de rapport</button></li>
                                         </ul>
                                     </div>
@@ -11003,8 +10911,6 @@
                                         <h4 className="text-sm font-bold text-white mb-4">Professionnel</h4>
                                         <ul className="space-y-2.5">
                                             <li><a href="index.saaspro.html" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Espace pro</a></li>
-                                            <li><button type="button" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Devenir partenaire</button></li>
-                                            <li><button type="button" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">API et Intégrations</button></li>
                                         </ul>
                                     </div>
                                 </div>
@@ -11012,7 +10918,7 @@
                                 <div className="landing-footer-meta pt-6 border-t border-white/10 flex flex-wrap justify-between items-center gap-4">
                                     <p className="text-xs text-[#64748B]">© 2026 DiagTertiaire • Estimations basées sur références sectorielles</p>
                                     <div className="landing-footer-badges flex items-center gap-3">
-                                        {['SSL', 'RGPD', '🇫🇷 FR'].map((b, i) => (
+                                        {['SSL', 'RGPD', 'FR'].map((b, i) => (
                                             <span key={i} className="text-xs text-[#64748B] bg-white/5 px-2.5 py-1.5 rounded-lg font-medium">{b}</span>
                                         ))}
                                     </div>

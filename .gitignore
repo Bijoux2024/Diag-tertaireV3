@@ -22,3 +22,6 @@ vercel_inspect*.txt
 scan*.txt
 search.txt
 search.js
+
+# Claude settings and worktrees
+.claude/

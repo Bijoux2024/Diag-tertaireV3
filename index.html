@@ -300,6 +300,27 @@
         }
 
         /* Primary CTA button — gradient validé, halo maximum */
+        @media (prefers-reduced-motion: reduce) {
+            html:focus-within {
+                scroll-behavior: auto;
+            }
+
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+
+            .fade-in,
+            .fade-up {
+                opacity: 1 !important;
+                transform: none !important;
+            }
+        }
+
         .btn-primary {
             background: linear-gradient(135deg, #1D4ED8 0%, #1E40AF 100%);
             color: white;
@@ -309,7 +330,7 @@
             font-size: 1.0625rem;
             font-weight: 700;
             letter-spacing: -0.2px;
-            box-shadow: 0 6px 24px rgba(29, 78, 216, 0.42), 0 2px 6px rgba(29, 78, 216, 0.22);
+            box-shadow: 0 10px 26px rgba(29, 78, 216, 0.24), 0 4px 10px rgba(29, 78, 216, 0.12);
             border: none;
             cursor: pointer;
             transition: background 0.2s ease, box-shadow 0.25s ease, transform 0.18s ease;
@@ -318,7 +339,7 @@
         .btn-primary:hover {
             background: linear-gradient(135deg, #1E40AF 0%, #1E3A8A 100%);
             transform: translateY(-2px);
-            box-shadow: 0 12px 36px rgba(29, 78, 216, 0.50), 0 4px 10px rgba(29, 78, 216, 0.25);
+            box-shadow: 0 14px 32px rgba(29, 78, 216, 0.28), 0 6px 14px rgba(29, 78, 216, 0.14);
         }
 
         .btn-primary:active {
@@ -343,6 +364,44 @@
             filter: drop-shadow(0 24px 40px rgba(15, 23, 42, 0.16));
         }
 
+        .landing-section-soft {
+            background: linear-gradient(180deg, #F7FAFF 0%, #FFFFFF 100%);
+            border-top: 1px solid rgba(219, 234, 254, 0.85);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.92);
+        }
+
+        .landing-panel {
+            background: #FFFFFF;
+            border: 1px solid #E2E8F0;
+            border-radius: 18px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .landing-panel-muted {
+            background: linear-gradient(180deg, #F6F9FF 0%, #FFFFFF 100%);
+            border: 1px solid rgba(29, 78, 216, 0.14);
+            border-radius: 18px;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+        }
+
+        .landing-trust-grid {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .landing-pro-bridge {
+            background: linear-gradient(135deg, #FFFFFF 0%, #F5F9FF 100%);
+            border: 1px solid #DCE6F6;
+            border-radius: 20px;
+            box-shadow: 0 14px 32px rgba(15, 23, 42, 0.06);
+        }
+
+        @media (min-width: 768px) {
+            .landing-trust-grid {
+                grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+            }
+        }
+
 
         /* ===== RESPONSIVE AMÉLIORATIONS ===== */
         @media (max-width: 640px) {
@@ -357,6 +416,26 @@
             .chip {
                 font-size: 0.72rem !important;
                 padding: 4px 10px !important;
+            }
+
+            .landing-hero-shell {
+                gap: 1.25rem !important;
+            }
+
+            .landing-hero-mockup {
+                margin-top: 0.25rem !important;
+            }
+
+            .landing-process-card {
+                padding: 1.25rem 1rem !important;
+                border-radius: 16px !important;
+            }
+
+            .landing-process-badge {
+                width: 46px !important;
+                height: 46px !important;
+                border-radius: 12px !important;
+                margin-bottom: 1rem !important;
             }
         }
 
@@ -611,9 +690,23 @@
                 gap: 1.5rem !important;
             }
 
+            footer .landing-footer-grid>div {
+                padding-bottom: 1rem;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            }
+
+            footer .landing-footer-grid>div:last-child {
+                padding-bottom: 0;
+                border-bottom: none;
+            }
+
             footer .pt-6.border-t {
                 flex-direction: column;
                 align-items: flex-start;
+            }
+
+            footer .landing-footer-badges {
+                flex-wrap: wrap;
             }
 
             details.group {
@@ -1367,7 +1460,7 @@
         const PageHome = ({ navigate }) => (
             <div className="fade-in">
                 {/* HERO — VERROUILLAGE FINAL */}
-                <section className="relative w-full overflow-hidden" style={{ paddingTop: 'clamp(1.5rem, 5vw, 8rem)', paddingBottom: 'clamp(2rem, 5vw, 8rem)', background: '#FFFFFF' }}>
+                <section className="relative w-full overflow-hidden" style={{ paddingTop: 'clamp(1.5rem, 5vw, 8rem)', paddingBottom: 'clamp(2rem, 5vw, 7rem)', background: 'linear-gradient(180deg, #FFFFFF 0%, #F8FBFF 100%)' }}>
                     {/* GLOW — halos structurés */}
                     <div className="absolute inset-0 pointer-events-none z-0" aria-hidden="true">
                         <div className="absolute top-0 left-0"
@@ -1380,7 +1473,7 @@
 
                     {/* CONTENT LAYER */}
                     <div className="relative z-10 max-w-7xl mx-auto px-4 lg:px-10">
-                        <div className="grid lg:grid-cols-2 gap-16 lg:gap-28 items-center">
+                        <div className="grid landing-hero-shell lg:grid-cols-2 gap-12 md:gap-16 lg:gap-28 items-center">
 
                             {/* LEFT COLUMN */}
                             <div className="order-1 lg:order-1">
@@ -1392,17 +1485,17 @@
                                 </div>
 
                                 {/* Titre — signature */}
-                                <h1 style={{ fontSize: 'clamp(1.95rem, 8.2vw, 3.75rem)', lineHeight: 1.04, fontWeight: 800, letterSpacing: '-1.5px', color: '#0A1929', marginBottom: '1.875rem', maxWidth: '30rem' }}>
+                                <h1 style={{ fontSize: 'clamp(1.95rem, 8.2vw, 3.75rem)', lineHeight: 1.04, fontWeight: 800, letterSpacing: '-1.5px', color: '#0A1929', marginBottom: 'clamp(1rem, 5vw, 1.875rem)', maxWidth: '30rem' }}>
                                     Pré-diagnostic énergétique tertiaire gratuit
                                 </h1>
 
                                 {/* Sous-titre — densité réduite par largeur */}
-                                <p style={{ maxWidth: '28rem', fontSize: '1.0625rem', lineHeight: 1.85, color: '#4B5B71', marginBottom: '3.25rem' }}>
+                                <p style={{ maxWidth: '28rem', fontSize: 'clamp(1rem, 2.7vw, 1.0625rem)', lineHeight: 1.8, color: '#4B5B71', marginBottom: 'clamp(1.5rem, 6vw, 3.25rem)' }}>
                                     En 3 minutes, estimez si un audit réglementaire est pertinent pour votre bâtiment. Ce pré-diagnostic gratuit compare votre niveau de consommation à des références adaptées à votre activité.
                                 </p>
 
                                 {/* Zone CTA — air maximal autour */}
-                                <div style={{ marginBottom: '3rem' }}>
+                                <div style={{ marginBottom: 'clamp(1.5rem, 6vw, 3rem)' }}>
                                     <button
                                         type="button"
                                         onClick={() => navigate('diagnostic')}
@@ -1416,7 +1509,7 @@
                                 </div>
 
                                 {/* Réassurance */}
-                                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', paddingTop: '1.5rem', borderTop: '1px solid #D6E1F0' }}>
+                                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', paddingTop: 'clamp(1rem, 4vw, 1.5rem)', borderTop: '1px solid #D6E1F0' }}>
                                     <Icon icon="solar:star-bold" style={{ color: '#F59E0B', fontSize: '1rem', flexShrink: 0, marginTop: '2px' }} />
                                     <p style={{ fontSize: '0.875rem', color: '#334455', fontWeight: 500, lineHeight: 1.65 }}>
                                         Pensé pour les propriétaires, exploitants et petits bailleurs de bâtiments tertiaires de moins de 1 000 m².
@@ -1426,7 +1519,7 @@
                             {/* RIGHT COLUMN - MOCKUP PDF PREMIUM V3 */}
                             {/* Performance estimée */}
                             {/* RIGHT COLUMN - MOCKUP PDF PREMIUM V4 */}
-                            <div className="flex justify-center items-center order-3 lg:order-2 mt-4 sm:mt-6 lg:mt-0">
+                            <div className="landing-hero-mockup flex justify-center items-center order-3 lg:order-2 mt-2 sm:mt-6 lg:mt-0">
                                 <div className="mockup-float relative" style={{ width: 'min(280px, 80vw)', maxWidth: '100%' }} data-desktop-w="450">
 
                                     {/* Depth layer */}
@@ -1888,34 +1981,31 @@
                 </section>
 
                 {/* PROCESS - Fond bleu clair premium */}
-                <section style={{ padding: 'clamp(1.75rem, 5vw, 5.5rem) 0', background: '#FFFFFF' }}>
+                <section className="landing-section-soft" style={{ padding: 'clamp(1.75rem, 5vw, 5.5rem) 0' }}>
                     <div className="max-w-6xl mx-auto px-4">
                         <div style={{ textAlign: 'center', marginBottom: '3.75rem' }}>
                             <h2 style={{ fontSize: 'clamp(1.5rem, 4vw, 2rem)', fontWeight: 700, color: '#0C1F35', marginBottom: '0.875rem', letterSpacing: '-0.6px', lineHeight: 1.2 }}>Comment obtenir votre rapport</h2>
                             <p style={{ fontSize: '1rem', color: '#64748B', maxWidth: '36rem', margin: '0 auto', lineHeight: 1.7 }}>Un processus simple en trois étapes, pensé pour les bâtiments tertiaires</p>
                         </div>
-                        <div className="grid sm:grid-cols-3 gap-6">
+                        <div className="grid sm:grid-cols-3 gap-4 md:gap-6">
                             {[
                                 { num: '1', title: 'Renseignez votre usage', desc: 'Quelques informations clés : activité, surface, consommations, équipements, ancienneté et éventuels travaux déjà réalisés.' },
                                 { num: '2', title: 'Comparaison de vos données', desc: 'Vos informations sont mises en perspective avec les références cohérentes de votre usage.' },
                                 { num: '3', title: 'Téléchargez votre rapport PDF', desc: 'Obtenez une première lecture de vos écarts de consommation, les priorités d\'action et une estimation du potentiel d\'économie.' }
                             ].map((step, i) => (
-                                <div key={i} style={{
-                                    background: '#FFFFFF',
-                                    borderRadius: '16px',
-                                    padding: '2.25rem 2rem',
-                                    border: '1px solid #DDE6F4',
-                                    boxShadow: '0 4px 16px rgba(15,23,42,0.08), 0 1px 4px rgba(15,23,42,0.04)'
+                                <div key={i} className="landing-panel landing-process-card process-step-mobile" style={{
+                                    padding: 'clamp(1.25rem, 4vw, 2.25rem) clamp(1rem, 4vw, 2rem)',
+                                    minHeight: '100%'
                                 }}>
-                                    <div style={{
+                                    <div className="landing-process-badge" style={{
                                         width: '54px', height: '54px',
                                         borderRadius: '13px',
-                                        background: i === 0 ? 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)' : i === 1 ? 'linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%)' : 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+                                        background: i === 0 ? 'linear-gradient(135deg, #1D4ED8 0%, #1E40AF 100%)' : i === 1 ? 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)' : 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)',
                                         color: 'white',
                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                                         fontWeight: 800, fontSize: '1.375rem',
                                         marginBottom: '1.625rem',
-                                        boxShadow: i === 0 ? '0 5px 16px rgba(37,99,235,0.38)' : i === 1 ? '0 5px 16px rgba(124,58,237,0.38)' : '0 5px 16px rgba(5,150,105,0.38)'
+                                        boxShadow: i === 0 ? '0 10px 22px rgba(29,78,216,0.24)' : i === 1 ? '0 10px 22px rgba(37,99,235,0.2)' : '0 10px 22px rgba(59,130,246,0.18)'
                                     }}>{step.num}</div>
                                     <h4 style={{ fontSize: '1.0625rem', fontWeight: 700, color: '#0C1F35', marginBottom: '0.75rem', lineHeight: 1.3 }}>{step.title}</h4>
                                     <p style={{ fontSize: '0.9375rem', color: '#64748B', lineHeight: 1.75 }}>{step.desc}</p>
@@ -1926,16 +2016,23 @@
                 </section>
 
                 {/* TRUST NOTE — sobre, fond blanc, épuré */}
-                <section style={{ padding: 'clamp(1.5rem, 4vw, 3rem) 0', background: '#FFFFFF', borderTop: '1px solid #E2E8F0' }}>
-                    <div className="max-w-3xl mx-auto px-4">
-                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', background: '#F5F8FF', border: '1px solid rgba(29,78,216,0.14)', borderRadius: '14px', padding: '1.25rem 1.375rem', boxShadow: '0 2px 8px rgba(29,78,216,0.05)' }}>
-                            <Icon icon="solar:shield-check-linear" style={{ color: '#1D4ED8', fontSize: '1.125rem', flexShrink: 0, marginTop: '2px' }} />
-                            <p style={{ fontSize: '0.875rem', color: '#334455', lineHeight: 1.75 }}>
-                                <strong>Note de confiance :</strong> ce pré-diagnostic est un outil d'aide à la décision, non certifiant, basé sur vos données déclaratives. Il ne remplace pas un audit réglementaire ni une visite technique sur site.
-                            </p>
-                            <p className="text-[#475569] text-sm md:text-base">
-                                {NEW_DIAGNOSTIC_REPORT_COPY.example.subtitle}
-                            </p>
+                <section style={{ padding: 'clamp(1.5rem, 4vw, 3rem) 0', background: '#F8FAFC', borderTop: '1px solid #E2E8F0' }}>
+                    <div className="max-w-5xl mx-auto px-4">
+                        <div className="landing-trust-grid">
+                            <div className="landing-panel-muted" style={{ display: 'flex', alignItems: 'flex-start', gap: '0.875rem', padding: '1.25rem 1.375rem' }}>
+                                <Icon icon="solar:shield-check-linear" style={{ color: '#1D4ED8', fontSize: '1.125rem', flexShrink: 0, marginTop: '2px' }} />
+                                <p style={{ fontSize: '0.875rem', color: '#334455', lineHeight: 1.75 }}>
+                                    <strong>Note de confiance :</strong> ce pré-diagnostic est un outil d'aide à la décision, non certifiant, basé sur vos données déclaratives. Il ne remplace pas un audit réglementaire ni une visite technique sur site.
+                                </p>
+                            </div>
+                            <div className="landing-panel" style={{ padding: '1.25rem 1.375rem' }}>
+                                <div className="inline-flex items-center gap-2 rounded-full bg-[#EFF6FF] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#1D4ED8]">
+                                    Exemple simulé
+                                </div>
+                                <p className="mt-3 text-[#475569] text-sm md:text-base leading-relaxed">
+                                    {NEW_DIAGNOSTIC_REPORT_COPY.example.subtitle}
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -1973,22 +2070,22 @@
                 </section>
 
                 {/* SECTION PRO DISCRETE */}
-                <section style={{ padding: 'clamp(1.5rem, 4vw, 2.5rem) 0 clamp(1.75rem, 4.5vw, 3.25rem)', background: '#F8FAFC', borderTop: '1px solid #E2E8F0' }}>
+                <section style={{ padding: 'clamp(1.5rem, 4vw, 2.5rem) 0 clamp(1.75rem, 4.5vw, 3.25rem)', background: 'linear-gradient(180deg, #F8FAFC 0%, #FFFFFF 100%)', borderTop: '1px solid #E2E8F0' }}>
                     <div className="max-w-6xl mx-auto px-4">
-                        <div className="max-w-5xl mx-auto rounded-[16px] border border-[#E2E8F0] bg-white px-4 py-4 md:px-6 md:py-[1.125rem]">
+                        <div className="landing-pro-bridge max-w-5xl mx-auto px-5 py-5 md:px-7 md:py-6">
                             <div className="flex flex-col gap-3.5 md:flex-row md:items-center md:justify-between md:gap-6">
                                 <div className="max-w-[41rem]">
-                                    <h2 className="text-[1.125rem] md:text-[1.25rem] font-bold tracking-[-0.02em] text-[#0C1D30] leading-tight">
+                                    <h2 className="text-[1.2rem] md:text-[1.35rem] font-bold tracking-[-0.02em] text-[#0C1D30] leading-tight">
                                         Vous êtes un professionnel ?
                                     </h2>
-                                    <p className="mt-1.5 text-sm md:text-[0.9375rem] leading-relaxed text-[#475569]">
+                                    <p className="mt-2 text-sm md:text-[0.95rem] leading-relaxed text-[#475569]">
                                         Découvrez l’espace dédié aux professionnels qui veulent qualifier plus vite leurs dossiers tertiaires.
                                     </p>
                                 </div>
 
                                 <a
                                     href="index.saaspro.html"
-                                    className="inline-flex min-h-[42px] w-full shrink-0 items-center justify-center gap-1.5 self-start rounded-lg border border-[#E2E8F0] bg-transparent px-3.5 py-2 text-sm font-medium text-[#334155] no-underline transition-all hover:border-[#CBD5E1] hover:bg-[#F8FAFC] hover:text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-slate-200 focus:ring-offset-2 sm:w-auto md:self-center"
+                                    className="inline-flex min-h-[46px] w-full shrink-0 items-center justify-center gap-1.5 self-start rounded-xl border border-[#C7D8F8] bg-white px-4 py-2.5 text-sm font-semibold text-[#1D4ED8] no-underline shadow-sm transition-all hover:border-[#AFC6F5] hover:bg-[#EFF6FF] hover:text-[#1E40AF] focus:outline-none focus:ring-2 focus:ring-slate-200 focus:ring-offset-2 sm:w-auto md:self-center"
                                 >
                                     Découvrir l’Espace Pro
                                     <Icon icon="solar:arrow-right-linear" style={{ fontSize: '0.95rem', opacity: 0.75 }} />
@@ -1998,7 +2095,7 @@
                     </div>
                 </section>
                 {/* VISUAL SEPARATOR */}
-                <div style={{ height: '3px', background: 'linear-gradient(90deg, #102A43, #2563EB, #102A43)' }} />
+                <div style={{ height: '1px', opacity: 0.7, background: 'linear-gradient(90deg, rgba(15,23,42,0), rgba(37,99,235,0.42), rgba(15,23,42,0))' }} />
             </div>
         );
         const PageMethod = ({ navigate }) => (
@@ -10862,9 +10959,9 @@
                     </main>
 
                     {currentPage !== 'diagnostic' && (
-                        <footer className="bg-[#0F172A] py-12 md:py-14 border-t border-white/5">
+                        <footer className="bg-[linear-gradient(180deg,#0F172A_0%,#122039_100%)] py-14 md:py-16 border-t border-white/5">
                             <div className="max-w-6xl mx-auto px-4">
-                                <div className="grid md:grid-cols-4 gap-8 md:gap-10 mb-8">
+                                <div className="landing-footer-grid grid md:grid-cols-4 gap-8 md:gap-10 mb-8">
 
                                     <div>
                                         <div className="flex items-center gap-2 mb-4">
@@ -10873,7 +10970,7 @@
                                             </div>
                                             <span className="font-bold text-white">DiagTertiaire</span>
                                         </div>
-                                        <p className="text-sm text-[#475569] leading-relaxed mb-4">Pré-diagnostic énergétique tertiaire orienté décision, basé sur références sectorielles.</p>
+                                        <p className="text-sm text-[#64748B] leading-relaxed mb-4">Pré-diagnostic énergétique tertiaire orienté décision, basé sur références sectorielles.</p>
                                         <div className="space-y-2">
                                             <button type="button" onClick={() => navigate('home')} className="block text-sm text-slate-400 hover:text-white transition-colors font-medium">A propos</button>
                                             <button type="button" className="block text-sm text-slate-400 hover:text-white transition-colors font-medium">Notre méthodologie</button>
@@ -10912,11 +11009,11 @@
                                     </div>
                                 </div>
 
-                                <div className="pt-6 border-t border-white/10 flex flex-wrap justify-between items-center gap-4">
-                                    <p className="text-xs text-[#475569]">© 2026 DiagTertiaire • Estimations basées sur références sectorielles</p>
-                                    <div className="flex items-center gap-3">
+                                <div className="landing-footer-meta pt-6 border-t border-white/10 flex flex-wrap justify-between items-center gap-4">
+                                    <p className="text-xs text-[#64748B]">© 2026 DiagTertiaire • Estimations basées sur références sectorielles</p>
+                                    <div className="landing-footer-badges flex items-center gap-3">
                                         {['SSL', 'RGPD', '🇫🇷 FR'].map((b, i) => (
-                                            <span key={i} className="text-xs text-[#475569] bg-white/5 px-2.5 py-1.5 rounded-lg font-medium">{b}</span>
+                                            <span key={i} className="text-xs text-[#64748B] bg-white/5 px-2.5 py-1.5 rounded-lg font-medium">{b}</span>
                                         ))}
                                     </div>
                                 </div>

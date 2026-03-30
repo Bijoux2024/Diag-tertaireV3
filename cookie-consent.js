@@ -74,27 +74,28 @@
 
         /* ─── Bannière (bas d'écran) ─────────────────────────── */
         '#dt-cb{position:fixed;bottom:0;left:0;right:0;z-index:99990;' +
-        'background:#fff;border-top:1px solid #E2E8F0;' +
-        'box-shadow:0 -4px 24px rgba(15,23,42,.09);' +
+        'background:rgba(255,255,255,.96);border-top:1px solid rgba(226,232,240,.92);' +
+        'backdrop-filter:saturate(145%) blur(14px);' +
+        'box-shadow:0 -10px 30px rgba(15,23,42,.08);' +
         'font-family:Inter,-apple-system,BlinkMacSystemFont,sans-serif;' +
         'font-size:14px;color:#0F172A;line-height:1.5;' +
         'transform:translateY(100%);transition:transform .28s cubic-bezier(.4,0,.2,1)}' +
         '#dt-cb.dt-in{transform:translateY(0)}' +
 
-        '#dt-cb-inner{max-width:900px;margin:0 auto;padding:1rem 1.5rem;' +
-        'display:flex;align-items:flex-start;gap:1.25rem;flex-wrap:wrap}' +
+        '#dt-cb-inner{max-width:980px;margin:0 auto;padding:.875rem 1.25rem;' +
+        'display:flex;align-items:center;gap:1rem;flex-wrap:wrap}' +
 
-        '#dt-cb-text{flex:1;min-width:240px}' +
-        '#dt-cb-text h2{font-size:14px;font-weight:700;color:#0F172A;margin:0 0 .3rem 0}' +
-        '#dt-cb-text p{margin:0;color:#475569;font-size:12.5px;line-height:1.6}' +
+        '#dt-cb-text{flex:1 1 360px;min-width:0}' +
+        '#dt-cb-text h2{font-size:13.5px;font-weight:700;color:#0F172A;margin:0 0 .2rem 0}' +
+        '#dt-cb-text p{margin:0;max-width:48rem;color:#475569;font-size:12px;line-height:1.55}' +
         '#dt-cb-text a{color:#1D4ED8;text-decoration:underline;text-underline-offset:2px}' +
         '#dt-cb-text a:hover{color:#1E40AF}' +
 
-        '#dt-cb-btns{display:flex;gap:.5rem;flex-shrink:0;align-items:center;' +
-        'padding-top:.125rem}' +
+        '#dt-cb-btns{display:grid;grid-template-columns:repeat(3,minmax(0,auto));gap:.45rem;' +
+        'flex-shrink:0;align-items:center;justify-content:end}' +
 
         /* ─── Boutons communs ─────────────────────────────────── */
-        '.dt-btn{padding:.5rem 1rem;border-radius:8px;font-size:12.5px;font-weight:600;' +
+        '.dt-btn{min-height:40px;padding:.625rem .95rem;border-radius:10px;font-size:12px;font-weight:600;' +
         'cursor:pointer;line-height:1;white-space:nowrap;font-family:inherit;' +
         'transition:background .14s,color .14s,border-color .14s}' +
         '.dt-btn:focus-visible{outline:2px solid #1D4ED8;outline-offset:2px}' +
@@ -117,9 +118,13 @@
 
         /* ─── Bannière mobile ─────────────────────────────────── */
         '@media(max-width:600px){' +
-        '#dt-cb-inner{padding:.875rem 1rem;gap:.75rem}' +
-        '#dt-cb-btns{width:100%;flex-direction:column}' +
-        '#dt-cb-btns .dt-btn{width:100%;text-align:center;padding:.625rem 1rem}' +
+        '#dt-cb{max-height:min(34vh,240px);overflow-y:auto}' +
+        '#dt-cb-inner{padding:.75rem .875rem;gap:.625rem;align-items:flex-start}' +
+        '#dt-cb-text h2{font-size:13px}' +
+        '#dt-cb-text p{font-size:11.5px;line-height:1.45}' +
+        '#dt-cb-btns{width:100%;grid-template-columns:repeat(2,minmax(0,1fr));justify-content:stretch}' +
+        '#dt-cb-btns .dt-btn{width:100%;text-align:center;padding:.625rem .75rem}' +
+        '#dt-cb-accept{grid-column:1 / -1}' +
         '}' +
 
         /* ─── Panneau overlay ─────────────────────────────────── */
@@ -258,9 +263,8 @@
             '<h2 id="dt-cb-title">Cookies et mesure d\'audience</h2>' +
             '<p id="dt-cb-desc">' +
             'Nous utilisons des cookies et autres traceurs pour mesurer l\'audience du site ' +
-            'et, le cas échéant, améliorer votre expérience. ' +
-            'Vous pouvez accepter, refuser, ou personnaliser vos choix. ' +
-            'Vous pourrez modifier votre choix à tout moment depuis le lien\u00a0' +
+            'et, si vous l\'acceptez, ameliorer l\'experience. ' +
+            'Votre choix reste modifiable a tout moment via le lien\u00a0' +
             '«\u00a0Gestion des cookies\u00a0». ' +
             '<a href="' + COOKIES_PAGE + '">Politique cookies.</a>' +
             '</p>' +

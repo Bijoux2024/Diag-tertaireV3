@@ -1222,11 +1222,11 @@
                 sections: [
                     {
                         heading: 'Éditeur',
-                        body: '[Nom de la société] — [Adresse] — [Email contact]'
+                        body: '[Nom de la société] - [Adresse] - [Email contact]'
                     },
                     {
                         heading: 'Hébergement',
-                        body: 'Vercel Inc. — 340 Pine Street Suite 701, San Francisco, CA 94104'
+                        body: 'Vercel Inc. - 340 Pine Street Suite 701, San Francisco, CA 94104'
                     },
                     {
                         heading: 'Directeur de publication',
@@ -4689,7 +4689,7 @@
             },
             steps: {
                 title: "3 étapes pour démarrer",
-                intro: "Créez votre compte ou reconnectez-vous — votre espace s'ouvre immédiatement.",
+                intro: "Créez votre compte ou reconnectez-vous. Votre espace s'ouvre immédiatement.",
                 items: [
                     { title: "Renseignez l'essentiel", text: "Nom, email, société, métier et mot de passe pour ouvrir votre espace.", duration: "< 1 min" },
                     { title: "Validez votre email si nécessaire", text: "Selon la configuration, un email de confirmation peut être envoyé.", duration: "Quelques secondes" },
@@ -5360,7 +5360,7 @@
             const syntheticRecord = {
                 id: recordId,
                 organization_id: organizationId,
-                title: `EXEMPLE — ${displayName}`,
+                title: `EXEMPLE - ${displayName}`,
                 status: 'completed',
                 lifecycle_status: 'active',
                 deleted_at: null,
@@ -7648,7 +7648,7 @@
                                     {r ? r.score : (c.score || '-')}
                                 </div>
                                 <div className="text-xs text-slate-300 mt-1">{r ? r.positioning : c.positioning || ''}</div>
-                                <div className="text-[10px] text-slate-400 mt-2 text-center max-w-[180px]">Indicateur indicatif — non opposable, hors cadre OPERAT.</div>
+                                <div className="text-[10px] text-slate-400 mt-2 text-center max-w-[180px]">Indicateur indicatif, non opposable, hors cadre OPERAT.</div>
                                 {r && (
                                     <div className="text-xs text-slate-400 mt-1 flex items-center gap-1.5">
                                         <span className={`w-2 h-2 rounded-full ${r.badgeConfiance === 'Élevé' ? 'bg-emerald-400' : r.badgeConfiance === 'Estimé' ? 'bg-red-400' : 'bg-amber-400'}`}></span>
@@ -7749,7 +7749,7 @@
                                 <h3 className="text-lg font-bold text-slate-800 mb-1 flex items-center gap-2">
                                     <Icon icon="solar:tag-price-bold" style={{ color: reportAccent }} /> Indice DiagTertiaire - avant / après travaux
                                 </h3>
-                                <p className="text-xs text-slate-400 mb-6">Indicateur indicatif — non opposable, hors cadre OPERAT.</p>
+                                <p className="text-xs text-slate-400 mb-6">Indicateur indicatif, non opposable, hors cadre OPERAT.</p>
                                 <div className="flex flex-col items-center gap-6 sm:flex-row sm:justify-center">
                                     <EtiquetteBande score={r.score} intensite={r.intensity} label="Indice actuel" sectorRef={r.ref} />
                                     <div className="flex flex-col items-center gap-1 text-slate-400">
@@ -10417,7 +10417,7 @@
                                                                 ) : passwordResetCooldownSec > 0 ? (
                                                                     <>
                                                                         <Icon icon="solar:hourglass-line-duotone" style={{ fontSize: '15px' }} />
-                                                                        Lien envoyé — nouveau dans {passwordResetCooldownSec}s
+                                                                        Lien envoyé. Nouveau dans {passwordResetCooldownSec}s
                                                                     </>
                                                                 ) : (
                                                                     <>

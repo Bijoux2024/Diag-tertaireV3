@@ -5884,7 +5884,7 @@
         };
 
         const CARBON_FACTORS_KG_CO2_PER_KWH = {
-            electricite: 0.0569,     // Base Carbone ADEME 2024 — mix France
+            electricite: 0.0640,     // Base Carbone ADEME 2024 — mix moyen France (corrigé : 0.0569 trop bas pour prospectif 2026-2030)
             gaz: 0.227,              // Base Carbone ADEME 2024
             fioul: 0.324,            // Base Carbone ADEME 2024
             reseau_chaleur: 0.100,   // Moyenne nationale (très variable)
@@ -5973,8 +5973,8 @@
             health_local: { cabs_kwh_m2_an: 165, source: 'Arrêté 28 novembre 2023' },
             hotel: { cabs_kwh_m2_an: 170, source: 'Arrêté 28 novembre 2023' },
             restaurant: { cabs_kwh_m2_an: 185, source: 'Arrêté 28 novembre 2023' },
-            retail: { cabs_kwh_m2_an: 125, source: 'Divers arrêtés' },
-            retail_food: { cabs_kwh_m2_an: 125, source: 'Divers arrêtés' },
+            retail: { cabs_kwh_m2_an: 125, source: 'Arrêté 13 avril 2022' },
+            retail_food: { cabs_kwh_m2_an: 240, source: 'Estimation prudente - pas d\'arrêté spécifique froid alimentaire (125 irréaliste pour ce secteur)' },
             warehouse_heated: { cabs_kwh_m2_an: 135, source: 'Arrêté 13 avril 2022' },
             light_warehouse: { cabs_kwh_m2_an: 135, source: 'Arrêté 13 avril 2022' }
         };
@@ -6124,9 +6124,11 @@
         NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.sante = NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.health_local;
         NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.enseignement = NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.education;
         NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.entrepot_chauffe = { ...NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.light_warehouse, heating_pct: 50, lighting_pct: 28, vent_aux_pct: 5, other_specific_pct: 15 };
+        NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.warehouse_heated = NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.entrepot_chauffe;
         NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.entrepot_non_chauffe = NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.light_warehouse;
         NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.commerce_non_alim = NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.retail;
         NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.commerce_alim = { ...NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.retail, cooling_pct: 35, heating_pct: 12, lighting_pct: 24, cooking_pct: 5, other_specific_pct: 14 };
+        NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.retail_food = NEW_DIAGNOSTIC_USAGE_BREAKDOWNS.commerce_alim;
 
         // Garde-fou : vérification 100% au chargement
         (function validateUsageBreakdowns() {
@@ -6276,15 +6278,16 @@
                     name: 'Relamping LED complet',
                     category: 'lighting',
                     tier: 'light',
-                    aid_pct: 0.50,
+                    aid_pct: 0.30,
                     trigger_rules: ['lighting_post > 15%', 'no_led_done'],
                     gain_scope: 'lighting_post',
-                    gain_pct_low: 0.45, gain_pct_med: 0.60, gain_pct_high: 0.80,
+                    gain_pct_low: 0.45, gain_pct_med: 0.60, gain_pct_high: 0.75,
                     capex_low: 15, capex_med: 30, capex_high: 45,
                     capex_unit: '€/m²',
                     roi_method: 'simple_payback',
                     aid_tags: ['CEE'],
-                    source_level_gain: 'source_strong', source_ref_gain: 'ADEME - LED tertiaire, gains mesurés',
+                    aid_detail: 'CEE (fiche BAT-EQ-127) ~25-30% du CAPEX en 2026 (primes en baisse depuis 2023). TVA 20% (tertiaire).',
+                    source_level_gain: 'source_strong', source_ref_gain: 'ADEME - LED tertiaire, gains mesurés (plafonné 75%)',
                     source_level_capex: 'source_strong', source_ref_capex: 'Prix marché LED 2025-2026',
                     source_level_roi: 'hypothesis'
                 },
@@ -6352,7 +6355,8 @@
                     capex_unit: '€',
                     capex_method: 'pac_tranches',
                     roi_method: 'simple_payback',
-                    aid_tags: ['CEE', 'MaPrimeRenov'],
+                    aid_tags: ['CEE', 'Fonds_Chaleur_ADEME', 'MaPrimeRenov_petit_tertiaire'],
+                    aid_detail: 'CEE (fiche BAT-TH-102) ~15-20% + Fonds Chaleur ADEME ~15-25% si ENR. MaPrimeRenov possible petit tertiaire < 1000m2 sous conditions (parcours accompagné). Cumul plafonné 80% HT.',
                     source_level_gain: 'source_strong', source_ref_gain: 'ADEME - PAC air/eau vs chaudière gaz',
                     source_level_capex: 'source_partial', source_ref_capex: 'Prix marché PAC 2025-2026',
                     source_level_roi: 'hypothesis'
@@ -6365,14 +6369,14 @@
                     aid_pct: 0.28,
                     trigger_rules: ['surface > 500'],
                     gain_scope: 'total',
-                    gain_pct_low: 0.12, gain_pct_med: 0.20, gain_pct_high: 0.28,
+                    gain_pct_low: 0.12, gain_pct_med: 0.18, gain_pct_high: 0.22,
                     capex_low: 8000, capex_med: 20000, capex_high: 45000,
                     capex_unit: '€',
                     capex_per_m2: 25,
                     capex_min: 8000,
                     roi_method: 'simple_payback',
                     aid_tags: ['CEE'],
-                    source_level_gain: 'source_partial', source_ref_gain: 'ADEME - GTB tertiaire',
+                    source_level_gain: 'source_partial', source_ref_gain: 'ADEME - GTB tertiaire (gain plafonné 22%, ADEME recommande 12-18% pour GTB seule)',
                     source_level_capex: 'hypothesis', source_ref_capex: 'Estimation intégrateurs GTB',
                     source_level_roi: 'hypothesis'
                 },
@@ -6384,12 +6388,13 @@
                     aid_pct: 0.35,
                     trigger_rules: ['roofInsulation !== yes'],
                     gain_scope: 'heating_post',
-                    gain_pct_low: 0.15, gain_pct_med: 0.20, gain_pct_high: 0.30,
+                    gain_pct_low: 0.15, gain_pct_med: 0.20, gain_pct_high: 0.25,
                     capex_low: 40, capex_med: 80, capex_high: 120,
                     capex_unit: '€/m²',
                     roi_method: 'simple_payback',
-                    aid_tags: ['CEE', 'MaPrimeRenov'],
-                    source_level_gain: 'source_strong', source_ref_gain: 'ADEME - Isolation toiture tertiaire',
+                    aid_tags: ['CEE', 'MaPrimeRenov_petit_tertiaire'],
+                    aid_detail: 'CEE (fiche BAT-EN-101) ~20-25%. MaPrimeRenov possible petit tertiaire < 1000m2 sous conditions. TVA 20% (tertiaire).',
+                    source_level_gain: 'source_strong', source_ref_gain: 'ADEME - Isolation toiture tertiaire (plafonné 25%)',
                     source_level_capex: 'source_partial', source_ref_capex: 'Prix marché isolation 2025',
                     source_level_roi: 'hypothesis'
                 },
@@ -6405,7 +6410,8 @@
                     capex_low: 120, capex_med: 190, capex_high: 280,
                     capex_unit: '€/m²',
                     roi_method: 'simple_payback',
-                    aid_tags: ['CEE', 'MaPrimeRenov'],
+                    aid_tags: ['CEE', 'MaPrimeRenov_petit_tertiaire'],
+                    aid_detail: 'CEE (fiche BAT-EN-102) ~20-25%. MaPrimeRenov possible petit tertiaire < 1000m2 sous conditions. TVA 20% (tertiaire).',
                     source_level_gain: 'source_partial', source_ref_gain: 'ADEME - ITE tertiaire',
                     source_level_capex: 'source_partial', source_ref_capex: 'Prix marché ITE 2025-2026',
                     source_level_roi: 'hypothesis'
@@ -6422,7 +6428,8 @@
                     capex_low: 400, capex_med: 550, capex_high: 900,
                     capex_unit: '€/m² vitré',
                     roi_method: 'simple_payback',
-                    aid_tags: ['CEE', 'MaPrimeRenov'],
+                    aid_tags: ['CEE', 'MaPrimeRenov_petit_tertiaire'],
+                    aid_detail: 'CEE (fiche BAT-EN-104) ~12-18%. MaPrimeRenov possible petit tertiaire < 1000m2 sous conditions. TVA 20% (tertiaire).',
                     source_level_gain: 'source_partial', source_ref_gain: 'ADEME - Menuiseries',
                     source_level_capex: 'source_partial', source_ref_capex: 'Prix marché menuiseries 2025',
                     source_level_roi: 'hypothesis'
@@ -6439,7 +6446,8 @@
                     capex_low: 2500, capex_med: 4500, capex_high: 6000,
                     capex_unit: '€',
                     roi_method: 'simple_payback',
-                    aid_tags: ['CEE', 'MaPrimeRenov'],
+                    aid_tags: ['CEE', 'Fonds_Chaleur_ADEME', 'MaPrimeRenov_petit_tertiaire'],
+                    aid_detail: 'CEE (fiche BAT-TH-148) ~15-20%. Fonds Chaleur ADEME ~15-20% si ENR. MaPrimeRenov possible petit tertiaire < 1000m2. Cumul plafonné 80% HT.',
                     source_level_gain: 'source_strong', source_ref_gain: 'ADEME - Chauffe-eau thermodynamique',
                     source_level_capex: 'source_partial', source_ref_capex: 'Prix marché CET 2025-2026',
                     source_level_roi: 'hypothesis'
@@ -6486,7 +6494,7 @@
                     aid_pct: 0.15,
                     trigger_rules: ['surface > 300'],
                     gain_scope: 'total',
-                    gain_pct_low: 0.03, gain_pct_med: 0.06, gain_pct_high: 0.10,
+                    gain_pct_low: 0.03, gain_pct_med: 0.05, gain_pct_high: 0.08,
                     capex_low: 1000, capex_med: 3000, capex_high: 8000,
                     capex_unit: '€',
                     roi_method: 'simple_payback',
@@ -6751,7 +6759,9 @@
             light_warehouse: { heating_pct: 95, ecs_pct: 5 },
             entrepot_non_chauffe: { heating_pct: 95, ecs_pct: 5 },
             entrepot_chauffe: { heating_pct: 95, ecs_pct: 5 },
-            commerce_alim: { heating_pct: 90, ecs_pct: 10 }
+            warehouse_heated: { heating_pct: 95, ecs_pct: 5 },
+            commerce_alim: { heating_pct: 90, ecs_pct: 10 },
+            retail_food: { heating_pct: 90, ecs_pct: 10 }
         };
 
         /* ─────────────────────────────────────────────────────────────────────────
@@ -6775,8 +6785,10 @@
             light_warehouse: { lighting_pct: 60, cooling_pct: 0, ventilation_pct: 8, other_pct: 32 },
             entrepot_non_chauffe: { lighting_pct: 60, cooling_pct: 0, ventilation_pct: 8, other_pct: 32 },
             entrepot_chauffe: { lighting_pct: 45, cooling_pct: 0, ventilation_pct: 10, other_pct: 45 },
+            warehouse_heated: { lighting_pct: 45, cooling_pct: 0, ventilation_pct: 10, other_pct: 45 },
             // commerce_alim : froid commercial dans "other" (usage spécifique, pas climato de confort)
-            commerce_alim: { lighting_pct: 25, cooling_pct: 5, ventilation_pct: 8, other_pct: 62 }
+            commerce_alim: { lighting_pct: 25, cooling_pct: 5, ventilation_pct: 8, other_pct: 62 },
+            retail_food: { lighting_pct: 25, cooling_pct: 5, ventilation_pct: 8, other_pct: 62 }
         };
 
         /* ─────────────────────────────────────────────────────────────────────────
@@ -6810,15 +6822,46 @@
             }
 
             // ──────────────────────────────────────────────────────────────────
-            // ÉTAPE 2 : kWh par poste (totalKwh × % de référence)
+            // ÉTAPE 2 : kWh par poste via SÉPARATION PAR SOURCE
+            // Le gaz ne sert qu'au chauffage + ECS (table GAS_SPLIT).
+            // L'élec non-thermique est répartie via ELEC_SPLIT_BY_ACTIVITY.
+            // Les % globaux (USAGE_BREAKDOWNS) restent exposés en breakdown_pct
+            // pour affichage pédagogique, mais les kWh réels viennent des splits.
             // ──────────────────────────────────────────────────────────────────
-            const heatingKwh = Math.round(totalKwh * heatingPct / 100);
-            const ecsKwh = Math.round(totalKwh * ecsPct / 100);
-            const lightingKwh = Math.round(totalKwh * lightingPct / 100);
-            const coolingKwh = Math.round(totalKwh * coolingPct / 100);
-            const ventKwh = Math.round(totalKwh * ventPct / 100);
+
+            // --- GAZ : chauffage + ECS ---
+            const gasSplit = NEW_DIAGNOSTIC_GAS_SPLIT_BY_ACTIVITY[activity]
+                || NEW_DIAGNOSTIC_GAS_SPLIT_BY_ACTIVITY.offices;
+            const gasHeatingKwh = Math.round(gas * (gasSplit.heating_pct || 88) / 100);
+            const gasEcsKwh = Math.max(0, gas - gasHeatingKwh);
+
+            // --- Chauffage et ECS : gaz ou élec selon source déclarée ---
+            const heatingIsGasPreCalc = ['gas', 'fuel', 'other', 'network'].includes(mainHeating);
+            let heatingKwh, ecsKwh, elecForHeating, elecForEcs;
+
+            if (heatingIsGasPreCalc && gas > 0) {
+                // Chauffage et ECS principalement gaz
+                heatingKwh = gasHeatingKwh;
+                ecsKwh = gasEcsKwh;
+                elecForHeating = 0;
+                elecForEcs = 0;
+            } else {
+                // Chauffage électrique : estimer via % globaux sur totalKwh
+                heatingKwh = Math.round(totalKwh * heatingPct / 100);
+                ecsKwh = Math.round(totalKwh * ecsPct / 100);
+                elecForHeating = heatingKwh;
+                elecForEcs = ecsKwh;
+            }
+
+            // --- ÉLEC non-thermique : répartition via ELEC_SPLIT_BY_ACTIVITY ---
+            const elecNonThermal = Math.max(0, elec - elecForHeating - elecForEcs);
+            const elecSplit = NEW_DIAGNOSTIC_ELEC_SPLIT_BY_ACTIVITY[activity]
+                || NEW_DIAGNOSTIC_ELEC_SPLIT_BY_ACTIVITY.offices;
+            const lightingKwh = Math.round(elecNonThermal * (elecSplit.lighting_pct || 30) / 100);
+            const coolingKwh = Math.round(elecNonThermal * (elecSplit.cooling_pct || 10) / 100);
+            const ventKwh = Math.round(elecNonThermal * (elecSplit.ventilation_pct || 15) / 100);
             const cookingKwh = Math.round(totalKwh * cookingPct / 100);
-            // "other" absorbe le résidu d'arrondi pour garantir la conservation
+            // "other" absorbe le résidu pour garantir la conservation
             const otherKwh = Math.max(0, totalKwh - heatingKwh - ecsKwh - lightingKwh
                 - coolingKwh - ventKwh - cookingKwh);
 

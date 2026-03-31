@@ -748,6 +748,14 @@
                 grid-template-columns: 1fr !important;
             }
         }
+        .seo-static-content {
+            position: absolute !important;
+            left: -9999px !important;
+            top: auto !important;
+            width: 1px !important;
+            height: 1px !important;
+            overflow: hidden !important;
+        }
     </style>
     <!-- Vercel Analytics — chargé conditionnellement selon le consentement (cookie-consent.js) -->
     <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
@@ -756,6 +764,7 @@
 
 <body class="antialiased text-[#374151] bg-[#F8F9FA]">
     <!-- Fallback HTML statique pour crawlers et utilisateurs sans JavaScript -->
+    <div class="seo-static-content">
     <header style="background:#fff;border-bottom:1px solid #E2E8F0;padding:1rem 1.5rem;">
         <div style="max-width:72rem;margin:0 auto;display:flex;align-items:center;justify-content:space-between;">
             <a href="/" style="display:flex;align-items:center;gap:0.5rem;text-decoration:none;color:#0F172A;font-weight:700;font-size:1.125rem;">DiagTertiaire</a>
@@ -791,6 +800,7 @@
     <footer style="background:#0F172A;color:#64748B;padding:2rem 1.5rem;font-size:0.875rem;text-align:center;">
         <p>© 2026 DiagTertiaire - Pré-diagnostic énergétique tertiaire</p>
     </footer>
+    </div>
     <noscript>Ce site nécessite JavaScript pour fonctionner pleinement.</noscript>
     <div id="root"></div>
 

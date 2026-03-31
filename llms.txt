@@ -1,0 +1,15 @@
+# DiagTertiaire
+
+> Pre-diagnostic energetique tertiaire oriente decision, base sur references sectorielles.
+
+DiagTertiaire est un service numerique de pre-diagnostic energetique a destination des acteurs du tertiaire. Il permet de renseigner des informations relatives a un batiment ou a un site tertiaire, d'obtenir une estimation energetique indicative, d'identifier des premiers leviers d'action et de generer un rapport synthetique de pre-analyse.
+
+## URLs principales
+
+- Page d'accueil : https://diag-tertiaire.fr/
+- Diagnostic : https://diag-tertiaire.fr/diagnostic.html
+- Espace professionnel : https://diag-tertiaire.fr/index.saaspro.html
+- Mentions legales : https://diag-tertiaire.fr/mentions-legales.html
+- Politique de confidentialite : https://diag-tertiaire.fr/politique-confidentialite.html
+- Conditions generales d'utilisation : https://diag-tertiaire.fr/conditions-generales-utilisation.html
+- Politique cookies : https://diag-tertiaire.fr/cookies.html

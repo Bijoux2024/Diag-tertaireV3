@@ -136,12 +136,12 @@ targetElecKwh = elecKwh + round(gasHeatingKwh / 3.5)   // COP PAC = 3.5
 ```
 Le PV est dimensionné sur cette cible post-travaux.
 
-### Tarification surplus (arrêté S21 2025)
+### Tarification surplus (arrêté S21 T2 2026)
 
 | Puissance | Tarif surplus |
 |-----------|--------------|
 | ≤ 9 kWc   | 0.0400 €/kWh |
-| 10–100 kWc | 0.0761 €/kWh |
+| 10–100 kWc | 0.0473 €/kWh |
 
 ### CAPEX PV dégressif
 
@@ -155,9 +155,9 @@ Le PV est dimensionné sur cette cible post-travaux.
 
 | Tranche | Prime |
 |---------|-------|
-| ≤ 9 kWc | 260 €/kWc |
-| 10–36 kWc | 190 €/kWc |
-| 37–100 kWc | 100 €/kWc |
+| ≤ 9 kWc | 80 €/kWc |
+| 10–36 kWc | 70 €/kWc |
+| 37–100 kWc | 60 €/kWc |
 
 ---
 

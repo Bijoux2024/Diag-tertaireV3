@@ -3,22 +3,33 @@
 
   const FORM_KEY = 'partner-interest-form';
   const STORAGE_PREFIX = 'diagtertiaire_antispam';
-  const GENERIC_SUBMIT_ERROR = "Impossible d'envoyer votre demande pour le moment. Merci de reessayer dans quelques instants.";
   const FORM_MINIMUM_DELAY_MS = 3000;
   const FORM_COOLDOWN_MS = 30000;
-  const MAX_TEXT_LENGTH = 2000;
-
-  let publicRuntimeConfig = null;
-  let publicRuntimeConfigPromise = null;
+  const MAX_TEXT_LENGTH = 2500;
+  const SUCCESS_MESSAGE = 'Votre demande a bien ete transmise. Nous reviendrons vers vous rapidement.';
+  const GENERIC_SUBMIT_ERROR = "Impossible d'envoyer votre demande pour le moment. Merci de reessayer ou d'ecrire a contact@diag-tertiaire.fr.";
 
   const form = document.getElementById('partner-form');
   const formShell = document.getElementById('partner-form-shell');
   const successShell = document.getElementById('partner-success-shell');
+  const successMessage = document.getElementById('partner-success-message');
   const feedback = document.getElementById('partner-feedback');
+  const feedbackDetail = document.getElementById('partner-feedback-detail');
   const submitButton = document.getElementById('partner-submit-button');
   const submitLabel = document.getElementById('partner-submit-label');
-  const calendlyCta = document.getElementById('partner-calendly-cta');
-  const honeypotField = document.getElementById('partner-website');
+
+  if (
+    !form ||
+    !formShell ||
+    !successShell ||
+    !successMessage ||
+    !feedback ||
+    !feedbackDetail ||
+    !submitButton ||
+    !submitLabel
+  ) {
+    return;
+  }
 
   const safeJsonParse = (value) => {
     if (typeof value !== 'string') return value;
@@ -140,199 +151,64 @@
     return { ok: true, error: null };
   };
 
-  const loadPublicRuntimeConfig = () => {
-    if (publicRuntimeConfig) return Promise.resolve(publicRuntimeConfig);
-    if (publicRuntimeConfigPromise) return publicRuntimeConfigPromise;
-
-    publicRuntimeConfigPromise = fetch('/api/public-config', { cache: 'no-store' })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`Impossible de charger /api/public-config (${response.status})`);
-        }
-        return response.json();
-      })
-      .then((data) => {
-        publicRuntimeConfig = {
-          supabaseUrl: String(data && data.supabaseUrl || '').trim(),
-          supabasePublishableKey: String(data && data.supabasePublishableKey || '').trim(),
-          partnerCalendlyUrl: String(data && data.partnerCalendlyUrl || '').trim()
-        };
-        return publicRuntimeConfig;
-      })
-      .catch((error) => {
-        console.error('Erreur chargement config publique :', error);
-        publicRuntimeConfig = {
-          supabaseUrl: '',
-          supabasePublishableKey: '',
-          partnerCalendlyUrl: ''
-        };
-        return publicRuntimeConfig;
-      });
-
-    return publicRuntimeConfigPromise;
+  const hideFeedback = () => {
+    feedback.hidden = true;
+    feedback.textContent = '';
+    feedback.classList.remove('feedback-success');
+    feedback.classList.add('feedback-error');
+    feedbackDetail.hidden = true;
+    feedbackDetail.textContent = '';
   };
 
-  const insertSupabaseRow = async (tableName, payload, preferHeader = 'return=minimal') => {
-    const { supabaseUrl, supabasePublishableKey } = await loadPublicRuntimeConfig();
-
-    if (!supabaseUrl || !supabasePublishableKey) {
-      return {
-        ok: false,
-        status: 0,
-        error: 'Configuration Supabase indisponible.'
-      };
-    }
-
-    try {
-      const response = await fetch(`${supabaseUrl}/rest/v1/${tableName}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          apikey: supabasePublishableKey,
-          Authorization: `Bearer ${supabasePublishableKey}`,
-          Prefer: preferHeader
-        },
-        body: JSON.stringify(payload)
-      });
-
-      const rawText = await response.text().catch(() => '');
-      const parsed = rawText ? safeJsonParse(rawText) : null;
-
-      if (!response.ok) {
-        return {
-          ok: false,
-          status: response.status,
-          error: (parsed && (parsed.message || parsed.error)) || rawText || `HTTP ${response.status}`
-        };
-      }
-
-      return {
-        ok: true,
-        status: response.status,
-        data: parsed
-      };
-    } catch (error) {
-      return {
-        ok: false,
-        status: 0,
-        error: error && error.message ? error.message : 'Erreur reseau.'
-      };
-    }
+  const showError = (message, detail = '') => {
+    feedback.hidden = false;
+    feedback.classList.remove('feedback-success');
+    feedback.classList.add('feedback-error');
+    feedback.textContent = message || GENERIC_SUBMIT_ERROR;
+    feedbackDetail.hidden = !detail;
+    feedbackDetail.textContent = detail || '';
   };
 
-  const buildLeadMessage = (payload) => {
-    const summaryParts = [
-      payload.partnerType ? `Type: ${payload.partnerType}` : '',
-      payload.requestSubject ? `Objet: ${payload.requestSubject}` : '',
-      payload.monthlyVolume ? `Volume: ${payload.monthlyVolume}` : '',
-      payload.message ? payload.message : ''
-    ].filter(Boolean);
-
-    return summaryParts.join(' | ');
-  };
-
-  const buildPartnerLeadPayload = (payload) => ({
-    source: 'partner_page',
-    name: payload.fullName || null,
-    email: payload.email || null,
-    company: payload.company || null,
-    phone: payload.phone || null,
-    message: buildLeadMessage(payload) || null,
-    raw_payload: {
-      form: 'partner_page',
-      page_url: window.location.href,
-      full_name: payload.fullName || null,
-      company: payload.company || null,
-      email: payload.email || null,
-      phone: payload.phone || null,
-      partner_type: payload.partnerType || null,
-      monthly_volume: payload.monthlyVolume || null,
-      request_subject: payload.requestSubject || null,
-      message: payload.message || null,
-      consent_rgpd: true,
-      consent_text_version: 'partner_page_rgpd_v1_2026-04-01'
-    }
-  });
-
-  const submitPartnerLead = async (payload) => {
-    const leadPayload = buildPartnerLeadPayload(payload);
-    const result = await insertSupabaseRow('pro_interest_submissions', leadPayload);
-
-    if (!result.ok) {
-      console.warn('partner lead persistence failed', result.status, result.error);
-    }
-
-    return result;
-  };
-
-  const sendPartnerInterestEmail = async (payload) => {
-    const response = await fetch('/api/send-email', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        type: 'partner_interest',
-        data: {
-          fullName: payload.fullName,
-          company: payload.company,
-          email: payload.email,
-          phone: payload.phone,
-          partnerType: payload.partnerType,
-          monthlyVolume: payload.monthlyVolume,
-          requestSubject: payload.requestSubject,
-          message: payload.message,
-          consent: true,
-          sourcePage: 'partenaire.html',
-          sourceUrl: window.location.href
-        }
-      })
-    });
-
-    const raw = await response.text().catch(() => '');
-    const parsed = raw ? safeJsonParse(raw) : null;
-
-    if (!response.ok) {
-      const apiError = parsed && typeof parsed.error === 'string' ? parsed.error : '';
-      const message = response.status >= 500
-        ? GENERIC_SUBMIT_ERROR
-        : (apiError || GENERIC_SUBMIT_ERROR);
-      throw new Error(message);
-    }
-
-    return parsed;
+  const showSuccess = () => {
+    hideFeedback();
+    formShell.hidden = true;
+    successShell.hidden = false;
+    successMessage.textContent = SUCCESS_MESSAGE;
   };
 
   const setLoading = (isLoading) => {
     submitButton.disabled = isLoading;
     submitButton.setAttribute('aria-busy', isLoading ? 'true' : 'false');
-    submitLabel.textContent = isLoading
-      ? 'Envoi en cours...'
-      : 'Parlez-nous de votre activite';
+    submitLabel.textContent = isLoading ? 'Envoi en cours...' : 'Envoyer ma demande';
   };
 
-  const hideFeedback = () => {
-    feedback.hidden = true;
-    feedback.classList.remove('feedback-success');
-    feedback.classList.add('feedback-error');
-    feedback.textContent = '';
+  const isNonProductionRuntime = () => {
+    const host = String(window.location.hostname || '').toLowerCase();
+    if (window.location.protocol === 'file:') return true;
+    if (!host) return true;
+    return host === 'localhost' || host === '127.0.0.1' || host.endsWith('.vercel.app');
   };
 
-  const showError = (message) => {
-    feedback.hidden = false;
-    feedback.classList.remove('feedback-success');
-    feedback.classList.add('feedback-error');
-    feedback.textContent = message || GENERIC_SUBMIT_ERROR;
-  };
+  const buildDevDetail = (error) => {
+    const rawMessage = String(error && (error.rawMessage || error.message) || '').trim();
 
-  const showSuccess = async () => {
-    hideFeedback();
-    formShell.hidden = true;
-    successShell.hidden = false;
-
-    const config = await loadPublicRuntimeConfig();
-    if (config.partnerCalendlyUrl) {
-      calendlyCta.href = config.partnerCalendlyUrl;
-      calendlyCta.hidden = false;
+    if (/Missing RESEND_API_KEY/i.test(rawMessage) || /Missing RESEND_FROM/i.test(rawMessage)) {
+      return 'Variables serveur manquantes en dev: RESEND_API_KEY et RESEND_FROM.';
     }
+
+    if (/HTTP 404/i.test(rawMessage) || (rawMessage.includes('/api/send-email') && /404/.test(rawMessage))) {
+      return "L'endpoint /api/send-email n'est pas disponible dans ce contexte local. Utilisez Vercel Dev ou une preview pour tester l'envoi.";
+    }
+
+    if (/Failed to fetch|NetworkError|Load failed/i.test(rawMessage) || window.location.protocol === 'file:') {
+      return "L'endpoint /api/send-email est inaccessible depuis ce contexte local. Utilisez Vercel Dev ou une preview pour tester l'envoi.";
+    }
+
+    if (/Too many email requests/i.test(rawMessage)) {
+      return 'La protection anti-abus a temporairement bloque les envois repetes.';
+    }
+
+    return rawMessage ? `Detail dev: ${rawMessage}` : '';
   };
 
   const collectPayload = (currentForm) => {
@@ -343,12 +219,59 @@
       company: normalizeText(formData.get('company'), 180),
       email: normalizeText(formData.get('email'), 180),
       phone: normalizeText(formData.get('phone'), 60),
-      partnerType: normalizeText(formData.get('partnerType'), 120),
-      monthlyVolume: normalizeText(formData.get('monthlyVolume'), 40),
-      requestSubject: normalizeText(formData.get('requestSubject'), 120),
+      structureType: normalizeText(formData.get('structureType'), 120),
+      need: normalizeText(formData.get('need'), 120),
       message: normalizeMultilineText(formData.get('message'), MAX_TEXT_LENGTH),
-      consent: formData.get('consent') === 'on'
+      consent: formData.get('consent') === 'on',
+      website: normalizeText(formData.get('website'), 120)
     };
+  };
+
+  const sendPartnerInterestEmail = async (payload) => {
+    let response;
+
+    try {
+      response = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'partner_interest',
+          data: {
+            fullName: payload.fullName,
+            company: payload.company,
+            email: payload.email,
+            phone: payload.phone,
+            structureType: payload.structureType,
+            need: payload.need,
+            message: payload.message,
+            consent: payload.consent,
+            website: payload.website,
+            sourcePage: 'partenaire.html',
+            sourceUrl: window.location.href
+          }
+        })
+      });
+    } catch (error) {
+      const networkError = new Error(GENERIC_SUBMIT_ERROR);
+      networkError.rawMessage = error && error.message ? error.message : 'Network error';
+      throw networkError;
+    }
+
+    const rawText = await response.text().catch(() => '');
+    const parsed = rawText ? safeJsonParse(rawText) : null;
+
+    if (!response.ok) {
+      const apiError = parsed && typeof parsed.error === 'string'
+        ? parsed.error
+        : (rawText || `HTTP ${response.status}`);
+
+      const requestError = new Error(GENERIC_SUBMIT_ERROR);
+      requestError.status = response.status;
+      requestError.rawMessage = apiError;
+      throw requestError;
+    }
+
+    return parsed;
   };
 
   const handleSubmit = async (event) => {
@@ -360,9 +283,10 @@
       return;
     }
 
+    const payload = collectPayload(form);
     const antiSpamCheck = runAntiSpamChecks({
       formKey: FORM_KEY,
-      honeypotValue: honeypotField.value,
+      honeypotValue: payload.website,
       minimumDelayMs: FORM_MINIMUM_DELAY_MS,
       cooldownMs: FORM_COOLDOWN_MS
     });
@@ -372,7 +296,6 @@
       return;
     }
 
-    const payload = collectPayload(form);
     if (!payload.consent) {
       showError("Merci d'accepter le traitement de vos informations pour etudier votre demande.");
       return;
@@ -383,23 +306,20 @@
 
     try {
       await sendPartnerInterestEmail(payload);
-      await submitPartnerLead(payload);
-      await showSuccess();
       form.reset();
       markFormRendered(FORM_KEY);
+      showSuccess();
     } catch (error) {
       clearFormCooldown(FORM_KEY);
-      showError(error && error.message ? error.message : GENERIC_SUBMIT_ERROR);
+      showError(
+        GENERIC_SUBMIT_ERROR,
+        isNonProductionRuntime() ? buildDevDetail(error) : ''
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  if (!form || !submitButton || !submitLabel || !feedback || !formShell || !successShell || !honeypotField) {
-    return;
-  }
-
   markFormRendered(FORM_KEY);
-  loadPublicRuntimeConfig().catch(() => null);
   form.addEventListener('submit', handleSubmit);
 })();

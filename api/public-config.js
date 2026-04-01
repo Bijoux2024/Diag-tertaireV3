@@ -33,9 +33,5 @@ const { getPublicSupabaseConfig } = require('./_lib/supabase-server');
  * @param {import('@vercel/node').VercelResponse} res
  */
 module.exports = function handler(req, res) {
-  const publicConfig = getPublicSupabaseConfig();
-  res.status(200).json({
-    ...publicConfig,
-    partnerCalendlyUrl: String(process.env.PARTNER_CALENDLY_URL || '').trim()
-  });
+  res.status(200).json(getPublicSupabaseConfig());
 };

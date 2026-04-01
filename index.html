@@ -1887,7 +1887,7 @@
                                     {[
                                         'Rapport généré automatiquement et disponible en téléchargement',
                                         'Première estimation des gains énergétiques, financiers et des aides mobilisables',
-                                        'Orientation possible vers un réseau de partenaires si vous souhaitez être accompagné'
+                                        "Possibilite d'un accompagnement complementaire si vous souhaitez approfondir votre projet"
                                     ].map((item, i) => (
                                         <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', fontSize: '0.9rem', color: '#475569' }}>
                                             <Icon icon="solar:check-circle-linear" style={{ color: '#2563EB', flexShrink: 0, fontSize: '1.1rem', marginTop: '1px' }} />
@@ -5840,8 +5840,8 @@
                                     className="mt-1 w-5 h-5 text-green-600 rounded"
                                 />
                                 <div>
-                                    <span className="text-sm font-semibold text-green-800">Je souhaite être mis en relation avec un expert partenaire</span>
-                                    <p className="text-xs text-green-700 mt-1">Optionnel · Un professionnel qualifié pourra vous contacter pour affiner votre projet.</p>
+                                    <span className="text-sm font-semibold text-green-800">Je souhaite etre recontacte pour approfondir mon projet</span>
+                                    <p className="text-xs text-green-700 mt-1">Optionnel. Nous pouvons revenir vers vous pour approfondir votre projet.</p>
                                 </div>
                             </label>
                         </div>
@@ -8657,10 +8657,10 @@
                     'Identifier les actions faisables rapidement, sans grands travaux.',
                     'Structurer un plan adapté à votre horizon de décision.'
                 ],
-                proof: "Gratuit, sans engagement. Votre rapport est transmis à un partenaire qualifié qui vous contacte sous 48h.",
-                cta: 'Être mis en relation gratuitement',
+                proof: "Gratuit, sans engagement. Si vous le souhaitez, votre demande peut etre etudiee pour un accompagnement adapte.",
+                cta: 'Demander un echange',
                 secondary: 'Conserver ce rapport',
-                success: 'Votre demande est enregistrée. Un partenaire qualifié vous contactera sous 48h avec une première orientation adaptée à votre site.'
+                success: 'Votre demande est enregistree. Nous reviendrons vers vous avec une premiere orientation adaptee a votre site.'
             }
         };
 
@@ -10328,7 +10328,7 @@
                                                     className="w-full px-5 py-4 bg-[#1D4ED8] text-white rounded-2xl text-sm font-bold hover:bg-[#1E40AF] active:scale-[0.99] transition-all shadow-lg flex items-center justify-center gap-2"
                                                 >
                                                     <Icon icon="solar:users-group-rounded-bold" className="text-lg shrink-0" />
-                                                    Être mis en relation gratuitement
+                                                    Demander un echange
                                                 </button>
                                                 <p className="text-[11px] text-slate-500 leading-relaxed">{nextStepCopy.proof}</p>
                                             </>
@@ -10338,7 +10338,7 @@
                                         {[
                                             { icon: 'solar:shield-check-bold', text: 'Aucun engagement ni frais', color: 'text-emerald-600' },
                                             { icon: 'solar:clock-circle-bold', text: 'Réponse sous 48h', color: 'text-blue-600' },
-                                            { icon: 'solar:star-bold', text: 'Partenaire qualifié et sélectionné', color: 'text-amber-500' },
+                                            { icon: 'solar:star-bold', text: 'Echange adapte a votre situation', color: 'text-amber-500' },
                                         ].map(({ icon, text, color }, i) => (
                                             <div key={i} className="flex items-center gap-1.5">
                                                 <Icon icon={icon} className={`text-base shrink-0 ${color}`} />
@@ -10357,8 +10357,8 @@
                                             <Icon icon="solar:users-group-rounded-bold" className="text-xl text-white" />
                                         </div>
                                         <div>
-                                            <p className="font-bold text-[#102A43] text-base">Mise en relation gratuite</p>
-                                            <p className="text-sm text-slate-600 mt-0.5">avec un partenaire adapté à votre situation</p>
+                                            <p className="font-bold text-[#102A43] text-base">Demande de contact</p>
+                                            <p className="text-sm text-slate-600 mt-0.5">pour approfondir votre situation</p>
                                         </div>
                                     </div>
                                     {ctaSent ? (
@@ -10394,9 +10394,9 @@
                                                 }}
                                                 className="w-full py-3.5 px-6 bg-[#1D4ED8] text-white rounded-xl text-sm font-bold hover:bg-[#1E40AF] transition-colors shadow-sm"
                                             >
-                                                Confirmer ma demande de mise en relation
+                                                Confirmer ma demande de contact
                                             </button>
-                                            <p className="text-xs text-slate-400 text-center">Gratuit · Sans engagement · Réponse sous 48h</p>
+                                            <p className="text-xs text-slate-400 text-center">Gratuit | Sans engagement | Reponse sous 48h</p>
                                         </div>
                                     )}
                                 </div>

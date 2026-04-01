@@ -43,6 +43,11 @@ const createHttpError = (statusCode, message) => {
   return error;
 };
 
+const isProductionRuntime = () => {
+  const env = String(process.env.VERCEL_ENV || process.env.NODE_ENV || '').trim().toLowerCase();
+  return env === 'production';
+};
+
 const getRequiredMailConfig = (emailType) => {
   const resendApiKey = readEnv('RESEND_API_KEY');
   const resendFrom = readEnv('RESEND_FROM');
@@ -86,13 +91,17 @@ const buildPartnerInterestEmail = (rawData) => {
   const company = normalizeText(data.company, { maxLength: 180 });
   const email = normalizeText(data.email, { maxLength: 180 });
   const phone = normalizeText(data.phone, { maxLength: 60 });
-  const partnerType = normalizeText(data.partnerType, { maxLength: 120 });
-  const monthlyVolume = normalizeText(data.monthlyVolume, { maxLength: 40 });
-  const requestSubject = normalizeText(data.requestSubject, { maxLength: 120 });
+  const structureType = normalizeText(data.structureType || data.partnerType, { maxLength: 120 });
+  const need = normalizeText(data.need || data.requestSubject, { maxLength: 120 });
   const message = normalizeText(data.message, { maxLength: 4000, multiline: true });
   const sourcePage = normalizeText(data.sourcePage, { maxLength: 80 });
   const sourceUrl = normalizeText(data.sourceUrl, { maxLength: 500 });
   const consent = !!data.consent;
+  const website = normalizeText(data.website, { maxLength: 200 });
+
+  if (website) {
+    throw createHttpError(400, 'Invalid partner interest request');
+  }
 
   if (!fullName) {
     throw createHttpError(400, 'Missing fullName');
@@ -106,12 +115,12 @@ const buildPartnerInterestEmail = (rawData) => {
     throw createHttpError(400, 'Invalid email');
   }
 
-  if (!partnerType) {
-    throw createHttpError(400, 'Missing partnerType');
+  if (!structureType) {
+    throw createHttpError(400, 'Missing structureType');
   }
 
-  if (!requestSubject) {
-    throw createHttpError(400, 'Missing requestSubject');
+  if (!need) {
+    throw createHttpError(400, 'Missing need');
   }
 
   if (!message) {
@@ -127,9 +136,8 @@ const buildPartnerInterestEmail = (rawData) => {
     ['Societe', company],
     ['Email professionnel', email],
     ['Telephone', phone || 'Non renseigne'],
-    ['Type de partenaire', partnerType],
-    ['Volume estime / mois', monthlyVolume || 'Non renseigne'],
-    ['Objet de la demande', requestSubject],
+    ['Type de structure', structureType],
+    ['Votre besoin', need],
     ['Consentement RGPD', consent ? 'Oui' : 'Non'],
     ['Page source', sourcePage || 'partenaire.html'],
     ['URL source', sourceUrl || 'Non renseignee']
@@ -144,7 +152,7 @@ const buildPartnerInterestEmail = (rawData) => {
       '',
       ...rows.map(([label, value]) => `${label}: ${value}`),
       '',
-      'Message / contexte :',
+      'Decrivez votre activite et votre besoin :',
       message
     ].join('\n'),
     html: `
@@ -166,7 +174,7 @@ const buildPartnerInterestEmail = (rawData) => {
               </tbody>
             </table>
             <div style="margin-top:20px;padding:16px 18px;border:1px solid #E2E8F0;border-radius:16px;background:#F8FAFC;">
-              <div style="font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#475569;margin-bottom:8px;">Message / contexte</div>
+              <div style="font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#475569;margin-bottom:8px;">Decrivez votre activite et votre besoin</div>
               <p style="margin:0;font-size:14px;line-height:1.7;color:#0F172A;">${escapeHtml(message).replace(/\n/g, '<br>')}</p>
             </div>
           </div>
@@ -324,6 +332,8 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  let emailType = '';
+
   try {
     enforceRateLimit(req, {
       scope: 'send-email-public',
@@ -340,7 +350,7 @@ module.exports = async function handler(req, res) {
       throw createHttpError(400, 'Invalid JSON payload');
     }
 
-    const emailType = String(body.type || '').trim();
+    emailType = String(body.type || '').trim();
     const data = asPlainObject(body.data);
     const { resendApiKey, resendFrom, adminEmail } = getRequiredMailConfig(emailType);
 
@@ -365,6 +375,14 @@ module.exports = async function handler(req, res) {
       emailPayload
     });
 
+    if (!isProductionRuntime()) {
+      console.info('[send-email] sent', {
+        emailType,
+        to: emailPayload.to,
+        id: resendResponse?.id || null
+      });
+    }
+
     return res.status(200).json({
       ok: true,
       emailType,
@@ -372,6 +390,15 @@ module.exports = async function handler(req, res) {
     });
   } catch (error) {
     const statusCode = Number.isInteger(error?.statusCode) ? error.statusCode : 500;
+
+    if (!isProductionRuntime()) {
+      console.error('[send-email] failed', {
+        emailType: emailType || 'unknown',
+        statusCode,
+        error: error?.message || 'Email delivery failed'
+      });
+    }
+
     return res.status(statusCode).json({
       ok: false,
       error: error?.message || 'Email delivery failed'

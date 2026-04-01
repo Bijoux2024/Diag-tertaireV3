@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Devenir partenaire DiagTertiaire</title>
+    <meta name="description"
+        content="Partenariats DiagTertiaire pour bureaux d'etudes, auditeurs, acteurs de la renovation, reseaux immobiliers et usages marque blanche.">
+    <link rel="canonical" href="https://diag-tertiaire.fr/partenaire.html">
+    <meta property="og:title" content="Devenir partenaire DiagTertiaire">
+    <meta property="og:description"
+        content="Etudions un partenariat, un usage pro ou une version marque blanche pour qualifier des batiments tertiaires plus vite.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://diag-tertiaire.fr/partenaire.html">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Devenir partenaire DiagTertiaire">
+    <meta name="twitter:description"
+        content="Partenariats et usage pro DiagTertiaire pour qualifier des batiments tertiaires et structurer les premiers echanges.">
+
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <meta name="theme-color" content="#2563EB">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --card: #FFFFFF;
+            --text: #0F172A;
+            --muted-soft: #64748B;
+            --border: #E2E8F0;
+            --navy: #102A43;
+            --blue: #1D4ED8;
+            --blue-hover: #1E40AF;
+            --shadow-md: 0 12px 32px rgba(15, 23, 42, 0.08), 0 4px 12px rgba(15, 23, 42, 0.05);
+            --shadow-lg: 0 20px 48px rgba(15, 23, 42, 0.1), 0 6px 18px rgba(15, 23, 42, 0.05);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            max-width: 100%;
+            overflow-x: clip;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(29, 78, 216, 0.08), transparent 36%),
+                linear-gradient(180deg, #F8FAFC 0%, #EFF6FF 100%);
+            color: var(--text);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .surface-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-md);
+        }
+
+        .surface-card-strong {
+            background: var(--card);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .field-base {
+            width: 100%;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: #FFFFFF;
+            color: var(--text);
+            padding: 0.95rem 1rem;
+            font: inherit;
+            transition: border-color 160ms ease, box-shadow 160ms ease;
+        }
+
+        .field-base::placeholder {
+            color: var(--muted-soft);
+        }
+
+        .field-base:focus {
+            outline: none;
+            border-color: rgba(29, 78, 216, 0.65);
+            box-shadow: 0 0 0 4px rgba(29, 78, 216, 0.14);
+        }
+
+        select.field-base {
+            appearance: none;
+            background-image:
+                linear-gradient(45deg, transparent 50%, #64748B 50%),
+                linear-gradient(135deg, #64748B 50%, transparent 50%);
+            background-position:
+                calc(100% - 18px) calc(50% - 4px),
+                calc(100% - 12px) calc(50% - 4px);
+            background-size: 6px 6px, 6px 6px;
+            background-repeat: no-repeat;
+            padding-right: 2.8rem;
+        }
+
+        .button-primary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.625rem;
+            border: 1px solid var(--blue);
+            border-radius: 14px;
+            background: linear-gradient(135deg, var(--blue) 0%, var(--blue-hover) 100%);
+            color: #FFFFFF;
+            font-weight: 700;
+            text-decoration: none;
+            transition: transform 180ms ease, box-shadow 180ms ease;
+        }
+
+        .button-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 16px 28px rgba(29, 78, 216, 0.18);
+        }
+
+        .button-primary:disabled {
+            opacity: 0.72;
+            transform: none;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        .button-secondary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.625rem;
+            border-radius: 14px;
+            border: 1px solid rgba(15, 23, 42, 0.12);
+            background: rgba(255, 255, 255, 0.7);
+            color: var(--navy);
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .feedback-error {
+            border: 1px solid #FECACA;
+            background: #FEF2F2;
+            color: #B91C1C;
+        }
+
+        .feedback-success {
+            border: 1px solid #BBF7D0;
+            background: #F0FDF4;
+            color: #166534;
+        }
+
+        .honeypot {
+            position: absolute;
+            left: -9999px;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            opacity: 0;
+            pointer-events: none;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen text-[#0F172A]">
+    <div class="min-h-screen flex flex-col">
+        <header class="sticky top-0 z-40 border-b border-[#E2E8F0] bg-white/90 backdrop-blur">
+            <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
+                <a href="./index.html"
+                    class="inline-flex items-center gap-3 text-[#102A43] no-underline transition-colors hover:text-[#1D4ED8]">
+                    <span
+                        class="flex h-10 w-10 items-center justify-center rounded-xl bg-[#1D4ED8]/10 text-[#1D4ED8]">
+                        <svg viewBox="0 0 24 24" class="h-5 w-5" aria-hidden="true">
+                            <path fill="currentColor"
+                                d="M7 22H5.5A1.5 1.5 0 0 1 4 20.5v-9C4 10.12 5.12 9 6.5 9H7V6a4 4 0 0 1 4-4h2a4 4 0 0 1 4 4v3h.5A2.5 2.5 0 0 1 20 11.5v9a1.5 1.5 0 0 1-1.5 1.5H17v-7H7zm2-11h6V6a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2zm1 4.5h2V18h-2zm4 0h2V18h-2z" />
+                        </svg>
+                    </span>
+                    <span>
+                        <span class="block text-base font-bold leading-tight">DiagTertiaire</span>
+                        <span class="block text-xs font-medium text-slate-500">Partenariats et usage pro</span>
+                    </span>
+                </a>
+
+                <nav class="hidden items-center gap-1 md:flex" aria-label="Navigation principale">
+                    <a href="./index.html"
+                        class="inline-flex h-10 items-center rounded-lg px-3 text-sm font-semibold text-slate-600 transition-colors hover:bg-[#F8FAFC] hover:text-[#102A43]">Accueil</a>
+                    <a href="./index.html"
+                        class="inline-flex h-10 items-center rounded-lg px-3 text-sm font-semibold text-slate-600 transition-colors hover:bg-[#F8FAFC] hover:text-[#102A43]">Exemple
+                        de rapport</a>
+                    <a href="./index.saaspro.html"
+                        class="inline-flex h-10 items-center rounded-lg px-3 text-sm font-semibold text-slate-600 transition-colors hover:bg-[#F8FAFC] hover:text-[#102A43]">Espace
+                        Pro</a>
+                </nav>
+
+                <a href="./diagnostic.html"
+                    class="button-primary px-4 py-3 text-sm shadow-[0_12px_24px_rgba(29,78,216,0.16)] sm:px-5">
+                    Lancer le pr&eacute;-diagnostic gratuit
+                </a>
+            </div>
+        </header>
+
+        <main class="flex-1">
+            <section class="px-4 pb-10 pt-10 sm:px-6 sm:pt-14">
+                <div class="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
+                    <div class="space-y-8">
+                        <div class="space-y-6">
+                            <span
+                                class="inline-flex items-center rounded-full border border-[#BFDBFE] bg-[#EFF6FF] px-4 py-2 text-sm font-semibold text-[#1D4ED8]">
+                                Partenariats B2B
+                            </span>
+                            <div class="space-y-5">
+                                <h1 class="max-w-3xl text-4xl font-extrabold tracking-[-0.04em] text-[#102A43] sm:text-5xl">
+                                    Devenir partenaire DiagTertiaire
+                                </h1>
+                                <p class="max-w-3xl text-lg leading-8 text-slate-600 sm:text-xl">
+                                    Vous &ecirc;tes bureau d'&eacute;tudes, auditeur, acteur de la r&eacute;novation ou
+                                    op&eacute;rateur souhaitant qualifier des b&acirc;timents tertiaires plus vite ?
+                                    &Eacute;changeons sur un partenariat ou un usage en marque blanche.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="surface-card rounded-[28px] p-6 sm:p-8">
+                            <div class="grid gap-5 md:grid-cols-2">
+                                <div class="rounded-2xl bg-[#F8FAFC] p-5">
+                                    <p class="text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">
+                                        Ce que la page permet
+                                    </p>
+                                    <p class="mt-3 text-base leading-7 text-slate-700">
+                                        Identifier si DiagTertiaire doit servir &agrave; g&eacute;n&eacute;rer des leads
+                                        mieux qualifi&eacute;s, structurer les premiers &eacute;changes ou d&eacute;ployer
+                                        un outil &agrave; vos couleurs.
+                                    </p>
+                                </div>
+                                <div class="rounded-2xl bg-[#102A43] p-5 text-white">
+                                    <p class="text-sm font-semibold uppercase tracking-[0.16em] text-[#BFDBFE]">
+                                        Cadre du flux
+                                    </p>
+                                    <p class="mt-3 text-base leading-7 text-slate-200">
+                                        Le formulaire est r&eacute;serv&eacute; &agrave; l'&eacute;tude d'un partenariat,
+                                        d'un usage pro ou d'une version marque blanche. Il ne lance pas un flux grand
+                                        public.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <section class="space-y-4" aria-labelledby="partner-audiences-title">
+                            <div class="space-y-2">
+                                <h2 id="partner-audiences-title" class="text-2xl font-bold text-[#102A43] sm:text-3xl">
+                                    Profils concern&eacute;s
+                                </h2>
+                                <p class="max-w-3xl text-base leading-7 text-slate-600">
+                                    La page cible les structures qui veulent qualifier plus vite leurs dossiers
+                                    tertiaires ou proposer l'outil en usage pro.
+                                </p>
+                            </div>
+                            <div class="flex flex-wrap gap-3">
+                                <span
+                                    class="rounded-full border border-[#E2E8F0] bg-white px-4 py-2 text-sm font-medium text-slate-700">Bureaux
+                                    d'&eacute;tudes</span>
+                                <span
+                                    class="rounded-full border border-[#E2E8F0] bg-white px-4 py-2 text-sm font-medium text-slate-700">Auditeurs
+                                    &eacute;nerg&eacute;tiques</span>
+                                <span
+                                    class="rounded-full border border-[#E2E8F0] bg-white px-4 py-2 text-sm font-medium text-slate-700">AMO
+                                    et conseil</span>
+                                <span
+                                    class="rounded-full border border-[#E2E8F0] bg-white px-4 py-2 text-sm font-medium text-slate-700">Acteurs
+                                    de la r&eacute;novation</span>
+                                <span
+                                    class="rounded-full border border-[#E2E8F0] bg-white px-4 py-2 text-sm font-medium text-slate-700">R&eacute;seaux
+                                    immobiliers</span>
+                                <span
+                                    class="rounded-full border border-[#E2E8F0] bg-white px-4 py-2 text-sm font-medium text-slate-700">Banques,
+                                    assureurs, apporteurs d'affaires</span>
+                                <span
+                                    class="rounded-full border border-[#E2E8F0] bg-white px-4 py-2 text-sm font-medium text-slate-700">Usage
+                                    marque blanche</span>
+                            </div>
+                        </section>
+                    </div>
+
+                    <aside class="surface-card rounded-[28px] p-6 sm:p-8" aria-labelledby="partner-points-title">
+                        <div class="space-y-6">
+                            <div class="space-y-3">
+                                <h2 id="partner-points-title" class="text-2xl font-bold text-[#102A43]">
+                                    B&eacute;n&eacute;fices partenaires
+                                </h2>
+                                <p class="text-base leading-7 text-slate-600">
+                                    Un socle simple pour qualifier plus t&ocirc;t, cadrer les dossiers et d&eacute;cider
+                                    du bon mode de collaboration.
+                                </p>
+                            </div>
+
+                            <div class="grid gap-4">
+                                <article class="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-5">
+                                    <h3 class="text-base font-semibold text-[#102A43]">Recevoir des leads qualifi&eacute;s</h3>
+                                    <p class="mt-2 text-sm leading-6 text-slate-600">
+                                        Les premi&egrave;res informations utiles peuvent &ecirc;tre structur&eacute;es avant
+                                        votre prise en charge.
+                                    </p>
+                                </article>
+
+                                <article class="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-5">
+                                    <h3 class="text-base font-semibold text-[#102A43]">Structurer les premi&egrave;res informations avant audit</h3>
+                                    <p class="mt-2 text-sm leading-6 text-slate-600">
+                                        Activit&eacute;, surface, niveau de maturit&eacute; et contexte peuvent &ecirc;tre
+                                        pos&eacute;s d&egrave;s l'entr&eacute;e.
+                                    </p>
+                                </article>
+
+                                <article class="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-5">
+                                    <h3 class="text-base font-semibold text-[#102A43]">Acc&eacute;l&eacute;rer la pr&eacute;-qualification commerciale</h3>
+                                    <p class="mt-2 text-sm leading-6 text-slate-600">
+                                        Le parcours aide &agrave; distinguer plus vite une mise en relation, un audit ou
+                                        un usage pro r&eacute;current.
+                                    </p>
+                                </article>
+
+                                <article class="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-5">
+                                    <h3 class="text-base font-semibold text-[#102A43]">D&eacute;ployer un outil &agrave; vos couleurs selon le cas</h3>
+                                    <p class="mt-2 text-sm leading-6 text-slate-600">
+                                        La m&ecirc;me base peut &ecirc;tre &eacute;tudi&eacute;e en usage pro interne ou
+                                        en version marque blanche.
+                                    </p>
+                                </article>
+                            </div>
+                        </div>
+                    </aside>
+                </div>
+            </section>
+            <section class="px-4 pb-16 sm:px-6 sm:pb-20">
+                <div class="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.78fr)]">
+                    <section class="surface-card-strong rounded-[32px] p-6 sm:p-8 lg:p-10"
+                        aria-labelledby="partner-form-title">
+                        <div class="space-y-3">
+                            <p class="text-sm font-semibold uppercase tracking-[0.16em] text-[#1D4ED8]">Formulaire principal</p>
+                            <h2 id="partner-form-title" class="text-2xl font-bold text-[#102A43] sm:text-3xl">
+                                &Eacute;tudier un partenariat
+                            </h2>
+                            <p class="max-w-2xl text-base leading-7 text-slate-600">
+                                Parlez-nous de votre activit&eacute;, du type de partenariat recherch&eacute; et du
+                                volume estim&eacute;. Nous utilisons ces informations pour orienter le bon format de
+                                collaboration.
+                            </p>
+                        </div>
+
+                        <div id="partner-feedback" class="feedback-error mt-6 rounded-2xl px-4 py-3 text-sm font-medium"
+                            role="alert" aria-live="polite" hidden></div>
+
+                        <div id="partner-form-shell" class="mt-6">
+                            <form id="partner-form" class="space-y-6" novalidate>
+                                <div class="honeypot" aria-hidden="true">
+                                    <label for="partner-website">Site web</label>
+                                    <input id="partner-website" name="website" type="text" tabindex="-1"
+                                        autocomplete="off">
+                                </div>
+
+                                <p class="text-sm text-slate-500">Les champs marqu&eacute;s * sont requis.</p>
+
+                                <div class="grid gap-5 md:grid-cols-2">
+                                    <div class="space-y-2">
+                                        <label for="partner-full-name" class="block text-sm font-semibold text-[#102A43]">
+                                            Nom et pr&eacute;nom *
+                                        </label>
+                                        <input id="partner-full-name" name="fullName" class="field-base" type="text"
+                                            autocomplete="name" required placeholder="Jean Martin">
+                                    </div>
+
+                                    <div class="space-y-2">
+                                        <label for="partner-company" class="block text-sm font-semibold text-[#102A43]">
+                                            Soci&eacute;t&eacute; *
+                                        </label>
+                                        <input id="partner-company" name="company" class="field-base" type="text"
+                                            autocomplete="organization" required placeholder="Cabinet Horizon">
+                                    </div>
+
+                                    <div class="space-y-2">
+                                        <label for="partner-email" class="block text-sm font-semibold text-[#102A43]">
+                                            Email professionnel *
+                                        </label>
+                                        <input id="partner-email" name="email" class="field-base" type="email"
+                                            autocomplete="email" required placeholder="vous@entreprise.fr">
+                                    </div>
+
+                                    <div class="space-y-2">
+                                        <label for="partner-phone" class="block text-sm font-semibold text-[#102A43]">
+                                            T&eacute;l&eacute;phone
+                                        </label>
+                                        <input id="partner-phone" name="phone" class="field-base" type="tel"
+                                            autocomplete="tel" placeholder="06 12 34 56 78">
+                                    </div>
+
+                                    <div class="space-y-2">
+                                        <label for="partner-type" class="block text-sm font-semibold text-[#102A43]">
+                                            Type de partenaire *
+                                        </label>
+                                        <select id="partner-type" name="partnerType" class="field-base" required>
+                                            <option value="">S&eacute;lectionner</option>
+                                            <option>Bureau d'&eacute;tudes</option>
+                                            <option>Auditeur &eacute;nerg&eacute;tique</option>
+                                            <option>Entreprise de r&eacute;novation</option>
+                                            <option>R&eacute;seau immobilier</option>
+                                            <option>Banque / assurance</option>
+                                            <option>Apporteur d'affaires</option>
+                                            <option>Demande marque blanche</option>
+                                            <option>Autre</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="space-y-2">
+                                        <label for="partner-volume" class="block text-sm font-semibold text-[#102A43]">
+                                            Volume estim&eacute; de dossiers / mois
+                                        </label>
+                                        <select id="partner-volume" name="monthlyVolume" class="field-base">
+                                            <option value="">S&eacute;lectionner</option>
+                                            <option>1 &agrave; 10</option>
+                                            <option>10 &agrave; 50</option>
+                                            <option>50 &agrave; 200</option>
+                                            <option>200+</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="space-y-2">
+                                    <label for="partner-subject" class="block text-sm font-semibold text-[#102A43]">
+                                        Objet de la demande *
+                                    </label>
+                                    <select id="partner-subject" name="requestSubject" class="field-base" required>
+                                        <option value="">S&eacute;lectionner</option>
+                                        <option>Recevoir des leads qualifi&eacute;s</option>
+                                        <option>Tester l'outil pour mon activit&eacute;</option>
+                                        <option>Utiliser une version marque blanche</option>
+                                        <option>Mettre en place un partenariat commercial</option>
+                                        <option>Autre</option>
+                                    </select>
+                                </div>
+
+                                <div class="space-y-2">
+                                    <label for="partner-message" class="block text-sm font-semibold text-[#102A43]">
+                                        Message / contexte *
+                                    </label>
+                                    <textarea id="partner-message" name="message" class="field-base min-h-[160px]"
+                                        required
+                                        placeholder="Expliquez votre activite, le type de dossiers traites, votre volume et le format envisage."></textarea>
+                                </div>
+
+                                <label
+                                    class="flex items-start gap-3 rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-4">
+                                    <input id="partner-consent" name="consent" type="checkbox"
+                                        class="mt-1 h-4 w-4 rounded border-slate-300 text-[#1D4ED8] focus:ring-[#1D4ED8]"
+                                        required>
+                                    <span class="text-sm leading-6 text-slate-600">
+                                        J'accepte que mes informations soient utilis&eacute;es pour &eacute;tudier ma
+                                        demande de partenariat et me recontacter au sujet de celle-ci. *
+                                    </span>
+                                </label>
+
+                                <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                                    <button id="partner-submit-button" type="submit"
+                                        class="button-primary w-full px-6 py-4 text-base shadow-[0_14px_28px_rgba(29,78,216,0.18)] sm:w-auto">
+                                        <span id="partner-submit-label">Parlez-nous de votre activit&eacute;</span>
+                                    </button>
+
+                                    <p class="text-sm leading-6 text-slate-500">
+                                        En cas de blocage, vous pouvez aussi &eacute;crire &agrave;
+                                        <a href="mailto:contact@diag-tertiaire.fr"
+                                            class="font-semibold text-[#1D4ED8] underline-offset-2 hover:underline">contact@diag-tertiaire.fr</a>.
+                                    </p>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div id="partner-success-shell" class="mt-6" hidden>
+                            <div class="feedback-success rounded-[24px] p-6 sm:p-8" aria-live="polite">
+                                <h3 class="text-xl font-bold text-[#166534]">Demande transmise</h3>
+                                <p class="mt-3 max-w-2xl text-base leading-7 text-[#166534]">
+                                    Votre demande a bien &eacute;t&eacute; transmise. Nous revenons vers vous
+                                    rapidement pour &eacute;tudier le bon format de partenariat.
+                                </p>
+                                <div class="mt-5 flex flex-col gap-3 sm:flex-row">
+                                    <a href="./index.html" class="button-secondary px-5 py-3 text-sm">
+                                        Retour au site public
+                                    </a>
+                                    <a id="partner-calendly-cta" href="#" target="_blank" rel="noopener noreferrer"
+                                        class="button-secondary px-5 py-3 text-sm" hidden>
+                                        Planifier un &eacute;change
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <aside class="space-y-6" aria-labelledby="partner-reassurance-title">
+                        <section class="surface-card rounded-[28px] p-6 sm:p-8">
+                            <div class="space-y-4">
+                                <h2 id="partner-reassurance-title" class="text-2xl font-bold text-[#102A43]">
+                                    Petit bloc de r&eacute;assurance
+                                </h2>
+                                <ul class="space-y-3 text-sm leading-6 text-slate-600">
+                                    <li class="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-4">
+                                        Demande relue manuellement pour distinguer mise en relation, usage pro et besoin
+                                        marque blanche.
+                                    </li>
+                                    <li class="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-4">
+                                        Le formulaire reste le canal principal. Aucun rendez-vous n'est impos&eacute;
+                                        pour vous qualifier.
+                                    </li>
+                                    <li class="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-4">
+                                        Le message envoy&eacute; permet de comprendre votre activit&eacute;, votre
+                                        volume et le cadre de collaboration &agrave; &eacute;tudier.
+                                    </li>
+                                </ul>
+                            </div>
+                        </section>
+
+                        <section class="surface-card rounded-[28px] p-6 sm:p-8">
+                            <div class="space-y-3">
+                                <p class="text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">
+                                    Message attendu
+                                </p>
+                                <h2 class="text-xl font-bold text-[#102A43]">
+                                    Ce que nous cherchons &agrave; comprendre
+                                </h2>
+                            </div>
+                            <div class="mt-5 space-y-4 text-sm leading-6 text-slate-600">
+                                <p class="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-4">
+                                    Si DiagTertiaire doit vous aider &agrave; g&eacute;n&eacute;rer et qualifier des
+                                    leads plus t&ocirc;t.
+                                </p>
+                                <p class="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-4">
+                                    Si le produit doit &ecirc;tre utilis&eacute; tel quel dans votre activit&eacute; ou
+                                    d&eacute;clin&eacute; en usage pro / marque blanche.
+                                </p>
+                                <p class="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-4">
+                                    Quel niveau de volume, de qualification et de personnalisation est pertinent.
+                                </p>
+                            </div>
+                        </section>
+                    </aside>
+                </div>
+            </section>
+        </main>
+
+        <footer class="border-t border-white/5 bg-[linear-gradient(180deg,#0F172A_0%,#122039_100%)] py-14 md:py-16">
+            <div class="mx-auto max-w-6xl px-4 sm:px-6">
+                <div class="grid gap-8 md:grid-cols-4 md:gap-10">
+                    <div>
+                        <div class="mb-4 flex items-center gap-3">
+                            <span
+                                class="flex h-9 w-9 items-center justify-center rounded-lg bg-[#1D4ED8]/20 text-[#1D4ED8]">
+                                <svg viewBox="0 0 24 24" class="h-[18px] w-[18px]" aria-hidden="true">
+                                    <path fill="currentColor"
+                                        d="M7 22H5.5A1.5 1.5 0 0 1 4 20.5v-9C4 10.12 5.12 9 6.5 9H7V6a4 4 0 0 1 4-4h2a4 4 0 0 1 4 4v3h.5A2.5 2.5 0 0 1 20 11.5v9a1.5 1.5 0 0 1-1.5 1.5H17v-7H7zm2-11h6V6a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2zm1 4.5h2V18h-2zm4 0h2V18h-2z" />
+                                </svg>
+                            </span>
+                            <span class="text-base font-bold text-white">DiagTertiaire</span>
+                        </div>
+                        <p class="mb-4 text-sm leading-7 text-slate-400">
+                            Pr&eacute;-diagnostic &eacute;nerg&eacute;tique tertiaire orient&eacute; d&eacute;cision, avec
+                            parcours public, usage pro et &eacute;tude de partenariats.
+                        </p>
+                        <div class="space-y-2">
+                            <a href="./index.html"
+                                class="block text-sm font-medium text-slate-400 transition-colors hover:text-white">A
+                                propos</a>
+                            <a href="./partenaire.html" aria-current="page"
+                                class="block text-sm font-medium text-white transition-colors hover:text-white">Devenir
+                                partenaire</a>
+                            <a href="./index.saaspro.html"
+                                class="block text-sm font-medium text-slate-400 transition-colors hover:text-white">Espace
+                                Pro</a>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h2 class="mb-4 text-sm font-bold text-white">Ressources</h2>
+                        <ul class="space-y-2.5">
+                            <li><a href="./diagnostic.html"
+                                    class="text-sm font-medium text-slate-400 transition-colors hover:text-white">Lancer
+                                    le pr&eacute;-diagnostic</a></li>
+                            <li><a href="./index.html"
+                                    class="text-sm font-medium text-slate-400 transition-colors hover:text-white">Exemple
+                                    de rapport</a></li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h2 class="mb-4 text-sm font-bold text-white">L&eacute;gal</h2>
+                        <ul class="space-y-2.5">
+                            <li><a href="./mentions-legales.html"
+                                    class="text-sm font-medium text-slate-400 transition-colors hover:text-white">Mentions
+                                    l&eacute;gales</a></li>
+                            <li><a href="./politique-confidentialite.html"
+                                    class="text-sm font-medium text-slate-400 transition-colors hover:text-white">Politique
+                                    de confidentialit&eacute;</a></li>
+                            <li><a href="./conditions-generales-utilisation.html"
+                                    class="text-sm font-medium text-slate-400 transition-colors hover:text-white">CGU</a>
+                            </li>
+                            <li><a href="./cookies.html"
+                                    class="text-sm font-medium text-slate-400 transition-colors hover:text-white">Politique
+                                    cookies</a></li>
+                            <li><button type="button" onclick="window.dtCookies && window.dtCookies.open()"
+                                    class="bg-transparent p-0 text-left text-sm font-medium text-slate-400 transition-colors hover:text-white">Gestion
+                                    des cookies</button></li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h2 class="mb-4 text-sm font-bold text-white">Email direct</h2>
+                        <ul class="space-y-2.5">
+                            <li><a href="mailto:contact@diag-tertiaire.fr"
+                                    class="text-sm font-medium text-slate-400 transition-colors hover:text-white">contact@diag-tertiaire.fr</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div
+                    class="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-white/10 pt-6 text-xs text-slate-500">
+                    <p>&copy; 2026 DiagTertiaire - Estimations bas&eacute;es sur r&eacute;f&eacute;rences sectorielles</p>
+                    <div class="flex items-center gap-3">
+                        <span class="rounded-lg bg-white/5 px-2.5 py-1.5 font-medium">SSL</span>
+                        <span class="rounded-lg bg-white/5 px-2.5 py-1.5 font-medium">RGPD</span>
+                        <span class="rounded-lg bg-white/5 px-2.5 py-1.5 font-medium">FR</span>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <noscript>
+        <div
+            style="max-width:960px;margin:24px auto;padding:16px 20px;border:1px solid #E2E8F0;border-radius:18px;background:#FFFFFF;color:#0F172A;font-family:Inter,sans-serif;">
+            Cette page utilise JavaScript pour l'envoi du formulaire. Vous pouvez nous &eacute;crire directement &agrave;
+            <a href="mailto:contact@diag-tertiaire.fr">contact@diag-tertiaire.fr</a>.
+        </div>
+    </noscript>
+
+    <script src="./cookie-consent.js" defer></script>
+    <script src="./partner-page.js" defer></script>
+</body>
+
+</html>

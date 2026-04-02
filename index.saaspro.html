@@ -20,6 +20,22 @@
 <html lang="fr">
 
 <head>
+    <script>
+        window.DT_GA_MEASUREMENT_ID = 'G-LP3GE90GK5';
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+        if (!window.__dtGtagConsentDefaultSet) {
+            window.gtag('consent', 'default', {
+                analytics_storage: 'denied',
+                ad_storage: 'denied',
+                ad_user_data: 'denied',
+                ad_personalization: 'denied',
+                wait_for_update: 500
+            });
+            window.__dtGtagConsentDefaultSet = true;
+        }
+    </script>
+    <script src="./ga4.js" defer></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DiagTertiaire Pro - Espace Professionnel</title>
@@ -892,8 +908,6 @@
             font-family: 'Inter', sans-serif;
         }
     </style>
-    <!-- Vercel Analytics — chargé conditionnellement selon le consentement (cookie-consent.js) -->
-    <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
     <script src="./cookie-consent.js"></script>
 </head>
 
@@ -10640,6 +10654,73 @@
             );
         };
 
+        const resolveProAnalyticsView = ({ sharedReport, authReady, auth, authRecovery, page }) => {
+            if (sharedReport) {
+                return {
+                    pageName: 'pro_shared_report',
+                    pagePath: '/index.saaspro.html#shared-report',
+                    pageTemplate: 'pro_space',
+                    pageTitle: 'DiagTertiaire Pro - Rapport partage'
+                };
+            }
+
+            if (!authReady) {
+                return {
+                    pageName: 'pro_auth_loading',
+                    pagePath: '/index.saaspro.html#auth-loading',
+                    pageTemplate: 'pro_space',
+                    pageTitle: 'DiagTertiaire Pro - Verification session'
+                };
+            }
+
+            if (!auth) {
+                if (authRecovery && authRecovery.active) {
+                    return {
+                        pageName: authRecovery.mode === 'first_access' ? 'pro_first_access' : 'pro_recovery',
+                        pagePath: authRecovery.mode === 'first_access'
+                            ? '/index.saaspro.html#first-access'
+                            : '/index.saaspro.html#recovery',
+                        pageTemplate: 'pro_space',
+                        pageTitle: authRecovery.mode === 'first_access'
+                            ? 'DiagTertiaire Pro - Premiere connexion'
+                            : 'DiagTertiaire Pro - Recuperation de compte'
+                    };
+                }
+
+                return {
+                    pageName: 'pro_landing',
+                    pagePath: '/index.saaspro.html#landing',
+                    pageTemplate: 'pro_space',
+                    pageTitle: 'DiagTertiaire Pro - Acces professionnel'
+                };
+            }
+
+            if (page && (page.indexOf('report-') === 0 || page.indexOf('case-report-') === 0)) {
+                return {
+                    pageName: 'pro_report',
+                    pagePath: '/index.saaspro.html#report',
+                    pageTemplate: 'pro_space',
+                    pageTitle: 'DiagTertiaire Pro - Rapport detaille'
+                };
+            }
+
+            var normalizedPage = page || 'dashboard';
+            var pageTitles = {
+                dashboard: 'DiagTertiaire Pro - Vue globale du parc',
+                cases: 'DiagTertiaire Pro - Dossiers clients',
+                new: 'DiagTertiaire Pro - Nouveau diagnostic',
+                settings: 'DiagTertiaire Pro - Configuration',
+                plans: 'DiagTertiaire Pro - Plans et tarification'
+            };
+
+            return {
+                pageName: 'pro_' + normalizedPage,
+                pagePath: '/index.saaspro.html#' + normalizedPage,
+                pageTemplate: 'pro_space',
+                pageTitle: pageTitles[normalizedPage] || 'DiagTertiaire Pro'
+            };
+        };
+
         /* ===== MAIN APP (Logique de routing et d'assemblage) ===== */
         const ProApp = () => {
             // ALL hooks at the top - no conditional hooks (React rules)
@@ -10693,6 +10774,27 @@
                 window.addEventListener('hashchange', syncSharedReport);
                 return () => window.removeEventListener('hashchange', syncSharedReport);
             }, []);
+
+            useEffect(() => {
+                if (!window.dtAnalytics || typeof window.dtAnalytics.trackPageView !== 'function') {
+                    return;
+                }
+
+                const view = resolveProAnalyticsView({
+                    sharedReport,
+                    authReady,
+                    auth,
+                    authRecovery,
+                    page
+                });
+
+                window.dtAnalytics.trackPageView({
+                    page_path: view.pagePath,
+                    page_title: view.pageTitle,
+                    page_name: view.pageName,
+                    page_template: view.pageTemplate
+                });
+            }, [sharedReport ? sharedReport.id : '', authReady, auth, authRecovery.active, authRecovery.mode, page]);
 
             useEffect(() => {
                 workspaceRef.current = workspace;

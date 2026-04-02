@@ -2,6 +2,22 @@
 <html lang="fr">
 
 <head>
+    <script>
+        window.DT_GA_MEASUREMENT_ID = 'G-LP3GE90GK5';
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+        if (!window.__dtGtagConsentDefaultSet) {
+            window.gtag('consent', 'default', {
+                analytics_storage: 'denied',
+                ad_storage: 'denied',
+                ad_user_data: 'denied',
+                ad_personalization: 'denied',
+                wait_for_update: 500
+            });
+            window.__dtGtagConsentDefaultSet = true;
+        }
+    </script>
+    <script src="./ga4.js" defer></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DiagTertiaire - Performance Énergétique Tertiaire</title>
@@ -757,8 +773,6 @@
             overflow: hidden !important;
         }
     </style>
-    <!-- Vercel Analytics — chargé conditionnellement selon le consentement (cookie-consent.js) -->
-    <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
     <script src="./cookie-consent.js"></script>
 </head>
 
@@ -770,6 +784,7 @@
             <a href="/" style="display:flex;align-items:center;gap:0.5rem;text-decoration:none;color:#0F172A;font-weight:700;font-size:1.125rem;">DiagTertiaire</a>
             <nav>
                 <a href="/diagnostic.html" style="margin-left:1.5rem;color:#1D4ED8;font-weight:600;text-decoration:none;">Diagnostic</a>
+                <a href="/exemple-rapport.html" style="margin-left:1.5rem;color:#64748B;font-weight:500;text-decoration:none;">Exemple de rapport</a>
                 <a href="/index.saaspro.html" style="margin-left:1.5rem;color:#64748B;font-weight:500;text-decoration:none;">Espace Pro</a>
                 <a href="/partenaire.html" style="margin-left:1.5rem;color:#64748B;font-weight:500;text-decoration:none;">Devenir partenaire</a>
             </nav>
@@ -790,6 +805,8 @@
         <section style="margin-top:2rem;">
             <h2 style="font-size:1.5rem;font-weight:700;color:#0F172A;margin-bottom:1rem;">Ressources</h2>
             <ul style="list-style:disc;padding-left:1.5rem;color:#334155;">
+                <li><a href="/exemple-rapport.html">Exemple de rapport</a></li>
+                <li><a href="/methode.html">Notre méthodologie</a></li>
                 <li><a href="/index.saaspro.html">Espace professionnel</a></li>
                 <li><a href="/partenaire.html">Devenir partenaire</a></li>
                 <li><a href="/mentions-legales.html">Mentions légales</a></li>
@@ -1537,15 +1554,14 @@
 
                                 {/* Zone CTA — air maximal autour */}
                                 <div style={{ marginBottom: 'clamp(1.5rem, 6vw, 3rem)' }}>
-                                    <button
-                                        type="button"
-                                        onClick={() => navigate('diagnostic')}
+                                    <a
+                                        href="/diagnostic.html"
                                         className="btn-primary"
                                         style={{ display: 'inline-flex', alignItems: 'center', gap: '10px' }}
                                     >
                                         Lancer le pré-diagnostic gratuit
                                         <Icon icon="solar:arrow-right-linear" width="20" height="20" />
-                                    </button>
+                                    </a>
                                     <p style={{ marginTop: '1.25rem', fontSize: '0.8125rem', color: '#64748B', fontWeight: 500, letterSpacing: '0.01em' }}>Sans engagement. Rapport PDF immédiat.</p>
                                 </div>
 
@@ -2028,9 +2044,8 @@
                     <div className="max-w-4xl mx-auto px-4 text-center" style={{ position: 'relative', zIndex: 1 }}>
                         <h2 style={{ fontSize: 'clamp(1.75rem, 4.5vw, 2.625rem)', fontWeight: 800, color: 'white', marginBottom: '1.125rem', lineHeight: 1.12, letterSpacing: '-0.8px' }}>Prêt à comparer votre consommation ?</h2>
                         <p style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.78)', marginBottom: '2.25rem', lineHeight: 1.7 }}>Une estimation concrète avant d'engager du temps ou du budget.</p>
-                        <button
-                            type="button"
-                            onClick={() => navigate('diagnostic')}
+                        <a
+                            href="/diagnostic.html"
                             style={{
                                 display: 'inline-flex', alignItems: 'center', gap: '10px',
                                 background: '#FFFFFF', color: '#102A43',
@@ -2039,14 +2054,15 @@
                                 fontWeight: 700, fontSize: '1rem',
                                 border: 'none', cursor: 'pointer',
                                 boxShadow: '0 5px 20px rgba(0,0,0,0.25), 0 2px 6px rgba(0,0,0,0.12)',
-                                transition: 'background 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease'
+                                transition: 'background 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease',
+                                textDecoration: 'none'
                             }}
                             onMouseEnter={e => { e.currentTarget.style.background = '#EFF6FF'; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 28px rgba(0,0,0,0.30), 0 3px 8px rgba(0,0,0,0.15)'; }}
                             onMouseLeave={e => { e.currentTarget.style.background = '#FFFFFF'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 5px 20px rgba(0,0,0,0.25), 0 2px 6px rgba(0,0,0,0.12)'; }}
                         >
                             <Icon icon="solar:rocket-linear" style={{ fontSize: '1rem' }} />
                             Lancer le pré-diagnostic gratuit
-                        </button>
+                        </a>
                         <p style={{ marginTop: '1.25rem', fontSize: '0.8125rem', color: 'rgba(255,255,255,0.58)', fontWeight: 500 }}>Sans engagement. Rapport PDF immédiat.</p>
                     </div>
                 </section>
@@ -3035,8 +3051,14 @@
            ───────────────────────────────────────────────────────────────────────── */
 
         const newDiagnosticTrack = (event, data = {}) => {
-            if (typeof window !== 'undefined' && typeof window.track === 'function') {
-                window.track(event, data);
+            if (typeof window !== 'undefined') {
+                const analyticsTracker = window.dtAnalytics && window.dtAnalytics.trackBusinessEvent;
+                if (typeof analyticsTracker === 'function') {
+                    analyticsTracker(event, data);
+                }
+                if (typeof window.track === 'function' && window.track !== analyticsTracker) {
+                    window.track(event, data);
+                }
             }
         };
 
@@ -10854,8 +10876,16 @@
             )
         );
 
+        const resolvePublicPageFromPath = () => {
+            const path = window.location.pathname || '/';
+            if (path === '/diagnostic.html' || path.endsWith('/diagnostic.html')) return 'diagnostic';
+            if (path === '/exemple-rapport.html' || path.endsWith('/exemple-rapport.html')) return 'exemple';
+            if (path === '/methode.html' || path.endsWith('/methode.html')) return 'methode';
+            return 'home';
+        };
+
         const App = () => {
-            const [currentPage, setCurrentPage] = useState('home');
+            const [currentPage, setCurrentPage] = useState(() => resolvePublicPageFromPath());
             const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
             const navigate = (page) => {
@@ -10868,27 +10898,16 @@
 
 
             const headerPages = [
-                { page: 'exemple', label: 'Exemple de rapport' },
-                { page: 'pro', label: 'Espace Pro', external: true }
+                { page: 'exemple', label: 'Exemple de rapport', href: '/exemple-rapport.html' },
+                { page: 'pro', label: 'Espace Pro', href: '/index.saaspro.html' }
             ];
 
-            const NavLink = ({ page, label, external = false, mobile = false }) => {
+            const NavLink = ({ page, label, href, mobile = false }) => {
                 const classes = mobile
                     ? `w-full text-left px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors ${currentPage === page ? 'text-[#1D4ED8] bg-[#EEF2FF]' : 'text-[#475569] hover:text-[#102A43] hover:bg-[#F8FAFC]'}`
                     : `inline-flex items-center h-10 px-3 rounded-lg text-sm font-semibold transition-colors ${currentPage === page ? 'text-[#1D4ED8] bg-[#EEF2FF]' : 'text-[#475569] hover:text-[#102A43] hover:bg-[#F8FAFC]'}`;
 
-                if (external) {
-                    return <a href="index.saaspro.html" className={classes}>{label}</a>;
-                }
-
-                return (
-                    <button type="button"
-                        onClick={() => navigate(page)}
-                        className={classes}
-                    >
-                        {label}
-                    </button>
-                );
+                return <a href={href} className={classes}>{label}</a>;
             };
 
             return (
@@ -10896,28 +10915,26 @@
                     <nav className={`sticky top-0 z-50 backdrop-blur border-b border-[#E2E8F0] ${isLandingPage ? 'bg-white/80 shadow-[0_2px_12px_rgba(15,23,42,0.04)]' : 'bg-white/95 shadow-[0_6px_20px_rgba(15,23,42,0.06)]'}`}>
                         <div className="max-w-6xl mx-auto px-4 sm:px-6">
                             <div className="h-[74px] flex items-center justify-between gap-4">
-                                <button
-                                    type="button"
-                                    onClick={() => navigate('home')}
+                                <a
+                                    href="/"
                                     className="inline-flex items-center gap-2 text-[#102A43] hover:text-[#1D4ED8] transition-colors"
                                 >
                                     <DiagTertiaireBrand dark={false} size={28} />
-                                </button>
+                                </a>
 
                                 <div className="hidden md:flex items-center gap-1">
                                     {headerPages.map((item) => (
-                                        <NavLink key={item.page} page={item.page} label={item.label} external={item.external} />
+                                        <NavLink key={item.page} page={item.page} label={item.label} href={item.href} />
                                     ))}
                                 </div>
 
                                 <div className="hidden md:block">
-                                    <button
-                                        type="button"
-                                        onClick={() => navigate('diagnostic')}
+                                    <a
+                                        href="/diagnostic.html"
                                         className="btn-primary inline-flex items-center justify-center px-5 py-2.5 text-sm font-bold rounded-xl"
                                     >
                                         Lancer le pré-diagnostic gratuit
-                                    </button>
+                                    </a>
                                 </div>
 
                                 <button
@@ -10936,16 +10953,15 @@
                                 <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4">
                                     <div className="flex flex-col gap-2">
                                         {headerPages.map((item) => (
-                                            <NavLink key={`mobile-${item.page}`} page={item.page} label={item.label} external={item.external} mobile />
+                                            <NavLink key={`mobile-${item.page}`} page={item.page} label={item.label} href={item.href} mobile />
                                         ))}
                                     </div>
-                                    <button
-                                        type="button"
-                                        onClick={() => navigate('diagnostic')}
+                                    <a
+                                        href="/diagnostic.html"
                                         className="btn-primary mt-3 w-full inline-flex items-center justify-center px-5 py-3 text-sm font-bold rounded-xl"
                                     >
                                         Lancer le pré-diagnostic gratuit
-                                    </button>
+                                    </a>
                                 </div>
                             </div>
                         )}
@@ -10975,6 +10991,8 @@
                             </div>
                         )}
 
+                        {currentPage === 'methode' && <PageMethod navigate={navigate} />}
+
                         {currentPage === 'exemple' && <PageExample navigate={navigate} />}
                     </main>
 
@@ -10992,8 +11010,8 @@
                                         </div>
                                         <p className="text-sm text-[#64748B] leading-relaxed mb-4">Pré-diagnostic énergétique tertiaire orienté décision, basé sur références sectorielles.</p>
                                         <div className="space-y-2">
-                                            <button type="button" onClick={() => navigate('home')} className="block text-sm text-slate-400 hover:text-white transition-colors font-medium">A propos</button>
-                                            <button type="button" onClick={() => navigate('methode')} className="block text-sm text-slate-400 hover:text-white transition-colors font-medium">Notre méthodologie</button>
+                                            <a href="/" className="block text-sm text-slate-400 hover:text-white transition-colors font-medium">A propos</a>
+                                            <a href="/methode.html" className="block text-sm text-slate-400 hover:text-white transition-colors font-medium">Notre méthodologie</a>
                                             <a href="./partenaire.html" className="block text-sm text-slate-400 hover:text-white transition-colors font-medium">Devenir partenaire</a>
                                         </div>
                                     </div>
@@ -11001,7 +11019,7 @@
                                     <div>
                                         <h4 className="text-sm font-bold text-white mb-4">Ressources</h4>
                                         <ul className="space-y-2.5">
-                                            <li><button type="button" onClick={() => navigate('exemple')} className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Exemple de rapport</button></li>
+                                            <li><a href="/exemple-rapport.html" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Exemple de rapport</a></li>
                                         </ul>
                                     </div>
 

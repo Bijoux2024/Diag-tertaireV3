@@ -169,11 +169,11 @@
     feedbackDetail.textContent = detail || '';
   };
 
-  const showSuccess = () => {
-    hideFeedback();
-    formShell.hidden = true;
-    successShell.hidden = false;
-    successMessage.textContent = SUCCESS_MESSAGE;
+    const showSuccess = () => {
+        hideFeedback();
+        formShell.hidden = true;
+        successShell.hidden = false;
+        successMessage.textContent = SUCCESS_MESSAGE;
   };
 
   const setLoading = (isLoading) => {
@@ -309,6 +309,13 @@
       form.reset();
       markFormRendered(FORM_KEY);
       showSuccess();
+      if (window.dtAnalytics && typeof window.dtAnalytics.trackEvent === 'function') {
+        window.dtAnalytics.trackEvent('partner_interest_submit', {
+          page: window.location.pathname,
+          need: payload.need,
+          structure_type: payload.structureType
+        });
+      }
     } catch (error) {
       clearFormCooldown(FORM_KEY);
       showError(

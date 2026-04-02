@@ -19,7 +19,6 @@
 
     var CONSENT_KEY = 'dt_cookie_consent';
     var CONSENT_MAX_MS = 180 * 24 * 60 * 60 * 1000; // 6 mois
-    var ANALYTICS_SCRIPT = '/_vercel/insights/script.js';
     var COOKIES_PAGE = './cookies.html';
 
     /* ── Stockage ─────────────────────────────────────────────────────────── */
@@ -42,27 +41,46 @@
         } catch (e) { return null; }
     }
 
-    function writeConsent(analytics) {
+    function dispatchConsentChange(consent) {
         try {
-            localStorage.setItem(CONSENT_KEY, JSON.stringify({
-                v: 2,
-                ts: Date.now(),
-                necessary: true,
-                analytics: !!analytics
-            }));
+            if (typeof window.CustomEvent === 'function') {
+                window.dispatchEvent(new CustomEvent('dt:cookie-consent-change', {
+                    detail: { consent: consent }
+                }));
+            }
         } catch (e) { }
+    }
+
+    function syncAnalyticsConsent(consent) {
+        try {
+            if (window.dtAnalytics && typeof window.dtAnalytics.syncConsent === 'function') {
+                window.dtAnalytics.syncConsent(consent);
+            } else if (window.dtAnalytics && typeof window.dtAnalytics.updateConsent === 'function') {
+                window.dtAnalytics.updateConsent(!!(consent && consent.analytics));
+            }
+        } catch (e) { }
+
+        dispatchConsentChange(consent);
+    }
+
+    function writeConsent(analytics) {
+        var consent = {
+            v: 2,
+            ts: Date.now(),
+            necessary: true,
+            analytics: !!analytics
+        };
+
+        try {
+            localStorage.setItem(CONSENT_KEY, JSON.stringify(consent));
+        } catch (e) { }
+
+        syncAnalyticsConsent(consent);
+        return consent;
     }
 
     /* ── Chargement conditionnel de la mesure d'audience ─────────────────── */
 
-    function loadAnalytics() {
-        if (document.querySelector('[data-dt-analytics]')) return; // anti double-injection
-        var s = document.createElement('script');
-        s.src = ANALYTICS_SCRIPT;
-        s.defer = true;
-        s.setAttribute('data-dt-analytics', '1');
-        document.head.appendChild(s);
-    }
 
     /* ── Styles (injectés une seule fois) ─────────────────────────────────── */
 
@@ -289,7 +307,6 @@
         byId('dt-cb-accept').addEventListener('click', function () {
             writeConsent(true);
             hideBanner();
-            loadAnalytics();
         });
 
         byId('dt-cb-refuse').addEventListener('click', function () {
@@ -376,7 +393,6 @@
                     prevFocus.focus();
                 }
             });
-            if (analytics) loadAnalytics();
         }
 
         requestAnimationFrame(function () {
@@ -430,6 +446,7 @@
         getConsent: readConsent,
         reset: function () {
             try { localStorage.removeItem(CONSENT_KEY); } catch (e) { }
+            syncAnalyticsConsent(null);
             hideAll();
             setTimeout(showBanner, 300);
         }
@@ -439,10 +456,9 @@
 
     function init() {
         var c = readConsent();
+        syncAnalyticsConsent(c);
         if (c === null) {
             showBanner();
-        } else if (c.analytics === true) {
-            loadAnalytics();
         }
     }
 

@@ -2,6 +2,22 @@
 <html lang="fr">
 
 <head>
+    <script>
+        window.DT_GA_MEASUREMENT_ID = 'G-LP3GE90GK5';
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+        if (!window.__dtGtagConsentDefaultSet) {
+            window.gtag('consent', 'default', {
+                analytics_storage: 'denied',
+                ad_storage: 'denied',
+                ad_user_data: 'denied',
+                ad_personalization: 'denied',
+                wait_for_update: 500
+            });
+            window.__dtGtagConsentDefaultSet = true;
+        }
+    </script>
+    <script src="./ga4.js" defer></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Conditions g\u00e9n\u00e9rales d'utilisation - DiagTertiaire</title>
@@ -107,8 +123,6 @@
             }
         }
     </style>
-    <!-- Vercel Analytics — chargé conditionnellement selon le consentement (cookie-consent.js) -->
-    <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
     <script src="./cookie-consent.js"></script>
 </head>
 

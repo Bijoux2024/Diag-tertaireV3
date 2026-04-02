@@ -1,4 +1,7 @@
 {
+  "rewrites": [
+    { "source": "/diagnostic", "destination": "/" }
+  ],
   "headers": [
     {
       "source": "/partenaire.html",

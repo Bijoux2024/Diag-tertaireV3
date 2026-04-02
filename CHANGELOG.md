@@ -16,7 +16,7 @@
 - Lien Espace Pro retire de la nav de methode.html et exemple-rapport.html
 
 ### PWA
-- site.webmanifest enrichi (start_url, scope, description, lang, categories, orientation)
+- Revert site.webmanifest to minimal version (disable PWA install prompt)
 
 ## [SEO] - 2026-04-03
 

@@ -314,7 +314,7 @@
         if (
             normalizedLabel.indexOf('lancer le pre diagnostic gratuit') !== -1
             || normalizedLabel.indexOf('voir le pre diagnostic') !== -1
-            || href === '/diagnostic.html'
+            || href === '/diagnostic' || href === '/diagnostic.html'
         ) {
             baseParams.cta_name = 'launch_pre_diagnostic';
             return { eventName: 'cta_click', params: baseParams };

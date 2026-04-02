@@ -22,7 +22,9 @@
       "Bash(vercel ls)",
       "Bash(grep -oE '\"\"solar:[a-z0-9-]+\"\"' index.saaspro.html)",
       "Bash(sed -n '5934,5938p' index.html)",
-      "Bash(sed -n '8200,8206p' index.html)"
+      "Bash(sed -n '8200,8206p' index.html)",
+      "Bash([ -f \"/c/Users/yanni/Diag-tertaireV3/$f\" ])",
+      "Bash([ -f \"/c/Users/yanni/Diag-tertaireV3/.env.example\" ])"
     ]
   }
 }

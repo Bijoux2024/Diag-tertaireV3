@@ -31,10 +31,16 @@ vercel.json                 # Config Vercel (headers, rewrites)
 ## Lancer en local
 
 ```bash
-npx serve .
+npm run dev
 ```
 
-Le front est statique et ne necessite aucun build. Les endpoints `/api/` ne fonctionnent qu'en environnement Vercel (ou via `vercel dev`).
+Le front est statique et ne necessite aucun build.
+
+Pour tester aussi les endpoints `/api/`, utilisez :
+
+```bash
+npm run dev:vercel
+```
 
 ## Deployer
 

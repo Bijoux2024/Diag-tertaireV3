@@ -1,5 +1,18 @@
 # Changelog - DiagTertiaire V3
 
+## [Refactoring] - 2026-04-02
+
+### Extrait
+- src/engine.js : moteur de calcul public extrait de index.html (2 420 lignes, source unique)
+- src/solar-icons.js : 118 icones SVG Solar extraites de index.html
+- index.html reduit de ~11 000 a ~8 700 lignes
+- index.saaspro.html : icones SVG extraites, ENGINE_PRO reste inline (divergence acceptee)
+
+### Modifie
+- index.html charge engine.js et solar-icons.js via script tags
+- index.saaspro.html charge solar-icons.js via script tag
+- Constantes partagees (BUILDING_AGES, BOILER_AGES, MAX_TOTAL_SAVINGS_PCT) deplacees dans engine.js
+
 ## [Nettoyage] - 2026-04-02
 
 ### Supprime

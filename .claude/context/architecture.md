@@ -2,8 +2,10 @@
 
 ## Surfaces runtime
 
-- `index.html` : landing public + diagnostic public
-- `index.saaspro.html` : espace pro canonique
+- `src/engine.js` : moteur de calcul public, source unique (ENGINE_VERSION 1.4.0, 2 420 lignes)
+- `src/solar-icons.js` : dictionnaire des 118 icones SVG Solar, partage entre index.html et saaspro
+- `index.html` : landing public + diagnostic public (charge engine.js et solar-icons.js)
+- `index.saaspro.html` : espace pro canonique (ENGINE_PRO inline, divergent de engine.js)
 - `diagtertiaire-pro-alpha.html` : alias legacy vers `index.saaspro.html`
 
 ## Source de verite reelle

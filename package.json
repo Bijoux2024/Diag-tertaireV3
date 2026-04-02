@@ -4,6 +4,12 @@
   "description": "Ce dossier correspond au MVP de démonstration **DiagTertiaire Pro**. Il s'agit d'une interface front-end statique, visant à démontrer le fonctionnement métier d'un éventuel SaaS B2B basé sur DiagTertiaire.",
   "main": "index.js",
   "scripts": {
+    "dev": "node scripts/static-server.js",
+    "start": "node scripts/static-server.js",
+    "dev:vercel": "npx vercel dev",
+    "serve:ps": "powershell -ExecutionPolicy Bypass -File scripts/serve-local.ps1",
+    "deploy:preview": "powershell -ExecutionPolicy Bypass -File scripts/vercel-preview.ps1",
+    "deploy:prod": "powershell -ExecutionPolicy Bypass -File scripts/vercel-prod.ps1",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

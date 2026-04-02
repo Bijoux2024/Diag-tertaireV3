@@ -26,7 +26,8 @@
       "Bash([ -f \"/c/Users/yanni/Diag-tertaireV3/$f\" ])",
       "Bash([ -f \"/c/Users/yanni/Diag-tertaireV3/.env.example\" ])",
       "Bash(rm -f c:/Users/yanni/Diag-tertaireV3/api/.claude/commands/fix.md c:/Users/yanni/Diag-tertaireV3/api/.claude/commands/feature.md c:/Users/yanni/Diag-tertaireV3/api/.claude/commands/check.md)",
-      "Bash(rmdir c:/Users/yanni/Diag-tertaireV3/api/.claude/commands)"
+      "Bash(rmdir c:/Users/yanni/Diag-tertaireV3/api/.claude/commands)",
+      "Bash(echo \"dev refs: $?\")"
     ]
   }
 }

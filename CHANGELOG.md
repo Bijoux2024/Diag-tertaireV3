@@ -1,5 +1,16 @@
 # Changelog - DiagTertiaire V3
 
+## [Gouvernance] - 2026-04-02
+
+### Ajoute
+- CLAUDE.md a la racine (lu automatiquement par Claude Code)
+- .claude/commands/ : fix, feature, check, cleanup (commandes standardisees)
+- Regles d'hygiene code : zero code mort, zero doublon, zero orphelin
+- Tests moteur obligatoires (3 scenarios de reference)
+
+### Supprime
+- api/.claude/commands/ (remplace par les commandes racine)
+
 ## [Refactoring] - 2026-04-02
 
 ### Extrait

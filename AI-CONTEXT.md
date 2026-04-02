@@ -97,3 +97,20 @@ Note : `index.saaspro.html` utilise son propre moteur (`ENGINE_PRO`, inline) qui
 3. Identifier les fichiers concernes par la modification
 4. Verifier qu'aucune regle absolue n'est violee
 5. Tester sur preview Vercel avant de merger
+
+## Gouvernance du code
+
+Les regles de qualite sont definies dans `CLAUDE.md` a la racine. Ce fichier est lu automatiquement par Claude Code.
+
+Commandes disponibles pour Claude Code :
+- `/fix` : correction de bug avec checklist hygiene
+- `/feature` : nouvelle fonctionnalite avec checklist hygiene
+- `/check` : audit de conformite du code
+- `/cleanup` : detection et suppression du code mort
+
+Chaque intervention doit respecter les 5 points d'hygiene :
+1. Zero code mort
+2. Zero doublon
+3. Zero fichier orphelin
+4. Zero TODO non documente
+5. Documentation synchronisee

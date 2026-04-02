@@ -18,6 +18,10 @@
 ### PWA
 - Revert site.webmanifest to minimal version (disable PWA install prompt)
 
+### Corrige
+- Restauration exemple-rapport.html complet (rapport simule 420 m2 Bordeaux) avec meta SEO conservees
+- React passe en production sur exemple-rapport.html
+
 ## [SEO] - 2026-04-03
 
 ### Performance

@@ -1,4 +1,6 @@
 .vercel
+.env
+.env.local
 .env*.local
 .env*.tmp
 node_modules/
@@ -17,6 +19,10 @@ __archive_tmp/
 # Logs Vercel locaux
 vercel_deployments*.txt
 vercel_inspect*.txt
+
+# Fichiers temporaires IA
+*.tmp
+tmp*.js
 
 # Scripts de debug ponctuels
 scan*.txt

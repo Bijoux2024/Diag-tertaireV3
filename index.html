@@ -30,6 +30,10 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="DiagTertiaire - Performance Énergétique Tertiaire">
     <meta name="twitter:description" content="Pré-diagnostic énergétique tertiaire gratuit. Identifiez vos leviers d'économies d'énergie et générez un rapport personnalisé.">
+    <meta property="og:image" content="https://diag-tertiaire.fr/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:image" content="https://diag-tertiaire.fr/og-image.png">
 
     <!-- Favicon -->
     <link rel="icon" href="/favicon.ico" sizes="any">
@@ -42,14 +46,20 @@
     <!-- Polices -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://unpkg.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
+    <link rel="dns-prefetch" href="https://unpkg.com">
+    <link rel="dns-prefetch" href="https://cdn.tailwindcss.com">
+    <link rel="preload" href="https://unpkg.com/react@18/umd/react.production.min.js" as="script" crossorigin>
+    <link rel="preload" href="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" as="script" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Bibliothèques externes -->
     <!-- TailwindCSS : framework CSS utilitaire (mode CDN, pas de build requis) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- React 18 (version production : optimisée, sans avertissements dev) -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <!-- PropTypes : validation des props React (utilisé par des composants Recharts si présent) -->
     <script src="https://unpkg.com/prop-types/prop-types.min.js"></script>
     <!-- Iconify : bibliothèque d'icônes (>200 000 icônes via web component) -->
@@ -417,22 +427,11 @@
             box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
         }
 
-        .landing-trust-grid {
-            display: grid;
-            gap: 1rem;
-        }
-
         .landing-pro-bridge {
             background: linear-gradient(135deg, #FFFFFF 0%, #F5F9FF 100%);
             border: 1px solid #DCE6F6;
             border-radius: 20px;
             box-shadow: 0 14px 32px rgba(15, 23, 42, 0.06);
-        }
-
-        @media (min-width: 768px) {
-            .landing-trust-grid {
-                grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
-            }
         }
 
 
@@ -773,6 +772,28 @@
             overflow: hidden !important;
         }
     </style>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "DiagTertiaire",
+      "url": "https://diag-tertiaire.fr/",
+      "description": "Pre-diagnostic energetique tertiaire gratuit. Identifiez vos leviers d'economies d'energie et generez un rapport personnalise.",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Web",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "EUR"
+      },
+      "creator": {
+        "@type": "Organization",
+        "name": "DiagTertiaire",
+        "url": "https://diag-tertiaire.fr/",
+        "logo": "https://diag-tertiaire.fr/android-chrome-512x512.png"
+      }
+    }
+    </script>
     <script src="./cookie-consent.js"></script>
 </head>
 
@@ -784,9 +805,8 @@
             <a href="/" style="display:flex;align-items:center;gap:0.5rem;text-decoration:none;color:#0F172A;font-weight:700;font-size:1.125rem;">DiagTertiaire</a>
             <nav>
                 <a href="/diagnostic" style="margin-left:1.5rem;color:#1D4ED8;font-weight:600;text-decoration:none;">Diagnostic</a>
+                <a href="/methode.html" style="margin-left:1.5rem;color:#64748B;font-weight:500;text-decoration:none;">Methodologie</a>
                 <a href="/exemple-rapport.html" style="margin-left:1.5rem;color:#64748B;font-weight:500;text-decoration:none;">Exemple de rapport</a>
-                <a href="/index.saaspro.html" style="margin-left:1.5rem;color:#64748B;font-weight:500;text-decoration:none;">Espace Pro</a>
-                <a href="/partenaire.html" style="margin-left:1.5rem;color:#64748B;font-weight:500;text-decoration:none;">Devenir partenaire</a>
             </nav>
         </div>
     </header>
@@ -820,7 +840,9 @@
         <p>© 2026 DiagTertiaire - Pré-diagnostic énergétique tertiaire</p>
     </footer>
     </div>
-    <noscript>Ce site nécessite JavaScript pour fonctionner pleinement.</noscript>
+    <noscript>
+      <p>DiagTertiaire est un outil de pre-diagnostic energetique tertiaire gratuit. Activez JavaScript pour acceder au formulaire de diagnostic et generer votre rapport personnalise.</p>
+    </noscript>
     <div id="root"></div>
 
     <script src="/src/solar-icons.js"></script>
@@ -2016,22 +2038,12 @@
                 {/* TRUST NOTE — sobre, fond blanc, épuré */}
                 <section style={{ padding: 'clamp(1.5rem, 4vw, 3rem) 0', background: '#F8FAFC', borderTop: '1px solid #E2E8F0' }}>
                     <div className="max-w-5xl mx-auto px-4">
-                        <div className="landing-trust-grid">
-                            <div className="landing-panel-muted" style={{ display: 'flex', alignItems: 'flex-start', gap: '0.875rem', padding: '1.25rem 1.375rem' }}>
+                        <div className="landing-panel-muted" style={{ display: 'flex', alignItems: 'flex-start', gap: '0.875rem', padding: '1.25rem 1.375rem', width: '100%' }}>
                                 <Icon icon="solar:shield-check-linear" style={{ color: '#1D4ED8', fontSize: '1.125rem', flexShrink: 0, marginTop: '2px' }} />
                                 <p style={{ fontSize: '0.875rem', color: '#334455', lineHeight: 1.75 }}>
                                     <strong>Note de confiance :</strong> ce pré-diagnostic est un outil d'aide à la décision, non certifiant, basé sur vos données déclaratives. Il ne remplace pas un audit réglementaire ni une visite technique sur site.
                                 </p>
                             </div>
-                            <div className="landing-panel" style={{ padding: '1.25rem 1.375rem' }}>
-                                <div className="inline-flex items-center gap-2 rounded-full bg-[#EFF6FF] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#1D4ED8]">
-                                    Exemple simulé
-                                </div>
-                                <p className="mt-3 text-[#475569] text-sm md:text-base leading-relaxed">
-                                    {NEW_DIAGNOSTIC_REPORT_COPY.example.subtitle}
-                                </p>
-                            </div>
-                        </div>
                     </div>
                 </section>
 

@@ -29,25 +29,18 @@ npm start
 C'est la séquence classique à utiliser à chaque fois que tu veux sauvegarder et envoyer ton travail sur la plateforme GitHub.
 
 **1. Voir les fichiers modifiés (vérification) :**
-```bash
-git status
-```
-
 **2. Ajouter TOUTES les modifications :**
-```bash
-git add .
-```
-
 **3. Créer une sauvegarde (commit) avec un message explicatif :**
-```bash
-git commit -m "Ton message descriptif ici (ex: correction du bouton diagnostic)"
-```
-
 **4. Envoyer (Push) le code pour le publier sur GitHub :**
-```bash
+git status
+git add .
+git commit -m "update"
 git push
-```
 
+Vercel :
+npm run deploy:preview : (deploy de verification)
+npm run deploy:prod : (deploy en production)
+npx vercel --prod : (alternative directe)
 ---
 
 ## 🔄 3. Récupérer les dernières mises à jour (Pull)

@@ -1,4 +1,9 @@
 User-agent: *
 Allow: /
+Disallow: /index.saaspro.html
+Disallow: /diagtertiaire-pro-alpha.html
+Disallow: /diagnostic.html
+Disallow: /public-report-print.html
+Disallow: /api/
 
 Sitemap: https://diag-tertiaire.fr/sitemap.xml

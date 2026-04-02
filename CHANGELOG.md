@@ -1,5 +1,31 @@
 # Changelog - DiagTertiaire V3
 
+## [SEO] - 2026-04-03
+
+### Performance
+- React passe de development a production build (index.html)
+- Ajout resource hints : preconnect et dns-prefetch pour unpkg.com et cdn.tailwindcss.com
+- Ajout preload pour react.production.min.js et react-dom.production.min.js
+
+### Meta tags
+- Ajout og:image et twitter:image sur les 7 pages publiques
+- Ajout twitter:title et twitter:description sur methode.html et exemple-rapport.html
+
+### Donnees structurees
+- Ajout JSON-LD WebApplication sur index.html
+- Ajout JSON-LD Article sur methode.html
+- Ajout JSON-LD WebPage sur exemple-rapport.html
+
+### Indexation
+- sitemap.xml : suppression /diagnostic (doublon) et /index.saaspro.html (prive), ajout lastmod
+- robots.txt : blocage pages privees (saaspro, pro-alpha, diagnostic.html, public-report-print) et /api/
+- vercel.json : ajout X-Robots-Tag noindex sur saaspro, pro-alpha et public-report-print
+- diagnostic.html : ajout meta noindex
+
+### Navigation statique
+- Nav statique index.html : ajout methode.html, suppression liens vers pages noindex
+- Enrichissement du contenu noscript
+
 ## [Gouvernance] - 2026-04-02
 
 ### Ajoute

@@ -1,0 +1,95 @@
+# AI-CONTEXT.md - DiagTertiaire V3
+
+> Lis ce fichier EN ENTIER avant toute modification du code.
+
+## Ce que fait ce projet
+
+DiagTertiaire est un outil de pre-diagnostic energetique pour batiments tertiaires.
+L'utilisateur repond a quelques questions simples et recoit :
+- une estimation energetique vs reference sectorielle
+- un score de performance
+- un top 3 d'actions prioritaires avec gains estimes
+- un rapport PDF telechargeable
+
+C'est un outil d'ORIENTATION DECISIONNELLE, pas un audit energetique.
+
+## Architecture technique
+
+- **Front** : HTML statique + React 18 (CDN) + Tailwind (CDN) - PAS de bundler, PAS de build
+- **Backend** : Vercel Serverless Functions (Node.js)
+- **BDD** : Supabase (PostgreSQL)
+- **PDF** : Puppeteer + @sparticuz/chromium cote serveur (Vercel)
+- **Deploiement** : Vercel (auto-deploy sur push main)
+- **Analytics** : GA4 via ga4.js
+- **Consentement** : cookie-consent.js
+
+## Fichiers critiques
+
+| Fichier | Role | Attention |
+|---|---|---|
+| `index.html` | Landing + SPA diagnostic + rapport | Contient tout le front public (~11 000 lignes) |
+| `index.saaspro.html` | Espace professionnel (auth, workspace, branding) | Moteur de calcul independant pour l'instant |
+| `public-report-print.html` | Template de rendu PDF serveur (Puppeteer) | Doit rester synchronise avec le moteur |
+| `/api/` | Endpoints serverless Vercel | Bien decoupe, ne pas fusionner |
+| `/supabase/migrations/` | Schema BDD | Executer dans l'ordre chronologique |
+
+## Regles absolues (a ne jamais violer)
+
+1. **Buildless** : pas de bundler, pas de build step. Tout est charge directement via `<script>` ou CDN
+2. **Pas de tiret long** (cadratin) dans le code ou le texte genere
+3. **Pas de division par zero**, pas de NaN, pas de valeur undefined non geree
+4. **Cumul des gains sequentiel** et non additif (le gain de l'action 2 s'applique sur le reste apres action 1)
+5. **localStorage = fallback legacy**, Supabase = source de verite pour le Pro
+6. **Ne pas casser le mode #report=** (partage de rapport sans authentification)
+7. **Toute modification du moteur** doit etre testee sur minimum 3 scenarios (bureau, restaurant, commerce)
+8. **Exclusion des actions deja realisees** dans le calcul des recommandations
+
+## Prix de reference (MVP V1)
+
+| Parametre | Valeur | Source |
+|---|---|---|
+| Electricite | 0.194 euros/kWh | Simplifie |
+| Gaz | 0.10 euros/kWh | Simplifie |
+| Facteur emission elec | 0.0640 kgCO2/kWh | Base Carbone ADEME 2024 (corrige prospectif) |
+
+## Structure du moteur de calcul (dans index.html)
+
+Le moteur est actuellement inline dans index.html. Voici les sections cles (reperes par lignes approximatives) :
+
+- **~lignes 5900-6130** : Tables de reference (benchmarks, breakdowns par activite, CABS)
+- **~lignes 6130-6530** : Bibliotheque des 22 actions (LED, PAC, isolation, PV, etc.)
+- **~lignes 6530-6780** : Tables de split energetique et constantes PV
+- **~lignes 6780-6940** : Fonction de split energetique par usage
+- **~lignes 6940-7200** : Calcul PV, yield, autoconsommation
+- **~lignes 7200-7400** : Calcul gains par action, CAPEX, scoring
+- **~lignes 7400-7700** : Pipeline principal `newDiagnosticBuildReportData`
+- **~lignes 7700+** : Composants React (formulaire, rapport, graphiques, pages)
+
+## Modele economique (a respecter dans les decisions techniques)
+
+- 100% scalable, ZERO intervention humaine
+- Pas de visio, pas d'analyse manuelle, pas de prestation humaine
+- Generation de leads qualifies automatisee
+- Marque blanche B2B prevue (le moteur doit rester generique)
+
+## Endpoints API existants
+
+| Endpoint | Role |
+|---|---|
+| `/api/public-config` | Config runtime publique |
+| `/api/public-report-pdf` | Generation PDF rapport public |
+| `/api/public-report-view` | Lecture rapport partage |
+| `/api/public-report-cover` | Gestion image de couverture |
+| `/api/public-report-cover-upload` | Upload image de couverture |
+| `/api/public-report-google-streetview` | Proxy Google Street View |
+| `/api/pro-report-pdf` | Generation PDF rapport Pro |
+| `/api/pro-delete-case` | Suppression securisee dossier Pro |
+| `/api/send-email` | Envoi d'emails (leads, notifications) |
+
+## Avant de modifier quoi que ce soit
+
+1. Lire CE FICHIER en entier
+2. Lire CLAUDE.md pour les regles operationnelles detaillees
+3. Identifier les fichiers concernes par la modification
+4. Verifier qu'aucune regle absolue n'est violee
+5. Tester sur preview Vercel avant de merger

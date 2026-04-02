@@ -1,6 +1,15 @@
 {
-  "name": "DiagTertiaire",
+  "name": "DiagTertiaire - Pre-diagnostic energetique tertiaire",
   "short_name": "DiagTertiaire",
+  "description": "Pre-diagnostic energetique tertiaire gratuit. Identifiez vos leviers d'economies d'energie et generez un rapport personnalise.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#2563EB",
+  "background_color": "#ffffff",
+  "categories": ["business", "productivity"],
+  "lang": "fr",
   "icons": [
     {
       "src": "/android-chrome-192x192.png",
@@ -12,8 +21,5 @@
       "sizes": "512x512",
       "type": "image/png"
     }
-  ],
-  "theme_color": "#2563EB",
-  "background_color": "#ffffff",
-  "display": "standalone"
+  ]
 }

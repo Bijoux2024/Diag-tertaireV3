@@ -1,5 +1,23 @@
 # Changelog - DiagTertiaire V3
 
+## [SEO Phase 2] - 2026-04-03
+
+### Donnees structurees
+- Ajout JSON-LD WebSite sur index.html
+- Ajout inLanguage: "fr" dans les 3 JSON-LD existants (WebApplication, Article, WebPage)
+- Ajout BreadcrumbList JSON-LD sur methode.html et exemple-rapport.html
+
+### Internationalisation
+- Ajout hreflang fr + x-default sur les 7 pages publiques
+
+### Maillage interne
+- Footer statique enrichi (3 colonnes : DiagTertiaire, Outil, Legal)
+- Liens vers pages privees retires de la section Ressources (saaspro, partenaire)
+- Lien Espace Pro retire de la nav de methode.html et exemple-rapport.html
+
+### PWA
+- site.webmanifest enrichi (start_url, scope, description, lang, categories, orientation)
+
 ## [SEO] - 2026-04-03
 
 ### Performance

@@ -1,4 +1,7 @@
 {
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  },
   "permissions": {
     "allow": [
       "Bash(npx serve:*)",
@@ -17,10 +20,9 @@
       "Read(//c/Users/yanni/Downloads/**)",
       "Bash(ls -lh /c/Users/yanni/Downloads/Diag-tertaireV3/*.html)",
       "Bash(vercel ls)",
-      "Bash(grep -oE '\"\"solar:[a-z0-9-]+\"\"' index.saaspro.html)"
+      "Bash(grep -oE '\"\"solar:[a-z0-9-]+\"\"' index.saaspro.html)",
+      "Bash(sed -n '5934,5938p' index.html)",
+      "Bash(sed -n '8200,8206p' index.html)"
     ]
-  },
-  "env": {
-    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
   }
 }

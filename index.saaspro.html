@@ -4350,6 +4350,9 @@
                 { id: 'ACT10', title: 'Isolation toiture opportuniste', scope: 'chauffage', gainRange: [14, 20, 28], capRange: [50, 70, 100], capexType: 'm2', cee: true, fiches: ['BAT-EN-102'], prerequis: ['isolation_toiture_partielle_ou_nulle'] },
                 { id: 'ACT11', title: 'Remplacement chaudière / PAC', scope: 'chauffage', gainRange: [25, 35, 50], capRange: [8000, 24000, 40000], capexType: 'forfait', cee: true, fiches: ['BAT-TH-113'], prerequis: ['chaudiere_presente'] },
                 { id: 'ACT12', title: 'VMC double flux haute performance', scope: 'ventil', gainRange: [35, 50, 65], capRange: [8000, 19000, 30000], capexType: 'forfait', cee: true, fiches: ['BAT-TH-125'], prerequis: ['vmc_presente'] },
+                // ACT13 : spécifique convecteurs électriques (COP 1 -> PAC COP ~2,8)
+                // Gain plus élevé qu'ACT11 (remplacement chaudière) car le différentiel COP est beaucoup plus grand
+                { id: 'ACT13', title: 'Remplacement convecteurs par PAC air/air ou air/eau', scope: 'chauffage', gainRange: [50, 62, 70], capRange: [8000, 20000, 45000], capexType: 'forfait', cee: true, fiches: ['BAT-TH-113'], prerequis: ['elec_convecteurs'] },
             ],
             getZoneFromCP: function (cp) {
                 if (!cp) return 'H2';
@@ -4399,6 +4402,16 @@
                 const zone = data.zone_climatique || this.getZoneFromCP(data.postalCode || data.batiment_cp);
                 const zoneCorr = this.zoneCorrectifs[zone] || this.zoneCorrectifs['H2'];
 
+                // === PRÉ-CALCUL ABONNEMENTS (requis avant estimation kWh) ===
+                // Les abonnements ne représentent pas de consommation d'énergie :
+                // la facture nette (hors abo) est la seule base valable pour estimer les kWh.
+                const aboElec = parseFloat(data.elecSubscriptionYearly || data.elec_abo_euro) || 0;
+                const aboGaz = parseFloat(data.gasSubscriptionYearly || data.gaz_abo_euro) || 0;
+                const _billElecBrut = parseFloat(data.elecEuro || data.elec_euro || data.elec_eur || data.cout_elec_eur) || 0;
+                const _billGazBrut = parseFloat(data.gasEuro || data.gaz_euro || data.gaz_eur || data.cout_gaz_eur) || 0;
+                const billElecNet = Math.max(0, _billElecBrut - aboElec);
+                const billGazNet = Math.max(0, _billGazBrut - aboGaz);
+
                 // === CONSOMMATION ===
                 let isKwhPrioritaire = false;
                 const getKwh = (kwh, eur, price) => {
@@ -4406,8 +4419,9 @@
                     if (eur && parseFloat(eur) > 0) return parseFloat(eur) / price;
                     return 0;
                 };
-                let kwhElec = getKwh(data.elecKwh || data.elec_kwh || data.conso_elec_kwh, data.elecEuro || data.elec_euro || data.elec_eur || data.cout_elec_eur, this.prices.elec);
-                let kwhGaz = getKwh(data.gasKwh || data.gaz_kwh || data.gas_kwh || data.conso_gaz_kwh, data.gasEuro || data.gaz_euro || data.gaz_eur || data.cout_gaz_eur, this.prices.gaz);
+                // Passer la facture nette au lieu de la facture brute pour l'estimation des kWh
+                let kwhElec = getKwh(data.elecKwh || data.elec_kwh || data.conso_elec_kwh, billElecNet || null, this.prices.elec);
+                let kwhGaz = getKwh(data.gasKwh || data.gaz_kwh || data.gas_kwh || data.conso_gaz_kwh, billGazNet || null, this.prices.gaz);
                 let kwhTotal = kwhElec + kwhGaz;
                 const isFallback = kwhTotal === 0;
                 if (isFallback) kwhTotal = ref.med * area;
@@ -4419,12 +4433,8 @@
                 const ratio = scoring.ratio;
 
                 // === PRIX MOYEN PONDÉRÉ ===
-                const billElec = parseFloat(data.elecEuro || data.elec_euro || data.elec_eur || data.cout_elec_eur) || 0;
-                const billGaz = parseFloat(data.gasEuro || data.gaz_euro || data.gaz_eur || data.cout_gaz_eur) || 0;
-                const aboElec = parseFloat(data.elecSubscriptionYearly || data.elec_abo_euro) || 0;
-                const billElecNet = Math.max(0, billElec - aboElec);
                 const implicitElec = (kwhElec > 0 && billElecNet > 0) ? billElecNet / kwhElec : this.prices.elec;
-                const implicitGaz = (kwhGaz > 0 && billGaz > 0) ? billGaz / kwhGaz : this.prices.gaz;
+                const implicitGaz = (kwhGaz > 0 && billGazNet > 0) ? billGazNet / kwhGaz : this.prices.gaz;
                 // Somme des kWh réellement saisis (avant substitution benchmark)
                 const _kwhInput = kwhElec + kwhGaz;
                 const _energiePrinc = data.energiePrincipale || data.energie_principale || data.energiePrincipale || 'electricite';
@@ -4432,7 +4442,8 @@
                 const avgPrice = _kwhInput > 0
                     ? (kwhElec * implicitElec + kwhGaz * implicitGaz) / _kwhInput
                     : _prixParEnergie;
-                const totalBill = Math.round(billElecNet + billGaz) || Math.round(kwhTotal * avgPrice);
+                // totalBill = part variable hors abonnements (seule base pour calcul d'économies et ROI)
+                const totalBill = Math.round(billElecNet + billGazNet) || Math.round(kwhTotal * avgPrice);
 
                 // === CORRECTIFS ANNÉE CONSTRUCTION ===
                 const anneeKey = data.constructionYear || data.annee_construction || '2001-2012';
@@ -4496,6 +4507,7 @@
                     if (p.includes('vmc_presente') && !vmcType) return false;
                     if (p.includes('ecs_presente') && !hasECS) return false;
                     if (p.includes('chaudiere_presente') && !hasChaudiere) return false;
+                    if (p.includes('elec_convecteurs') && heatingType !== 'radiateurs_elec') return false;
                     if (p.includes('eclairage_non_led') && isLED) return false;
                     if (p.includes('isolation_toiture_partielle_ou_nulle') && isolToiture === 'oui') return false;
                     return true;
@@ -4595,6 +4607,8 @@
                     // Financier
                     totalBill,
                     estimatedBill: totalBill,
+                    aboElec: Math.round(aboElec),
+                    aboGaz: Math.round(aboGaz),
                     avgPrice: parseFloat(avgPrice.toFixed(4)),
                     // Postes
                     postes,
@@ -7681,7 +7695,7 @@
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                             {[
                                 { label: 'Consommation', val: r.kwhTotal.toLocaleString('fr-FR') + ' kWh/an', sub: r.intensity + ' kWh/m²/an', icon: 'solar:bolt-bold', col: 'text-blue-600' },
-                                { label: 'Facture estimée', val: r.totalBill.toLocaleString('fr-FR') + ' €/an', sub: r.isFallback ? 'Ratio sectoriel' : 'Données saisies', icon: 'solar:wallet-bold', col: 'text-emerald-600' },
+                                { label: 'Facture d\'énergie déclarée', val: r.totalBill.toLocaleString('fr-FR') + ' €/an', sub: r.isFallback ? 'Estimation sectorielle' : (() => { const abo = (r.aboElec || 0) + (r.aboGaz || 0); return abo > 0 ? 'dont ' + abo.toLocaleString('fr-FR') + ' € abo. déduit' : 'Hors abonnement'; })(), icon: 'solar:wallet-bold', col: 'text-emerald-600' },
                                 { label: 'Économies potentielles', val: r.totalSavingsEur.toLocaleString('fr-FR') + ' €/an', sub: r.totalSavingsKwh.toLocaleString('fr-FR') + ' kWh écon.', icon: 'solar:leaf-bold', col: 'text-orange-500' },
                                 { label: 'CO2 actuel', val: r.co2Total.toLocaleString('fr-FR') + ' kg/an', sub: 'Après travaux : ' + r.co2Apres.toLocaleString('fr-FR') + ' kg', icon: 'solar:cloud-bold', col: 'text-purple-600' },
                             ].map((k, i) => (

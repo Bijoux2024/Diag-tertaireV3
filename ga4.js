@@ -323,7 +323,7 @@
         if (
             normalizedLabel.indexOf('decouvrir l espace pro') !== -1
             || normalizedLabel === 'espace pro'
-            || href === '/index.saaspro.html'
+            || href === '/espace-professionnel.html'
         ) {
             baseParams.cta_name = 'discover_pro_space';
             return { eventName: 'pro_cta_click', params: baseParams };

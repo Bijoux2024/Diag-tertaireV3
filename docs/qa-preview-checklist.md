@@ -92,7 +92,7 @@ Note :
 Objectif : verifier l'auth Supabase minimale.
 
 Etapes :
-1. Ouvrir `index.saaspro.html`.
+1. Ouvrir `espace-professionnel.html`.
 2. Demander un magic link avec le compte principal.
 3. Ouvrir le lien de connexion.
 
@@ -109,7 +109,7 @@ Note :
 Objectif : verifier la persistance de session.
 
 Etapes :
-1. Une fois connecte, rafraichir `index.saaspro.html`.
+1. Une fois connecte, rafraichir `espace-professionnel.html`.
 2. Fermer puis rouvrir l'onglet si necessaire.
 
 Resultat attendu : la session est restauree et le workspace revient sans perte visible.
@@ -210,7 +210,7 @@ Note :
 Objectif : verifier la lecture du logo apres rechargement.
 
 Etapes :
-1. Rafraichir `index.saaspro.html`.
+1. Rafraichir `espace-professionnel.html`.
 2. Revenir dans `Configuration` puis sur un rapport.
 
 Resultat attendu : le logo est restitue apres refresh via le Storage prive.

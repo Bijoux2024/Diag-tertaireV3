@@ -28,9 +28,9 @@ C'est un outil d'ORIENTATION DECISIONNELLE, pas un audit energetique.
 | Fichier | Role | Attention |
 |---|---|---|
 | `src/engine.js` | Moteur de calcul public (source unique, 2 420 lignes) | ENGINE_VERSION 1.4.0 - toute modif = tester 3 scenarios |
-| `src/solar-icons.js` | Dictionnaire des 118 icones SVG Solar | Partage entre index.html et index.saaspro.html |
+| `src/solar-icons.js` | Dictionnaire des 118 icones SVG Solar | Partage entre index.html et espace-professionnel.html |
 | `index.html` | Landing + composants React + rapport (~8 700 lignes) | Charge engine.js et solar-icons.js via script tags |
-| `index.saaspro.html` | Espace professionnel (auth, workspace, branding) | Moteur Pro independant (ENGINE_PRO), pas encore migre sur engine.js. Divergence connue et acceptee a ce stade |
+| `espace-professionnel.html` | Espace professionnel (auth, workspace, branding) | Moteur Pro independant (ENGINE_PRO), pas encore migre sur engine.js. Divergence connue et acceptee a ce stade |
 | `public-report-print.html` | Template de rendu PDF serveur (Puppeteer) | Doit rester synchronise avec le moteur |
 | `/api/` | Endpoints serverless Vercel | Bien decoupe, ne pas fusionner |
 | `/supabase/migrations/` | Schema BDD | Executer dans l'ordre chronologique |
@@ -67,7 +67,7 @@ Le moteur est extrait dans `src/engine.js` (2 420 lignes, source unique). Charge
 - **Pipeline principal** : `newDiagnosticBuildReportData(formData)` - retourne l'objet rapport complet
 - **Projection** : `newDiagnosticBuildProjectionData({...})` - projection 10 ans avec inflation
 
-Note : `index.saaspro.html` utilise son propre moteur (`ENGINE_PRO`, inline) qui diverge de engine.js. Migration future prevue mais pas prioritaire.
+Note : `espace-professionnel.html` utilise son propre moteur (`ENGINE_PRO`, inline) qui diverge de engine.js. Migration future prevue mais pas prioritaire.
 
 ## Modele economique (a respecter dans les decisions techniques)
 

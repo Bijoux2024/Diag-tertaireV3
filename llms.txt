@@ -8,7 +8,7 @@ DiagTertiaire est un service numerique de pre-diagnostic energetique a destinati
 
 - Page d'accueil : https://diag-tertiaire.fr/
 - Diagnostic : https://diag-tertiaire.fr/ (diagnostic.html redirige vers /)
-- Espace professionnel : https://diag-tertiaire.fr/index.saaspro.html
+- Espace professionnel : https://diag-tertiaire.fr/espace-professionnel.html
 - Mentions legales : https://diag-tertiaire.fr/mentions-legales.html
 - Politique de confidentialite : https://diag-tertiaire.fr/politique-confidentialite.html
 - Conditions generales d'utilisation : https://diag-tertiaire.fr/conditions-generales-utilisation.html

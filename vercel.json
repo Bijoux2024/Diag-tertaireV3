@@ -1,6 +1,8 @@
 {
   "rewrites": [
-    { "source": "/diagnostic", "destination": "/" }
+    { "source": "/diagnostic", "destination": "/" },
+    { "source": "/espace-professionnel", "destination": "/espace-professionnel.html" },
+    { "source": "/index.saaspro.html", "destination": "/espace-professionnel.html" }
   ],
   "headers": [
     {
@@ -13,7 +15,7 @@
       ]
     },
     {
-      "source": "/index.saaspro.html",
+      "source": "/espace-professionnel.html",
       "headers": [
         { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
       ]

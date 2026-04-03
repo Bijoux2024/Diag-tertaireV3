@@ -1,5 +1,5 @@
 <!--
-    DiagTertiaire Pro - index.saaspro.html
+    DiagTertiaire Pro - espace-professionnel.html
     =========================================================
     REGLES DE CONFORMITE DES DONNEES MOCK (MOCK_PRO_CASES_V2)
     ---------------------------------------------------------
@@ -40,11 +40,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DiagTertiaire Pro - Espace Professionnel</title>
     <meta name="description" content="Espace professionnel DiagTertiaire : accedez aux diagnostics energetiques de vos clients, gerez vos dossiers et generez des rapports tertiaires.">
-    <link rel="canonical" href="https://diag-tertiaire.fr/index.saaspro.html">
+    <link rel="canonical" href="https://diag-tertiaire.fr/espace-professionnel.html">
     <meta property="og:title" content="DiagTertiaire Pro - Espace Professionnel">
     <meta property="og:description" content="Espace professionnel DiagTertiaire : diagnostics energetiques, gestion des dossiers et rapports tertiaires.">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://diag-tertiaire.fr/index.saaspro.html">
+    <meta property="og:url" content="https://diag-tertiaire.fr/espace-professionnel.html">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="DiagTertiaire Pro - Espace Professionnel">
     <meta name="twitter:description" content="Espace professionnel DiagTertiaire : diagnostics energetiques, gestion des dossiers et rapports tertiaires.">
@@ -10657,7 +10657,7 @@
             if (sharedReport) {
                 return {
                     pageName: 'pro_shared_report',
-                    pagePath: '/index.saaspro.html#shared-report',
+                    pagePath: '/espace-professionnel.html#shared-report',
                     pageTemplate: 'pro_space',
                     pageTitle: 'DiagTertiaire Pro - Rapport partage'
                 };
@@ -10666,7 +10666,7 @@
             if (!authReady) {
                 return {
                     pageName: 'pro_auth_loading',
-                    pagePath: '/index.saaspro.html#auth-loading',
+                    pagePath: '/espace-professionnel.html#auth-loading',
                     pageTemplate: 'pro_space',
                     pageTitle: 'DiagTertiaire Pro - Verification session'
                 };
@@ -10677,8 +10677,8 @@
                     return {
                         pageName: authRecovery.mode === 'first_access' ? 'pro_first_access' : 'pro_recovery',
                         pagePath: authRecovery.mode === 'first_access'
-                            ? '/index.saaspro.html#first-access'
-                            : '/index.saaspro.html#recovery',
+                            ? '/espace-professionnel.html#first-access'
+                            : '/espace-professionnel.html#recovery',
                         pageTemplate: 'pro_space',
                         pageTitle: authRecovery.mode === 'first_access'
                             ? 'DiagTertiaire Pro - Premiere connexion'
@@ -10688,7 +10688,7 @@
 
                 return {
                     pageName: 'pro_landing',
-                    pagePath: '/index.saaspro.html#landing',
+                    pagePath: '/espace-professionnel.html#landing',
                     pageTemplate: 'pro_space',
                     pageTitle: 'DiagTertiaire Pro - Acces professionnel'
                 };
@@ -10697,7 +10697,7 @@
             if (page && (page.indexOf('report-') === 0 || page.indexOf('case-report-') === 0)) {
                 return {
                     pageName: 'pro_report',
-                    pagePath: '/index.saaspro.html#report',
+                    pagePath: '/espace-professionnel.html#report',
                     pageTemplate: 'pro_space',
                     pageTitle: 'DiagTertiaire Pro - Rapport detaille'
                 };
@@ -10714,7 +10714,7 @@
 
             return {
                 pageName: 'pro_' + normalizedPage,
-                pagePath: '/index.saaspro.html#' + normalizedPage,
+                pagePath: '/espace-professionnel.html#' + normalizedPage,
                 pageTemplate: 'pro_space',
                 pageTitle: pageTitles[normalizedPage] || 'DiagTertiaire Pro'
             };

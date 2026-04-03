@@ -4,7 +4,7 @@
  *
  * Ce fichier est charge par :
  * - index.html (diagnostic public)
- * - index.saaspro.html (espace pro)
+ * - espace-professionnel.html (espace pro)
  * - public-report-print.html (template PDF serveur)
  *
  * Toute modification doit etre testee sur minimum 3 scenarios.

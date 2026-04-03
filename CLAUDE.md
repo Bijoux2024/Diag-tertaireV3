@@ -79,7 +79,7 @@ Chaque test doit retourner : intensity > 0, actions.length >= 3, aucun NaN, brea
 ```
 /
 ├── index.html              # Landing + SPA diagnostic (8 700 lignes)
-├── index.saaspro.html      # Espace Pro (moteur ENGINE_PRO independant)
+├── espace-professionnel.html # Espace Pro (moteur ENGINE_PRO independant)
 ├── public-report-print.html # Template PDF serveur
 ├── src/
 │   ├── engine.js           # Moteur de calcul - SOURCE UNIQUE (2 420 lignes)

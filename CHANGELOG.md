@@ -39,7 +39,7 @@
 - Ajout JSON-LD WebPage sur exemple-rapport.html
 
 ### Indexation
-- sitemap.xml : suppression /diagnostic (doublon) et /index.saaspro.html (prive), ajout lastmod
+- sitemap.xml : suppression /diagnostic (doublon) et /espace-professionnel.html (prive), ajout lastmod
 - robots.txt : blocage pages privees (saaspro, pro-alpha, diagnostic.html, public-report-print) et /api/
 - vercel.json : ajout X-Robots-Tag noindex sur saaspro, pro-alpha et public-report-print
 - diagnostic.html : ajout meta noindex
@@ -65,11 +65,11 @@
 - src/engine.js : moteur de calcul public extrait de index.html (2 420 lignes, source unique)
 - src/solar-icons.js : 118 icones SVG Solar extraites de index.html
 - index.html reduit de ~11 000 a ~8 700 lignes
-- index.saaspro.html : icones SVG extraites, ENGINE_PRO reste inline (divergence acceptee)
+- espace-professionnel.html : icones SVG extraites, ENGINE_PRO reste inline (divergence acceptee)
 
 ### Modifie
 - index.html charge engine.js et solar-icons.js via script tags
-- index.saaspro.html charge solar-icons.js via script tag
+- espace-professionnel.html charge solar-icons.js via script tag
 - Constantes partagees (BUILDING_AGES, BOILER_AGES, MAX_TOTAL_SAVINGS_PCT) deplacees dans engine.js
 
 ## [Nettoyage] - 2026-04-02

@@ -1,6 +1,6 @@
 User-agent: *
 Allow: /
-Disallow: /index.saaspro.html
+Disallow: /espace-professionnel.html
 Disallow: /diagtertiaire-pro-alpha.html
 Disallow: /diagnostic.html
 Disallow: /public-report-print.html

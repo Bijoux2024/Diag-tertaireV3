@@ -6,8 +6,8 @@ Pre-diagnostic energetique tertiaire oriente decision. Estimez la performance en
 
 ```
 index.html                  # Site public + diagnostic + rapport (~11 000 lignes)
-index.saaspro.html          # Espace professionnel (auth, workspace, branding)
-diagtertiaire-pro-alpha.html # Alias legacy -> redirige vers index.saaspro.html
+espace-professionnel.html          # Espace professionnel (auth, workspace, branding)
+diagtertiaire-pro-alpha.html # Alias legacy -> redirige vers espace-professionnel.html
 diagnostic.html             # Redirection vers / (ancien doublon elimine)
 methode.html                # Page methodologie (legere, sans moteur)
 exemple-rapport.html        # Page exemple de rapport (legere, sans moteur)

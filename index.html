@@ -107,6 +107,9 @@
             box-sizing: border-box;
         }
 
+        :focus-visible { outline: 2px solid var(--blue-premium); outline-offset: 2px; }
+        :focus:not(:focus-visible) { outline: none; }
+
         html,
         body {
             max-width: 100%;
@@ -906,6 +909,7 @@
 </head>
 
 <body class="antialiased text-[#374151] bg-[#F8F9FA]">
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:z-[200] focus:top-2 focus:left-2 focus:bg-white focus:text-[#1D4ED8] focus:px-4 focus:py-2 focus:rounded-lg focus:shadow-lg focus:font-semibold focus:text-sm">Aller au contenu principal</a>
     <!-- Fallback HTML statique pour crawlers et utilisateurs sans JavaScript -->
     <div class="seo-static-content">
     <header style="background:#fff;border-bottom:1px solid #E2E8F0;padding:1rem 1.5rem;">
@@ -3047,12 +3051,15 @@
                                         </div>
                                         <div className="grid md:grid-cols-2 gap-6">
                                             <div>
-                                                <label className="block text-sm font-semibold text-[#102A43] mb-3">
+                                                <label htmlFor="contact-name" className="block text-sm font-semibold text-[#102A43] mb-3">
                                                     Votre nom *
                                                 </label>
                                                 <input
+                                                    id="contact-name"
                                                     type="text"
                                                     required
+                                                    aria-required="true"
+                                                    autoComplete="name"
                                                     value={contactForm.name}
                                                     onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
                                                     className="w-full border border-[#E2E8F0] rounded-lg px-4 py-3.5 text-sm focus:border-[#1D4ED8] focus:ring-2 focus:ring-[#1D4ED8]/20 outline-none transition-all placeholder-slate-400"
@@ -3061,12 +3068,15 @@
                                             </div>
 
                                             <div>
-                                                <label className="block text-sm font-semibold text-[#102A43] mb-3">
+                                                <label htmlFor="contact-email" className="block text-sm font-semibold text-[#102A43] mb-3">
                                                     Email professionnel *
                                                 </label>
                                                 <input
+                                                    id="contact-email"
                                                     type="email"
                                                     required
+                                                    aria-required="true"
+                                                    autoComplete="email"
                                                     value={contactForm.email}
                                                     onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
                                                     className="w-full border border-[#E2E8F0] rounded-lg px-4 py-3.5 text-sm focus:border-[#1D4ED8] focus:ring-2 focus:ring-[#1D4ED8]/20 outline-none transition-all placeholder-slate-400"
@@ -3076,11 +3086,13 @@
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-semibold text-[#102A43] mb-3">
+                                            <label htmlFor="contact-company" className="block text-sm font-semibold text-[#102A43] mb-3">
                                                 Votre cabinet / Entreprise
                                             </label>
                                             <input
+                                                id="contact-company"
                                                 type="text"
+                                                autoComplete="organization"
                                                 value={contactForm.company}
                                                 onChange={(e) => setContactForm({ ...contactForm, company: e.target.value })}
                                                 className="w-full border border-[#E2E8F0] rounded-lg px-4 py-3.5 text-sm focus:border-[#1D4ED8] focus:ring-2 focus:ring-[#1D4ED8]/20 outline-none transition-all placeholder-slate-400"
@@ -3089,10 +3101,11 @@
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-semibold text-[#102A43] mb-3">
+                                            <label htmlFor="contact-message" className="block text-sm font-semibold text-[#102A43] mb-3">
                                                 Message / Besoins spécifiques
                                             </label>
                                             <textarea
+                                                id="contact-message"
                                                 value={contactForm.message}
                                                 onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
                                                 rows="4"
@@ -3102,7 +3115,7 @@
                                         </div>
 
                                         {contactSubmitError && (
-                                            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                                            <div role="alert" aria-live="assertive" className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                                                 {contactSubmitError}
                                             </div>
                                         )}
@@ -3604,19 +3617,28 @@
             error = null,
             suffix = null,
             helper = null,
-            disabled = false
-        }) => (
+            disabled = false,
+            autoComplete
+        }) => {
+            const fieldId = React.useMemo(() => 'ndf-' + label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+$/, ''), [label]);
+            const errorId = fieldId + '-err';
+            return (
             <div className="mb-5 relative group">
-                <label className="block text-[13px] font-bold tracking-wide uppercase text-slate-500 mb-2 transition-colors group-focus-within:text-[#1D4ED8]">
+                <label htmlFor={fieldId} className="block text-[13px] font-bold tracking-wide uppercase text-slate-500 mb-2 transition-colors group-focus-within:text-[#1D4ED8]">
                     {label} {required && <span className="text-red-500">*</span>}
                 </label>
                 <div className="relative">
                     <input
+                        id={fieldId}
                         type={type}
                         value={value}
                         onChange={(e) => onChange(e.target.value)}
                         placeholder={placeholder}
                         disabled={disabled}
+                        autoComplete={autoComplete}
+                        aria-required={required || undefined}
+                        aria-invalid={error ? true : undefined}
+                        aria-describedby={error ? errorId : undefined}
                         className={`w-full px-4 text-[15px] font-medium h-[52px] border-2 rounded-xl focus:outline-none transition-all duration-200 ${error
                             ? 'border-red-300 bg-red-50/50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10'
                             : 'border-slate-200 bg-white hover:border-slate-300 focus:border-[#1D4ED8] focus:ring-4 focus:ring-blue-500/10 focus:shadow-[0_0_20px_rgba(29,78,216,0.06)]'
@@ -3629,9 +3651,10 @@
                     )}
                 </div>
                 {helper && <p className="text-xs text-neutral-500 mt-1">{helper}</p>}
-                {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+                {error && <p id={errorId} role="alert" className="text-xs text-red-500 mt-1">{error}</p>}
             </div>
-        );
+            );
+        };
 
         // Select générique
         const NewDiagnosticFormSelect = ({
@@ -3642,15 +3665,22 @@
             required = false,
             error = null,
             placeholder = 'Sélectionnez...'
-        }) => (
+        }) => {
+            const fieldId = React.useMemo(() => label ? 'nds-' + label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+$/, '') : undefined, [label]);
+            const errorId = fieldId ? fieldId + '-err' : undefined;
+            return (
             <div className="mb-5 relative group">
-                <label className="block text-[13px] font-bold tracking-wide uppercase text-slate-500 mb-2 transition-colors group-focus-within:text-[#1D4ED8]">
+                {label && <label htmlFor={fieldId} className="block text-[13px] font-bold tracking-wide uppercase text-slate-500 mb-2 transition-colors group-focus-within:text-[#1D4ED8]">
                     {label} {required && <span className="text-red-500">*</span>}
-                </label>
+                </label>}
                 <div className="relative">
                     <select
+                        id={fieldId}
                         value={value}
                         onChange={(e) => onChange(e.target.value)}
+                        aria-required={required || undefined}
+                        aria-invalid={error ? true : undefined}
+                        aria-describedby={error ? errorId : undefined}
                         className={`new-diagnostic-select-surface w-full px-4 appearance-none text-[15px] font-medium h-[52px] border-2 rounded-xl focus:outline-none transition-all duration-200 ${error
                             ? 'border-red-300 bg-red-50/50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10'
                             : 'border-slate-200 bg-white hover:border-slate-300 focus:border-[#1D4ED8] focus:ring-4 focus:ring-blue-500/10 focus:shadow-[0_0_20px_rgba(29,78,216,0.06)]'
@@ -3664,9 +3694,10 @@
                         ))}
                     </select>
                 </div>
-                {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+                {error && <p id={errorId} role="alert" className="text-xs text-red-500 mt-1">{error}</p>}
             </div>
-        );
+            );
+        };
 
         // Radio cards
         const NewDiagnosticRadioCards = ({ options, selected, onChange, columns = 2 }) => {
@@ -4423,16 +4454,16 @@
                     )}
 
                     {formData.coverImageStatus === 'loading' && (
-                        <div className="flex items-center gap-3 mt-4 text-[#1D4ED8] bg-blue-50/50 p-4 rounded-lg border border-blue-100">
-                            <Icon icon="solar:spinner-linear" className="animate-spin text-xl" />
+                        <div role="status" aria-live="polite" aria-busy="true" className="flex items-center gap-3 mt-4 text-[#1D4ED8] bg-blue-50/50 p-4 rounded-lg border border-blue-100">
+                            <Icon icon="solar:spinner-linear" aria-hidden="true" className="animate-spin text-xl" />
                             <span className="text-sm font-medium">Génération en cours...</span>
                         </div>
                     )}
 
                     {formData.coverImageStatus === 'error' && (
                         <div className="mt-4">
-                            <div className="flex items-center gap-2 text-amber-600 bg-amber-50 p-3 rounded-lg text-sm border border-amber-100 mb-3">
-                                <Icon icon="solar:danger-triangle-linear" className="text-lg shrink-0" />
+                            <div role="alert" className="flex items-center gap-2 text-amber-600 bg-amber-50 p-3 rounded-lg text-sm border border-amber-100 mb-3">
+                                <Icon icon="solar:danger-triangle-linear" aria-hidden="true" className="text-lg shrink-0" />
                                 {formData.coverImageError}
                             </div>
                             {formData.coverMode !== 'upload' ? (
@@ -4959,11 +4990,12 @@
                     <p className="text-[#475569] mb-8">Commençons par quelques informations de base</p>
 
                     <div className="mb-6 relative" ref={autocompleteRef}>
-                        <label className="block text-sm font-semibold text-neutral-700 mb-1">
+                        <label htmlFor="diag-address" className="block text-sm font-semibold text-neutral-700 mb-1">
                             Adresse du bâtiment <span className="text-red-500">*</span>
                         </label>
                         <div className="relative">
                             <input
+                                id="diag-address"
                                 type="text"
                                 value={query}
                                 onChange={handleAddressChange}
@@ -4973,9 +5005,13 @@
                                 placeholder="Commencez à saisir l'adresse..."
                                 autoComplete="off"
                                 role="combobox"
+                                aria-required="true"
                                 aria-expanded={showSuggestions && suggestions.length > 0}
                                 aria-autocomplete="list"
+                                aria-controls="address-suggestions-list"
                                 aria-activedescendant={highlightedIndex >= 0 ? `address-suggestion-${highlightedIndex}` : undefined}
+                                aria-invalid={errors.address ? true : undefined}
+                                aria-describedby={errors.address ? 'diag-address-err' : undefined}
                                 className={`w-full px-4 py-3 border rounded-xl bg-white text-sm shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.address ? 'border-red-400' : formData.addressIsValid ? 'border-green-400 bg-green-50/30' : 'border-neutral-300'}`}
                             />
                             {isLoadingSuggestions && (
@@ -4989,11 +5025,11 @@
                                 </div>
                             )}
                         </div>
-                        {errors.address && <p className="text-xs text-red-500 mt-1">{errors.address}</p>}
+                        {errors.address && <p id="diag-address-err" role="alert" className="text-xs text-red-500 mt-1">{errors.address}</p>}
 
                         {/* Liste de suggestions */}
                         {showSuggestions && suggestions.length > 0 && (
-                            <ul role="listbox" className="absolute z-50 w-full mt-1 bg-white border border-neutral-200 rounded-xl shadow-lg max-h-60 overflow-auto divide-y divide-neutral-100">
+                            <ul id="address-suggestions-list" role="listbox" className="absolute z-50 w-full mt-1 bg-white border border-neutral-200 rounded-xl shadow-lg max-h-60 overflow-auto divide-y divide-neutral-100">
                                 {suggestions.map((s, index) => (
                                     <li
                                         key={index}
@@ -5029,7 +5065,7 @@
                             selected={formData.role}
                             onChange={(v) => setFormData({ ...formData, role: v })}
                         />
-                        {errors.role && <p className="text-xs text-red-500 mt-2">{errors.role}</p>}
+                        {errors.role && <p role="alert" className="text-xs text-red-500 mt-2">{errors.role}</p>}
                     </div>
 
                     <div className="grid grid-cols-[120px_1fr] gap-2">
@@ -5113,7 +5149,7 @@
                                                 </button>
                                             ))}
                                         </div>
-                                        {errors.mixedUsage1 && <p className="text-xs text-red-500 mt-2">{errors.mixedUsage1}</p>}
+                                        {errors.mixedUsage1 && <p role="alert" className="text-xs text-red-500 mt-2">{errors.mixedUsage1}</p>}
                                     </>
                                 ) : (
                                     <>
@@ -5136,7 +5172,7 @@
                                                 </button>
                                             ))}
                                         </div>
-                                        {errors.mixedUsage2 && <p className="text-xs text-red-500 mt-2">{errors.mixedUsage2}</p>}
+                                        {errors.mixedUsage2 && <p role="alert" className="text-xs text-red-500 mt-2">{errors.mixedUsage2}</p>}
                                     </>
                                 )}
                             </div>
@@ -5326,10 +5362,10 @@
                     </div>
 
                     {/* ── BLOC A — Enveloppe ────────────────────────────────────────────── */}
-                    <div className="p-5 bg-white border border-[#E2E8F0] rounded-xl shadow-sm mb-6">
+                    <div role="group" aria-labelledby="bloc-enveloppe-title" className="p-5 bg-white border border-[#E2E8F0] rounded-xl shadow-sm mb-6">
                         <div className="flex items-center gap-2 mb-4">
-                            <Icon icon="solar:home-angle-bold" className="text-[#1D4ED8] text-xl" />
-                            <h3 className="font-semibold text-[#102A43]">Enveloppe du bâtiment</h3>
+                            <Icon icon="solar:home-angle-bold" aria-hidden="true" className="text-[#1D4ED8] text-xl" />
+                            <h3 id="bloc-enveloppe-title" className="font-semibold text-[#102A43]">Enveloppe du bâtiment</h3>
                         </div>
                         <div className="mb-4">
                             <label className="block text-sm font-medium text-[#475569] mb-3">Année de construction <span className="text-red-500">*</span></label>
@@ -5353,7 +5389,7 @@
                                     </button>
                                 ))}
                             </div>
-                            {errors.buildingAge && <p className="text-red-500 text-xs mt-1">{errors.buildingAge}</p>}
+                            {errors.buildingAge && <p role="alert" className="text-red-500 text-xs mt-1">{errors.buildingAge}</p>}
                         </div>
                         <div className="mb-4">
                             <label className="block text-sm font-medium text-[#475569] mb-2">Isolation de la toiture</label>
@@ -5372,7 +5408,7 @@
                                     >{opt.label}</button>
                                 ))}
                             </div>
-                            {errors.roofInsulation && <p className="text-red-500 text-xs mt-1">{errors.roofInsulation}</p>}
+                            {errors.roofInsulation && <p role="alert" className="text-red-500 text-xs mt-1">{errors.roofInsulation}</p>}
                         </div>
                         <div className="mb-2">
                             <label className="block text-sm font-medium text-[#475569] mb-2">Isolation des murs</label>
@@ -5391,15 +5427,15 @@
                                     >{opt.label}</button>
                                 ))}
                             </div>
-                            {errors.wallInsulation && <p className="text-red-500 text-xs mt-1">{errors.wallInsulation}</p>}
+                            {errors.wallInsulation && <p role="alert" className="text-red-500 text-xs mt-1">{errors.wallInsulation}</p>}
                         </div>
                     </div>
 
                     {/* ── BLOC B — Systèmes techniques ──────────────────────────────────── */}
-                    <div className="p-5 bg-white border border-[#E2E8F0] rounded-xl shadow-sm mb-6">
+                    <div role="group" aria-labelledby="bloc-systemes-title" className="p-5 bg-white border border-[#E2E8F0] rounded-xl shadow-sm mb-6">
                         <div className="flex items-center gap-2 mb-4">
-                            <Icon icon="solar:settings-bold" className="text-[#1D4ED8] text-xl" />
-                            <h3 className="font-semibold text-[#102A43]">Systèmes techniques</h3>
+                            <Icon icon="solar:settings-bold" aria-hidden="true" className="text-[#1D4ED8] text-xl" />
+                            <h3 id="bloc-systemes-title" className="font-semibold text-[#102A43]">Systèmes techniques</h3>
                         </div>
                         {formData.mainHeating === 'gas' && (
                             <div className="mb-4 fade-in">
@@ -5457,10 +5493,10 @@
 
                     {/* ── BLOC C — Équipements spécifiques ─────────────────────────────── */}
                     {(['commerce_alim', 'restaurant', 'hotel', 'offices', 'light_warehouse', 'education'].includes(formData.activity) || Number(formData.surface) > 300) && (
-                        <div className="p-5 bg-white border border-[#E2E8F0] rounded-xl shadow-sm mb-6">
+                        <div role="group" aria-labelledby="bloc-equipements-title" className="p-5 bg-white border border-[#E2E8F0] rounded-xl shadow-sm mb-6">
                             <div className="flex items-center gap-2 mb-4">
-                                <Icon icon="solar:widget-bold" className="text-[#1D4ED8] text-xl" />
-                                <h3 className="font-semibold text-[#102A43]">Équipements spécifiques à l'activité</h3>
+                                <Icon icon="solar:widget-bold" aria-hidden="true" className="text-[#1D4ED8] text-xl" />
+                                <h3 id="bloc-equipements-title" className="font-semibold text-[#102A43]">Équipements spécifiques à l'activité</h3>
                             </div>
                             {formData.activity === 'commerce_alim' && (
                                 <div className="pb-4 mb-4 border-b border-[#E2E8F0]">
@@ -5849,6 +5885,7 @@
                                 placeholder="Jean"
                                 required
                                 error={errors.firstName}
+                                autoComplete="given-name"
                             />
                             <NewDiagnosticFormInput
                                 label="Email"
@@ -5858,6 +5895,7 @@
                                 placeholder="vous@entreprise.fr"
                                 required
                                 error={errors.email}
+                                autoComplete="email"
                             />
                         </div>
                         <div className="grid md:grid-cols-2 gap-4 mt-4">
@@ -5868,6 +5906,7 @@
                                 type="tel"
                                 placeholder="06 12 34 56 78"
                                 helper="Optionnel"
+                                autoComplete="tel"
                             />
                             <NewDiagnosticFormInput
                                 label="Société"
@@ -5875,6 +5914,7 @@
                                 onChange={(v) => setFormData({ ...formData, company: v })}
                                 placeholder="Nom de votre entreprise"
                                 helper="Optionnel"
+                                autoComplete="organization"
                             />
                         </div>
                     </div>
@@ -7484,11 +7524,12 @@
                                             <button
                                                 onClick={handleExportPDF}
                                                 disabled={isPDFGenerating}
+                                                aria-busy={isPDFGenerating || undefined}
                                                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-white text-[#102A43] px-5 py-3 text-sm font-bold shadow-sm hover:bg-slate-100 disabled:bg-slate-300 disabled:text-slate-500 transition-colors"
                                             >
                                                 {isPDFGenerating
-                                                    ? <Icon icon="solar:refresh-linear" className="text-lg animate-spin" />
-                                                    : <Icon icon="solar:file-text-linear" className="text-lg" />}
+                                                    ? <Icon icon="solar:refresh-linear" aria-hidden="true" className="text-lg animate-spin" />
+                                                    : <Icon icon="solar:file-text-linear" aria-hidden="true" className="text-lg" />}
                                                 {isPDFGenerating ? 'Génération en cours…' : 'Générer le rapport PDF'}
                                             </button>
                                         )}
@@ -8740,7 +8781,7 @@
                         )}
                     </nav>
 
-                    <main className="flex-1">
+                    <main id="main-content" className="flex-1">
                         {currentPage === 'home' && <PageHome navigate={navigate} />}
 
                         {currentPage === 'diagnostic' && (

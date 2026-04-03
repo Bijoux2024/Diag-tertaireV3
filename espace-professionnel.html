@@ -79,6 +79,9 @@
             box-sizing: border-box;
         }
 
+        :focus-visible { outline: 2px solid #1D4ED8; outline-offset: 2px; }
+        :focus:not(:focus-visible) { outline: none; }
+
         body {
             font-family: 'DM Sans', system-ui, sans-serif;
             background: #F1F5F9;
@@ -912,6 +915,7 @@
 </head>
 
 <body>
+    <a href="#pro-main-content" class="sr-only" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0" onfocus="this.style.cssText='position:fixed;z-index:200;top:8px;left:8px;width:auto;height:auto;padding:8px 16px;margin:0;overflow:visible;clip:auto;border:0;background:#fff;color:#1D4ED8;border-radius:8px;font-weight:600;font-size:14px;box-shadow:0 4px 12px rgba(0,0,0,0.15)'" onblur="this.style.cssText='position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0'">Aller au contenu principal</a>
     <div id="pro-root"></div>
     <script src="/src/solar-icons.js"></script>
     <script type="text/babel">
@@ -3730,13 +3734,14 @@
             return (
                 <div className="fixed inset-0 z-[120] bg-slate-950/55 backdrop-blur-sm flex items-center justify-center px-4 py-6" onClick={onClose}>
                     <div
+                        role="dialog" aria-modal="true" aria-labelledby="legal-modal-title"
                         className="w-full max-w-2xl rounded-[28px] bg-white border border-slate-200 shadow-2xl shadow-slate-900/20 overflow-hidden"
                         onClick={(event) => event.stopPropagation()}
                     >
                         <div className="flex items-start justify-between gap-4 px-6 py-5 border-b border-slate-200">
                             <div>
                                 <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400">Informations</p>
-                                <h3 className="text-2xl font-black text-slate-900 tracking-tight mt-1">{content.title}</h3>
+                                <h3 id="legal-modal-title" className="text-2xl font-black text-slate-900 tracking-tight mt-1">{content.title}</h3>
                             </div>
                             <button
                                 type="button"
@@ -3776,12 +3781,12 @@
 
             return (
                 <div className="modal-overlay">
-                    <div className="modal-box fade-in" onClick={(event) => event.stopPropagation()}>
+                    <div className="modal-box fade-in" role="dialog" aria-modal="true" aria-labelledby="onboarding-modal-title" onClick={(event) => event.stopPropagation()}>
                         <div className="p-8">
                             <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center mb-5">
                                 <Icon icon="solar:map-point-wave-bold" style={{ fontSize: '24px' }} />
                             </div>
-                            <h3 className="text-2xl font-black text-slate-900 tracking-tight">Bienvenue sur l'espace Pro</h3>
+                            <h3 id="onboarding-modal-title" className="text-2xl font-black text-slate-900 tracking-tight">Bienvenue sur l'espace Pro</h3>
                             <p className="text-slate-600 mt-3 leading-7">
                                 Souhaitez-vous faire le tour du dashboard pour découvrir ses fonctionnalités ? (30 secondes)
                             </p>
@@ -6102,17 +6107,20 @@
                 upd('zone_climatique', zone);
             }, [data.cp]);
 
-            const F = ({ label, req, children }) => (
+            const F = ({ label, req, children }) => {
+                const childId = React.Children.toArray(children)?.[0]?.props?.id;
+                return (
                 <div>
-                    <label className="pro-label">{label}{req && <span className="text-red-500 ml-1">*</span>}</label>
+                    <label htmlFor={childId} className="pro-label">{label}{req && <span className="text-red-500 ml-1">*</span>}</label>
                     {children}
                 </div>
-            );
+                );
+            };
             const inp = (k, ph, type = 'text') => (
-                <input type={type} className="pro-input" placeholder={ph} value={data[k]} onChange={e => upd(k, e.target.value)} />
+                <input id={'pf-' + k} type={type} className="pro-input" placeholder={ph} value={data[k]} onChange={e => upd(k, e.target.value)} />
             );
             const sel = (k, opts) => (
-                <select className="pro-input" value={data[k]} onChange={e => upd(k, e.target.value)}>
+                <select id={'pf-' + k} className="pro-input" value={data[k]} onChange={e => upd(k, e.target.value)}>
                     {opts.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                 </select>
             );
@@ -6533,17 +6541,17 @@
 
             return (
                 <div className="modal-overlay" onClick={onClose}>
-                    <div className="modal-box fade-in" onClick={e => e.stopPropagation()}>
+                    <div className="modal-box fade-in" role="dialog" aria-modal="true" aria-labelledby="demo-modal-title" onClick={e => e.stopPropagation()}>
                         {step === 1 ? (
                             <div className="p-8 relative">
-                                <button type="button" onClick={onClose} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 transition-colors">
-                                    <Icon icon="solar:close-circle-linear" style={{ fontSize: '24px' }} />
+                                <button type="button" onClick={onClose} aria-label="Fermer" className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 transition-colors">
+                                    <Icon icon="solar:close-circle-linear" aria-hidden="true" style={{ fontSize: '24px' }} />
                                 </button>
 
                                 <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center mb-5">
                                     <Icon icon="solar:presentation-graph-bold" style={{ fontSize: '24px' }} />
                                 </div>
-                                <h3 className="text-2xl font-bold text-slate-800 mb-2">Découvrir DiagTertiaire Pro</h3>
+                                <h3 id="demo-modal-title" className="text-2xl font-bold text-slate-800 mb-2">Découvrir DiagTertiaire Pro</h3>
                                 <p className="text-slate-600 mb-6 text-sm">
                                     Remplissez ce formulaire court. Notre équipe vous donnera accès à un environnement de présentation complet pour vous et vos collaborateurs.
                                 </p>
@@ -6563,21 +6571,21 @@
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                            <label className="pro-label">Prénom & Nom</label>
-                                            <input type="text" className="pro-input" placeholder="Ex: Marie Dupont" value={form.name} onChange={e => setField('name', e.target.value)} required />
+                                            <label htmlFor="demo-name" className="pro-label">Prénom & Nom</label>
+                                            <input id="demo-name" type="text" aria-required="true" autoComplete="name" className="pro-input" placeholder="Ex: Marie Dupont" value={form.name} onChange={e => setField('name', e.target.value)} required />
                                         </div>
                                         <div>
-                                            <label className="pro-label">Société/ Cabinet</label>
-                                            <input type="text" className="pro-input" placeholder="Ex: Nexity" value={form.company} onChange={e => setField('company', e.target.value)} required />
+                                            <label htmlFor="demo-company" className="pro-label">Société/ Cabinet</label>
+                                            <input id="demo-company" type="text" aria-required="true" autoComplete="organization" className="pro-input" placeholder="Ex: Nexity" value={form.company} onChange={e => setField('company', e.target.value)} required />
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="pro-label">Email professionnel</label>
-                                        <input type="email" className="pro-input" placeholder="marie@entreprise.com" value={form.email} onChange={e => setField('email', e.target.value)} required />
+                                        <label htmlFor="demo-email" className="pro-label">Email professionnel</label>
+                                        <input id="demo-email" type="email" aria-required="true" autoComplete="email" className="pro-input" placeholder="marie@entreprise.com" value={form.email} onChange={e => setField('email', e.target.value)} required />
                                     </div>
                                     <div>
-                                        <label className="pro-label">Enjeu principal (optionnel)</label>
-                                        <select className="pro-input text-slate-600" value={form.mainChallenge} onChange={e => setField('mainChallenge', e.target.value)}>
+                                        <label htmlFor="demo-challenge" className="pro-label">Enjeu principal (optionnel)</label>
+                                        <select id="demo-challenge" className="pro-input text-slate-600" value={form.mainChallenge} onChange={e => setField('mainChallenge', e.target.value)}>
                                             <option value="">Sélectionnez un enjeu</option>
                                             <option value="1">Génération de rapports en marque blanche</option>
                                             <option value="2">Supervision d'un parc immobilier multi-sites</option>
@@ -6587,7 +6595,7 @@
                                     </div>
 
                                     {submitError && (
-                                        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                                        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">
                                             {submitError}
                                         </div>
                                     )}
@@ -6605,8 +6613,8 @@
                             </div>
                         ) : (
                             <div className="p-8 text-center relative fade-in">
-                                <button type="button" onClick={onClose} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 transition-colors">
-                                    <Icon icon="solar:close-circle-linear" style={{ fontSize: '24px' }} />
+                                <button type="button" onClick={onClose} aria-label="Fermer" className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 transition-colors">
+                                    <Icon icon="solar:close-circle-linear" aria-hidden="true" style={{ fontSize: '24px' }} />
                                 </button>
 
                                 <div className="w-16 h-16 mx-auto rounded-full bg-green-50 text-green-600 flex items-center justify-center mb-5">
@@ -8582,16 +8590,16 @@
             const Opt = ({ label, field, value, icon, sub }) => {
                 const sel = form[field] === value;
                 return (
-                    <div className={`step-option ${sel ? 'selected' : ''}`} onClick={() => set(field, value)}>
+                    <button type="button" className={`step-option ${sel ? 'selected' : ''}`} onClick={() => set(field, value)} aria-pressed={sel} style={{ background: 'none', border: 'none', textAlign: 'left', width: '100%' }}>
                         {icon && <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${sel ? 'bg-blue-50 text-blue-700' : 'bg-slate-50 text-slate-400'}`}>
-                            <Icon icon={icon} style={{ fontSize: '18px' }} />
+                            <Icon icon={icon} aria-hidden="true" style={{ fontSize: '18px' }} />
                         </div>}
                         <div className="flex-1">
                             <div className="font-semibold text-slate-700 text-sm">{label}</div>
                             {sub && <div className="text-xs text-slate-400 mt-0.5">{sub}</div>}
                         </div>
-                        {sel && <Icon icon="solar:check-circle-bold" className="text-blue-600 text-lg shrink-0" />}
-                    </div>
+                        {sel && <Icon icon="solar:check-circle-bold" aria-hidden="true" className="text-blue-600 text-lg shrink-0" />}
+                    </button>
                 );
             };
 
@@ -8724,13 +8732,13 @@
                                     <Icon icon="solar:user-id-bold" className="text-blue-600" /> Identification du dossier
                                 </h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                    <div><label className="pro-label">Nom du contact <span className="text-red-500">*</span></label><input className="pro-input" placeholder="Jean Martin" value={form.contactName} onChange={e => set('contactName', e.target.value)} /></div>
-                                    <div><label className="pro-label">Société / Raison sociale <span className="text-red-500">*</span></label><input className="pro-input" placeholder="Dupont & Associés" value={form.company} onChange={e => set('company', e.target.value)} /></div>
-                                    <div><label className="pro-label">Email</label><input type="email" className="pro-input" placeholder="j.martin@exemple.fr" value={form.email} onChange={e => set('email', e.target.value)} /></div>
-                                    <div><label className="pro-label">Téléphone</label><input type="tel" className="pro-input" placeholder="06 12 34 56 78" value={form.phone} onChange={e => set('phone', e.target.value)} /></div>
-                                    <div><label className="pro-label">Code postal du bâtiment <span className="text-red-500">*</span></label><input className="pro-input" placeholder="75001" maxLength={5} value={form.postalCode} onChange={e => set('postalCode', e.target.value)} /></div>
-                                    <div><label className="pro-label">Statut occupant</label>
-                                        <select className="pro-input" value={form.statut} onChange={e => set('statut', e.target.value)}>
+                                    <div><label htmlFor="pro-contactName" className="pro-label">Nom du contact <span className="text-red-500">*</span></label><input id="pro-contactName" aria-required="true" autoComplete="name" className="pro-input" placeholder="Jean Martin" value={form.contactName} onChange={e => set('contactName', e.target.value)} /></div>
+                                    <div><label htmlFor="pro-company" className="pro-label">Société / Raison sociale <span className="text-red-500">*</span></label><input id="pro-company" aria-required="true" autoComplete="organization" className="pro-input" placeholder="Dupont & Associés" value={form.company} onChange={e => set('company', e.target.value)} /></div>
+                                    <div><label htmlFor="pro-email" className="pro-label">Email</label><input id="pro-email" type="email" autoComplete="email" className="pro-input" placeholder="j.martin@exemple.fr" value={form.email} onChange={e => set('email', e.target.value)} /></div>
+                                    <div><label htmlFor="pro-phone" className="pro-label">Téléphone</label><input id="pro-phone" type="tel" autoComplete="tel" className="pro-input" placeholder="06 12 34 56 78" value={form.phone} onChange={e => set('phone', e.target.value)} /></div>
+                                    <div><label htmlFor="pro-postalCode" className="pro-label">Code postal du bâtiment <span className="text-red-500">*</span></label><input id="pro-postalCode" aria-required="true" className="pro-input" placeholder="75001" maxLength={5} value={form.postalCode} onChange={e => set('postalCode', e.target.value)} /></div>
+                                    <div><label htmlFor="pro-statut" className="pro-label">Statut occupant</label>
+                                        <select id="pro-statut" className="pro-input" value={form.statut} onChange={e => set('statut', e.target.value)}>
                                             <option value="">Sélectionner</option>
                                             <option value="proprietaire_occupant">Propriétaire occupant</option>
                                             <option value="proprietaire_bailleur">Propriétaire bailleur</option>
@@ -8748,15 +8756,15 @@
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                    <div><label className="pro-label">Horizon de décision</label>
-                                        <select className="pro-input" value={form.horizon} onChange={e => set('horizon', e.target.value)}>
+                                    <div><label htmlFor="pro-horizon" className="pro-label">Horizon de décision</label>
+                                        <select id="pro-horizon" className="pro-input" value={form.horizon} onChange={e => set('horizon', e.target.value)}>
                                             <option value="">Sélectionner</option>
                                             <option value="immediat">Immédiat (- 3 mois)</option>
                                             <option value="moyen">Moyen terme (3–12 mois)</option>
                                             <option value="long">Long terme (+ 1 an)</option>
                                         </select>
                                     </div>
-                                    <div><label className="pro-label">Urgence / contexte (libre)</label><input className="pro-input" placeholder="Ex: Bail à renouveler en septembre" value={form.urgence} onChange={e => set('urgence', e.target.value)} /></div>
+                                    <div><label htmlFor="pro-urgence" className="pro-label">Urgence / contexte (libre)</label><input id="pro-urgence" className="pro-input" placeholder="Ex: Bail à renouveler en septembre" value={form.urgence} onChange={e => set('urgence', e.target.value)} /></div>
                                 </div>
                                 {/* NOTE INTERNE - jamais affichée dans le rapport client */}
                                 <div className="border border-dashed border-indigo-200 bg-indigo-50/30 rounded-xl p-4 mt-2">
@@ -8804,9 +8812,9 @@
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                                    <div><label className="pro-label">Surface utile (m²) <span className="text-red-500">*</span></label><input type="number" className="pro-input" placeholder="Ex: 500" value={form.surface} onChange={e => set('surface', e.target.value)} /></div>
-                                    <div><label className="pro-label">Année de construction</label>
-                                        <select className="pro-input" value={form.constructionYear} onChange={e => set('constructionYear', e.target.value)}>
+                                    <div><label htmlFor="pro-surface" className="pro-label">Surface utile (m²) <span className="text-red-500">*</span></label><input id="pro-surface" aria-required="true" type="number" className="pro-input" placeholder="Ex: 500" value={form.surface} onChange={e => set('surface', e.target.value)} /></div>
+                                    <div><label htmlFor="pro-constructionYear" className="pro-label">Année de construction</label>
+                                        <select id="pro-constructionYear" className="pro-input" value={form.constructionYear} onChange={e => set('constructionYear', e.target.value)}>
                                             <option value="">Sélectionner</option>
                                             <option value="avant1948">Avant 1948</option>
                                             <option value="1948-1974">1948 – 1974</option>
@@ -8816,8 +8824,8 @@
                                             <option value="apres2012">Après 2012 (RT2012 / RE2020)</option>
                                         </select>
                                     </div>
-                                    <div><label className="pro-label">Niveaux</label>
-                                        <select className="pro-input" value={form.niveaux} onChange={e => set('niveaux', e.target.value)}>
+                                    <div><label htmlFor="pro-niveaux" className="pro-label">Niveaux</label>
+                                        <select id="pro-niveaux" className="pro-input" value={form.niveaux} onChange={e => set('niveaux', e.target.value)}>
                                             <option value="">-</option>
                                             <option value="1">1 niveau (RDC)</option>
                                             <option value="2">2 niveaux</option>
@@ -8893,16 +8901,16 @@
                                         <Opt label="Fioul / Autre" field="heating" value="fioul" />
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
-                                        <div><label className="pro-label">Âge de l'installation</label>
-                                            <select className="pro-input" value={form.chauffage_age} onChange={e => set('chauffage_age', e.target.value)}>
+                                        <div><label htmlFor="pro-chauffage-age" className="pro-label">Âge de l'installation</label>
+                                            <select id="pro-chauffage-age" className="pro-input" value={form.chauffage_age} onChange={e => set('chauffage_age', e.target.value)}>
                                                 <option value="">-</option>
                                                 <option value="moins_10_ans">Moins de 10 ans</option>
                                                 <option value="entre_10_20_ans">10 à 20 ans</option>
                                                 <option value="plus_20_ans">Plus de 20 ans</option>
                                             </select>
                                         </div>
-                                        <div><label className="pro-label">Distribution</label>
-                                            <select className="pro-input" value={form.chauffage_reseau} onChange={e => set('chauffage_reseau', e.target.value)}>
+                                        <div><label htmlFor="pro-chauffage-reseau" className="pro-label">Distribution</label>
+                                            <select id="pro-chauffage-reseau" className="pro-input" value={form.chauffage_reseau} onChange={e => set('chauffage_reseau', e.target.value)}>
                                                 <option value="">-</option>
                                                 <option value="eau_chaude">Réseau eau chaude</option>
                                                 <option value="air_souffle">Air soufflé</option>
@@ -8976,21 +8984,21 @@
                                 <div className="bg-blue-50/40 border border-blue-100 rounded-xl p-5 space-y-3">
                                     <div className="flex items-center gap-2 font-bold text-blue-700 text-sm mb-1"><Icon icon="solar:bolt-bold" className="text-blue-600" /> Électricité</div>
                                     <div className="grid grid-cols-2 gap-3">
-                                        <div><label className="pro-label">kWh / an</label><input type="number" className="pro-input" placeholder="Ex: 52 000" value={form.elecKwh} onChange={e => set('elecKwh', e.target.value)} /></div>
-                                        <div><label className="pro-label">€ TTC / an</label><input type="number" className="pro-input" placeholder="Ex: 10 800" value={form.elecEuro} onChange={e => set('elecEuro', e.target.value)} /></div>
+                                        <div><label htmlFor="pro-elecKwh" className="pro-label">kWh / an</label><input id="pro-elecKwh" type="number" className="pro-input" placeholder="Ex: 52 000" value={form.elecKwh} onChange={e => set('elecKwh', e.target.value)} /></div>
+                                        <div><label htmlFor="pro-elecEuro" className="pro-label">€ TTC / an</label><input id="pro-elecEuro" type="number" className="pro-input" placeholder="Ex: 10 800" value={form.elecEuro} onChange={e => set('elecEuro', e.target.value)} /></div>
                                     </div>
-                                    <div><label className="pro-label">Abonnement annuel inclus (€)</label><input type="number" className="pro-input max-w-xs" placeholder="Ex: 840" value={form.elecSubscriptionYearly} onChange={e => set('elecSubscriptionYearly', e.target.value)} /></div>
+                                    <div><label htmlFor="pro-elecSub" className="pro-label">Abonnement annuel inclus (€)</label><input id="pro-elecSub" type="number" className="pro-input max-w-xs" placeholder="Ex: 840" value={form.elecSubscriptionYearly} onChange={e => set('elecSubscriptionYearly', e.target.value)} /></div>
                                 </div>
                                 <div className="bg-orange-50/40 border border-orange-100 rounded-xl p-5 space-y-3">
                                     <div className="flex items-center gap-2 font-bold text-orange-700 text-sm mb-1"><Icon icon="solar:fire-bold" className="text-orange-500" /> Gaz naturel</div>
                                     <div className="grid grid-cols-2 gap-3">
-                                        <div><label className="pro-label">kWh PCI / an</label><input type="number" className="pro-input" placeholder="Ex: 38 000" value={form.gasKwh} onChange={e => set('gasKwh', e.target.value)} /></div>
-                                        <div><label className="pro-label">€ TTC / an</label><input type="number" className="pro-input" placeholder="Ex: 4 200" value={form.gasEuro} onChange={e => set('gasEuro', e.target.value)} /></div>
+                                        <div><label htmlFor="pro-gasKwh" className="pro-label">kWh PCI / an</label><input id="pro-gasKwh" type="number" className="pro-input" placeholder="Ex: 38 000" value={form.gasKwh} onChange={e => set('gasKwh', e.target.value)} /></div>
+                                        <div><label htmlFor="pro-gasEuro" className="pro-label">€ TTC / an</label><input id="pro-gasEuro" type="number" className="pro-input" placeholder="Ex: 4 200" value={form.gasEuro} onChange={e => set('gasEuro', e.target.value)} /></div>
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                    <div><label className="pro-label">Période couverte</label>
-                                        <select className="pro-input" value={form.periode_couverte} onChange={e => set('periode_couverte', e.target.value)}>
+                                    <div><label htmlFor="pro-periode" className="pro-label">Période couverte</label>
+                                        <select id="pro-periode" className="pro-input" value={form.periode_couverte} onChange={e => set('periode_couverte', e.target.value)}>
                                             <option value="">-</option>
                                             <option value="12_mois_complets">12 mois complets</option>
                                             <option value="moins_12_mois">Moins de 12 mois</option>
@@ -9021,12 +9029,12 @@
                                 </h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                     <div>
-                                        <label className="pro-label">Heures d'occupation / semaine : <strong>{form.heures_semaine}h</strong></label>
-                                        <input type="range" min="10" max="80" step="5" className="w-full mt-2 accent-blue-600" value={form.heures_semaine} onChange={e => set('heures_semaine', parseInt(e.target.value))} />
+                                        <label htmlFor="pro-heures" className="pro-label">Heures d'occupation / semaine : <strong>{form.heures_semaine}h</strong></label>
+                                        <input id="pro-heures" type="range" min="10" max="80" step="5" className="w-full mt-2 accent-blue-600" value={form.heures_semaine} onChange={e => set('heures_semaine', parseInt(e.target.value))} />
                                         <div className="flex justify-between text-xs text-slate-400 mt-1"><span>10h</span><span>80h</span></div>
                                     </div>
-                                    <div><label className="pro-label">Semaines d'activité / an</label>
-                                        <select className="pro-input" value={form.semaines_annee} onChange={e => set('semaines_annee', e.target.value)}>
+                                    <div><label htmlFor="pro-semaines" className="pro-label">Semaines d'activité / an</label>
+                                        <select id="pro-semaines" className="pro-input" value={form.semaines_annee} onChange={e => set('semaines_annee', e.target.value)}>
                                             <option value="">-</option>
                                             <option value="moins_40">Moins de 40 semaines</option>
                                             <option value="40_46">40 à 46 semaines</option>
@@ -9034,8 +9042,8 @@
                                             <option value="51_52">Quasi-permanent (51–52)</option>
                                         </select>
                                     </div>
-                                    <div><label className="pro-label">Nombre d'occupants habituels</label>
-                                        <select className="pro-input" value={form.nb_occupants} onChange={e => set('nb_occupants', e.target.value)}>
+                                    <div><label htmlFor="pro-occupants" className="pro-label">Nombre d'occupants habituels</label>
+                                        <select id="pro-occupants" className="pro-input" value={form.nb_occupants} onChange={e => set('nb_occupants', e.target.value)}>
                                             <option value="">-</option>
                                             <option value="moins_5">Moins de 5</option>
                                             <option value="6_20">6 à 20</option>
@@ -9043,8 +9051,8 @@
                                             <option value="plus_50">Plus de 50</option>
                                         </select>
                                     </div>
-                                    <div><label className="pro-label">Intensité d'usage</label>
-                                        <select className="pro-input" value={form.intensite_usage} onChange={e => set('intensite_usage', e.target.value)}>
+                                    <div><label htmlFor="pro-intensite" className="pro-label">Intensité d'usage</label>
+                                        <select id="pro-intensite" className="pro-input" value={form.intensite_usage} onChange={e => set('intensite_usage', e.target.value)}>
                                             <option value="faible">Faible (bureau calme, peu d'équipements)</option>
                                             <option value="standard">Standard</option>
                                             <option value="intense">Intense (data, production, cuisson…)</option>
@@ -9280,9 +9288,9 @@
                     <div className="space-y-8">
                         <div className="space-y-8">
                             {/* SECTION BRANDING */}
-                            <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm shadow-slate-200/40 border border-slate-200" data-tour="branding-section">
-                                <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
-                                    <Icon icon="solar:paint-roller-bold" className="text-blue-600" /> Branding & Marque blanche
+                            <div role="group" aria-labelledby="branding-section-title" className="bg-white rounded-2xl p-6 md:p-8 shadow-sm shadow-slate-200/40 border border-slate-200" data-tour="branding-section">
+                                <h3 id="branding-section-title" className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+                                    <Icon icon="solar:paint-roller-bold" aria-hidden="true" className="text-blue-600" /> Branding & Marque blanche
                                 </h3>
 
                                 <div className="space-y-6">
@@ -9292,8 +9300,8 @@
                                             {proLogoImg ? (
                                                 <div className="relative w-16 h-16 rounded-lg border border-slate-200 bg-slate-50 flex items-center justify-center p-1">
                                                     <img src={proLogoImg} alt="Logo" className="max-w-full max-h-full object-contain" />
-                                                    <button onClick={removeLogo} disabled={logoActionPending} className="absolute -top-2 -right-2 bg-red-500 text-white w-5 h-5 rounded-full flex items-center justify-center hover:bg-red-600 shadow border border-white disabled:opacity-60 disabled:cursor-not-allowed">
-                                                        <Icon icon="solar:close-circle-bold" className="text-xs" />
+                                                    <button onClick={removeLogo} disabled={logoActionPending} aria-label="Supprimer le logo" className="absolute -top-2 -right-2 bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center hover:bg-red-600 shadow border border-white disabled:opacity-60 disabled:cursor-not-allowed">
+                                                        <Icon icon="solar:close-circle-bold" aria-hidden="true" className="text-xs" />
                                                     </button>
                                                 </div>
                                             ) : (
@@ -9326,8 +9334,9 @@
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="pro-label block mb-2 text-sm font-semibold text-slate-700">Nom du Cabinet (affiché si pas de logo)</label>
+                                        <label htmlFor="pro-logoName" className="pro-label block mb-2 text-sm font-semibold text-slate-700">Nom du Cabinet (affiché si pas de logo)</label>
                                         <input
+                                            id="pro-logoName"
                                             type="text"
                                             className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-shadow"
                                             value={proLogoName}
@@ -9536,8 +9545,8 @@
                                 <Icon icon="solar:buildings-2-bold" className="text-blue-500" /> DT Pro
                             </h2>
                             {/* Bouton fermeture interne pour mobile */}
-                            <button type="button" onClick={closeMobile} className="lg:hidden text-slate-400 hover:text-white transition-colors">
-                                <Icon icon="solar:close-circle-bold" style={{ fontSize: '24px' }} />
+                            <button type="button" onClick={closeMobile} aria-label="Fermer le menu" className="lg:hidden text-slate-400 hover:text-white transition-colors">
+                                <Icon icon="solar:close-circle-bold" aria-hidden="true" style={{ fontSize: '24px' }} />
                             </button>
                         </div>
 
@@ -9545,10 +9554,10 @@
                             {navs.map(n => {
                                 const isActive = curPage === n.id || ((curPage.startsWith('report-') || curPage.startsWith('case-report-')) && n.id === 'cases');
                                 return (
-                                    <div id={n.domId || undefined} key={n.id} className={`nav-item ${isActive ? 'active' : ''}`} onClick={() => { setPage(n.id); closeMobile(); }}>
-                                        <Icon icon={n.icon} style={{ fontSize: '20px' }} />
+                                    <button type="button" id={n.domId || undefined} key={n.id} className={`nav-item ${isActive ? 'active' : ''}`} onClick={() => { setPage(n.id); closeMobile(); }} aria-current={isActive ? 'page' : undefined} style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left' }}>
+                                        <Icon icon={n.icon} aria-hidden="true" style={{ fontSize: '20px' }} />
                                         {n.label}
-                                    </div>
+                                    </button>
                                 );
                             })}
                         </nav>
@@ -9649,8 +9658,8 @@
         const ProTopbar = ({ title, toggleMobile }) => (
             <div className="bg-white border-b border-slate-200 px-4 md:px-8 py-4 flex items-center justify-between sticky top-0 z-30 shadow-sm shadow-slate-200/40">
                 <div className="flex items-center gap-3">
-                    <button type="button" onClick={toggleMobile} className="lg:hidden w-12 h-12 flex items-center justify-center rounded-xl bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200 transition-colors">
-                        <Icon icon="solar:hamburger-menu-linear" style={{ fontSize: '24px' }} />
+                    <button type="button" onClick={toggleMobile} aria-label="Ouvrir le menu" className="lg:hidden w-12 h-12 flex items-center justify-center rounded-xl bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200 transition-colors">
+                        <Icon icon="solar:hamburger-menu-linear" aria-hidden="true" style={{ fontSize: '24px' }} />
                     </button>
                     <h1 className="text-xl font-bold text-slate-800 tracking-tight hidden sm:block">{title}</h1>
                 </div>
@@ -10258,17 +10267,17 @@
 
                                             <div className="grid md:grid-cols-2 gap-4">
                                                 <div>
-                                                    <label className="pro-label">{copy.form.fields.password}</label>
-                                                    <input type="password" name="recoveryPassword" autoComplete="new-password" required minLength={AUTH_MIN_PASSWORD_LENGTH} className="pro-input" placeholder={copy.form.placeholders.password} value={recoveryForm.password} onChange={e => setRecoveryField('password', e.target.value)} />
+                                                    <label htmlFor="recovery-password" className="pro-label">{copy.form.fields.password}</label>
+                                                    <input id="recovery-password" type="password" name="recoveryPassword" autoComplete="new-password" required aria-required="true" minLength={AUTH_MIN_PASSWORD_LENGTH} className="pro-input" placeholder={copy.form.placeholders.password} value={recoveryForm.password} onChange={e => setRecoveryField('password', e.target.value)} />
                                                 </div>
                                                 <div>
-                                                    <label className="pro-label">{copy.form.fields.confirmPassword}</label>
-                                                    <input type="password" name="recoveryPasswordConfirmation" autoComplete="new-password" required minLength={AUTH_MIN_PASSWORD_LENGTH} className="pro-input" placeholder={copy.form.placeholders.confirmPassword} value={recoveryForm.confirmPassword} onChange={e => setRecoveryField('confirmPassword', e.target.value)} />
+                                                    <label htmlFor="recovery-confirmPassword" className="pro-label">{copy.form.fields.confirmPassword}</label>
+                                                    <input id="recovery-confirmPassword" type="password" name="recoveryPasswordConfirmation" autoComplete="new-password" required aria-required="true" minLength={AUTH_MIN_PASSWORD_LENGTH} className="pro-input" placeholder={copy.form.placeholders.confirmPassword} value={recoveryForm.confirmPassword} onChange={e => setRecoveryField('confirmPassword', e.target.value)} />
                                                 </div>
                                             </div>
 
                                             {passwordUpdateError && (
-                                                <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                                                <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">
                                                     {passwordUpdateError}
                                                 </div>
                                             )}
@@ -10335,23 +10344,23 @@
                                                     <>
                                                         <div className="grid md:grid-cols-2 gap-4">
                                                             <div>
-                                                                <label className="pro-label">{copy.form.fields.fullName}</label>
-                                                                <input type="text" name="fullName" autoComplete="name" required className="pro-input" placeholder={copy.form.placeholders.fullName} value={form.fullName} onChange={e => setField('fullName', e.target.value)} />
+                                                                <label htmlFor="auth-fullName" className="pro-label">{copy.form.fields.fullName}</label>
+                                                                <input id="auth-fullName" type="text" name="fullName" autoComplete="name" required aria-required="true" className="pro-input" placeholder={copy.form.placeholders.fullName} value={form.fullName} onChange={e => setField('fullName', e.target.value)} />
                                                             </div>
                                                             <div>
-                                                                <label className="pro-label">{copy.form.fields.email}</label>
-                                                                <input type="email" name="email" autoComplete="email" required className="pro-input" placeholder={copy.form.placeholders.email} value={form.email} onChange={e => setField('email', e.target.value)} />
+                                                                <label htmlFor="auth-email-signup" className="pro-label">{copy.form.fields.email}</label>
+                                                                <input id="auth-email-signup" type="email" name="email" autoComplete="email" required aria-required="true" className="pro-input" placeholder={copy.form.placeholders.email} value={form.email} onChange={e => setField('email', e.target.value)} />
                                                             </div>
                                                         </div>
 
                                                         <div className="grid md:grid-cols-2 gap-4">
                                                             <div>
-                                                                <label className="pro-label">{copy.form.fields.company}</label>
-                                                                <input type="text" name="company" autoComplete="organization" required className="pro-input" placeholder={copy.form.placeholders.company} value={form.company} onChange={e => setField('company', e.target.value)} />
+                                                                <label htmlFor="auth-company" className="pro-label">{copy.form.fields.company}</label>
+                                                                <input id="auth-company" type="text" name="company" autoComplete="organization" required aria-required="true" className="pro-input" placeholder={copy.form.placeholders.company} value={form.company} onChange={e => setField('company', e.target.value)} />
                                                             </div>
                                                             <div>
-                                                                <label className="pro-label">{copy.form.fields.role}</label>
-                                                                <select name="role" required className="pro-input" value={form.role} onChange={e => setField('role', e.target.value)}>
+                                                                <label htmlFor="auth-role" className="pro-label">{copy.form.fields.role}</label>
+                                                                <select id="auth-role" name="role" required aria-required="true" className="pro-input" value={form.role} onChange={e => setField('role', e.target.value)}>
                                                                     <option value="">Sélectionnez votre métier</option>
                                                                     {copy.form.roleOptions.map(opt => (
                                                                         <option key={opt} value={opt}>{opt}</option>
@@ -10362,31 +10371,31 @@
 
                                                         <div className="grid md:grid-cols-2 gap-4">
                                                             <div>
-                                                                <label className="pro-label">{copy.form.fields.password}</label>
-                                                                <input type="password" name="password" autoComplete="new-password" required minLength={AUTH_MIN_PASSWORD_LENGTH} className="pro-input" placeholder={copy.form.placeholders.password} value={form.password} onChange={e => setField('password', e.target.value)} />
+                                                                <label htmlFor="auth-password" className="pro-label">{copy.form.fields.password}</label>
+                                                                <input id="auth-password" type="password" name="password" autoComplete="new-password" required aria-required="true" minLength={AUTH_MIN_PASSWORD_LENGTH} className="pro-input" placeholder={copy.form.placeholders.password} value={form.password} onChange={e => setField('password', e.target.value)} />
                                                             </div>
                                                             <div>
-                                                                <label className="pro-label">{copy.form.fields.confirmPassword}</label>
-                                                                <input type="password" name="confirmPassword" autoComplete="new-password" required minLength={AUTH_MIN_PASSWORD_LENGTH} className="pro-input" placeholder={copy.form.placeholders.confirmPassword} value={form.confirmPassword} onChange={e => setField('confirmPassword', e.target.value)} />
+                                                                <label htmlFor="auth-confirmPassword" className="pro-label">{copy.form.fields.confirmPassword}</label>
+                                                                <input id="auth-confirmPassword" type="password" name="confirmPassword" autoComplete="new-password" required aria-required="true" minLength={AUTH_MIN_PASSWORD_LENGTH} className="pro-input" placeholder={copy.form.placeholders.confirmPassword} value={form.confirmPassword} onChange={e => setField('confirmPassword', e.target.value)} />
                                                             </div>
                                                         </div>
                                                     </>
                                                 ) : (
                                                     <>
                                                         <div>
-                                                            <label className="pro-label">{copy.form.fields.email}</label>
-                                                            <input type="email" name="email" autoComplete="email" required className="pro-input" placeholder={copy.form.placeholders.email} value={form.email} onChange={e => setField('email', e.target.value)} />
+                                                            <label htmlFor="auth-email-login" className="pro-label">{copy.form.fields.email}</label>
+                                                            <input id="auth-email-login" type="email" name="email" autoComplete="email" required aria-required="true" className="pro-input" placeholder={copy.form.placeholders.email} value={form.email} onChange={e => setField('email', e.target.value)} />
                                                         </div>
 
                                                         <div>
-                                                            <label className="pro-label">{copy.form.fields.password}</label>
-                                                            <input type="password" name="currentPassword" autoComplete="current-password" required className="pro-input" placeholder="Votre mot de passe" value={form.loginPassword} onChange={e => setField('loginPassword', e.target.value)} />
+                                                            <label htmlFor="auth-loginPassword" className="pro-label">{copy.form.fields.password}</label>
+                                                            <input id="auth-loginPassword" type="password" name="currentPassword" autoComplete="current-password" required aria-required="true" className="pro-input" placeholder="Votre mot de passe" value={form.loginPassword} onChange={e => setField('loginPassword', e.target.value)} />
                                                         </div>
                                                     </>
                                                 )}
 
                                                 {submitError && (
-                                                    <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                                                    <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">
                                                         {submitError}
                                                     </div>
                                                 )}
@@ -11674,7 +11683,7 @@
                         isRefreshingChecklist={isRefreshingChecklist}
                         onStartTour={startOnboardingTour}
                     />
-                    <div className="pro-content flex-1 max-w-full">
+                    <div id="pro-main-content" className="pro-content flex-1 max-w-full">
                         <ProTopbar title={currentTitle} toggleMobile={toggleMobile} />
                         <main className="min-h-[calc(100vh-73px)]">
                             {renderPage()}

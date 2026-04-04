@@ -836,7 +836,7 @@
         "Diagnostic energetique gratuit",
         "Rapport PDF personnalise",
         "Estimation des economies",
-        "Calcul du ROI",
+        "Estimation du retour sur investissement",
         "Recommandations d'actions"
       ]
     }
@@ -1978,9 +1978,9 @@
 
                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(0.3rem, 1.5vw, 0.5rem)' }}>
                                                     {[
-                                                        ['Régulation thermique', 'ROI 2-4 ans', '#0F766E', '#ECFEFF'],
-                                                        ['Isolation toiture', 'ROI moyen', '#B45309', '#FFF7ED'],
-                                                        ['LED / Éclairage', 'ROI rapide', '#16A34A', '#ECFDF5']
+                                                        ['Régulation thermique', '2-4 ans', '#0F766E', '#ECFEFF'],
+                                                        ['Isolation toiture', 'Rentabilité moyenne', '#B45309', '#FFF7ED'],
+                                                        ['LED / Éclairage', 'Retour rapide', '#16A34A', '#ECFDF5']
                                                     ].map(([label, badge, color, bg], i) => (
                                                         <div
                                                             key={i}
@@ -2228,8 +2228,8 @@
                             </h1>
 
                             <p className="text-[#475569] leading-relaxed text-sm md:text-base">
-                                DiagTertiaire est un <strong>pré-diagnostic</strong> : un outil de cadrage rapide pour comprendre
-                                si la consommation d’un bâtiment tertiaire est cohérente, identifier les leviers les plus probables
+                                DiagTertiaire est un <strong>comparatif</strong> : un outil de cadrage rapide pour comprendre
+                                si la consommation d’un local professionnel est cohérente, identifier les leviers les plus probables
                                 et décider s’il faut lancer un audit complet.
                             </p>
                         </div>
@@ -2243,7 +2243,7 @@
                                 <ul className="space-y-2 text-sm text-[#475569]">
                                     <li className="flex items-start gap-2"><Icon icon="solar:arrow-right-linear" className="text-sm mt-0.5 text-[#102A43] shrink-0" /><span>Estime la performance et l’écart à une référence sectorielle</span></li>
                                     <li className="flex items-start gap-2"><Icon icon="solar:arrow-right-linear" className="text-sm mt-0.5 text-[#102A43] shrink-0" /><span>Priorise les postes d’action (chauffage, éclairage, pilotage…)</span></li>
-                                    <li className="flex items-start gap-2"><Icon icon="solar:arrow-right-linear" className="text-sm mt-0.5 text-[#102A43] shrink-0" /><span>Donne des ordres de grandeur coûts / gains / ROI</span></li>
+                                    <li className="flex items-start gap-2"><Icon icon="solar:arrow-right-linear" className="text-sm mt-0.5 text-[#102A43] shrink-0" /><span>Donne des ordres de grandeur coûts / gains / retour sur investissement</span></li>
                                     <li className="flex items-start gap-2"><Icon icon="solar:arrow-right-linear" className="text-sm mt-0.5 text-[#102A43] shrink-0" /><span>Fournit une base de discussion avant audit ou devis</span></li>
                                 </ul>
                             </div>
@@ -2263,7 +2263,7 @@
                         </div>
 
                         <div className="mt-5 bg-white rounded-2xl border border-[#E2E8F0] p-5">
-                            <h3 className="text-sm font-semibold text-[#102A43] mb-2">Pourquoi ce pré-diagnostic existe</h3>
+                            <h3 className="text-sm font-semibold text-[#102A43] mb-2">Pourquoi ce comparatif existe</h3>
                             <p className="text-sm text-[#475569] leading-relaxed">
                                 L’objectif : une <strong>estimation fiable</strong> avant d’engager du temps,
                                 un budget d’audit ou des travaux. Un cadrage rapide pour décider sereinement.
@@ -2283,7 +2283,7 @@
                                 { icon: 'solar:buildings-2-linear', color: '#102A43', title: 'Référence sectorielle', desc: "Chaque activité tertiaire a sa consommation de référence (bureaux, commerce, santé...)." },
                                 { icon: 'solar:calendar-linear', color: '#F59E0B', title: 'Ajustement bâtiment', desc: "L’âge du bâtiment et des équipements affine l’ordre de grandeur estimé." },
                                 { icon: 'solar:wallet-money-linear', color: '#16A34A', title: 'Lecture économique', desc: "L’estimation est convertie en coût annuel pour une lecture décisionnelle immédiate." },
-                                { icon: 'solar:chart-2-linear', color: '#1D4ED8', title: 'Priorisation', desc: "Le rapport propose des actions types avec gains, coûts et ROI indicatifs." },
+                                { icon: 'solar:chart-2-linear', color: '#1D4ED8', title: 'Priorisation', desc: "Le rapport propose des actions types avec gains, coûts et délai de rentabilisation indicatifs." },
                             ].map((item, i) => (
                                 <div key={i} className="bg-[#F8FAFC] rounded-xl border border-[#E2E8F0] p-4 hover:shadow-sm transition-shadow">
                                     <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3" style={{ backgroundColor: `${item.color}15` }}>
@@ -3201,7 +3201,7 @@
             },
             {
                 id: 'retail',
-                label: 'Commerce / Retail',
+                label: 'Commerce',
                 icon: 'solar:shop-linear',
                 refKwh: 350,
                 source_level: 'source_partial',
@@ -3228,7 +3228,7 @@
             },
             {
                 id: 'commerce_alim',
-                label: 'Commerce alimentaire',
+                label: 'Commerce alimentaire (épicerie, boucherie...)',
                 icon: 'solar:shop-minimalistic-linear',
                 refKwh: 650,
                 source_level: 'source_partial',
@@ -3237,7 +3237,7 @@
             },
             {
                 id: 'health_local',
-                label: 'Santé (cabinet, local)',
+                label: 'Cabinet de santé',
                 icon: 'solar:heart-pulse-linear',
                 refKwh: 200,
                 source_level: 'pending_expert',
@@ -3246,7 +3246,7 @@
             },
             {
                 id: 'education',
-                label: 'Enseignement',
+                label: 'École / Formation',
                 icon: 'solar:book-linear',
                 refKwh: 150,
                 source_level: 'source_partial',
@@ -3255,7 +3255,7 @@
             },
             {
                 id: 'light_warehouse',
-                label: 'Entrepôt logistique',
+                label: 'Entrepôt / Stockage',
                 icon: 'solar:box-linear',
                 refKwh: 90,
                 source_level: 'source_partial',
@@ -3264,7 +3264,7 @@
             },
             {
                 id: 'mixed',
-                label: 'Usage mixte',
+                label: 'Plusieurs activités',
                 icon: 'solar:transfer-horizontal-linear',
                 refKwh: 0, // Calculé dynamiquement
                 source_level: 'hypothesis',
@@ -3275,7 +3275,7 @@
 
         const NEW_DIAGNOSTIC_ROLES = [
             { id: 'owner', label: 'Propriétaire', icon: 'solar:home-linear' },
-            { id: 'tenant', label: 'Locataire exploitant', icon: 'solar:case-linear' }
+            { id: 'tenant', label: 'Locataire / Gestionnaire', icon: 'solar:case-linear' }
         ];
 
         const NEW_DIAGNOSTIC_WORKS_DONE = [
@@ -3286,9 +3286,9 @@
             { id: 'roof_done', label: 'Isolation toiture rénovée', category: 'envelope' },
             { id: 'walls_done', label: 'Isolation murs rénovée', category: 'envelope' },
             { id: 'windows_done', label: 'Fenêtres remplacées (double/triple vitrage)', category: 'envelope' },
-            { id: 'gtb_done', label: 'GTB / Supervision installée', category: 'pilotage' },
-            { id: 'dhw_done', label: 'ECS optimisée (calorifugeage, ballon thermo)', category: 'dhw' },
-            { id: 'vmc_df_done', label: 'VMC double flux installée', category: 'ventilation' }
+            { id: 'gtb_done', label: 'Pilotage automatique (chauffage, éclairage)', category: 'pilotage' },
+            { id: 'dhw_done', label: 'Eau chaude', category: 'dhw' },
+            { id: 'vmc_df_done', label: 'Ventilation', category: 'ventilation' }
         ];
 
         // NEW_DIAGNOSTIC_BUILDING_AGES -> src/engine.js
@@ -3296,7 +3296,7 @@
 
         const NEW_DIAGNOSTIC_PROJECT_OBJECTIVES = [
             { id: 'reduce_costs', label: 'Réduire mes charges énergétiques', icon: 'solar:wallet-money-linear' },
-            { id: 'compliance', label: 'Me mettre en conformité (Décret Tertiaire)', icon: 'solar:document-text-linear' },
+            { id: 'compliance', label: 'Respecter les obligations réglementaires', icon: 'solar:document-text-linear' },
             { id: 'valorization', label: 'Valoriser mon patrimoine', icon: 'solar:chart-2-linear' }
         ];
 
@@ -3501,7 +3501,7 @@
                     errors.push({
                         type: 'warning',
                         code: 'PRICE_IMPLIED_OUT_OF_RANGE',
-                        message: 'Électricité : le prix implicite semble inhabituel (vérifiez vos données)'
+                        message: 'Électricité : le prix au kWh calculé semble inhabituel. Vérifiez vos chiffres.'
                     });
                 }
             }
@@ -3512,7 +3512,7 @@
                     errors.push({
                         type: 'warning',
                         code: 'PRICE_IMPLIED_OUT_OF_RANGE',
-                        message: 'Gaz : le prix implicite semble inhabituel (vérifiez vos données)'
+                        message: 'Gaz : le prix au kWh calculé semble inhabituel. Vérifiez vos chiffres.'
                     });
                 }
             }
@@ -4805,7 +4805,7 @@
                 if (isValid) {
                     setErrors(prev => ({ ...prev, address: null, postalCode: null, city: null }));
                 } else {
-                    setErrors(prev => ({ ...prev, address: 'Adresse trop imprécise : précisez le numéro de voie' }));
+                    setErrors(prev => ({ ...prev, address: 'Merci d\'entrer l\'adresse complète avec le numéro' }));
                 }
             };
 
@@ -4928,9 +4928,9 @@
                 const newErrors = {};
 
                 if (!formData.addressIsValid || !formData.address) {
-                    newErrors.address = 'Veuillez sélectionner une adresse valide dans la liste proposée';
+                    newErrors.address = 'Sélectionnez votre adresse dans la liste';
                 } else if (formData.addressPrecision === 'street') {
-                    newErrors.address = 'Adresse trop imprécise : veuillez préciser le numéro de voie';
+                    newErrors.address = 'Merci d\'entrer l\'adresse complète avec le numéro';
                 }
                 if (!formData.role) {
                     newErrors.role = 'Veuillez sélectionner votre rôle';
@@ -4942,10 +4942,10 @@
                     newErrors.activity = 'Veuillez sélectionner une activité';
                 }
                 if (formData.activity === 'mixed') {
-                    if (!formData.mixedUsage1) newErrors.mixedUsage1 = 'Sélectionnez un usage pour Usage 1';
-                    if (!formData.mixedUsage2) newErrors.mixedUsage2 = 'Sélectionnez un usage pour Usage 2';
+                    if (!formData.mixedUsage1) newErrors.mixedUsage1 = 'Veuillez choisir le premier type d\'activité';
+                    if (!formData.mixedUsage2) newErrors.mixedUsage2 = 'Veuillez choisir le deuxième type d\'activité';
                     if (formData.mixedUsage1 && formData.mixedUsage2 && formData.mixedUsage1 === formData.mixedUsage2) {
-                        newErrors.mixedUsage2 = 'Usage 2 doit être différent de Usage 1';
+                        newErrors.mixedUsage2 = 'Ces deux activités doivent être différentes';
                     }
                 }
 
@@ -4962,8 +4962,8 @@
 
             return (
                 <div className="max-w-2xl mx-auto">
-                    <h2 className="text-2xl font-bold text-[#102A43] mb-2">Identification</h2>
-                    <p className="text-[#475569] mb-8">Commençons par quelques informations de base</p>
+                    <h2 className="text-2xl font-bold text-[#102A43] mb-2">Parlez-nous de votre local</h2>
+                    <p className="text-[#475569] mb-8">Juste les infos essentielles pour commencer</p>
 
                     <div className="mb-6 relative" ref={autocompleteRef}>
                         <label htmlFor="diag-address" className="block text-sm font-semibold text-neutral-700 mb-1">
@@ -5027,7 +5027,7 @@
                         {!formData.addressIsValid && query.length >= 3 && !showSuggestions && !isLoadingSuggestions && suggestions.length === 0 && (
                             <div className="text-xs text-amber-600 mt-2 flex items-center gap-1">
                                 <Icon icon="solar:info-circle-linear" />
-                                Veuillez sélectionner une adresse valide dans la liste qui s'affiche.
+                                Sélectionnez votre adresse dans la liste.
                             </div>
                         )}
                     </div>
@@ -5079,7 +5079,7 @@
                     {isMixed && (
                         <div className="mb-6 border border-[#E2E8F0] rounded-xl overflow-hidden">
                             <div className="flex border-b border-[#E2E8F0]">
-                                {['Usage 1', 'Usage 2'].map((tab, idx) => (
+                                {['Activité 1', 'Activité 2'].map((tab, idx) => (
                                     <button
                                         key={idx}
                                         type="button"
@@ -5106,7 +5106,7 @@
                             <div className="p-4 bg-white">
                                 {mixedTab === 0 ? (
                                     <>
-                                        <p className="text-sm text-neutral-600 mb-3">Sélectionnez le premier usage du bâtiment :</p>
+                                        <p className="text-sm text-neutral-600 mb-3">Quel est le premier type d'activité ?</p>
                                         <div className="grid grid-cols-2 gap-2">
                                             {nonMixedActivities.map(act => (
                                                 <button
@@ -5129,7 +5129,7 @@
                                     </>
                                 ) : (
                                     <>
-                                        <p className="text-sm text-neutral-600 mb-3">Sélectionnez le deuxième usage du bâtiment :</p>
+                                        <p className="text-sm text-neutral-600 mb-3">Quel est le deuxième type d'activité ?</p>
                                         <div className="grid grid-cols-2 gap-2">
                                             {nonMixedActivities.map(act => (
                                                 <button
@@ -5182,7 +5182,7 @@
                     newErrors.mainHeating = 'Veuillez sélectionner le mode de chauffage principal';
                 }
                 if (!formData.ecsSameSystem && !formData.ecsSystem) {
-                    newErrors.ecsSystem = 'Veuillez sélectionner le système ECS';
+                    newErrors.ecsSystem = 'Veuillez préciser votre système d\'eau chaude';
                 }
                 if (!formData.buildingAge) {
                     newErrors.buildingAge = "Veuillez sélectionner l'année de construction";
@@ -5201,8 +5201,8 @@
 
             return (
                 <div className="max-w-2xl mx-auto">
-                    <h2 className="text-2xl font-bold text-[#102A43] mb-2">Bâtiment & Usage</h2>
-                    <p className="text-[#475569] mb-8">Caractéristiques de votre site</p>
+                    <h2 className="text-2xl font-bold text-[#102A43] mb-2">Votre bâtiment</h2>
+                    <p className="text-[#475569] mb-8">Quelques détails sur votre local</p>
 
                     <NewDiagnosticFormInput
                         label="Surface totale"
@@ -5223,7 +5223,7 @@
                                 </div>
                                 <div>
                                     <h3 className="font-bold text-[#102A43] mb-0">Répartition des surfaces</h3>
-                                    <p className="text-xs text-neutral-500">Ajustez la part de chaque usage</p>
+                                    <p className="text-xs text-neutral-500">Estimez le pourcentage de chaque activité</p>
                                 </div>
                             </div>
                             <NewDiagnosticMixSlider
@@ -5243,9 +5243,9 @@
                             value={formData.mainHeating}
                             onChange={(v) => setFormData({ ...formData, mainHeating: v })}
                             options={[
-                                { id: 'electric', label: 'Electrique (PAC, convecteurs...)' },
-                                { id: 'gas', label: 'Gaz (chaudière autonome)' },
-                                { id: 'network', label: 'Réseau de chaleur urbain' },
+                                { id: 'electric', label: 'Électrique (radiateurs, pompe à chaleur)' },
+                                { id: 'gas', label: 'Gaz (chaudière)' },
+                                { id: 'network', label: 'Chauffage collectif (réseau de chaleur)' },
                                 { id: 'other', label: 'Autre (fioul, bois...)' }
                             ]}
                             placeholder="Sélectionnez..."
@@ -5272,7 +5272,7 @@
                     {/* ECS Section */}
                     <div className="mb-8">
                         <label className="block text-sm font-medium text-neutral-700 mb-4">
-                            Production d'eau chaude sanitaire (ECS) <span className="text-red-500">*</span>
+                            Eau chaude <span className="text-red-500">*</span>
                         </label>
                         <div className="grid md:grid-cols-2 gap-4 mb-4">
                             <button
@@ -5285,7 +5285,7 @@
                             >
                                 <Icon icon="solar:fire-bold" className={`text-2xl mb-2 block ${formData.ecsSameSystem ? 'text-[#1D4ED8]' : 'text-neutral-500'}`} />
                                 <div className="font-semibold text-neutral-900 mb-1">Même système que le chauffage</div>
-                                <div className="text-xs text-neutral-600">Chaudière mixte, PAC, ou réseau urbain</div>
+                                <div className="text-xs text-neutral-600">Chaudière, pompe à chaleur ou chauffage collectif</div>
                             </button>
                             <button
                                 type="button"
@@ -5296,7 +5296,7 @@
                                     }`}
                             >
                                 <Icon icon="solar:bath-bold" className={`text-2xl mb-2 block ${!formData.ecsSameSystem ? 'text-[#1D4ED8]' : 'text-neutral-500'}`} />
-                                <div className="font-semibold text-neutral-900 mb-1">Système indépendant / dédié</div>
+                                <div className="font-semibold text-neutral-900 mb-1">Système séparé (ballon électrique, etc.)</div>
                                 <div className="text-xs text-neutral-600">Ballon électrique, chauffe-eau gaz séparé, etc.</div>
                             </button>
                         </div>
@@ -5304,13 +5304,13 @@
                         {!formData.ecsSameSystem && (
                             <div className="fade-in">
                                 <NewDiagnosticFormSelect
-                                    label="Précisez le système dédié"
+                                    label="Quel type d'eau chaude ?"
                                     value={formData.ecsSystem}
                                     onChange={(v) => setFormData({ ...formData, ecsSystem: v })}
                                     options={[
                                         { id: 'electric_boiler', label: 'Chauffe-eau électrique (standard)' },
                                         { id: 'gas_boiler', label: 'Chauffe-eau gaz indépendant' },
-                                        { id: 'heat_pump', label: 'PAC thermodynamique' },
+                                        { id: 'heat_pump', label: 'Pompe à chaleur' },
                                         { id: 'solar', label: 'Solaire thermique' },
                                         { id: 'network_dedicated', label: 'Réseau de chaleur (échangeur dédié)' }
                                     ]}
@@ -5324,15 +5324,15 @@
 
                     <div className="mb-6">
                         <label className="block text-sm font-medium text-neutral-700 mb-2">
-                            Intensité d'usage
+                            Comment est utilisé votre local ?
                         </label>
                         <NewDiagnosticFormSelect
                             value={formData.usageIntensity}
                             onChange={(v) => setFormData({ ...formData, usageIntensity: v })}
                             options={[
                                 { id: 'low', label: 'Faible (ex: peu occupé, horaires limités)' },
-                                { id: 'standard', label: 'Standard (horaires de bureau classiques)' },
-                                { id: 'high', label: 'Intense (horaires étendus, week-ends, fort taux d\'occupation)' }
+                                { id: 'standard', label: 'Normal (horaires classiques, occupation régulière)' },
+                                { id: 'high', label: 'Intense (ouvert le week-end, beaucoup de passage)' }
                             ]}
                         />
                     </div>
@@ -5341,7 +5341,7 @@
                     <div role="group" aria-labelledby="bloc-enveloppe-title" className="p-5 bg-white border border-[#E2E8F0] rounded-xl shadow-sm mb-6">
                         <div className="flex items-center gap-2 mb-4">
                             <Icon icon="solar:home-angle-bold" aria-hidden="true" className="text-[#1D4ED8] text-xl" />
-                            <h3 id="bloc-enveloppe-title" className="font-semibold text-[#102A43]">Enveloppe du bâtiment</h3>
+                            <h3 id="bloc-enveloppe-title" className="font-semibold text-[#102A43]">Isolation et structure</h3>
                         </div>
                         <div className="mb-4">
                             <label className="block text-sm font-medium text-[#475569] mb-3">Année de construction <span className="text-red-500">*</span></label>
@@ -5433,7 +5433,7 @@
                                 >
                                     <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${formData.hasVmc ? 'left-5' : 'left-1'}`}></span>
                                 </div>
-                                <span className="text-sm font-medium text-[#475569]">Le bâtiment dispose d'une VMC</span>
+                                <span className="text-sm font-medium text-[#475569]">Avez-vous une ventilation mécanique ?</span>
                             </label>
                             {formData.hasVmc && (
                                 <select
@@ -5441,16 +5441,16 @@
                                     onChange={e => setFormData(p => ({ ...p, vmcType: e.target.value }))}
                                     className="new-diagnostic-select-surface mt-2 w-full border border-[#E2E8F0] rounded-lg p-2.5 text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]"
                                 >
-                                    <option value="">-- Type de VMC --</option>
-                                    <option value="simple_flux">Simple flux</option>
-                                    <option value="double_flux">Double flux</option>
+                                    <option value="">-- Type de ventilation --</option>
+                                    <option value="simple_flux">Ventilation simple</option>
+                                    <option value="double_flux">Ventilation performante (double flux)</option>
                                 </select>
                             )}
                         </div>
                         {formData.role === 'owner' && (
                             <div className="mb-2">
-                                <label className="block text-sm font-medium text-[#475569] mb-1">Accès et orientation de la toiture</label>
-                                <p className="text-xs text-[#475569] mb-2">Potentiel solaire (PV ou thermique)</p>
+                                <label className="block text-sm font-medium text-[#475569] mb-1">Votre toiture est-elle accessible ?</label>
+                                <p className="text-xs text-[#475569] mb-2">Pour panneaux solaires</p>
                                 <div className="grid grid-cols-3 gap-2">
                                     {[
                                         { val: 'yes', label: 'Accessible' },
@@ -5476,9 +5476,9 @@
                             </div>
                             {formData.activity === 'commerce_alim' && (
                                 <div className="pb-4 mb-4 border-b border-[#E2E8F0]">
-                                    <p className="text-xs font-semibold text-[#475569] uppercase tracking-wide mb-3">Froid commercial</p>
+                                    <p className="text-xs font-semibold text-[#475569] uppercase tracking-wide mb-3">Réfrigération</p>
                                     <div className="mb-3">
-                                        <label className="block text-sm font-medium text-[#475569] mb-2">Type de meubles frigorifiques</label>
+                                        <label className="block text-sm font-medium text-[#475569] mb-2">Avez-vous des vitrines ou meubles réfrigérés ?</label>
                                         <div className="grid grid-cols-2 gap-2">
                                             {[
                                                 { val: 'open_shelves', label: 'Ouverts', color: '#EF4444', bg: '#FEF2F2', border: '#FECACA' },
@@ -5495,12 +5495,12 @@
                                         </div>
                                     </div>
                                     <div className="mb-3">
-                                        <label className="block text-sm font-medium text-[#475569] mb-2">Âge des groupes froids</label>
+                                        <label className="block text-sm font-medium text-[#475569] mb-2">Depuis quand avez-vous ces équipements ?</label>
                                         <div className="grid grid-cols-3 gap-2">
                                             {[
-                                                { val: 'under5', label: '< 5 ans', color: '#16A34A', bg: '#F0FDF4', border: '#BBF7D0' },
-                                                { val: '5to15', label: '5–15 ans', color: '#F59E0B', bg: '#FFFBEB', border: '#FDE68A' },
-                                                { val: 'over15', label: '> 15 ans', color: '#EF4444', bg: '#FEF2F2', border: '#FECACA' },
+                                                { val: 'under5', label: 'Moins de 5 ans', color: '#16A34A', bg: '#F0FDF4', border: '#BBF7D0' },
+                                                { val: '5to15', label: '5 à 15 ans', color: '#F59E0B', bg: '#FFFBEB', border: '#FDE68A' },
+                                                { val: 'over15', label: 'Plus de 15 ans', color: '#EF4444', bg: '#FEF2F2', border: '#FECACA' },
                                             ].map(opt => (
                                                 <button key={opt.val} type="button"
                                                     onClick={() => setFormData(p => ({ ...p, coldEquipmentAge: opt.val }))}
@@ -5511,7 +5511,7 @@
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-[#475569] mb-1">Maintenance groupes froids</label>
+                                        <label className="block text-sm font-medium text-[#475569] mb-1">Entretien de la réfrigération</label>
                                         <select
                                             value={formData.coldMaintenanceStatus}
                                             onChange={e => setFormData(p => ({ ...p, coldMaintenanceStatus: e.target.value }))}
@@ -5544,7 +5544,7 @@
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-[#475569] mb-1">Maintenance froid cuisine</label>
+                                        <label className="block text-sm font-medium text-[#475569] mb-1">Entretien du froid en cuisine</label>
                                         <select
                                             value={formData.coldMaintenanceStatus}
                                             onChange={e => setFormData(p => ({ ...p, coldMaintenanceStatus: e.target.value }))}
@@ -5582,7 +5582,7 @@
                                         >
                                             <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${formData.hasGtb ? 'left-5' : 'left-1'}`}></span>
                                         </div>
-                                        <span className="text-sm font-medium text-[#475569]">GTB / Domotique en place</span>
+                                        <span className="text-sm font-medium text-[#475569]">Gestion automatisée (chauffage, éclairage...)</span>
                                     </label>
                                     <label className="flex items-center gap-3 cursor-pointer">
                                         <div
@@ -5655,9 +5655,9 @@
 
             return (
                 <div className="max-w-3xl mx-auto">
-                    <h2 className="text-2xl font-bold text-[#102A43] mb-2">Énergies</h2>
+                    <h2 className="text-2xl font-bold text-[#102A43] mb-2">Vos consommations d'énergie</h2>
                     <p className="text-[#475569] mb-8">
-                        Renseignez vos consommations annuelles (si vous les avez)
+                        Entrez vos chiffres, même approximatifs
                     </p>
 
                     {/* Erreurs bloquantes */}
@@ -5707,13 +5707,13 @@
                                     />
 
                                     <NewDiagnosticFormInput
-                                        label="Montant annuel TTC"
+                                        label="Montant annuel payé (toutes taxes)"
                                         value={formData.elecEuro}
                                         onChange={(v) => setFormData({ ...formData, elecEuro: v })}
                                         type="number"
                                         placeholder="23280"
                                         suffix="€/an"
-                                        helper="Total TTC sur l'année"
+                                        helper="Total annuel toutes taxes"
                                     />
                                 </div>
 
@@ -5761,13 +5761,13 @@
                                     />
 
                                     <NewDiagnosticFormInput
-                                        label="Montant annuel TTC"
+                                        label="Montant annuel payé (toutes taxes)"
                                         value={formData.gasEuro}
                                         onChange={(v) => setFormData({ ...formData, gasEuro: v })}
                                         type="number"
                                         placeholder="8000"
                                         suffix="€/an"
-                                        helper="Total TTC sur l'année"
+                                        helper="Total annuel toutes taxes"
                                     />
                                 </div>
 
@@ -5845,7 +5845,7 @@
             return (
                 <div className="max-w-2xl mx-auto">
                     <h2 className="text-2xl font-bold text-[#102A43] mb-2">Dernière étape</h2>
-                    <p className="text-[#475569] mb-8">Vos coordonnées et votre projet</p>
+                    <p className="text-[#475569] mb-8">Pour recevoir votre rapport par email</p>
 
                     {/* Coordonnées */}
                     <div className="mb-8 p-6 bg-white border border-[#E2E8F0] rounded-xl shadow-sm">
@@ -5987,7 +5987,7 @@
                                 />
                                 <div>
                                     <span className="text-sm text-neutral-700">
-                                        J'accepte la <a href="/politique-confidentialite.html" className="text-[#1D4ED8] underline" target="_blank">politique de confidentialité</a> *
+                                        J'accepte la <a href="/politique-confidentialite.html" className="text-[#1D4ED8] underline" target="_blank">politique de confidentialité</a> (vos données sont protégées et jamais revendues) *
                                     </span>
                                     {errors.opt_in_politique && (
                                         <p className="text-xs text-red-500 mt-1">{errors.opt_in_politique}</p>
@@ -6002,8 +6002,8 @@
                                     className="mt-1 w-5 h-5 text-green-600 rounded"
                                 />
                                 <div>
-                                    <span className="text-sm font-semibold text-green-800">Je souhaite etre recontacte pour approfondir mon projet</span>
-                                    <p className="text-xs text-green-700 mt-1">Optionnel. Nous pouvons revenir vers vous pour approfondir votre projet.</p>
+                                    <span className="text-sm font-semibold text-green-800">Je souhaite être contacté par un expert en énergie si mon rapport le justifie</span>
+                                    <p className="text-xs text-green-700 mt-1">Gratuit et sans engagement. Nos experts sont sélectionnés pour leur sérieux.</p>
                                 </div>
                             </label>
                         </div>
@@ -6021,7 +6021,7 @@
                                 : 'bg-neutral-200 text-neutral-400 cursor-not-allowed'
                                 }`}
                         >
-                            Voir mon rapport →
+                            Voir mon rapport gratuit →
                         </button>
                     </div>
                 </div>
@@ -6038,7 +6038,7 @@
         const NEW_DIAGNOSTIC_TIER_LABELS = {
             light: {
                 label: 'Actions rapides (sans gros travaux)',
-                subtitle: 'Faible investissement · ROI court · sans travaux lourds',
+                subtitle: 'Faible investissement · Retour rapide · sans travaux lourds',
                 color: '#16A34A', bg: '#F0FDF4', border: '#BBF7D0',
                 icon: 'solar:bolt-bold'
             },
@@ -6437,17 +6437,17 @@
                     annualSavings: 'Économie estimée / an',
                     energyGain: 'Gain estimé',
                     budget: 'Budget travaux estimé',
-                    roi: 'ROI*'
+                    roi: 'Rentabilisé en'
                 },
                 budgetTiles: {
                     works: 'Budget travaux estimé',
                     aids: 'Aides estimées',
                     net: 'Budget net',
                     annual: 'Économies / an',
-                    roi: 'ROI indicatif'
+                    roi: 'Rentabilisé en'
                 },
                 empty: "Aucune action prioritaire suffisamment robuste ne ressort avec le niveau de données actuel. Un cadrage expert est recommandé avant arbitrage.",
-                footnote: '* ROI : temps de retour sur investissement'
+                footnote: '* Retour sur investissement indicatif'
             },
             impact: {
                 title: 'Impact écologique estimé',
@@ -6547,7 +6547,7 @@
             cooling: 'Climatisation',
             ventilation: 'Ventilation',
             lighting: 'Eclairage',
-            dhw: 'ECS',
+            dhw: 'Eau chaude',
             envelope: 'Enveloppe',
             other_specific: 'Autres usages'
         };
@@ -7210,13 +7210,13 @@
 
             const decisionReadout = newDiagnosticBuildDecisionReadout(reportPayload);
             const budgetProgram = newDiagnosticBuildProgramBudget(actions, composite.annual_euro.value);
-            const roleLabel = role === 'tenant' ? 'Locataire exploitant' : role === 'owner' ? 'Propriétaire' : 'Partie prenante';
+            const roleLabel = role === 'tenant' ? 'Locataire / Gestionnaire' : role === 'owner' ? 'Propriétaire' : 'Partie prenante';
             const benchmarkGap = Math.round(benchmark.site_intensity.value - benchmark.benchmark_median.value);
             const benchmarkGapText = benchmarkGap > 0
-                ? `Vous êtes à +${newDiagnosticFormatInteger(benchmarkGap)} kWh/m²/an au-dessus de la médiane sectorielle.`
+                ? `Vous êtes à +${newDiagnosticFormatInteger(benchmarkGap)} kWh/m²/an au-dessus de la moyenne de votre secteur.`
                 : benchmarkGap < 0
-                    ? `Vous êtes à ${newDiagnosticFormatInteger(Math.abs(benchmarkGap))} kWh/m²/an sous la médiane sectorielle.`
-                    : 'Vous êtes au niveau de la médiane sectorielle.';
+                    ? `Vous êtes à ${newDiagnosticFormatInteger(Math.abs(benchmarkGap))} kWh/m²/an sous la moyenne de votre secteur.`
+                    : 'Vous êtes au niveau de la moyenne de votre secteur.';
             const benchmarkComment = targetIntensity <= benchmark.benchmark_low.value
                 ? 'La cible suggérée vous rapproche de la zone basse du secteur.'
                 : targetIntensity <= benchmark.benchmark_median.value
@@ -7439,7 +7439,7 @@
                                             </div>
                                             <div className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/10 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-slate-200">
                                                 <Icon icon="solar:document-text-bold" className="text-base" />
-                                                Rapport pré-diagnostic
+                                                Votre comparatif énergétique
                                             </div>
                                         </div>
                                         {(() => {
@@ -7545,7 +7545,7 @@
                                     <HeroKpiCard icon="solar:wallet-bold" label="Coût annuel actuel" value={formatMoney(calc.total_cost_euro_an.value)} sub="Charges énergie estimées" tone={{ bg: 'bg-slate-100', text: 'text-slate-700' }} />
                                     <HeroKpiCard icon="solar:leaf-bold" label="Économie annuelle" value={formatMoney(composite.annual_euro.value)} sub="3 actions prioritaires visibles" tone={{ bg: 'bg-emerald-50', text: 'text-emerald-700' }} />
                                     <HeroKpiCard icon="solar:wallet-bold" label="Budget net indicatif" value={formatMoney(budgetProgram.capex_net)} sub="Même périmètre, aides déduites" tone={{ bg: 'bg-indigo-50', text: 'text-indigo-700' }} />
-                                    <HeroKpiCard icon="solar:chart-square-bold" label="ROI indicatif" value={budgetProgram.roi_global_years !== null ? formatYears(budgetProgram.roi_global_years) : 'À confirmer'} sub="Ordre de grandeur à confirmer" tone={{ bg: 'bg-amber-50', text: 'text-amber-700' }} />
+                                    <HeroKpiCard icon="solar:chart-square-bold" label="Rentabilisé en" value={budgetProgram.roi_global_years !== null ? formatYears(budgetProgram.roi_global_years) : 'À confirmer'} sub="Ordre de grandeur à confirmer" tone={{ bg: 'bg-amber-50', text: 'text-amber-700' }} />
                                 </div>
 
                                 <div className="report-subcard p-5 mb-5 border-l-4" style={{ borderLeftColor: diagIndex.color }}>
@@ -7636,7 +7636,7 @@
                                             const keysToMap = [
                                                 { k: 'heating_pct', n: 'Chauffage', color: '#EF4444' },
                                                 { k: 'cooling_pct', n: 'Climatisation', color: '#3B82F6' },
-                                                { k: 'dhw_pct', n: 'ECS', color: '#F59E0B' },
+                                                { k: 'dhw_pct', n: 'Eau chaude', color: '#F59E0B' },
                                                 { k: 'lighting_pct', n: 'Éclairage', color: '#EAB308' },
                                                 { k: 'vent_aux_pct', n: 'Ventilation', color: '#8B5CF6' },
                                                 { k: 'cooking_pct', n: 'Cuisson', color: '#F97316' },
@@ -7761,7 +7761,7 @@
                                             <p className="text-sm text-yellow-800">
                                                 <Icon icon="solar:info-circle-linear" className="inline mr-1" />
                                                 <strong>Action requise :</strong> Vous devez déclarer vos consommations sur la plateforme OPERAT
-                                                et établir un plan d'actions pour atteindre les objectifs. Ce pré-diagnostic peut servir de base
+                                                et établir un plan d'actions pour atteindre les objectifs. Ce comparatif peut servir de base
                                                 pour identifier vos priorités.
                                             </p>
                                         </div>
@@ -7836,7 +7836,7 @@
                                 <Icon icon="solar:check-read-bold" className="text-[#1D4ED8]" />
                                 Plan d'actions recommandé
                             </h2>
-                            <p className="text-sm text-slate-500 mt-1 mb-6">Actions sélectionnées selon le rapport gain/effort et un ROI ≤ 10 ans.</p>
+                            <p className="text-sm text-slate-500 mt-1 mb-6">Actions sélectionnées selon le rapport gain/effort et un retour ≤ 10 ans.</p>
 
                             {(() => {
                                 const MAX_ROI = 10;
@@ -7914,7 +7914,7 @@
                                             </div>
                                             <div className="grid grid-cols-3 gap-2 text-center mb-3">
                                                 <div className="bg-emerald-50 rounded-lg p-2">
-                                                    <p className="text-[9px] text-emerald-700 font-bold uppercase tracking-wide mb-0.5">Gain/an</p>
+                                                    <p className="text-[9px] text-emerald-700 font-bold uppercase tracking-wide mb-0.5">Économie par an</p>
                                                     <p className="text-sm font-black text-emerald-700 leading-none">{formatMoney(action.gain_euro_an?.value || 0)}</p>
                                                 </div>
                                                 <div className="bg-slate-50 rounded-lg p-2">
@@ -7922,7 +7922,7 @@
                                                     <p className="text-sm font-black text-slate-900 leading-none">{formatMoney(capexNet)}</p>
                                                 </div>
                                                 <div className="bg-amber-50 rounded-lg p-2">
-                                                    <p className="text-[9px] text-amber-700 font-bold uppercase tracking-wide mb-0.5">ROI</p>
+                                                    <p className="text-[9px] text-amber-700 font-bold uppercase tracking-wide mb-0.5">Rentabilisé en</p>
                                                     <p className="text-sm font-black text-amber-700 leading-none">{roiStr}</p>
                                                 </div>
                                             </div>
@@ -7952,9 +7952,9 @@
                                                             <tr>
                                                                 <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wide text-slate-400 w-10">#</th>
                                                                 <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wide text-slate-400">Action</th>
-                                                                <th className="px-4 py-3 text-right text-[10px] font-bold uppercase tracking-wide text-slate-400">Gain / an</th>
-                                                                <th className="px-4 py-3 text-right text-[10px] font-bold uppercase tracking-wide text-slate-400">Budget</th>
-                                                                <th className="px-4 py-3 text-right text-[10px] font-bold uppercase tracking-wide text-slate-400">ROI</th>
+                                                                <th className="px-4 py-3 text-right text-[10px] font-bold uppercase tracking-wide text-slate-400">Économie / an</th>
+                                                                <th className="px-4 py-3 text-right text-[10px] font-bold uppercase tracking-wide text-slate-400">Investissement estimé</th>
+                                                                <th className="px-4 py-3 text-right text-[10px] font-bold uppercase tracking-wide text-slate-400">Rentabilisé en</th>
                                                                 <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wide text-slate-400">Effort</th>
                                                             </tr>
                                                         </thead>
@@ -7989,7 +7989,7 @@
                                     <>
                                         <ActionGroup
                                             title="Sans gros travaux"
-                                            subtitle="Faible investissement · mise en œuvre simple · ROI rapide"
+                                            subtitle="Faible investissement · mise en œuvre simple · retour rapide"
                                             groupActions={lightGroup}
                                             icon="solar:bolt-bold"
                                             hdrBg="bg-emerald-50 border border-emerald-100"
@@ -8031,7 +8031,7 @@
                                                                 {complementaryAid > 0 && <p className="text-[11px] text-blue-600 mt-1">Aides estimées : {formatMoney(complementaryAid)}</p>}
                                                             </div>
                                                             <div className="rounded-2xl border border-amber-100 bg-white px-4 py-3">
-                                                                <p className="text-[10px] font-bold uppercase tracking-wide text-amber-700">ROI indicatif</p>
+                                                                <p className="text-[10px] font-bold uppercase tracking-wide text-amber-700">Rentabilisé en</p>
                                                                 <p className="text-lg font-black text-amber-700 mt-1">{complementaryRoi}</p>
                                                                 <p className="text-[11px] text-slate-400 mt-1">Levier complémentaire à confirmer sur site</p>
                                                             </div>
@@ -8082,7 +8082,7 @@
                                         <div className="min-w-0">
                                             <p className="text-[32px] font-black text-slate-900 leading-none">{newDiagnosticFormatInteger(co2Eq.arbres)}</p>
                                             <p className="text-xs font-bold uppercase tracking-wide text-slate-500 mt-1.5">Arbres équivalents / an</p>
-                                            <p className="text-[10px] text-slate-400 mt-0.5">séquestration ADEME</p>
+                                            <p className="text-[10px] text-slate-400 mt-0.5">séquestration carbone</p>
                                         </div>
                                     </div>
                                     <div className="report-subcard p-5 flex items-center gap-4">
@@ -8252,7 +8252,7 @@
                         <div className="mt-6 pt-5 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
                             <div className="flex items-center gap-2.5">
                                 <DiagTertiaireBrand dark={false} size={18} />
-                                <span className="text-xs text-slate-600 font-semibold">Pré-diagnostic énergétique · DiagTertiaire</span>
+                                <span className="text-xs text-slate-600 font-semibold">Votre comparatif énergétique · DiagTertiaire</span>
                             </div>
                             <p className="text-[11px] text-slate-500 text-center sm:text-right leading-relaxed max-w-xs">
                                 Estimations fondées sur données déclaratives et références sectorielles. Non substitutif à un audit réglementaire.
@@ -8582,7 +8582,7 @@
                                     <Icon icon="solar:pen-bold" className="text-base" />
                                     Modifier mon rapport
                                 </button>
-                                <span className="ml-auto text-[11px] text-slate-400 hidden sm:block">Pré-diagnostic énergétique · DiagTertiaire</span>
+                                <span className="ml-auto text-[11px] text-slate-400 hidden sm:block">Votre comparatif énergétique · DiagTertiaire</span>
                             </div>
                         </div>
 

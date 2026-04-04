@@ -28,7 +28,11 @@
       "Bash(rm -f c:/Users/yanni/Diag-tertaireV3/api/.claude/commands/fix.md c:/Users/yanni/Diag-tertaireV3/api/.claude/commands/feature.md c:/Users/yanni/Diag-tertaireV3/api/.claude/commands/check.md)",
       "Bash(rmdir c:/Users/yanni/Diag-tertaireV3/api/.claude/commands)",
       "Bash(echo \"dev refs: $?\")",
-      "Bash(python3 _restructure.py)"
+      "Bash(python3 _restructure.py)",
+      "Bash(sed -i \"s/ROI court · sans travaux lourds/Retour rapide · sans travaux lourds/g\" index.html)",
+      "Bash(sed -i \"s/mise en œuvre simple · ROI rapide/mise en œuvre simple · retour rapide/g\" index.html)",
+      "Bash(sed -i \"s/'ROI moyen'/'Rentabilité moyenne'/g\" index.html)",
+      "Bash(sed -i \"s/un ROI ≤ 10 ans/un retour ≤ 10 ans/g\" index.html)"
     ]
   }
 }

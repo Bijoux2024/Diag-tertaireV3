@@ -1853,6 +1853,108 @@ const newDiagnosticRunSplitUnitTests = () => {
 };
 
 /* ─────────────────────────────────────────────────────────────────────────
+   TESTS RAPPORT COMPLET v1.5.0 (T8-T15)
+   ───────────────────────────────────────────────────────────────────────── */
+const newDiagnosticRunReportUnitTests = () => {
+    const _base = (overrides) => ({
+        activity: 'offices', surface: '300', buildingAge: '2001_2012',
+        mainHeating: 'gas', ecsSameSystem: true, boilerAge: '5to15',
+        hasCooling: true, hasVmc: false, vmcType: '',
+        roofType: 'flat', roofOrientation: '',
+        roofInsulation: 'unknown', wallInsulation: 'unknown',
+        levels: '1', worksDone: [], role: 'owner', postalCode: '75000',
+        elecUsed: true, elecKwh: '', elecEuro: '0',
+        gasUsed: true, gasKwh: '', gasEuro: '0',
+        elecIncludesSubscription: false, gasIncludesSubscription: false,
+        ...overrides
+    });
+
+    const TESTS = [
+        {
+            name: 'T8 -- Commerce fioul : mainHeating dans inputs_summary',
+            fd: _base({ activity: 'retail', mainHeating: 'fuel', elecKwh: '20000', gasKwh: '40000' }),
+            check: (r) => {
+                if (!r) throw new Error('Rapport null');
+                if (!r.inputs_summary?.mainHeating) throw new Error('mainHeating manquant dans inputs_summary');
+                if (r.inputs_summary.mainHeating !== 'fuel') throw new Error('mainHeating = ' + r.inputs_summary.mainHeating + ' (attendu fuel)');
+            }
+        },
+        {
+            name: 'T9 -- Hotel reseau chaleur : rapport non null',
+            fd: _base({ activity: 'hotel', mainHeating: 'network', elecKwh: '30000', gasKwh: '50000' }),
+            check: (r) => {
+                if (!r) throw new Error('Rapport null');
+                if (!r.inputs_summary?.mainHeating) throw new Error('mainHeating manquant dans inputs_summary');
+            }
+        },
+        {
+            name: 'T10 -- Commerce retail mediane = 210',
+            fd: _base({ activity: 'retail', mainHeating: 'gas', elecKwh: '30000', gasKwh: '20000' }),
+            check: (r) => {
+                if (!r) throw new Error('Rapport null');
+                const mediane = r.benchmark_result?.benchmark_median?.value;
+                if (mediane !== 210) throw new Error('Mediane retail = ' + mediane + ' (attendu 210)');
+            }
+        },
+        {
+            name: 'T11 -- Bureau avant 1975 : rapport non null',
+            fd: _base({ activity: 'offices', buildingAge: 'pre1975', elecKwh: '30000', gasKwh: '20000' }),
+            check: (r) => {
+                if (!r) throw new Error('Rapport null');
+            }
+        },
+        {
+            name: 'T12 -- Bureau post-2012 : rapport non null',
+            fd: _base({ activity: 'offices', buildingAge: 'post2012', mainHeating: 'electric', elecKwh: '40000', gasKwh: '0' }),
+            check: (r) => {
+                if (!r) throw new Error('Rapport null');
+            }
+        },
+        {
+            name: 'T13 -- Hotel toiture plate : rapport non null',
+            fd: _base({ activity: 'hotel', roofType: 'flat', elecKwh: '50000', gasKwh: '80000' }),
+            check: (r) => {
+                if (!r) throw new Error('Rapport null');
+            }
+        },
+        {
+            name: 'T14 -- Bureau sans toiture : aucun PV (ACT22)',
+            fd: _base({ activity: 'offices', roofType: 'none', mainHeating: 'electric', elecKwh: '40000', gasKwh: '0' }),
+            check: (r) => {
+                if (!r) throw new Error('Rapport null');
+                const pvAction = (r.top_actions || []).find(a => a.id === 'ACT22');
+                if (pvAction) throw new Error('PV recommande malgre roofType=none');
+            }
+        },
+        {
+            name: 'T15 -- Restaurant ventilation = 12%',
+            fd: _base({ activity: 'restaurant', mainHeating: 'gas', elecKwh: '40000', gasKwh: '60000' }),
+            check: (r) => {
+                if (!r) throw new Error('Rapport null');
+                const ventPct = r.split_result?.breakdown_pct?.vent_aux_pct;
+                if (ventPct !== 12) throw new Error('Ventilation restaurant = ' + ventPct + '% (attendu 12%)');
+            }
+        }
+    ];
+
+    const results = [];
+    for (const t of TESTS) {
+        try {
+            const r = newDiagnosticBuildReportData(t.fd);
+            t.check(r);
+            results.push({ name: t.name, status: 'PASS' });
+        } catch (e) {
+            results.push({ name: t.name, status: 'FAIL', error: e.message });
+            console.error(t.name + ': ' + e.message);
+        }
+    }
+    console.table(results);
+    const allPass = results.every(r => r.status === 'PASS');
+    console.info(allPass ? '[T8-T15] Tous les tests passent' : '[T8-T15] Des tests ont echoue');
+    return results;
+};
+
+/* ─────────────────────────────────────────────────────────────────────────
    HELPERS : GAINS COMPOSÉS + CAP
    ───────────────────────────────────────────────────────────────────────── */
 

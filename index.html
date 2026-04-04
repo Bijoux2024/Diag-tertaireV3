@@ -2345,8 +2345,8 @@
                 ecsSystem: 'electric_boiler',
                 hasVmc: true,
                 vmcType: 'simple_flux',
-                roofAccessible: 'yes',
-                usageIntensity: 'standard',
+                roofType: 'flat',
+                roofOrientation: '',
 
                 hasGtb: false,
                 hasExteriorLighting: true,
@@ -3360,17 +3360,18 @@
             // === ÉTAPE 2 : Bâtiment ===
             surface: '',
             buildingAge: '',       // 'pre1975' | '1975_2000' | '2001_2012' | 'post2012'
+            roofType: '',          // 'flat' | 'pitched' | 'none'
+            roofOrientation: '',   // 'south' | 'east' | 'west' | 'north' | 'unknown'
             roofInsulation: '',    // 'yes' | 'no' | 'unknown'
             wallInsulation: '',    // 'yes' | 'no' | 'unknown'
             mainHeating: '',
             boilerAge: '',         // 'under5' | '5to15' | '15to20' | 'over20'
             hasCooling: false,
+            ceilingHeight: '',
             ecsSameSystem: true,
             ecsSystem: '',
             hasVmc: false,
             vmcType: '',           // 'natural' | 'simple_flux' | 'double_flux'
-            roofAccessible: '',    // 'yes' | 'no' | 'unknown'
-            usageIntensity: 'standard',
             hasGtb: false,
 
             // === ÉTAPE 3 : Énergies ===
@@ -3378,12 +3379,10 @@
             elecKwh: '',
             elecEuro: '',
             elecIncludesSubscription: false,
-            elecSubscriptionYearly: '',
             gasUsed: false,
             gasKwh: '',
             gasEuro: '',
             gasIncludesSubscription: false,
-            gasSubscriptionYearly: '',
 
             // === ÉTAPE 4 : Contact + Qualification ===
             firstName: '',
@@ -3418,8 +3417,8 @@
             ecsSystem: 'electric_boiler',
             hasVmc: true,
             vmcType: 'simple_flux',
-            roofAccessible: 'yes',
-            usageIntensity: 'standard',
+            roofType: 'flat',
+            roofOrientation: '',
             hasGtb: false,
             elecUsed: true,
             elecKwh: '31500',
@@ -3517,22 +3516,6 @@
                 }
             }
 
-            // Warning abonnement coché mais vide
-            if (formData.elecIncludesSubscription && !formData.elecSubscriptionYearly) {
-                errors.push({
-                    type: 'warning',
-                    code: 'SUBSCRIPTION_INCLUDED_NO_VALUE',
-                    message: 'Électricité : abonnement coché mais montant non renseigné (estimation moins précise)'
-                });
-            }
-
-            if (formData.gasIncludesSubscription && !formData.gasSubscriptionYearly) {
-                errors.push({
-                    type: 'warning',
-                    code: 'SUBSCRIPTION_INCLUDED_NO_VALUE',
-                    message: 'Gaz : abonnement coché mais montant non renseigné (estimation moins précise)'
-                });
-            }
 
             return errors;
         };
@@ -5168,6 +5151,12 @@
         };
 
         // Étape 2 : Bâtiment & Usage
+        const DEFAULT_CEILING_HEIGHT = {
+            offices: 2.7, retail: 3.0, retail_food: 3.2, hotel: 2.5,
+            restaurant: 2.8, education: 3.0, warehouse_heated: 5.0,
+            light_warehouse: 6.0, health_local: 2.7
+        };
+
         const NewDiagnosticStep2Building = ({ formData, setFormData, onNext, onBack }) => {
             const [errors, setErrors] = useState({});
             const isMixed = formData.activity === 'mixed';
@@ -5204,16 +5193,32 @@
                     <h2 className="text-2xl font-bold text-[#102A43] mb-2">Votre bâtiment</h2>
                     <p className="text-[#475569] mb-8">Quelques détails sur votre local</p>
 
-                    <NewDiagnosticFormInput
-                        label="Surface totale"
-                        value={formData.surface}
-                        onChange={(v) => setFormData({ ...formData, surface: v })}
-                        type="number"
-                        placeholder="300"
-                        suffix="m²"
-                        required
-                        error={errors.surface}
-                    />
+                    <div className="grid grid-cols-2 gap-4 mb-0">
+                        <NewDiagnosticFormInput
+                            label="Surface totale"
+                            value={formData.surface}
+                            onChange={(v) => setFormData({ ...formData, surface: v })}
+                            type="number"
+                            placeholder="300"
+                            suffix="m²"
+                            required
+                            error={errors.surface}
+                        />
+                        <div className="mb-8">
+                            <label className="block text-sm font-medium text-[#475569] mb-2">Hauteur sous plafond (m)</label>
+                            <input
+                                type="number"
+                                step="0.1"
+                                min="2"
+                                max="15"
+                                value={formData.ceilingHeight || DEFAULT_CEILING_HEIGHT[formData.activity] || 2.7}
+                                onChange={(e) => setFormData({ ...formData, ceilingHeight: e.target.value })}
+                                className="w-full px-4 py-2 border border-[#E2E8F0] rounded-xl text-sm"
+                                placeholder="2.7"
+                            />
+                            <p className="text-xs text-[#94A3B8] mt-1">Pre-rempli selon votre activite, modifiable</p>
+                        </div>
+                    </div>
 
                     {isMixed && (
                         <div className="mb-8 p-5 bg-white border border-[#E2E8F0] rounded-xl shadow-sm">
@@ -5322,21 +5327,6 @@
                         )}
                     </div>
 
-                    <div className="mb-6">
-                        <label className="block text-sm font-medium text-neutral-700 mb-2">
-                            Comment est utilisé votre local ?
-                        </label>
-                        <NewDiagnosticFormSelect
-                            value={formData.usageIntensity}
-                            onChange={(v) => setFormData({ ...formData, usageIntensity: v })}
-                            options={[
-                                { id: 'low', label: 'Faible (ex: peu occupé, horaires limités)' },
-                                { id: 'standard', label: 'Normal (horaires classiques, occupation régulière)' },
-                                { id: 'high', label: 'Intense (ouvert le week-end, beaucoup de passage)' }
-                            ]}
-                        />
-                    </div>
-
                     {/* ── BLOC A — Enveloppe ────────────────────────────────────────────── */}
                     <div role="group" aria-labelledby="bloc-enveloppe-title" className="p-5 bg-white border border-[#E2E8F0] rounded-xl shadow-sm mb-6">
                         <div className="flex items-center gap-2 mb-4">
@@ -5351,7 +5341,7 @@
                                         key={age.id}
                                         type="button"
                                         onClick={() => setFormData({ ...formData, buildingAge: age.id })}
-                                        className={`p-4 rounded-xl border-2 text-center transition-all ${formData.buildingAge === age.id
+                                        className={`min-h-[48px] px-4 py-3 rounded-xl border-2 text-center transition-all ${formData.buildingAge === age.id
                                             ? 'border-[#1D4ED8] bg-[#EFF6FF]'
                                             : 'border-[#E2E8F0] hover:border-[#1D4ED8]/40'
                                             }`}
@@ -5449,20 +5439,41 @@
                         </div>
                         {formData.role === 'owner' && (
                             <div className="mb-2">
-                                <label className="block text-sm font-medium text-[#475569] mb-1">Votre toiture est-elle accessible ?</label>
-                                <p className="text-xs text-[#475569] mb-2">Pour panneaux solaires</p>
-                                <div className="grid grid-cols-3 gap-2">
+                                <label className="block text-sm font-medium text-[#475569] mb-1">Type de toiture</label>
+                                <div className="grid grid-cols-3 gap-2 mb-3">
                                     {[
-                                        { val: 'yes', label: 'Accessible' },
-                                        { val: 'no', label: 'Non accessible' },
-                                        { val: 'unknown', label: 'Je ne sais pas' },
+                                        { val: 'flat', label: 'Terrasse (plate)', icon: 'solar:home-linear' },
+                                        { val: 'pitched', label: 'Inclinee', icon: 'solar:home-angle-linear' },
+                                        { val: 'none', label: 'Pas de toiture exploitable', icon: 'solar:buildings-linear' },
                                     ].map(opt => (
                                         <button key={opt.val} type="button"
-                                            onClick={() => setFormData(p => ({ ...p, roofAccessible: opt.val }))}
-                                            className={`py-2 px-3 rounded-lg border text-sm font-medium transition-all ${formData.roofAccessible === opt.val ? 'bg-[#EFF6FF] border-[#1D4ED8] text-[#1D4ED8] border-2' : 'border-[#E2E8F0] text-[#475569] hover:border-[#1D4ED8]'}`}
-                                        >{opt.label}</button>
+                                            onClick={() => setFormData(p => ({ ...p, roofType: opt.val, roofOrientation: opt.val !== 'pitched' ? '' : p.roofOrientation }))}
+                                            className={`min-h-[72px] py-2 px-3 rounded-xl border-2 text-sm font-medium transition-all flex flex-col items-center justify-center gap-1 ${formData.roofType === opt.val ? 'bg-[#EFF6FF] border-[#1D4ED8] text-[#1D4ED8]' : 'border-[#E2E8F0] text-[#475569] hover:border-[#1D4ED8]'}`}
+                                        >
+                                            <Icon icon={opt.icon} className="text-2xl" aria-hidden="true" />
+                                            <span>{opt.label}</span>
+                                        </button>
                                     ))}
                                 </div>
+                                {formData.roofType === 'pitched' && (
+                                    <div className="mt-2">
+                                        <label className="block text-sm font-medium text-[#475569] mb-1">Orientation principale</label>
+                                        <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                                            {[
+                                                { val: 'south', label: 'Sud' },
+                                                { val: 'east', label: 'Est' },
+                                                { val: 'west', label: 'Ouest' },
+                                                { val: 'north', label: 'Nord' },
+                                                { val: 'unknown', label: 'Je ne sais pas' },
+                                            ].map(opt => (
+                                                <button key={opt.val} type="button"
+                                                    onClick={() => setFormData(p => ({ ...p, roofOrientation: opt.val }))}
+                                                    className={`py-2 px-2 rounded-lg border-2 text-xs font-medium transition-all ${formData.roofOrientation === opt.val ? 'bg-[#EFF6FF] border-[#1D4ED8] text-[#1D4ED8]' : 'border-[#E2E8F0] text-[#475569] hover:border-[#1D4ED8]'}`}
+                                                >{opt.label}</button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>
@@ -5721,20 +5732,8 @@
                                     label="Mon montant inclut l'abonnement"
                                     checked={formData.elecIncludesSubscription}
                                     onChange={(v) => setFormData({ ...formData, elecIncludesSubscription: v })}
-                                    helper="Si vous cochez cette case et renseignez l'abonnement, on l'enlèvera pour estimer la consommation"
+                                    helper="L'abonnement sera deduit automatiquement selon votre profil de consommation"
                                 />
-
-                                {formData.elecIncludesSubscription && (
-                                    <NewDiagnosticFormInput
-                                        label="Abonnement annuel"
-                                        value={formData.elecSubscriptionYearly}
-                                        onChange={(v) => setFormData({ ...formData, elecSubscriptionYearly: v })}
-                                        type="number"
-                                        placeholder="150"
-                                        suffix="€/an"
-                                        helper="Montant de l'abonnement seul (hors consommation)"
-                                    />
-                                )}
                             </div>
                         )}
                     </div>
@@ -5775,23 +5774,36 @@
                                     label="Mon montant inclut l'abonnement"
                                     checked={formData.gasIncludesSubscription}
                                     onChange={(v) => setFormData({ ...formData, gasIncludesSubscription: v })}
-                                    helper="Si vous cochez cette case et renseignez l'abonnement, on l'enlèvera pour estimer la consommation"
+                                    helper="L'abonnement sera deduit automatiquement selon votre profil de consommation"
                                 />
-
-                                {formData.gasIncludesSubscription && (
-                                    <NewDiagnosticFormInput
-                                        label="Abonnement annuel"
-                                        value={formData.gasSubscriptionYearly}
-                                        onChange={(v) => setFormData({ ...formData, gasSubscriptionYearly: v })}
-                                        type="number"
-                                        placeholder="120"
-                                        suffix="€/an"
-                                        helper="Montant de l'abonnement seul (hors consommation)"
-                                    />
-                                )}
                             </div>
                         )}
                     </div>
+
+                    {(() => {
+                        const _activity = formData.activity || 'offices';
+                        const _surface = parseFloat(formData.surface) || 100;
+                        const _bench = NEW_DIAGNOSTIC_BENCHMARKS_INTENSITY[_activity];
+                        if (!_bench) return null;
+                        const _medianeKwh = _bench.median_kwh_m2_an * _surface;
+                        const _elecVal = parseFloat(formData.elecKwh) || (parseFloat(formData.elecEuro) || 0) / 0.196;
+                        const _gasVal = parseFloat(formData.gasKwh) || (parseFloat(formData.gasEuro) || 0) / 0.108;
+                        const _totalEstime = _elecVal + _gasVal;
+                        if (_totalEstime <= 0) return null;
+                        if (_totalEstime > _medianeKwh * 2.5) {
+                            return React.createElement('p', { className: 'text-amber-600 text-xs mt-2 flex items-center gap-1' },
+                                React.createElement('iconify-icon', { icon: 'solar:danger-triangle-linear' }),
+                                ' Verifiez que le montant correspond bien a une facture annuelle (et non mensuelle)'
+                            );
+                        }
+                        if (_totalEstime < _medianeKwh * 0.3) {
+                            return React.createElement('p', { className: 'text-amber-600 text-xs mt-2 flex items-center gap-1' },
+                                React.createElement('iconify-icon', { icon: 'solar:danger-triangle-linear' }),
+                                ' Cette consommation semble faible pour votre surface et activite'
+                            );
+                        }
+                        return null;
+                    })()}
 
                     <div className="flex justify-between mt-8">
                         <button

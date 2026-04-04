@@ -984,9 +984,15 @@
       });
 
       // ── CO₂ impact ────────────────────────────────────────────────────────
+      const _mainHeatingPr = inputs.mainHeating || 'gas';
+      const _nonElecCo2Pr = (_mainHeatingPr === 'fuel' || _mainHeatingPr === 'fioul')
+        ? 0.324
+        : (_mainHeatingPr === 'network')
+            ? 0.100
+            : 0.227;
       const totKnownPr  = elecKwhPr + gasKwhPr;
       const co2FactorPr = totKnownPr > 0
-        ? (elecKwhPr / totKnownPr) * 0.079 + (gasKwhPr / totKnownPr) * 0.227
+        ? (elecKwhPr / totKnownPr) * 0.079 + (gasKwhPr / totKnownPr) * _nonElecCo2Pr
         : 0.12;
       const co2EvitePr  = Math.max(0, Math.round(annualKwh * co2FactorPr));
       const co2ArbPr    = Math.round(co2EvitePr / 22);
@@ -1703,6 +1709,16 @@
                       <span>{item}</span>
                     </li>
                   ))}
+                  <li className="pba" style={{
+                    display: 'flex', gap: 8, fontSize: 10, color: '#475569',
+                    lineHeight: 1.5, marginBottom: 6,
+                  }}>
+                    <span style={{
+                      width: 6, height: 6, borderRadius: '50%',
+                      background: '#818CF8', flexShrink: 0, marginTop: 4,
+                    }} />
+                    <span>Abonnement electrique et gaz deduit automatiquement selon le profil de consommation</span>
+                  </li>
                 </ul>
               </div>
             </div>

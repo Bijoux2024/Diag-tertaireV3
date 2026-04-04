@@ -984,9 +984,15 @@
       });
 
       // ── CO₂ impact ────────────────────────────────────────────────────────
+      const _mainHeatingPr = inputs.mainHeating || 'gas';
+      const _nonElecCo2Pr = (_mainHeatingPr === 'fuel' || _mainHeatingPr === 'fioul')
+        ? 0.324
+        : (_mainHeatingPr === 'network')
+            ? 0.100
+            : 0.227;
       const totKnownPr  = elecKwhPr + gasKwhPr;
       const co2FactorPr = totKnownPr > 0
-        ? (elecKwhPr / totKnownPr) * 0.079 + (gasKwhPr / totKnownPr) * 0.227
+        ? (elecKwhPr / totKnownPr) * 0.079 + (gasKwhPr / totKnownPr) * _nonElecCo2Pr
         : 0.12;
       const co2EvitePr  = Math.max(0, Math.round(annualKwh * co2FactorPr));
       const co2ArbPr    = Math.round(co2EvitePr / 22);

@@ -2335,7 +2335,7 @@
                 activity: 'offices',
 
                 surface: '420',
-                buildingAge: '1989_2005',
+                buildingAge: '2001_2012',
                 roofInsulation: 'unknown',
                 wallInsulation: 'unknown',
                 mainHeating: 'gas',
@@ -3359,7 +3359,7 @@
 
             // === ÉTAPE 2 : Bâtiment ===
             surface: '',
-            buildingAge: '',       // 'pre1948' | '1948_1974' | '1975_1988' | '1989_2005' | '2006_2012' | 'post2012'
+            buildingAge: '',       // 'pre1975' | '1975_2000' | '2001_2012' | 'post2012'
             roofInsulation: '',    // 'yes' | 'no' | 'unknown'
             wallInsulation: '',    // 'yes' | 'no' | 'unknown'
             mainHeating: '',
@@ -6416,7 +6416,10 @@
 
         const NEW_DIAGNOSTIC_CO2_FACTORS = {
             elec: 0.079,
-            gaz: 0.227
+            gaz: 0.227,
+            fioul: 0.324,
+            reseau_chaleur: 0.100,
+            bois_granules: 0.030
         };
 
         const NEW_DIAGNOSTIC_CO2_ARBRE_KG_AN = 22;
@@ -7239,8 +7242,14 @@
             const elecKwh = calc.elec_kwh_an.value || 0;
             const gasKwh = calc.gas_kwh_an.value || 0;
             const totalKnownKwh = elecKwh + gasKwh;
+            const _mainHeating = reportPayload.inputs_summary.mainHeating || 'gas';
+            const _nonElecCo2Factor = (_mainHeating === 'fuel' || _mainHeating === 'fioul')
+                ? NEW_DIAGNOSTIC_CO2_FACTORS.fioul
+                : (_mainHeating === 'network')
+                    ? NEW_DIAGNOSTIC_CO2_FACTORS.reseau_chaleur
+                    : NEW_DIAGNOSTIC_CO2_FACTORS.gaz;
             const weightedCo2Factor = totalKnownKwh > 0
-                ? ((elecKwh / totalKnownKwh) * NEW_DIAGNOSTIC_CO2_FACTORS.elec) + ((gasKwh / totalKnownKwh) * NEW_DIAGNOSTIC_CO2_FACTORS.gaz)
+                ? ((elecKwh / totalKnownKwh) * NEW_DIAGNOSTIC_CO2_FACTORS.elec) + ((gasKwh / totalKnownKwh) * _nonElecCo2Factor)
                 : 0.12;
             const co2EviteAnnuel = Math.max(0, Math.round((composite.annual_kwh.value || 0) * weightedCo2Factor));
             const co2Eq = newDiagnosticGetCO2Equivalences(co2EviteAnnuel);

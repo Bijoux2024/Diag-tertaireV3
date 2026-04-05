@@ -2335,7 +2335,9 @@
                 activity: 'offices',
 
                 surface: '420',
-                buildingAge: '1989_2005',
+                buildingAge: '2001_2012',
+                roofType: 'flat',
+                roofOrientation: '',
                 roofInsulation: 'unknown',
                 wallInsulation: 'unknown',
                 mainHeating: 'gas',
@@ -2345,8 +2347,7 @@
                 ecsSystem: 'electric_boiler',
                 hasVmc: true,
                 vmcType: 'simple_flux',
-                roofAccessible: 'yes',
-                usageIntensity: 'standard',
+                ceilingHeight: '2.7',
 
                 hasGtb: false,
                 hasExteriorLighting: true,
@@ -3188,6 +3189,18 @@
             }
         };
 
+        const DEFAULT_CEILING_HEIGHT = {
+            offices: 2.7,
+            retail: 3.0,
+            retail_food: 3.2,
+            hotel: 2.5,
+            restaurant: 2.8,
+            education: 3.0,
+            warehouse_heated: 5.0,
+            light_warehouse: 6.0,
+            health_local: 2.7
+        };
+
         const NEW_DIAGNOSTIC_ACTIVITIES = [
             {
                 id: 'offices',
@@ -3359,7 +3372,9 @@
 
             // === ÉTAPE 2 : Bâtiment ===
             surface: '',
-            buildingAge: '',       // 'pre1948' | '1948_1974' | '1975_1988' | '1989_2005' | '2006_2012' | 'post2012'
+            buildingAge: '',       // 'pre1975' | '1975_2000' | '2001_2012' | 'post2012'
+            roofType: '',          // 'flat' | 'pitched' | 'none'
+            roofOrientation: '',   // 'south' | 'east' | 'west' | 'north' | 'unknown'
             roofInsulation: '',    // 'yes' | 'no' | 'unknown'
             wallInsulation: '',    // 'yes' | 'no' | 'unknown'
             mainHeating: '',
@@ -3369,8 +3384,7 @@
             ecsSystem: '',
             hasVmc: false,
             vmcType: '',           // 'natural' | 'simple_flux' | 'double_flux'
-            roofAccessible: '',    // 'yes' | 'no' | 'unknown'
-            usageIntensity: 'standard',
+            ceilingHeight: '',
             hasGtb: false,
 
             // === ÉTAPE 3 : Énergies ===
@@ -3378,12 +3392,10 @@
             elecKwh: '',
             elecEuro: '',
             elecIncludesSubscription: false,
-            elecSubscriptionYearly: '',
             gasUsed: false,
             gasKwh: '',
             gasEuro: '',
             gasIncludesSubscription: false,
-            gasSubscriptionYearly: '',
 
             // === ÉTAPE 4 : Contact + Qualification ===
             firstName: '',
@@ -3408,7 +3420,9 @@
             postalCode: '33000',
             activity: 'offices',
             surface: '420',
-            buildingAge: '1989_2005',
+            buildingAge: '2001_2012',
+            roofType: 'flat',
+            roofOrientation: '',
             roofInsulation: 'unknown',
             wallInsulation: 'unknown',
             mainHeating: 'gas',
@@ -3418,8 +3432,7 @@
             ecsSystem: 'electric_boiler',
             hasVmc: true,
             vmcType: 'simple_flux',
-            roofAccessible: 'yes',
-            usageIntensity: 'standard',
+            ceilingHeight: '2.7',
             hasGtb: false,
             elecUsed: true,
             elecKwh: '31500',
@@ -3515,23 +3528,6 @@
                         message: 'Gaz : le prix au kWh calculé semble inhabituel. Vérifiez vos chiffres.'
                     });
                 }
-            }
-
-            // Warning abonnement coché mais vide
-            if (formData.elecIncludesSubscription && !formData.elecSubscriptionYearly) {
-                errors.push({
-                    type: 'warning',
-                    code: 'SUBSCRIPTION_INCLUDED_NO_VALUE',
-                    message: 'Électricité : abonnement coché mais montant non renseigné (estimation moins précise)'
-                });
-            }
-
-            if (formData.gasIncludesSubscription && !formData.gasSubscriptionYearly) {
-                errors.push({
-                    type: 'warning',
-                    code: 'SUBSCRIPTION_INCLUDED_NO_VALUE',
-                    message: 'Gaz : abonnement coché mais montant non renseigné (estimation moins précise)'
-                });
             }
 
             return errors;
@@ -5069,7 +5065,7 @@
                     <NewDiagnosticFormSelect
                         label="Activité principale"
                         value={formData.activity}
-                        onChange={(v) => setFormData({ ...formData, activity: v, mixedUsage1: '', mixedUsage2: '' })}
+                        onChange={(v) => setFormData({ ...formData, activity: v, mixedUsage1: '', mixedUsage2: '', ceilingHeight: DEFAULT_CEILING_HEIGHT[v] ? String(DEFAULT_CEILING_HEIGHT[v]) : '' })}
                         options={NEW_DIAGNOSTIC_ACTIVITIES}
                         required
                         error={errors.activity}
@@ -5215,6 +5211,16 @@
                         error={errors.surface}
                     />
 
+                    <NewDiagnosticFormInput
+                        label="Hauteur sous plafond (m)"
+                        value={formData.ceilingHeight || (DEFAULT_CEILING_HEIGHT[formData.activity] ? String(DEFAULT_CEILING_HEIGHT[formData.activity]) : '')}
+                        onChange={(v) => setFormData({ ...formData, ceilingHeight: v })}
+                        type="number"
+                        placeholder="2.7"
+                        suffix="m"
+                        helper="Pre-rempli selon votre activite, modifiable"
+                    />
+
                     {isMixed && (
                         <div className="mb-8 p-5 bg-white border border-[#E2E8F0] rounded-xl shadow-sm">
                             <div className="flex items-center gap-3 mb-6">
@@ -5320,21 +5326,6 @@
                                 />
                             </div>
                         )}
-                    </div>
-
-                    <div className="mb-6">
-                        <label className="block text-sm font-medium text-neutral-700 mb-2">
-                            Comment est utilisé votre local ?
-                        </label>
-                        <NewDiagnosticFormSelect
-                            value={formData.usageIntensity}
-                            onChange={(v) => setFormData({ ...formData, usageIntensity: v })}
-                            options={[
-                                { id: 'low', label: 'Faible (ex: peu occupé, horaires limités)' },
-                                { id: 'standard', label: 'Normal (horaires classiques, occupation régulière)' },
-                                { id: 'high', label: 'Intense (ouvert le week-end, beaucoup de passage)' }
-                            ]}
-                        />
                     </div>
 
                     {/* ── BLOC A — Enveloppe ────────────────────────────────────────────── */}
@@ -5447,19 +5438,38 @@
                                 </select>
                             )}
                         </div>
-                        {formData.role === 'owner' && (
-                            <div className="mb-2">
-                                <label className="block text-sm font-medium text-[#475569] mb-1">Votre toiture est-elle accessible ?</label>
-                                <p className="text-xs text-[#475569] mb-2">Pour panneaux solaires</p>
-                                <div className="grid grid-cols-3 gap-2">
+                        <div className="mb-2">
+                            <label className="block text-sm font-medium text-[#475569] mb-2">Type de toiture</label>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                {[
+                                    { val: 'flat', label: 'Terrasse (plate)', icon: 'solar:home-linear' },
+                                    { val: 'pitched', label: 'Inclinee', icon: 'solar:home-angle-linear' },
+                                    { val: 'none', label: 'Pas de toiture exploitable', icon: 'solar:buildings-linear' },
+                                ].map(opt => (
+                                    <button key={opt.val} type="button"
+                                        onClick={() => setFormData(p => ({ ...p, roofType: opt.val, roofOrientation: opt.val !== 'pitched' ? '' : p.roofOrientation }))}
+                                        className={`min-h-[72px] px-4 py-3 rounded-xl border-2 text-center transition-all ${formData.roofType === opt.val ? 'border-[#1D4ED8] bg-[#EFF6FF]' : 'border-[#E2E8F0] hover:border-[#1D4ED8]/40'}`}
+                                    >
+                                        <Icon icon={opt.icon} className="text-2xl mb-1 mx-auto" />
+                                        <div className="text-sm font-medium">{opt.label}</div>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        {formData.roofType === 'pitched' && (
+                            <div className="mt-4 mb-2">
+                                <label className="block text-sm font-medium text-[#475569] mb-2">Orientation principale de la toiture</label>
+                                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                                     {[
-                                        { val: 'yes', label: 'Accessible' },
-                                        { val: 'no', label: 'Non accessible' },
+                                        { val: 'south', label: 'Sud' },
+                                        { val: 'east', label: 'Est' },
+                                        { val: 'west', label: 'Ouest' },
+                                        { val: 'north', label: 'Nord' },
                                         { val: 'unknown', label: 'Je ne sais pas' },
                                     ].map(opt => (
                                         <button key={opt.val} type="button"
-                                            onClick={() => setFormData(p => ({ ...p, roofAccessible: opt.val }))}
-                                            className={`py-2 px-3 rounded-lg border text-sm font-medium transition-all ${formData.roofAccessible === opt.val ? 'bg-[#EFF6FF] border-[#1D4ED8] text-[#1D4ED8] border-2' : 'border-[#E2E8F0] text-[#475569] hover:border-[#1D4ED8]'}`}
+                                            onClick={() => setFormData(p => ({ ...p, roofOrientation: opt.val }))}
+                                            className={`py-2 px-2 rounded-lg border-2 text-xs font-medium transition-all ${formData.roofOrientation === opt.val ? 'border-[#1D4ED8] bg-[#EFF6FF] text-[#1D4ED8]' : 'border-[#E2E8F0] text-[#475569] hover:border-[#1D4ED8]/40'}`}
                                         >{opt.label}</button>
                                     ))}
                                 </div>
@@ -5721,20 +5731,8 @@
                                     label="Mon montant inclut l'abonnement"
                                     checked={formData.elecIncludesSubscription}
                                     onChange={(v) => setFormData({ ...formData, elecIncludesSubscription: v })}
-                                    helper="Si vous cochez cette case et renseignez l'abonnement, on l'enlèvera pour estimer la consommation"
+                                    helper="L'abonnement sera deduit automatiquement de votre estimation"
                                 />
-
-                                {formData.elecIncludesSubscription && (
-                                    <NewDiagnosticFormInput
-                                        label="Abonnement annuel"
-                                        value={formData.elecSubscriptionYearly}
-                                        onChange={(v) => setFormData({ ...formData, elecSubscriptionYearly: v })}
-                                        type="number"
-                                        placeholder="150"
-                                        suffix="€/an"
-                                        helper="Montant de l'abonnement seul (hors consommation)"
-                                    />
-                                )}
                             </div>
                         )}
                     </div>
@@ -5775,23 +5773,36 @@
                                     label="Mon montant inclut l'abonnement"
                                     checked={formData.gasIncludesSubscription}
                                     onChange={(v) => setFormData({ ...formData, gasIncludesSubscription: v })}
-                                    helper="Si vous cochez cette case et renseignez l'abonnement, on l'enlèvera pour estimer la consommation"
+                                    helper="L'abonnement sera deduit automatiquement de votre estimation"
                                 />
-
-                                {formData.gasIncludesSubscription && (
-                                    <NewDiagnosticFormInput
-                                        label="Abonnement annuel"
-                                        value={formData.gasSubscriptionYearly}
-                                        onChange={(v) => setFormData({ ...formData, gasSubscriptionYearly: v })}
-                                        type="number"
-                                        placeholder="120"
-                                        suffix="€/an"
-                                        helper="Montant de l'abonnement seul (hors consommation)"
-                                    />
-                                )}
                             </div>
                         )}
                     </div>
+
+                    {(() => {
+                        const activity = formData.activity || 'offices';
+                        const surface = parseFloat(formData.surface) || 100;
+                        const bench = NEW_DIAGNOSTIC_BENCHMARKS_INTENSITY[activity];
+                        if (!bench) return null;
+                        const medianeKwh = bench.median_kwh_m2_an * surface;
+                        const elecVal = parseFloat(formData.elecKwh) || (parseFloat(formData.elecEuro) || 0) / 0.196;
+                        const gasVal = parseFloat(formData.gasKwh) || (parseFloat(formData.gasEuro) || 0) / 0.108;
+                        const totalEstime = elecVal + gasVal;
+                        if (totalEstime <= 0) return null;
+                        if (totalEstime > medianeKwh * 2.5) {
+                            return React.createElement('p', { className: 'text-amber-600 text-xs mt-2 flex items-center gap-1' },
+                                React.createElement(Icon, { icon: 'solar:danger-triangle-linear', className: 'shrink-0' }),
+                                'Verifiez que le montant correspond bien a une facture annuelle (et non mensuelle)'
+                            );
+                        }
+                        if (totalEstime < medianeKwh * 0.3) {
+                            return React.createElement('p', { className: 'text-amber-600 text-xs mt-2 flex items-center gap-1' },
+                                React.createElement(Icon, { icon: 'solar:danger-triangle-linear', className: 'shrink-0' }),
+                                'Cette consommation semble faible pour votre surface et activite'
+                            );
+                        }
+                        return null;
+                    })()}
 
                     <div className="flex justify-between mt-8">
                         <button
@@ -6416,7 +6427,10 @@
 
         const NEW_DIAGNOSTIC_CO2_FACTORS = {
             elec: 0.079,
-            gaz: 0.227
+            gaz: 0.227,
+            fioul: 0.324,
+            reseau_chaleur: 0.100,
+            bois_granules: 0.030
         };
 
         const NEW_DIAGNOSTIC_CO2_ARBRE_KG_AN = 22;
@@ -7239,8 +7253,14 @@
             const elecKwh = calc.elec_kwh_an.value || 0;
             const gasKwh = calc.gas_kwh_an.value || 0;
             const totalKnownKwh = elecKwh + gasKwh;
+            const _mainHeating = reportPayload.inputs_summary.mainHeating || 'gas';
+            const _nonElecCo2Factor = (_mainHeating === 'fuel' || _mainHeating === 'fioul')
+                ? NEW_DIAGNOSTIC_CO2_FACTORS.fioul
+                : (_mainHeating === 'network')
+                    ? NEW_DIAGNOSTIC_CO2_FACTORS.reseau_chaleur
+                    : NEW_DIAGNOSTIC_CO2_FACTORS.gaz;
             const weightedCo2Factor = totalKnownKwh > 0
-                ? ((elecKwh / totalKnownKwh) * NEW_DIAGNOSTIC_CO2_FACTORS.elec) + ((gasKwh / totalKnownKwh) * NEW_DIAGNOSTIC_CO2_FACTORS.gaz)
+                ? ((elecKwh / totalKnownKwh) * NEW_DIAGNOSTIC_CO2_FACTORS.elec) + ((gasKwh / totalKnownKwh) * _nonElecCo2Factor)
                 : 0.12;
             const co2EviteAnnuel = Math.max(0, Math.round((composite.annual_kwh.value || 0) * weightedCo2Factor));
             const co2Eq = newDiagnosticGetCO2Equivalences(co2EviteAnnuel);

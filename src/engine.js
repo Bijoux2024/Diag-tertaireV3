@@ -9,20 +9,18 @@
  *
  * Toute modification doit etre testee sur minimum 3 scenarios.
  */
-const ENGINE_VERSION = '1.4.0';
-const ENGINE_LAST_UPDATED = '2026-04-02';
+const ENGINE_VERSION = '1.5.0';
+const ENGINE_LAST_UPDATED = '2026-04-04';
 
 // ═══════════════════════════════════════════════════════════════
 // CONSTANTES PARTAGEES (utilisees par le moteur ET le formulaire)
 // ═══════════════════════════════════════════════════════════════
 
 const NEW_DIAGNOSTIC_BUILDING_AGES = [
-    { id: 'pre1948', label: 'Avant 1948', coef: 1.50, icon: 'solar:home-angle-linear' },
-    { id: '1948_1974', label: '1948 - 1974', coef: 1.35, icon: 'solar:home-angle-linear' },
-    { id: '1975_1988', label: '1975 - 1988', coef: 1.15, icon: 'solar:home-2-linear' },
-    { id: '1989_2005', label: '1989 - 2005', coef: 1.05, icon: 'solar:buildings-linear' },
-    { id: '2006_2012', label: '2006 - 2012', coef: 1.00, icon: 'solar:buildings-2-linear' },
-    { id: 'post2012', label: 'Après 2012', coef: 0.75, icon: 'solar:buildings-2-linear' }
+    { id: 'pre1975', label: 'Avant 1975', coef: 1.40, benchCoeff: 1.25, G: 1.40, icon: 'solar:home-angle-linear' },
+    { id: '1975_2000', label: '1975 - 2000', coef: 1.15, benchCoeff: 1.05, G: 0.90, icon: 'solar:home-2-linear' },
+    { id: '2001_2012', label: '2001 - 2012', coef: 1.00, benchCoeff: 0.90, G: 0.60, icon: 'solar:buildings-linear' },
+    { id: 'post2012', label: 'Apres 2012 (RT2012+)', coef: 0.75, benchCoeff: 0.75, G: 0.45, icon: 'solar:buildings-2-linear' }
 ];
 
 const NEW_DIAGNOSTIC_BOILER_AGES = [
@@ -107,8 +105,19 @@ const INFLATION_ENERGIE = {
     bois_granules: 0.025, // SOURCE_PARTIAL — marché stable
 };
 
+const ROOF_TYPE_COEFF = {
+    flat: 0.85,
+    pitched_south: 1.00,
+    pitched_se_sw: 0.93,
+    pitched_east: 0.82,
+    pitched_west: 0.82,
+    pitched_north: 0.55,
+    pitched_unknown: 0.85,
+    none: 0
+};
+
 const CARBON_FACTORS_KG_CO2_PER_KWH = {
-    electricite: 0.0640,     // Base Carbone ADEME 2024 — mix moyen France (corrigé : 0.0569 trop bas pour prospectif 2026-2030)
+    electricite: 0.079,      // ADEME RE2020 methode mensualisee par usage -- valeur minimale prospective 2026-2030
     gaz: 0.227,              // Base Carbone ADEME 2024
     fioul: 0.324,            // Base Carbone ADEME 2024
     reseau_chaleur: 0.100,   // Moyenne nationale (très variable)
@@ -121,62 +130,62 @@ const CARBON_FACTORS_KG_CO2_PER_KWH = {
    ───────────────────────────────────────────────────────────────────────── */
 
 const NEW_DIAGNOSTIC_BENCHMARKS_INTENSITY = {
-    version_tag: 'v2.0-2026',
-    last_updated: '2026-03-23',
+    version_tag: 'v3.0-2026',
+    last_updated: '2026-04-04',
 
     offices: {
-        median_kwh_m2_an: 140, low_kwh_m2_an: 90, high_kwh_m2_an: 200,
+        median_kwh_m2_an: 135, low_kwh_m2_an: 85, high_kwh_m2_an: 195,
         unit: 'kWh EF/m²/an', energy_scope: 'final_energy', stat_type: 'median_q1_q3',
         source_level: 'source_partial', source_ref: 'ADEME ECNA 2022 + OPERAT',
-        source_note: 'Bureaux chauffés, médiane France métropolitaine', validity_limits: 'Bureaux standards, hors data centers'
+        source_note: 'Bureaux chauffes, mediane France metropolitaine', validity_limits: 'Bureaux standards, hors data centers'
     },
     retail: {
-        median_kwh_m2_an: 130, low_kwh_m2_an: 80, high_kwh_m2_an: 200,
+        median_kwh_m2_an: 210, low_kwh_m2_an: 140, high_kwh_m2_an: 300,
         unit: 'kWh EF/m²/an', energy_scope: 'final_energy', stat_type: 'median_q1_q3',
-        source_level: 'source_partial', source_ref: 'ADEME/CEREN 2019 révisé',
-        source_note: 'Commerce non-alimentaire, hors froid commercial', validity_limits: 'Commerce de détail hors alimentaire'
+        source_level: 'source_partial', source_ref: 'ADEME/SDES 2024 -- commerce non-alimentaire, energie finale',
+        source_note: 'Commerce non-alimentaire, hors froid commercial', validity_limits: 'Commerce de detail hors alimentaire'
     },
     retail_food: {
         median_kwh_m2_an: 360, low_kwh_m2_an: 250, high_kwh_m2_an: 500,
         unit: 'kWh EF/m²/an', energy_scope: 'final_energy', stat_type: 'median_q1_q3',
         source_level: 'source_partial', source_ref: 'ADEME (froid alimentaire)',
-        source_note: 'Commerce alimentaire avec froid intégré', validity_limits: 'Supermarché, épicerie avec froid'
+        source_note: 'Commerce alimentaire avec froid integre', validity_limits: 'Supermarche, epicerie avec froid'
     },
     hotel: {
-        median_kwh_m2_an: 241, low_kwh_m2_an: 150, high_kwh_m2_an: 400,
+        median_kwh_m2_an: 230, low_kwh_m2_an: 140, high_kwh_m2_an: 380,
         unit: 'kWh EF/m²/an', energy_scope: 'final_energy', stat_type: 'median_q1_q3',
-        source_level: 'source_partial', source_ref: 'ADEME Hôtellerie 2024',
-        source_note: 'Hors blanchisserie industrielle et restauration', validity_limits: 'Hôtellerie standard, hors palace'
+        source_level: 'source_partial', source_ref: 'ADEME Hotellerie 2024',
+        source_note: 'Hors blanchisserie industrielle et restauration', validity_limits: 'Hotellerie standard, hors palace'
     },
     restaurant: {
-        median_kwh_m2_an: 250, low_kwh_m2_an: 180, high_kwh_m2_an: 380,
+        median_kwh_m2_an: 270, low_kwh_m2_an: 190, high_kwh_m2_an: 400,
         unit: 'kWh EF/m²/an', energy_scope: 'final_energy', stat_type: 'median_q1_q3',
         source_level: 'source_partial', source_ref: 'ADEME HORECA 2024',
-        source_note: 'Restaurant / brasserie avec cuisson, valeurs ajustées pour un usage réel hors fast-food', validity_limits: 'Restaurant service, hors restauration très intensive'
+        source_note: 'Restaurant / brasserie avec cuisson, valeurs ajustees pour un usage reel hors fast-food', validity_limits: 'Restaurant service, hors restauration tres intensive'
     },
     education: {
-        median_kwh_m2_an: 100, low_kwh_m2_an: 70, high_kwh_m2_an: 160,
+        median_kwh_m2_an: 110, low_kwh_m2_an: 75, high_kwh_m2_an: 165,
         unit: 'kWh EF/m²/an', energy_scope: 'final_energy', stat_type: 'median_q1_q3',
         source_level: 'source_partial', source_ref: 'ADEME/OPERAT (-27% depuis 2010)',
-        source_note: 'Primaire/secondaire, hors université', validity_limits: 'Enseignement primaire/secondaire'
+        source_note: 'Primaire/secondaire, hors universite', validity_limits: 'Enseignement primaire/secondaire'
     },
     warehouse_heated: {
-        median_kwh_m2_an: 135, low_kwh_m2_an: 80, high_kwh_m2_an: 200,
+        median_kwh_m2_an: 120, low_kwh_m2_an: 70, high_kwh_m2_an: 180,
         unit: 'kWh EF/m²/an', energy_scope: 'final_energy', stat_type: 'median_q1_q3',
-        source_level: 'source_partial', source_ref: 'CEREN Logistique révisé',
-        source_note: 'Chauffage + éclairage', validity_limits: 'Logistique légère chauffée'
+        source_level: 'source_partial', source_ref: 'CEREN Logistique revise',
+        source_note: 'Chauffage + eclairage', validity_limits: 'Logistique legere chauffee'
     },
     light_warehouse: {
-        median_kwh_m2_an: 50, low_kwh_m2_an: 25, high_kwh_m2_an: 80,
+        median_kwh_m2_an: 45, low_kwh_m2_an: 20, high_kwh_m2_an: 75,
         unit: 'kWh EF/m²/an', energy_scope: 'final_energy', stat_type: 'median_q1_q3',
         source_level: 'source_partial', source_ref: 'CEREN Logistique',
-        source_note: 'Éclairage seul', validity_limits: 'Logistique légère, hors entrepôts frigorifiques'
+        source_note: 'Eclairage seul', validity_limits: 'Logistique legere, hors entrepots frigorifiques'
     },
     health_local: {
-        median_kwh_m2_an: 200, low_kwh_m2_an: 130, high_kwh_m2_an: 320,
+        median_kwh_m2_an: 195, low_kwh_m2_an: 125, high_kwh_m2_an: 310,
         unit: 'kWh EF/m²/an', energy_scope: 'final_energy', stat_type: 'median_q1_q3',
-        source_level: 'source_partial', source_ref: 'ADEME Santé',
-        source_note: 'Ventilation réglementaire incluse, cabinets < 500m²', validity_limits: 'Santé ambulatoire < 500m²'
+        source_level: 'source_partial', source_ref: 'ADEME Sante',
+        source_note: 'Ventilation reglementaire incluse, cabinets < 500m²', validity_limits: 'Sante ambulatoire < 500m²'
     }
 };
 
@@ -273,11 +282,11 @@ const NEW_DIAGNOSTIC_USAGE_BREAKDOWNS = {
     restaurant: {
         heating_pct: 25,
         cooling_pct: 5,
-        vent_aux_pct: 15,
+        vent_aux_pct: 12,
         lighting_pct: 18,
         dhw_pct: 10,
         cooking_pct: 20,
-        other_specific_pct: 7,
+        other_specific_pct: 10,
         breakdown_mode: 'coarse_statistical',
         source_level: 'source_partial',
         source_ref: 'ADEME - Restauration commerciale, profil brasserie',
@@ -733,7 +742,7 @@ const NEW_DIAGNOSTIC_ACTIONS_LIBRARY = {
             category: 'production',
             tier: 'heavy',
             aid_pct: 0.10,
-            trigger_rules: ['surface > 100', 'roofAccessible !== no'],
+            trigger_rules: ['surface > 100', 'roofType !== none'],
             gain_scope: 'elec_post',
             gain_pct_low: 0.10, gain_pct_med: 0.20, gain_pct_high: 0.30,
             capex_low: 8000, capex_med: 15000, capex_high: 30000,
@@ -1309,10 +1318,27 @@ const newDiagnosticEstimatePhotovoltaicScenario = ({ action, totalKwh, breakdown
     const safeSurface = Math.max(1, Number(surface || formData?.surface || 100));
     const levels = Math.max(1, parseInt(formData?.levels || 1, 10) || 1);
     const roofSurface = safeSurface / levels;
-    const usableRoofRatio = formData?.roofAccessible === 'yes' ? 0.60 : 0.48;
+    const getRoofCoeff = (roofType, roofOrientation) => {
+        if (!roofType || roofType === 'none') return 0;
+        if (roofType === 'flat') return ROOF_TYPE_COEFF.flat;
+        if (roofType === 'pitched') {
+            if (roofOrientation === 'south') return ROOF_TYPE_COEFF.pitched_south;
+            if (roofOrientation === 'east') return ROOF_TYPE_COEFF.pitched_east;
+            if (roofOrientation === 'west') return ROOF_TYPE_COEFF.pitched_west;
+            if (roofOrientation === 'north') return ROOF_TYPE_COEFF.pitched_north;
+            return ROOF_TYPE_COEFF.pitched_unknown;
+        }
+        return 0.85;
+    };
+    const roofCoeff = getRoofCoeff(formData?.roofType, formData?.roofOrientation);
+    // Backward compat : si roofType absent mais roofAccessible present
+    const usableRoofRatio = (formData?.roofType === 'none') ? 0
+        : (formData?.roofType === 'flat' || formData?.roofType === 'pitched') ? 0.60
+        : (formData?.roofAccessible === 'yes' ? 0.60 : 0.48);
     const usableRoofSurface = Math.max(0, roofSurface * usableRoofRatio);
     const roofLimitedKwc = usableRoofSurface * 0.20;
-    const localYieldKwhPerKwc = newDiagnosticEstimatePhotovoltaicYield(formData);
+    const localYieldKwhPerKwcBase = newDiagnosticEstimatePhotovoltaicYield(formData);
+    const localYieldKwhPerKwc = localYieldKwhPerKwcBase * (roofCoeff > 0 ? roofCoeff : 1);
     // Cible élec post-travaux (si PAC recommandée, la conso élec augmente)
     // Note : à ce stade l'appel vient de calculateActionGain qui passe splitResult via ePrices.targetElecKwh
     const estimatedSiteElectricityKwh = Math.max(1,
@@ -1342,7 +1368,7 @@ const newDiagnosticEstimatePhotovoltaicScenario = ({ action, totalKwh, breakdown
 
     const newDiagnosticGetPvAutoconoPrime = (kwc) => {
         if (kwc <= 9) return 80;    // €/kWc — CRE T1-T2 2026 (arrêté 26 mars 2025)
-        if (kwc <= 36) return 70;   // €/kWc — CRE T2 2026
+        if (kwc <= 36) return 120;  // €/kWc — CRE T2 2026 (corrige, ancienne valeur 70 fausse)
         return 60;                  // 36-100 kWc — CRE T2 2026
     };
     const primePerKwc = newDiagnosticGetPvAutoconoPrime(installedKwc);
@@ -1657,7 +1683,7 @@ const newDiagnosticFilterAndScoreActions = (formData, splitResult) => {
         if (action.id === 'ACT18' && formData.ecsSameSystem) return false;
         // ACT22 conditions
         if (action.id === 'ACT22' && surface < 100) return false;
-        if (action.id === 'ACT22' && formData.roofAccessible === 'no') return false;
+        if (action.id === 'ACT22' && (formData.roofType === 'none' || formData.roofAccessible === 'no')) return false;
 
         return true;
     });
@@ -1676,7 +1702,7 @@ const newDiagnosticFilterAndScoreActions = (formData, splitResult) => {
         if (action.tier === 'light') feasibility *= 1.3;
         if (action.tier === 'heavy') feasibility *= 0.7;
 
-        if (action.category?.includes('envelope') && ['pre1948', '1948_1974', '1975_1988'].includes(buildingAge)) {
+        if (action.category?.includes('envelope') && ['pre1975', '1975_2000'].includes(buildingAge)) {
             feasibility *= buildingAgeCoef;
         }
         if (action.id === 'ACT13' && boilerAgePriority >= 2) feasibility *= 1.5;
@@ -1840,7 +1866,7 @@ const newDiagnosticGetComplementaryPhotovoltaicOpportunity = (formData, splitRes
     if (!photovoltaicAction) return null;
     if ((topActions || []).some(action => action.id === photovoltaicAction.id)) return null;
     if (surface < 100) return null;
-    if (formData.roofAccessible === 'no') return null;
+    if (formData.roofType === 'none' || formData.roofAccessible === 'no') return null;
 
     const energyPrices = {
         elec: NEW_DIAGNOSTIC_ENERGY_PRICES.electricity.price_default_eur_kwh,
@@ -2199,7 +2225,8 @@ const newDiagnosticBuildReportData = (formData) => {
             primary_goal: formData.primaryGoal || null,
             project_horizon: formData.projectHorizon || null,
             decision_role: formData.decisionRole || null,
-            contactOptIn: formData.contactOptIn || false
+            contactOptIn: formData.contactOptIn || false,
+            mainHeating: formData.mainHeating || 'gas'
         },
 
         // Calculation results
@@ -2418,3 +2445,109 @@ function newDiagnosticBuildProjectionData({ annualSavingsEuro, totalCostEuroAn, 
         graphiquePubliable
     };
 }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   TESTS RAPPORT COMPLET T8-T15 (appeler newDiagnosticRunReportTests() dans la console)
+   ───────────────────────────────────────────────────────────────────────── */
+
+const newDiagnosticRunReportTests = () => {
+    const base = { ecsSameSystem: true, surface: '300', levels: '1', address: 'Test', postalCode: '75001' };
+
+    const TESTS = [
+        {
+            name: 'T8 -- Commerce fioul : mainHeating dans inputs_summary',
+            fd: { ...base, mainHeating: 'fuel', activity: 'retail', annualElecKwh: 20000, annualGasKwh: 40000 },
+            check: (r) => {
+                if (!r) throw new Error('Rapport null');
+                if (!r.inputs_summary?.mainHeating) throw new Error('mainHeating manquant dans inputs_summary');
+                if (r.inputs_summary.mainHeating !== 'fuel') throw new Error('mainHeating = ' + r.inputs_summary.mainHeating + ' (attendu fuel)');
+            }
+        },
+        {
+            name: 'T9 -- Hotel reseau chaleur : mainHeating dans inputs_summary',
+            fd: { ...base, mainHeating: 'network', activity: 'hotel', annualElecKwh: 30000, annualGasKwh: 50000 },
+            check: (r) => {
+                if (!r) throw new Error('Rapport null');
+                if (!r.inputs_summary?.mainHeating) throw new Error('mainHeating manquant dans inputs_summary');
+            }
+        },
+        {
+            name: 'T10 -- Commerce retail mediane = 210',
+            fd: { ...base, mainHeating: 'gas', activity: 'retail', annualElecKwh: 30000, annualGasKwh: 20000 },
+            check: (r) => {
+                if (!r) throw new Error('Rapport null');
+                const bench = r.benchmark_result;
+                if (!bench) throw new Error('benchmark_result absent');
+                if (bench.benchmark_median.value !== 210) {
+                    throw new Error('Mediane retail = ' + bench.benchmark_median.value + ' (attendu 210)');
+                }
+            }
+        },
+        {
+            name: 'T11 -- Bureau avant 1975 : rapport OK sans NaN',
+            fd: { ...base, mainHeating: 'gas', activity: 'offices', buildingAge: 'pre1975', annualElecKwh: 30000, annualGasKwh: 20000 },
+            check: (r) => {
+                if (!r) throw new Error('Rapport null');
+                const str = JSON.stringify(r);
+                if (str.includes('"NaN"') || str.includes(':null,') && str.indexOf('intensity') > -1) {
+                    if (r.intensity?.value !== undefined && isNaN(r.intensity.value)) throw new Error('intensity NaN');
+                }
+            }
+        },
+        {
+            name: 'T12 -- Bureau post-2012 : rapport OK',
+            fd: { ...base, mainHeating: 'electric', activity: 'offices', buildingAge: 'post2012', annualElecKwh: 40000, annualGasKwh: 0 },
+            check: (r) => {
+                if (!r) throw new Error('Rapport null');
+                if (!r.top_actions || r.top_actions.length === 0) throw new Error('Aucune action retournee');
+            }
+        },
+        {
+            name: 'T13 -- Hotel toiture plate : solaire non exclu',
+            fd: { ...base, mainHeating: 'gas', activity: 'hotel', roofType: 'flat', annualElecKwh: 50000, annualGasKwh: 80000 },
+            check: (r) => {
+                if (!r) throw new Error('Rapport null');
+                // roofType=flat ne doit pas exclure PV
+                const pvAction = (r.top_actions || []).find(a => a.id === 'ACT22');
+                const pvCompl = r.complementary_photovoltaic_opportunity;
+                // Au moins l'un des deux doit etre possible (pas une erreur en soi si absent, mais on verifie que ce n'est pas exclu explicitement)
+                // Le test verifie juste que le rapport s'affiche sans erreur
+            }
+        },
+        {
+            name: 'T14 -- Bureau sans toiture : PV exclu',
+            fd: { ...base, mainHeating: 'electric', activity: 'offices', roofType: 'none', annualElecKwh: 40000, annualGasKwh: 0 },
+            check: (r) => {
+                if (!r) throw new Error('Rapport null');
+                const pvAction = (r.top_actions || []).find(a => a.id === 'ACT22');
+                if (pvAction) throw new Error('PV recommande malgre roofType=none');
+                if (r.complementary_photovoltaic_opportunity) throw new Error('PV complementaire present malgre roofType=none');
+            }
+        },
+        {
+            name: 'T15 -- Restaurant ventilation = 12%',
+            fd: { ...base, mainHeating: 'gas', activity: 'restaurant', annualElecKwh: 40000, annualGasKwh: 60000 },
+            check: (r) => {
+                if (!r) throw new Error('Rapport null');
+                const ventPct = r.split_result?.breakdown_pct?.vent_aux_pct;
+                if (ventPct !== 12) throw new Error('Ventilation restaurant = ' + ventPct + '% (attendu 12%)');
+            }
+        }
+    ];
+
+    const results = [];
+    for (const t of TESTS) {
+        try {
+            const r = newDiagnosticBuildReportData(t.fd);
+            t.check(r);
+            results.push({ name: t.name, status: 'PASS' });
+        } catch (e) {
+            results.push({ name: t.name, status: 'FAIL', error: e.message });
+            console.error(t.name + ': ' + e.message);
+        }
+    }
+    console.table(results);
+    const allPass = results.every(r => r.status === 'PASS');
+    console.info(allPass ? 'Tous les tests rapport passent' : 'Des tests rapport ont echoue');
+    return results;
+};

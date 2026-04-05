@@ -389,12 +389,12 @@
       const firstChild = !intro && avoidBreak ? (childList.shift() || null) : null;
       const titleNode = (
         <div className="section-title" style={{
-          fontSize: 14.5, fontWeight: 800, color: T.navy,
+          fontSize: 14, fontWeight: 800, color: T.navy,
           letterSpacing: '-0.28px', marginBottom: sub ? 3 : 12,
         }}>{title}</div>
       );
       const subNode = sub ? (
-        <div style={{ fontSize: 10.2, color: T.slate600, marginBottom: 12, lineHeight: 1.55 }}>
+        <div style={{ fontSize: 10, color: T.slate600, marginBottom: 12, lineHeight: 1.55 }}>
           {sub}
         </div>
       ) : null;
@@ -583,7 +583,7 @@
           <div style={{ flex: 1 }}>
             {/* Name + tier badge */}
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
-              <div style={{ fontSize: 11.2, fontWeight: 700, color: T.navy }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: T.navy }}>
                 {action.name || 'Action recommandée'}
               </div>
               <span style={{
@@ -594,7 +594,7 @@
               }}>{tier.label}</span>
             </div>
             {/* Metrics row */}
-            <div style={{ display: 'flex', gap: 16, fontSize: 10.2, color: T.slate600, flexWrap: 'wrap', lineHeight: 1.45 }}>
+            <div style={{ display: 'flex', gap: 16, fontSize: 10, color: T.slate600, flexWrap: 'wrap', lineHeight: 1.45 }}>
               <span>
                 Gain&nbsp;
                 <strong style={{ color: '#15803D', fontWeight: 800 }}>{fmtEur(gainEuro)}/an</strong>
@@ -614,7 +614,7 @@
             </div>
             {/* PV detail (ACT22) */}
             {action.id === 'ACT22' && action.pv_production_kwh_an && (
-              <div style={{ marginTop: 6, padding: '6px 8px', background: '#F0F9FF', border: '1px solid #BAE6FD', borderRadius: 8, fontSize: 9.5, color: T.slate600, lineHeight: 1.55 }}>
+              <div style={{ marginTop: 6, padding: '6px 8px', background: '#F0F9FF', border: '1px solid #BAE6FD', borderRadius: 8, fontSize: 10, color: T.slate600, lineHeight: 1.55 }}>
                 <div>Production annuelle : <strong>{Math.round(action.pv_production_kwh_an).toLocaleString('fr-FR')} kWh/an</strong>
                   {action.pv_installed_kwc && <span> ({action.pv_installed_kwc} kWc installés)</span>}
                 </div>
@@ -899,7 +899,7 @@
                   <path key={i} d={s.path} fill={s.color} />
                 ))}
                 <text x="70" y="65" textAnchor="middle"
-                  style={{ fontSize: '17px', fontWeight: 900, fill: T.navy,
+                  style={{ fontSize: '16px', fontWeight: 900, fill: T.navy,
                     fontFamily: 'Helvetica Neue, Arial, sans-serif' }}>
                   {dominant.pct}%
                 </text>
@@ -1107,7 +1107,7 @@
                 }}>{displayTitle}</div>
 
                 <div style={{
-                  fontSize: 10.5, color: 'rgba(255,255,255,0.72)',
+                  fontSize: 11, color: 'rgba(255,255,255,0.72)',
                   lineHeight: 1.6,
                 }}>
                   {heroSubLine}{heroSubLine ? ' · ' : ''}Généré le {fmtDate(rp.generated_at)}
@@ -1134,7 +1134,7 @@
                 <div style={{ fontSize: 30, fontWeight: 900, lineHeight: 1, color: '#6EE7B7' }}>
                   -{savingsPct}%
                 </div>
-                <div style={{ fontSize: 9.5, color: '#FFFFFF', lineHeight: 1.4, marginTop: 5 }}>
+                <div style={{ fontSize: 10, color: '#FFFFFF', lineHeight: 1.4, marginTop: 5 }}>
                   {classGain > 0 ? `+${classGain} classe${classGain > 1 ? 's' : ''} estimée${classGain > 1 ? 's' : ''}` : 'Intensité réduite estimée'}
                 </div>
                 <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.72)', marginTop: 6 }}>
@@ -1168,10 +1168,10 @@
                     padding: '8px 10px',
                   }}>
                     <div style={{
-                      fontSize: 8.5, fontWeight: 700, textTransform: 'uppercase',
+                      fontSize: 8, fontWeight: 700, textTransform: 'uppercase',
                       color: 'rgba(255,255,255,0.48)', marginBottom: 4,
                     }}>{ic.label}</div>
-                    <div style={{ fontSize: 12.5, fontWeight: 800, color: '#fff', lineHeight: 1.1 }}>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', lineHeight: 1.1 }}>
                       {ic.value}
                     </div>
                   </div>
@@ -1207,7 +1207,7 @@
               }} />
               <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.86)', lineHeight: 1.5 }}>
                 Potentiel d'économies estimé&nbsp;
-                <strong style={{ color: '#6EE7B7', fontSize: 12.5 }}>{fmtEur(annualEuro)}/an</strong>
+                <strong style={{ color: '#6EE7B7', fontSize: 13 }}>{fmtEur(annualEuro)}/an</strong>
                 <span style={{ opacity: 0.76 }}> · baisse cible -{savingsPct}%</span>
                 {annualKwh > 0 && (
                   <span style={{ opacity: 0.72 }}> · {fmtInt(annualKwh, 'kWh')} évités</span>
@@ -1261,7 +1261,7 @@
             <div style={{ fontSize: 15, fontWeight: 800, color: T.navy, lineHeight: 1.35 }}>
               {keyBusinessSentence}
             </div>
-            <div style={{ fontSize: 10.4, color: T.slate600, lineHeight: 1.55, marginTop: 5 }}>
+            <div style={{ fontSize: 10, color: T.slate600, lineHeight: 1.55, marginTop: 5 }}>
               {benchmarkGapText} {benchmarkComment}
             </div>
           </div>
@@ -1280,7 +1280,7 @@
                     <div style={{ height: 3, background: c.topColor }} />
                     <div style={{ padding: '11px 12px' }}>
                       <div style={{ fontSize: 8, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.09em', color: c.topColor, marginBottom: 6 }}>{c.title}</div>
-                      <div style={{ fontSize: 10.4, color: '#374151', lineHeight: 1.55 }}>{c.text}</div>
+                      <div style={{ fontSize: 10, color: '#374151', lineHeight: 1.55 }}>{c.text}</div>
                     </div>
                   </div>
                 ))}
@@ -1435,18 +1435,18 @@
                     border: `1px solid ${i === 3 ? '#86EFAC' : T.slate200}`,
                     borderRadius: 10, padding: '9px 10px',
                   }}>
-                    <div style={{ fontSize: 7.6, fontWeight: 700, textTransform: 'uppercase', color: i === 3 ? '#15803D' : T.slate400, marginBottom: 5 }}>{c.label}</div>
+                    <div style={{ fontSize: 8, fontWeight: 700, textTransform: 'uppercase', color: i === 3 ? '#15803D' : T.slate400, marginBottom: 5 }}>{c.label}</div>
                     {c.special ? (
                       <>
                         <div style={{ fontSize: 15, fontWeight: 900, color: '#15803D' }}>{c.special}</div>
-                        {c.roi && <div style={{ fontSize: 9.5, color: '#047857', marginTop: 4, fontWeight: 700 }}>Rentabilité : {c.roi}</div>}
+                        {c.roi && <div style={{ fontSize: 10, color: '#047857', marginTop: 4, fontWeight: 700 }}>Rentabilité : {c.roi}</div>}
                       </>
                     ) : (
                       <>
-                        <div style={{ fontSize: 12.2, fontWeight: 800, color: '#374151' }}>{c.main}</div>
-                        <div style={{ fontSize: 9.4, color: T.slate400, marginTop: 1 }}>{c.note}</div>
-                        {c.diff  != null && c.diff  > 0 && <div style={{ fontSize: 10.2, fontWeight: 700, color: '#059669', marginTop: 3 }}>Économies : {fmtEur(c.diff)}</div>}
-                        {c.diffAbs != null && <div style={{ fontSize: 10.2, fontWeight: 700, color: '#059669', marginTop: 3 }}>Avec actions : {c.diffAbs}</div>}
+                        <div style={{ fontSize: 12, fontWeight: 800, color: '#374151' }}>{c.main}</div>
+                        <div style={{ fontSize: 9, color: T.slate400, marginTop: 1 }}>{c.note}</div>
+                        {c.diff  != null && c.diff  > 0 && <div style={{ fontSize: 10, fontWeight: 700, color: '#059669', marginTop: 3 }}>Économies : {fmtEur(c.diff)}</div>}
+                        {c.diffAbs != null && <div style={{ fontSize: 10, fontWeight: 700, color: '#059669', marginTop: 3 }}>Avec actions : {c.diffAbs}</div>}
                       </>
                     )}
                   </div>
@@ -1472,8 +1472,8 @@
             const GroupHeader = ({ title, subtitle, bg, border }) => (
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderRadius: 10, marginBottom: 8, background: bg, border: `1px solid ${border}` }}>
                 <div>
-                  <div style={{ fontSize: 11.2, fontWeight: 800, color: T.navy }}>{title}</div>
-                  <div style={{ fontSize: 9.4, color: T.slate600 }}>{subtitle}</div>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: T.navy }}>{title}</div>
+                  <div style={{ fontSize: 9, color: T.slate600 }}>{subtitle}</div>
                 </div>
               </div>
             );
@@ -1637,7 +1637,7 @@
                   <div style={{ fontSize: 12, fontWeight: 800, color: '#5B21B6', marginBottom: 4 }}>
                     Décret Tertiaire — bâtiment concerné
                   </div>
-                  <div style={{ fontSize: 10.2, color: T.slate600, lineHeight: 1.55, marginBottom: 10 }}>
+                  <div style={{ fontSize: 10, color: T.slate600, lineHeight: 1.55, marginBottom: 10 }}>
                     Avec une surface de <strong style={{ color: T.navy }}>{fmtInt(surface, 'm²')}</strong>, ce bâtiment est soumis au dispositif Éco Énergie Tertiaire.
                     Les réductions de consommation identifiées dans ce rapport contribuent directement aux objectifs réglementaires.
                   </div>
@@ -1647,13 +1647,13 @@
                         background: 'rgba(124,58,237,0.05)', border: '1px solid #DDD6FE',
                         borderRadius: 9, padding: '8px 10px', textAlign: 'center',
                       }}>
-                        <div style={{ fontSize: 8.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#7C3AED', marginBottom: 3 }}>Objectif {yr}</div>
+                        <div style={{ fontSize: 8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#7C3AED', marginBottom: 3 }}>Objectif {yr}</div>
                         <div style={{ fontSize: 16, fontWeight: 900, color: T.navy }}>{tgt}</div>
-                        <div style={{ fontSize: 8.5, color: T.slate400, marginTop: 2 }}>vs année référence</div>
+                        <div style={{ fontSize: 8, color: T.slate400, marginTop: 2 }}>vs année référence</div>
                       </div>
                     ))}
                   </div>
-                  <div style={{ background: '#FEF9C3', border: '1px solid #FDE68A', borderRadius: 8, padding: '7px 10px', fontSize: 9.5, color: '#92400E', lineHeight: 1.5 }}>
+                  <div style={{ background: '#FEF9C3', border: '1px solid #FDE68A', borderRadius: 8, padding: '7px 10px', fontSize: 10, color: '#92400E', lineHeight: 1.5 }}>
                     <strong>Action requise :</strong> Déclaration sur la plateforme OPERAT et plan d'actions à établir. Ce diagnostic fournit une base de priorisation.
                   </div>
                 </div>
@@ -1695,7 +1695,7 @@
                 <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 7, lineHeight: 1.25 }}>
                   Confirmez vos leviers avec un expert
                 </div>
-                <div style={{ fontSize: 10.3, color: 'rgba(255,255,255,0.85)', lineHeight: 1.5, marginBottom: 10 }}>
+                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.85)', lineHeight: 1.5, marginBottom: 10 }}>
                   Chaque bâtiment est différent. Un échange de 20 à 30 minutes avec un expert
                   permet de valider les pistes identifiées ici, et d'affiner le chiffrage avant tout engagement.
                 </div>
@@ -1711,7 +1711,7 @@
                     'Identifier les actions réalisables rapidement',
                     'Structurer un plan d\'action sur mesure'
                   ].map((b, i) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 7, fontSize: 9.8, color: '#fff', lineHeight: 1.35 }}>
+                    <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 7, fontSize: 10, color: '#fff', lineHeight: 1.35 }}>
                       <span style={{
                         flexShrink: 0,
                         width: 16,
@@ -1737,7 +1737,7 @@
                   background: 'rgba(255,255,255,0.12)',
                   borderRadius: 20,
                   padding: '5px 11px',
-                  fontSize: 9.5,
+                  fontSize: 10,
                   fontWeight: 600,
                   color: '#fff'
                 }}>

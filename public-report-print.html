@@ -204,10 +204,10 @@
     };
 
     // @sync — inflation rates from index.html INFLATION_ENERGIE (élec 3.5%, gaz 4.5%)
-    // @sync — energy prices from NEW_DIAGNOSTIC_ENERGY_PRICES (élec 0.206, gaz 0.108)
+    // @sync — energy prices from NEW_DIAGNOSTIC_ENERGY_PRICES (élec 0.1960, gaz 0.108)
     const INFLATION_ELEC  = 0.035;
     const INFLATION_GAZ   = 0.045;
-    const ELEC_PRICE_KWH  = 0.206;
+    const ELEC_PRICE_KWH  = 0.1960;
     const GAS_PRICE_KWH   = 0.108;
 
     // @sync — cumulative projection matching newDiagnosticBuildProjectionData in index.html
@@ -310,9 +310,11 @@
     };
 
     const TIER_CONF = {
-      quick_win:  { label: 'Action rapide', bg: '#F0FDF4', color: '#15803D', border: '#86EFAC' },
-      equipment:  { label: 'Équipement',    bg: '#EFF6FF', color: '#1D4ED8', border: '#BFDBFE' },
-      structural: { label: 'Structurel',    bg: '#FEF3C7', color: '#92400E', border: '#FDE68A' },
+      light:      { label: 'Action rapide',  bg: '#F0FDF4', color: '#15803D', border: '#86EFAC' },
+      heavy:      { label: 'Investissement', bg: '#FEF3C7', color: '#92400E', border: '#FDE68A' },
+      quick_win:  { label: 'Action rapide',  bg: '#F0FDF4', color: '#15803D', border: '#86EFAC' },
+      equipment:  { label: 'Équipement',     bg: '#EFF6FF', color: '#1D4ED8', border: '#BFDBFE' },
+      structural: { label: 'Structurel',     bg: '#FEF3C7', color: '#92400E', border: '#FDE68A' },
     };
 
     /* ═══════════════════════════════════════════════════════
@@ -422,11 +424,11 @@
             border: `1px solid ${T.slate200}`,
             borderRadius: T.radiusLg,
             marginBottom: mb,
-            overflow: 'hidden',
+            overflow: 'visible',
           }}
         >
           <div className="section-start">
-            <div style={{ height: 3, background: `linear-gradient(90deg, ${T.blue} 0%, #6366F1 100%)` }} />
+            <div style={{ height: 3, background: `linear-gradient(90deg, ${T.blue} 0%, #6366F1 100%)`, borderRadius: `${T.radiusLg}px ${T.radiusLg}px 0 0` }} />
             <div style={{ padding: `16px 18px ${childList.length ? 12 : 18}px` }}>
               {leadNode}
             </div>
@@ -844,9 +846,10 @@
     const USAGE_KEYS = [
       { k: 'heating_pct',        label: 'Chauffage',     color: '#EF4444' },
       { k: 'cooling_pct',        label: 'Climatisation', color: '#3B82F6' },
-      { k: 'dhw_pct',            label: 'ECS',           color: '#F59E0B' },
+      { k: 'dhw_pct',            label: 'Eau chaude',    color: '#F59E0B' },
       { k: 'lighting_pct',       label: 'Éclairage',     color: '#EAB308' },
       { k: 'vent_aux_pct',       label: 'Ventilation',   color: '#8B5CF6' },
+      { k: 'cooking_pct',        label: 'Cuisson',       color: '#F97316' },
       { k: 'other_specific_pct', label: 'Autres',        color: '#94A3B8' },
     ];
 
@@ -997,6 +1000,8 @@
       const co2EvitePr  = Math.max(0, Math.round(annualKwh * co2FactorPr));
       const co2ArbPr    = Math.round(co2EvitePr / 22);
       const co2VoitPr   = Math.round((co2EvitePr / 2100) * 10) / 10;
+      // @sync — NEW_DIAGNOSTIC_CO2_VOITURE_KM = 0.193 kg/km (index.html)
+      const co2KmPr     = Math.round(co2EvitePr / 0.193);
 
       const locationMeta = [activity, surface > 0 ? fmtInt(surface, 'm²') : null].filter(Boolean).join(' · ');
       const heroSubLine  = [locationMeta, addressLine].filter(Boolean).join(' · ');
@@ -1163,7 +1168,7 @@
                     padding: '8px 10px',
                   }}>
                     <div style={{
-                      fontSize: 7.5, fontWeight: 700, textTransform: 'uppercase',
+                      fontSize: 8.5, fontWeight: 700, textTransform: 'uppercase',
                       color: 'rgba(255,255,255,0.48)', marginBottom: 4,
                     }}>{ic.label}</div>
                     <div style={{ fontSize: 12.5, fontWeight: 800, color: '#fff', lineHeight: 1.1 }}>
@@ -1306,6 +1311,7 @@
                 : 'Au niveau de la médiane sectorielle.';
             return (
               <Section title="Positionnement sectoriel" mb={18} avoidBreak={true}>
+                <div>
                 <div style={{ fontSize: 12, fontWeight: 700, color: T.navy, marginBottom: 10 }}>{gapText}</div>
                 <div style={{ position: 'relative', paddingTop: 44, paddingBottom: 2 }}>
                   {/* Reference labels above bar */}
@@ -1388,6 +1394,7 @@
                 <div style={{ fontSize: 10, color: T.slate400, marginTop: 4 }}>
                   Source\u00a0: {String(bench.source_ref || 'Références sectorielles')}
                 </div>
+                </div>
               </Section>
             );
           })()}
@@ -1409,7 +1416,7 @@
             )}
           >
             {/* Résumé chiffré — valeurs cumulatives, même logique que web */}
-            <div className="section-summary" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginTop: 12 }}>
+            <div className="section-summary" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginTop: 12, breakInside: 'avoid', pageBreakInside: 'avoid' }}>
               {(() => {
                 const d1  = projection.data[1]  || {};
                 const d3  = projection.data[3]  || {};
@@ -1519,7 +1526,7 @@
                 {orderedGroups.slice(1).map(renderActionGroup)}
 
                 {/* Budget recap */}
-                <div className="budget-row section-summary" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginTop: 14 }}>
+                <div className="budget-row section-summary" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginTop: 14, breakInside: 'avoid', pageBreakInside: 'avoid' }}>
                   {budgetCells.map(cell => (
                     <div key={cell.label} className="pba" style={{ borderRadius: 10, padding: '12px 13px', background: cell.bg, border: `1px solid ${cell.bd}` }}>
                       <div style={{ fontSize: 8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: cell.c, marginBottom: 5 }}>{cell.label}</div>
@@ -1585,15 +1592,79 @@
                       <div style={{ fontSize: 9, color: T.slate400, marginTop: 2 }}>émissions moy. annuelles</div>
                     </div>
                   </div>
+                  {/* Km */}
+                  <div style={{ background: '#fff', border: `1px solid ${T.slate200}`, borderRadius: 12, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ width: 40, height: 40, borderRadius: 10, background: T.slate50, border: `1px solid ${T.slate200}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <svg width="22" height="22" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M4 14h20M4 10h4l4 4 4-4h8" stroke="#475569" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <circle cx="14" cy="20" r="2" fill="#475569"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 20, fontWeight: 900, color: T.navy, lineHeight: 1 }}>{co2KmPr.toLocaleString('fr-FR')}</div>
+                      <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: T.slate600, marginTop: 3 }}>km voiture / an</div>
+                      <div style={{ fontSize: 9, color: T.slate400, marginTop: 2 }}>0,193 kg CO₂/km ADEME</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </Section>
           )}
 
           {/* ══════════════════════════════════════════════════
+              DÉCRET TERTIAIRE — conditionnel surface >= 1000 m²
+          ═════════════════════════════════════════════════ */}
+          {surface >= 1000 && (
+            <div className="pba" style={{
+              background: '#fff',
+              border: '1px solid #DDD6FE',
+              borderLeft: '4px solid #7C3AED',
+              borderRadius: T.radiusLg,
+              padding: '16px 18px',
+              marginBottom: 18,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+                <div style={{
+                  width: 38, height: 38, borderRadius: 10, flexShrink: 0,
+                  background: 'rgba(124,58,237,0.08)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M9 12h6m-6 4h4M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" stroke="#7C3AED" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 12, fontWeight: 800, color: '#5B21B6', marginBottom: 4 }}>
+                    Décret Tertiaire — bâtiment concerné
+                  </div>
+                  <div style={{ fontSize: 10.2, color: T.slate600, lineHeight: 1.55, marginBottom: 10 }}>
+                    Avec une surface de <strong style={{ color: T.navy }}>{fmtInt(surface, 'm²')}</strong>, ce bâtiment est soumis au dispositif Éco Énergie Tertiaire.
+                    Les réductions de consommation identifiées dans ce rapport contribuent directement aux objectifs réglementaires.
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 10 }}>
+                    {[['2030', '-40 %'], ['2040', '-50 %'], ['2050', '-60 %']].map(([yr, tgt]) => (
+                      <div key={yr} style={{
+                        background: 'rgba(124,58,237,0.05)', border: '1px solid #DDD6FE',
+                        borderRadius: 9, padding: '8px 10px', textAlign: 'center',
+                      }}>
+                        <div style={{ fontSize: 8.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#7C3AED', marginBottom: 3 }}>Objectif {yr}</div>
+                        <div style={{ fontSize: 16, fontWeight: 900, color: T.navy }}>{tgt}</div>
+                        <div style={{ fontSize: 8.5, color: T.slate400, marginTop: 2 }}>vs année référence</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ background: '#FEF9C3', border: '1px solid #FDE68A', borderRadius: 8, padding: '7px 10px', fontSize: 9.5, color: '#92400E', lineHeight: 1.5 }}>
+                    <strong>Action requise :</strong> Déclaration sur la plateforme OPERAT et plan d'actions à établir. Ce diagnostic fournit une base de priorisation.
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ══════════════════════════════════════════════════
               PROCHAINE ÉTAPE
           ═════════════════════════════════════════════════ */}
-          <div style={{
+          <div className="pba" style={{
             background: 'linear-gradient(135deg, #1E3A5F 0%, #2563EB 100%)',
             borderRadius: 12,
             padding: '18px 20px',
@@ -1679,7 +1750,7 @@
           {/* ══════════════════════════════════════════════════
               HYPOTHESES + LIMITES — 2-col, avoid split
           ═════════════════════════════════════════════════ */}
-          <div className="cols-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 18 }}>
+          <div className="cols-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 18, breakInside: 'avoid', pageBreakInside: 'avoid' }}>
 
             {/* Hypothèses */}
             <div className="pba" style={{
@@ -1709,16 +1780,6 @@
                       <span>{item}</span>
                     </li>
                   ))}
-                  <li className="pba" style={{
-                    display: 'flex', gap: 8, fontSize: 10, color: '#475569',
-                    lineHeight: 1.5, marginBottom: 6,
-                  }}>
-                    <span style={{
-                      width: 6, height: 6, borderRadius: '50%',
-                      background: '#818CF8', flexShrink: 0, marginTop: 4,
-                    }} />
-                    <span>Abonnement electrique et gaz deduit automatiquement selon le profil de consommation</span>
-                  </li>
                 </ul>
               </div>
             </div>
@@ -1762,6 +1823,7 @@
           <div style={{
             textAlign: 'center', fontSize: 10, color: T.slate400,
             paddingTop: 16, borderTop: `1px solid ${T.slate200}`,
+            breakBefore: 'avoid', pageBreakBefore: 'avoid',
           }}>
             <strong style={{ color: T.slate600 }}>DiagTertiaire</strong>
             {' '}· Pré-diagnostic énergétique indicatif · Lecture selon activité déclarée
@@ -1795,6 +1857,114 @@
       /* Fetch report payload from secure API */
       useEffect(() => {
         const params = new URLSearchParams(window.location.search);
+
+        /* ── MODE MOCK LOCAL (?mock=1) ──────────────────────────────────
+           Charge un payload réaliste sans API ni Supabase.
+           Usage : http://localhost:4173/public-report-print.html?mock=1
+           NE PAS utiliser en production — uniquement pour révision locale.
+        ──────────────────────────────────────────────────────────────── */
+        if (params.get('mock')) {
+          const mockPayload = {
+            report_id: 'MOCK-2026-AUDIT',
+            generated_at: new Date().toISOString(),
+            inputs_summary: {
+              site_name: 'Bureaux Le Vieux-Port',
+              activity: 'Bureaux',
+              address: '1 Quai du Port',
+              postal_code: '13002',
+              surface: 1250,
+              email: 'contact@example.fr',
+              mainHeating: 'gas',
+              cover_image_selected: false,
+            },
+            benchmark_result: {
+              site_intensity:    { value: 192 },
+              benchmark_median:  { value: 148 },
+              benchmark_low:     { value: 98  },
+              benchmark_high:    { value: 245 },
+              position: 'above_range',
+              source_ref: 'Références sectorielles ADEME / Observatoire BBC 2024',
+            },
+            composite_savings: {
+              annual_euro: { value: 31400 },
+              annual_kwh:  { value: 104000 },
+              total_pct:   { value: 24 },
+            },
+            confidence: { level: 'medium', score: 68 },
+            calculation_results: {
+              total_cost_euro_an: { value: 46800 },
+              elec_kwh_an:        { value: 195000 },
+              gas_kwh_an:         { value: 47000  },
+            },
+            usage_breakdown: {
+              breakdown_pct: {
+                heating_pct: 36, cooling_pct: 11, dhw_pct: 7,
+                lighting_pct: 24, vent_aux_pct: 12, other_specific_pct: 10,
+              },
+            },
+            top_actions: [
+              {
+                id: 'ACT01', tier: 'light',
+                name: 'Réglage horaires et abaissement chauffage',
+                gain_euro_an: { value: 4800 }, gain_kwh_an: { value: 20000 },
+                capex: { value: 800 }, capex_net: { value: 800 }, aid_amount: { value: 0 },
+                roi_years: { value: 0.2 },
+              },
+              {
+                id: 'ACT05', tier: 'light',
+                name: 'Arrêt automatique de la ventilation hors horaires',
+                gain_euro_an: { value: 3200 }, gain_kwh_an: { value: 13500 },
+                capex: { value: 1400 }, capex_net: { value: 1190 }, aid_amount: { value: 210 },
+                roi_years: { value: 0.4 },
+              },
+              {
+                id: 'ACT06', tier: 'light',
+                name: 'Pilotage GTB éclairage présence / luminosité',
+                gain_euro_an: { value: 2600 }, gain_kwh_an: { value: 11000 },
+                capex: { value: 2800 }, capex_net: { value: 2380 }, aid_amount: { value: 420 },
+                roi_years: { value: 1.1 },
+              },
+              {
+                id: 'ACT08', tier: 'heavy',
+                name: 'Remplacement chaudière gaz par pompe à chaleur air/eau',
+                gain_euro_an: { value: 13500 }, gain_kwh_an: { value: 42000 },
+                capex: { value: 32000 }, capex_net: { value: 20800 },
+                aid_amount: { value: 11200 }, aid_tags: ['CEE', 'MaPrimeRenov'],
+                roi_years: { value: 1.5 },
+              },
+              {
+                id: 'ACT10', tier: 'heavy',
+                name: 'Isolation thermique des combles perdus',
+                gain_euro_an: { value: 5800 }, gain_kwh_an: { value: 20000 },
+                capex: { value: 19000 }, capex_net: { value: 12350 },
+                aid_amount: { value: 6650 }, aid_tags: ['CEE'],
+                roi_years: { value: 2.1 },
+              },
+            ],
+            assumptions: [
+              'Surface et activité déclarées par l\'occupant',
+              'Consommations issues des factures 2024-2025 fournies',
+              'Prix unitaires : 0,196 €/kWh élec · 0,108 €/kWh gaz TTC',
+              'Durée de fonctionnement estimée : 9h/jour, 220 jours/an',
+              'Répartition des usages calculée sur profil type bureaux tertiaires',
+              'Aides CEE et MaPrimeRénov estimées sans validation ANAH',
+              'Abonnements réseau déduits automatiquement selon le profil',
+              'Inflation énergie pondérée : 3,5% élec / 4,5% gaz',
+            ],
+            limits: [
+              'Ce pré-diagnostic est indicatif et non opposable réglementairement',
+              'Les chiffres sont des estimations avant audit technique certifié RGE',
+              'Les aides dépendent du statut du demandeur et de l\'éligibilité',
+              'L\'effet rebond et les interactions entre travaux ne sont pas modélisés',
+              'La qualité réelle de l\'enveloppe n\'a pas été visitée sur site',
+            ],
+          };
+          console.log('[print] MODE MOCK — payload injecté directement');
+          setReportPayload(mockPayload);
+          setPrintAssets({});
+          return;
+        }
+
         const id    = params.get('public_report_id') || '';
         const token = params.get('token') || '';
 
@@ -1890,21 +2060,26 @@
             if (document.fonts?.ready) await document.fonts.ready;
             if (cancelled || readyFired.current) return;
 
+            const hasProjectionChart = arr(reportPayload.top_actions).length > 0;
             let projectionReady = false;
-            for (let i = 0; i < 30 && !cancelled && !readyFired.current; i++) {
-              const chart = document.querySelector('[data-report-chart="projection"] svg');
-              if (chart) {
-                const rect = chart.getBoundingClientRect();
-                if (rect.width >= 100 && rect.height >= 100) {
-                  projectionReady = true;
-                  console.log('[print] projection svg ready:', Math.round(rect.width), '×', Math.round(rect.height));
-                  break;
+            if (hasProjectionChart) {
+              for (let i = 0; i < 30 && !cancelled && !readyFired.current; i++) {
+                const chart = document.querySelector('[data-report-chart="projection"] svg');
+                if (chart) {
+                  const rect = chart.getBoundingClientRect();
+                  if (rect.width >= 100 && rect.height >= 100) {
+                    projectionReady = true;
+                    console.log('[print] projection svg ready:', Math.round(rect.width), '×', Math.round(rect.height));
+                    break;
+                  }
                 }
+                await new Promise(r => setTimeout(r, 80));
               }
-              await new Promise(r => setTimeout(r, 80));
-            }
-            if (!projectionReady) {
-              console.warn('[print] projection svg not visible — proceeding anyway');
+              if (!projectionReady) {
+                console.warn('[print] projection svg not visible — proceeding anyway');
+              }
+            } else {
+              console.log('[print] no actions — skipping projection chart poll');
             }
             if (cancelled || readyFired.current) return;
 

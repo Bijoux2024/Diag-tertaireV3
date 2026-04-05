@@ -1,5 +1,89 @@
 # Changelog - DiagTertiaire V3
 
+## [Audit PDF - anti-coupure + sync] - 2026-04-05
+
+### Corrections critiques (public-report-print.html)
+
+- **TIER_CONF** : ajout des cles `light` et `heavy` (moteur engine.js). Tous les badges d'action affichaient "Equipement" en fallback — desormais "Action rapide" (light, vert) et "Investissement" (heavy, ambre).
+- **Budget recap** : `breakInside: 'avoid'` inline sur le conteneur 4-cells du budget global. La cascade CSS (`.budget-row { break-inside: auto }` apres `.pba`) annulait la protection — corrige par style inline prioritaire.
+- **Section-summary projection** : meme correction `breakInside: 'avoid'` inline (meme bug de cascade).
+- **CTA "Prochaine etape"** : ajout `className="pba"` sur le wrapper externe du bloc gradient bleu. Seul le titre interne etait protege — les bullets et proof line pouvaient se retrouver sur une page differente.
+
+### Corrections importantes (public-report-print.html)
+
+- **Signal de pret Puppeteer** : ajout d'une garde `hasProjectionChart = top_actions.length > 0` avant le polling SVG. Evite 2.4s d'attente inutile quand 0 actions (pas de graphique dans le DOM).
+- **Positionnement sectoriel** : regroupement des 3 children (gapText + jauge + source) dans un div unique — devient `firstChild` dans `section-start (.pba)`. La jauge ne peut plus etre separee du titre.
+- **Footer anti-veuve** : `breakBefore: 'avoid'` sur le footer pour empecher qu'il se retrouve seul en tete de page.
+- **Grid hypotheses/limites** : `breakInside: 'avoid'` inline sur `.cols-2` pour maintenir les 2 colonnes sur la meme page.
+- **Section wrapper** : `overflow: 'hidden'` -> `overflow: 'visible'` pour eviter le clipping Chromium/Puppeteer aux bords de page. La barre gradient du titre conserve son `borderRadius` via une propriete directe.
+
+### Ameliorations (public-report-print.html)
+
+- **CO2 equivalence km** : ajout de la 3eme equivalence (km voiture evites / an, facteur 0,193 kg/km ADEME). Synchronisation avec `newDiagnosticGetCO2Equivalences` de index.html.
+- **Typographie** : labels hero mini-KPIs `7.5px` -> `8.5px`, labels Decret Tertiaire `7.5px` -> `8.5px`. Seuil minimum lisible a l'impression (6pt = 8px CSS).
+
+### Fichiers modifies
+
+- `public-report-print.html`
+- `CHANGELOG.md`
+
+## [Audit post-refonte formulaire] - 2026-04-05
+
+### Regressions corrigees dans engine.js
+
+- **Lead scoring - hScore** : ajout des nouvelles valeurs de decisionHorizon (`6months`, `1year`, `later`) qui tombaient sur le fallback 8 au lieu de 24/16/8 attendus. Backward compat : anciennes valeurs (`3to6months`, `6to12months`, `over1year`) conservees.
+- **Lead scoring - oScore** : ajout de `compliance` (= 9, alias de `comply_regulation`) et `valorization` (= 7, alias de `valorise_asset`) introduits par la refonte. Backward compat : anciennes valeurs conservees.
+- **inputs_summary** : correction des references vers les anciens noms de champs (`primaryGoal` -> `projectObjective`, `projectHorizon` -> `decisionHorizon`, `decisionRole` -> `role` avec fallback backward-compat). Ces champs etaient `null` pour tous les nouveaux diagnostics depuis la refonte.
+- **buildingAge fallback** : `'2006_2012'` remplace par `'post2012'` (la valeur n'existait plus dans les 4 nouvelles tranches).
+
+### Corrections visuelles dans index.html
+
+- **Stepper** : label etape 5 corrige de "Rapport" -> "Contact" (l'etape 5 est le formulaire de contact, le rapport est genere apres).
+- **Toggle climatisation** : couleur active corrigee de vert (`#16A34A`) vers bleu (`#1D4ED8`) pour etre coherent avec tous les autres toggles du formulaire.
+- **Boutons Step3** : fleches `←` / `→` supprimees sur les boutons Retour/Continuer pour harmoniser avec les etapes 1, 2, 4 et 5.
+
+### Enrichissement payload Supabase (index.html)
+
+- `newDiagnosticBuildDiagnosticLeadPayload` - correction des anciens noms de champs (`primaryGoal`, `projectHorizon`) vers les nouveaux avec fallback.
+- `raw_payload` : ajout de `budget_range`, `works_done`, `decision_horizon`, `is_decision_maker`, `building_age`, `first_name`.
+
+### Ajout mineur
+
+- `DEFAULT_CEILING_HEIGHT` : ajout de `commerce_alim: 3.2` (activite presentante dans ACTIVITIES mais absente du mapping).
+- Commentaire DEFAULT_FORM_DATA : `surface` documente comme deplacee en etape 1.
+
+### Fichiers modifies
+
+- `src/engine.js`
+- `index.html`
+- `CHANGELOG.md`
+
+## [Formulaire 5 etapes] - 2026-04-05
+
+### Refonte formulaire public (4 -> 5 etapes)
+- Step1 (Batiment) : activite, adresse, surface, cover image - role retire, surface ajoutee
+- Step2 (Equipements) : chauffage, ECS, buildingAge, toiture - surface/ceilingHeight retires, boilerAge conditionnel gaz+fioul, bloc accordeon pour roofInsulation/wallInsulation/VMC/GTB
+- Step3 (Consommations) : elec + gaz - champs abonnement retires de l'UI
+- Step4 (Projet) : NOUVEAU - travaux, role, objectif, horizon, budgetRange, decideur
+- Step5 (Rapport) : NOUVEAU - prenom, email, telephone, societe, RGPD, opt-in
+- CTA final : "Generer mon rapport gratuit"
+- Stepper mis a jour : 5 etapes avec labels Batiment/Equipements/Consommations/Projet/Rapport
+
+### Nouveau champ budgetRange
+- Ajoute dans NEW_DIAGNOSTIC_DEFAULT_FORM_DATA
+- Constante NEW_DIAGNOSTIC_BUDGET_RANGES (5 options)
+- Transmis au lead scoring (25 pts max)
+
+### buildingAge simplifie (6 -> 4 tranches)
+- Synchronise avec engine.js : pre1975, 1975_2000, 2001_2012, post2012
+
+### GA4 tracking mis a jour
+- diagnostic_step5_completed ajoute (step_name: contact)
+- Labels refactorises : building, equipment, energy, project, contact
+
+### Fichiers modifies
+- index.html, exemple-rapport.html (synchronises), ga4.js
+
 ## [SEO Phase 2] - 2026-04-03
 
 ### Donnees structurees

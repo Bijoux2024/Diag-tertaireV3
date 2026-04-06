@@ -53,7 +53,8 @@
       "Bash(python3 apply_legal.py)",
       "Bash(python3 apply_pro.py)",
       "Bash(python3 -m http.server 3333)",
-      "mcp__claude_ai_Vercel__list_deployments"
+      "mcp__claude_ai_Vercel__list_deployments",
+      "Bash(head -30 /c/Users/yanni/diag-tertiaire-blog/src/content/blog/*.md)"
     ]
   }
 }

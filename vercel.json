@@ -1,5 +1,7 @@
 {
   "rewrites": [
+    { "source": "/blog/", "destination": "https://diag-tertiaire-blog.vercel.app/blog/" },
+    { "source": "/blog/:path+/", "destination": "https://diag-tertiaire-blog.vercel.app/blog/:path+/" },
     { "source": "/blog/:path*", "destination": "https://diag-tertiaire-blog.vercel.app/blog/:path*" },
     { "source": "/diagnostic", "destination": "/" },
     { "source": "/espace-professionnel", "destination": "/espace-professionnel.html" },

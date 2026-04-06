@@ -64,7 +64,8 @@
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <!-- PropTypes : validation des props React (utilisé par des composants Recharts si présent) -->
     <script src="https://unpkg.com/prop-types/prop-types.min.js"></script>
-    <!-- Iconify : bibliothèque d'icônes (>200 000 icônes via web component) -->
+    <!-- Recharts : graphiques interactifs (CDN UMD — ResponsiveContainer utilisé dans les rapports) -->
+    <!-- Les icônes Solar sont chargées depuis src/solar-icons.js (voir plus bas) -->
     <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
 
     <!-- Babel Standalone : compile le JSX en JavaScript dans le navigateur -->
@@ -1133,8 +1134,8 @@
                 phone: formData.phone || null,
                 message: newDiagnosticBuildLeadMessage(
                     formData.address ? `Adresse: ${formData.address}` : null,
-                    formData.primaryGoal ? `Objectif: ${formData.primaryGoal}` : null,
-                    formData.projectHorizon ? `Horizon: ${formData.projectHorizon}` : null,
+                    (formData.projectObjective || formData.primaryGoal) ? `Objectif: ${formData.projectObjective || formData.primaryGoal}` : null,
+                    (formData.decisionHorizon || formData.projectHorizon) ? `Horizon: ${formData.decisionHorizon || formData.projectHorizon}` : null,
                     formData.contactOptIn ? 'Mise en relation expert: oui' : 'Mise en relation expert: non'
                 ),
                 report_id: reportPayload && reportPayload.report_id ? reportPayload.report_id : null,
@@ -1174,8 +1175,14 @@
                     activity: formData.activity || inputsSummary.activity || null,
                     surface: surfaceValue || null,
                     role: formData.decisionRole || formData.role || inputsSummary.decision_role || inputsSummary.role || null,
-                    primary_goal: formData.primaryGoal || null,
-                    project_horizon: formData.projectHorizon || null,
+                    primary_goal: formData.projectObjective || formData.primaryGoal || null,
+                    project_horizon: formData.decisionHorizon || formData.projectHorizon || null,
+                    budget_range: formData.budgetRange || null,
+                    works_done: formData.worksDone || [],
+                    decision_horizon: formData.decisionHorizon || null,
+                    is_decision_maker: formData.isDecisionMaker || null,
+                    building_age: formData.buildingAge || null,
+                    first_name: formData.firstName || null,
                     contact_opt_in: !!formData.contactOptIn,
                     report_id: reportPayload && reportPayload.report_id ? reportPayload.report_id : null
                 }
@@ -2040,9 +2047,9 @@
                         </p>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.5rem', maxWidth: '60rem', margin: '0 auto', position: 'relative' }}>
                             {[
-                                { num: '1', icon: 'solar:document-text-linear', title: 'Décrivez votre local', desc: 'Vous renseignez votre activité, votre surface et vos consommations (facture ou estimation)', gradient: 'linear-gradient(135deg, #1E3A5F 0%, #1E3A8A 100%)' },
-                                { num: '2', icon: 'solar:chart-2-linear', title: 'On compare pour vous', desc: 'Notre outil compare vos données aux repères de consommation de votre secteur (données publiques officielles)', gradient: 'linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%)' },
-                                { num: '3', icon: 'solar:download-linear', title: 'Recevez votre rapport', desc: 'Vous recevez votre rapport en PDF : positionnement, économies possibles, et 3 actions prioritaires', gradient: 'linear-gradient(135deg, #2563EB 0%, #3B82F6 100%)' }
+                                { num: '1', icon: 'solar:document-text-bold-duotone', title: 'Décrivez votre local', desc: 'Vous renseignez votre activité, votre surface et vos consommations (facture ou estimation)', gradient: 'linear-gradient(135deg, #1E3A5F 0%, #1E3A8A 100%)' },
+                                { num: '2', icon: 'solar:chart-2-bold-duotone', title: 'On compare pour vous', desc: 'Notre outil compare vos données aux repères de consommation de votre secteur (données publiques officielles)', gradient: 'linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%)' },
+                                { num: '3', icon: 'solar:download-bold-duotone', title: 'Recevez votre rapport', desc: 'Vous recevez votre rapport en PDF : positionnement, économies possibles, et 3 actions prioritaires', gradient: 'linear-gradient(135deg, #2563EB 0%, #3B82F6 100%)' }
                             ].map((step, i) => (
                                 <div key={i} style={{
                                     background: step.gradient,
@@ -2084,9 +2091,9 @@
                         </div>
                         <div className="grid sm:grid-cols-3 gap-7">
                             {[
-                                { icon: 'solar:buildings-2-linear', color: '#1D4ED8', bg: '#EBF1FF', title: 'Savoir si vous consommez trop', desc: 'Votre consommation est comparée automatiquement aux données moyennes de votre secteur, issues de sources publiques officielles.' },
-                                { icon: 'solar:target-bold', color: '#1D4ED8', bg: '#EBF1FF', title: 'Savoir par où commencer', desc: 'Le rapport classe les travaux les plus rentables pour votre situation : isolation, chauffage, éclairage... avec le retour sur investissement estimé.' },
-                                { icon: 'solar:graph-new-up-bold', color: '#1D4ED8', bg: '#EBF1FF', title: 'Chiffrer vos économies possibles', desc: 'Recevez une estimation en euros par an, avec une projection sur 10 ans - coût des travaux inclus.' }
+                                { icon: 'solar:buildings-2-bold-duotone', color: '#1D4ED8', bg: '#EBF1FF', title: 'Savoir si vous consommez trop', desc: 'Votre consommation est comparée automatiquement aux données moyennes de votre secteur, issues de sources publiques officielles.' },
+                                { icon: 'solar:target-bold-duotone', color: '#1D4ED8', bg: '#EBF1FF', title: 'Savoir par où commencer', desc: 'Le rapport classe les travaux les plus rentables pour votre situation : isolation, chauffage, éclairage... avec le retour sur investissement estimé.' },
+                                { icon: 'solar:graph-new-up-bold-duotone', color: '#1D4ED8', bg: '#EBF1FF', title: 'Chiffrer vos économies possibles', desc: 'Recevez une estimation en euros par an, avec une projection sur 10 ans - coût des travaux inclus.' }
                             ].map((item, i) => (
                                 <div key={i} style={{
                                     background: '#FCFCFF',
@@ -2219,7 +2226,7 @@
                     <div className="max-w-6xl mx-auto">
                         <div className="max-w-3xl">
                             <div className="inline-flex items-center gap-2 bg-[#1D4ED8]/10 text-[#102A43] px-3 py-1 rounded-full text-xs font-semibold mb-4">
-                                <Icon icon="solar:shield-check-linear" className="text-sm" />
+                                <Icon icon="solar:shield-check-line-duotone" className="text-sm" />
                                 Notre approche
                             </div>
 
@@ -2280,10 +2287,10 @@
 
                         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                             {[
-                                { icon: 'solar:buildings-2-linear', color: '#102A43', title: 'Référence sectorielle', desc: "Chaque activité tertiaire a sa consommation de référence (bureaux, commerce, santé...)." },
-                                { icon: 'solar:calendar-linear', color: '#F59E0B', title: 'Ajustement bâtiment', desc: "L’âge du bâtiment et des équipements affine l’ordre de grandeur estimé." },
-                                { icon: 'solar:wallet-money-linear', color: '#16A34A', title: 'Lecture économique', desc: "L’estimation est convertie en coût annuel pour une lecture décisionnelle immédiate." },
-                                { icon: 'solar:chart-2-linear', color: '#1D4ED8', title: 'Priorisation', desc: "Le rapport propose des actions types avec gains, coûts et délai de rentabilisation indicatifs." },
+                                { icon: 'solar:buildings-2-bold-duotone', color: '#102A43', title: 'Référence sectorielle', desc: "Chaque activité tertiaire a sa consommation de référence (bureaux, commerce, santé...)." },
+                                { icon: 'solar:calendar-bold-duotone', color: '#F59E0B', title: 'Ajustement bâtiment', desc: "L’âge du bâtiment et des équipements affine l’ordre de grandeur estimé." },
+                                { icon: 'solar:wallet-money-bold-duotone', color: '#16A34A', title: 'Lecture économique', desc: "L’estimation est convertie en coût annuel pour une lecture décisionnelle immédiate." },
+                                { icon: 'solar:chart-2-bold-duotone', color: '#1D4ED8', title: 'Priorisation', desc: "Le rapport propose des actions types avec gains, coûts et délai de rentabilisation indicatifs." },
                             ].map((item, i) => (
                                 <div key={i} className="bg-[#F8FAFC] rounded-xl border border-[#E2E8F0] p-4 hover:shadow-sm transition-shadow">
                                     <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3" style={{ backgroundColor: `${item.color}15` }}>
@@ -2549,12 +2556,12 @@
 
                                 <div className="flex flex-wrap items-center justify-center gap-8 text-sm text-white/90 mb-12 py-4 px-6 bg-white/5 rounded-xl border border-white/10 max-w-3xl mx-auto">
                                     <div className="flex items-center gap-2">
-                                        <Icon icon="solar:shield-check-bold" className="text-[#16A34A] text-lg" />
+                                        <Icon icon="solar:shield-check-bold-duotone" className="text-[#16A34A] text-lg" />
                                         <span><strong>100% sécurisé</strong></span>
                                     </div>
                                     <div className="w-px h-6 bg-white/20"></div>
                                     <div className="flex items-center gap-2">
-                                        <Icon icon="solar:rocket-bold" className="text-[#16A34A] text-lg" />
+                                        <Icon icon="solar:rocket-bold-duotone" className="text-[#16A34A] text-lg" />
                                         <span><strong>Déploiement immédiat</strong></span>
                                     </div>
                                 </div>
@@ -2887,21 +2894,21 @@
                             <div className="grid md:grid-cols-3 gap-6">
                                 {[
                                     {
-                                        icon: 'solar:calculator-minimalistic-linear',
+                                        icon: 'solar:chart-square-bold-duotone',
                                         title: 'Experts-comptables',
                                         desc: 'Proposez un service premium à vos clients tertiaires. Démarquez-vous avec un outil digital professionnel.',
                                         testimonial: '"Qualification rapide : identifiez en quelques minutes si un dossier mérite un audit approfondi."',
                                         author: ''
                                     },
                                     {
-                                        icon: 'solar:buildings-3-linear',
+                                        icon: 'solar:buildings-bold-duotone',
                                         title: 'Bureaux d\'études',
                                         desc: 'Qualifiez vos prospects en 5 minutes avant audit. Gagnez du temps sur les premiers contacts.',
                                         testimonial: '"Gain de temps : remplacez les premiers rendez-vous exploratoires par un rapport structuré."',
                                         author: ''
                                     },
                                     {
-                                        icon: 'solar:hammer-linear',
+                                        icon: 'solar:magic-stick-3-bold-duotone',
                                         title: 'Artisans & installateurs',
                                         desc: 'Démontrez votre expertise avec un rapport professionnel. Facilitez la prise de décision client.',
                                         testimonial: '"Image professionnelle : remettez un rapport à vos couleurs, prêt à partager."',
@@ -3193,6 +3200,7 @@
             offices: 2.7,
             retail: 3.0,
             retail_food: 3.2,
+            commerce_alim: 3.2,
             hotel: 2.5,
             restaurant: 2.8,
             education: 3.0,
@@ -3205,7 +3213,7 @@
             {
                 id: 'offices',
                 label: 'Bureaux',
-                icon: 'solar:buildings-2-linear',
+                icon: 'solar:buildings-2-bold-duotone',
                 // Valeurs provisoires + source_level
                 refKwh: 180,
                 source_level: 'source_partial',
@@ -3215,7 +3223,7 @@
             {
                 id: 'retail',
                 label: 'Commerce',
-                icon: 'solar:shop-linear',
+                icon: 'solar:shop-bold-duotone',
                 refKwh: 350,
                 source_level: 'source_partial',
                 source_ref: 'CEREN 2019 - Commerce',
@@ -3224,7 +3232,7 @@
             {
                 id: 'hotel',
                 label: 'Hôtel',
-                icon: 'solar:bed-linear',
+                icon: 'solar:bed-bold-duotone',
                 refKwh: 280,
                 source_level: 'source_partial',
                 source_ref: 'ADEME - Hôtellerie',
@@ -3233,7 +3241,7 @@
             {
                 id: 'restaurant',
                 label: 'Restaurant',
-                icon: 'solar:chef-hat-linear',
+                icon: 'solar:book-bold-duotone',
                 refKwh: 400,
                 source_level: 'hypothesis',
                 source_ref: 'Estimation produit',
@@ -3242,7 +3250,7 @@
             {
                 id: 'commerce_alim',
                 label: 'Commerce alimentaire (épicerie, boucherie...)',
-                icon: 'solar:shop-minimalistic-linear',
+                icon: 'solar:shop-bold-duotone',
                 refKwh: 650,
                 source_level: 'source_partial',
                 source_ref: 'CEREN 2019 · Commerce alimentaire',
@@ -3251,7 +3259,7 @@
             {
                 id: 'health_local',
                 label: 'Cabinet de santé',
-                icon: 'solar:heart-pulse-linear',
+                icon: 'solar:target-bold-duotone',
                 refKwh: 200,
                 source_level: 'pending_expert',
                 source_ref: 'À confirmer',
@@ -3260,7 +3268,7 @@
             {
                 id: 'education',
                 label: 'École / Formation',
-                icon: 'solar:book-linear',
+                icon: 'solar:book-bold-duotone',
                 refKwh: 150,
                 source_level: 'source_partial',
                 source_ref: 'ADEME - Établissements scolaires',
@@ -3269,7 +3277,7 @@
             {
                 id: 'light_warehouse',
                 label: 'Entrepôt / Stockage',
-                icon: 'solar:box-linear',
+                icon: 'solar:box-bold-duotone',
                 refKwh: 90,
                 source_level: 'source_partial',
                 source_ref: 'CEREN - Entrepôts',
@@ -3278,7 +3286,7 @@
             {
                 id: 'mixed',
                 label: 'Plusieurs activités',
-                icon: 'solar:transfer-horizontal-linear',
+                icon: 'solar:buildings-2-bold-duotone',
                 refKwh: 0, // Calculé dynamiquement
                 source_level: 'hypothesis',
                 source_ref: 'Pondération offices + retail',
@@ -3287,8 +3295,8 @@
         ];
 
         const NEW_DIAGNOSTIC_ROLES = [
-            { id: 'owner', label: 'Propriétaire', icon: 'solar:home-linear' },
-            { id: 'tenant', label: 'Locataire / Gestionnaire', icon: 'solar:case-linear' }
+            { id: 'owner', label: 'Propriétaire', icon: 'solar:home-bold-duotone' },
+            { id: 'tenant', label: 'Locataire / Gestionnaire', icon: 'solar:key-bold-duotone' }
         ];
 
         const NEW_DIAGNOSTIC_WORKS_DONE = [
@@ -3308,9 +3316,9 @@
         // NEW_DIAGNOSTIC_BOILER_AGES -> src/engine.js
 
         const NEW_DIAGNOSTIC_PROJECT_OBJECTIVES = [
-            { id: 'reduce_costs', label: 'Réduire mes charges énergétiques', icon: 'solar:wallet-money-linear' },
-            { id: 'compliance', label: 'Respecter les obligations réglementaires', icon: 'solar:document-text-linear' },
-            { id: 'valorization', label: 'Valoriser mon patrimoine', icon: 'solar:chart-2-linear' }
+            { id: 'reduce_costs', label: 'Réduire mes charges énergétiques', icon: 'solar:wallet-money-bold-duotone' },
+            { id: 'compliance', label: 'Respecter les obligations réglementaires', icon: 'solar:document-text-bold-duotone' },
+            { id: 'valorization', label: 'Valoriser mon patrimoine', icon: 'solar:chart-2-bold-duotone' }
         ];
 
         const NEW_DIAGNOSTIC_DECISION_HORIZONS = [
@@ -3318,6 +3326,14 @@
             { id: '6months', label: "D'ici 6 mois" },
             { id: '1year', label: "D'ici 1 an" },
             { id: 'later', label: 'Plus tard / en veille' }
+        ];
+
+        const NEW_DIAGNOSTIC_BUDGET_RANGES = [
+            { id: 'under5k', label: 'Moins de 5 000 EUR' },
+            { id: '5to20k', label: '5 000 a 20 000 EUR' },
+            { id: '20to80k', label: '20 000 a 80 000 EUR' },
+            { id: 'over80k', label: 'Plus de 80 000 EUR' },
+            { id: 'unknown', label: 'Je ne sais pas encore' }
         ];
 
         const NEW_DIAGNOSTIC_DEFAULT_FORM_DATA = {
@@ -3370,7 +3386,7 @@
             mixOfficesPct: 50,
             mixRetailPct: 50,
 
-            // === ÉTAPE 2 : Bâtiment ===
+            // === ÉTAPE 1 : Bâtiment (surface deplacee ici depuis Step2) ===
             surface: '',
             buildingAge: '',       // 'pre1975' | '1975_2000' | '2001_2012' | 'post2012'
             roofType: '',          // 'flat' | 'pitched' | 'none'
@@ -3396,16 +3412,24 @@
             gasKwh: '',
             gasEuro: '',
             gasIncludesSubscription: false,
+            networkUsed: false,
+            networkKwh: '',
+            networkEuro: '',
+            // pacAge : age de la PAC si mainHeating = 'electric_pac' (optionnel)
+            pacAge: '',
 
-            // === ÉTAPE 4 : Contact + Qualification ===
+            // === ÉTAPE 4 : Projet ===
+            worksDone: [],
+            projectObjective: '',  // 'reduce_costs' | 'compliance' | 'valorization'
+            decisionHorizon: '',   // 'immediate' | '6months' | '1year' | 'later'
+            budgetRange: '',       // 'under5k' | '5to20k' | '20to80k' | 'over80k' | 'unknown'
+            isDecisionMaker: '',   // 'yes' | 'no'
+
+            // === ÉTAPE 5 : Contact ===
             firstName: '',
             email: '',
             phone: '',
             company: '',
-            worksDone: [],
-            projectObjective: '',  // 'reduce_costs' | 'compliance' | 'valorization'
-            decisionHorizon: '',   // 'immediate' | '6months' | '1year' | 'later'
-            isDecisionMaker: '',   // 'yes' | 'no'
 
             // === RGPD & Opt-in ===
             opt_in_politique: false,
@@ -3484,9 +3508,16 @@
 
         const newDiagnosticValidateEnergyData = (formData) => {
             const errors = [];
+            const isNetwork = formData.mainHeating === 'network';
 
             // Au moins une énergie doit être renseignée
-            if (!formData.elecUsed && !formData.gasUsed) {
+            if (isNetwork) {
+                // Pour reseau de chaleur : kWh reseau obligatoire
+                if (!formData.networkKwh && !formData.networkEuro) {
+                    errors.push('Reseau de chaleur : renseignez au moins les kWh ou le montant en €');
+                    return errors;
+                }
+            } else if (!formData.elecUsed && !formData.gasUsed) {
                 errors.push('Au moins une énergie (électricité ou gaz) doit être renseignée');
                 return errors;
             }
@@ -3540,7 +3571,7 @@
         // NewDiagnosticStepper (barre de progression)
         const NewDiagnosticStepper = ({ currentStep, totalSteps }) => {
             const steps = Array.from({ length: totalSteps }, (_, i) => i + 1);
-            const stepTitles = ["Le projet", "Le bâtiment", "Les équipements", "Données & Contact"];
+            const stepTitles = ["Batiment", "Equipements", "Consommations", "Projet", "Contact"];
 
             return (
                 <div className="mb-10 lg:mb-12">
@@ -4364,10 +4395,10 @@
                 <div className={isModalSurface ? 'bg-[#F8FAFC] border border-[#E2E8F0] rounded-[24px] p-5 md:p-6 shadow-sm overflow-hidden relative' : 'mt-8 mb-6 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-6 shadow-sm overflow-hidden relative fade-in'}>
                     <div className="flex items-start gap-4 mb-4">
                         <div className="w-10 h-10 rounded-full bg-blue-100 text-[#1D4ED8] flex items-center justify-center shrink-0">
-                            <Icon icon="solar:camera-linear" className="text-xl" />
+                            <Icon icon="solar:gallery-add-bold-duotone" className="text-xl" />
                         </div>
                         <div className="flex-1">
-                            <h3 className="text-lg font-bold text-neutral-800">Visuel pour la couverture du rapport</h3>
+                            <h3 className="text-lg font-bold text-neutral-800">Image pour la couverture du rapport</h3>
                             <p className="text-sm text-neutral-500 mt-1">Sélectionnez la source de l'image de couverture. Le processus prend en compte votre saisie adresse. (Étape facultative)</p>
                         </div>
                     </div>
@@ -4396,7 +4427,7 @@
                                 className="flex items-center gap-2 bg-white text-[#1D4ED8] px-4 py-2 rounded-lg font-semibold border border-[#DBEAFE] hover:bg-[#EFF6FF] transition-colors"
                             >
                                 <Icon icon="solar:magic-stick-3-linear" className="text-lg" />
-                                Générer un visuel
+                                Générer une image
                             </button>
                             <button
                                 type="button"
@@ -4603,7 +4634,7 @@
         };
 
         // Étape 1 : Identification
-        const NewDiagnosticStep1Identification = ({ formData, setFormData, onNext }) => {
+        const NewDiagnosticStep1Building = ({ formData, setFormData, onNext }) => {
             const [errors, setErrors] = useState({});
             const [mixedTab, setMixedTab] = useState(0); // 0 = Usage 1, 1 = Usage 2
 
@@ -4924,24 +4955,24 @@
                 const newErrors = {};
 
                 if (!formData.addressIsValid || !formData.address) {
-                    newErrors.address = 'Sélectionnez votre adresse dans la liste';
+                    newErrors.address = 'Selectionnez votre adresse dans la liste';
                 } else if (formData.addressPrecision === 'street') {
-                    newErrors.address = 'Merci d\'entrer l\'adresse complète avec le numéro';
-                }
-                if (!formData.role) {
-                    newErrors.role = 'Veuillez sélectionner votre rôle';
+                    newErrors.address = 'Merci d\'entrer l\'adresse complete avec le numero';
                 }
                 if (!newDiagnosticValidatePostalCode(formData.postalCode)) {
                     newErrors.postalCode = 'Code postal invalide (5 chiffres)';
                 }
                 if (!formData.activity) {
-                    newErrors.activity = 'Veuillez sélectionner une activité';
+                    newErrors.activity = 'Veuillez selectionner une activite';
+                }
+                if (!newDiagnosticValidateNumber(formData.surface, 1)) {
+                    newErrors.surface = 'Surface invalide (doit etre > 0)';
                 }
                 if (formData.activity === 'mixed') {
-                    if (!formData.mixedUsage1) newErrors.mixedUsage1 = 'Veuillez choisir le premier type d\'activité';
-                    if (!formData.mixedUsage2) newErrors.mixedUsage2 = 'Veuillez choisir le deuxième type d\'activité';
+                    if (!formData.mixedUsage1) newErrors.mixedUsage1 = 'Veuillez choisir le premier type d\'activite';
+                    if (!formData.mixedUsage2) newErrors.mixedUsage2 = 'Veuillez choisir le deuxieme type d\'activite';
                     if (formData.mixedUsage1 && formData.mixedUsage2 && formData.mixedUsage1 === formData.mixedUsage2) {
-                        newErrors.mixedUsage2 = 'Ces deux activités doivent être différentes';
+                        newErrors.mixedUsage2 = 'Ces deux activites doivent etre differentes';
                     }
                 }
 
@@ -5028,18 +5059,6 @@
                         )}
                     </div>
 
-                    <div className="mb-4 mt-6">
-                        <label className="block text-sm font-medium text-neutral-700 mb-2">
-                            Vous êtes <span className="text-red-500">*</span>
-                        </label>
-                        <NewDiagnosticRadioCards
-                            options={NEW_DIAGNOSTIC_ROLES.map(r => ({ ...r, desc: null }))}
-                            selected={formData.role}
-                            onChange={(v) => setFormData({ ...formData, role: v })}
-                        />
-                        {errors.role && <p role="alert" className="text-xs text-red-500 mt-2">{errors.role}</p>}
-                    </div>
-
                     <div className="grid grid-cols-[120px_1fr] gap-2">
                         <NewDiagnosticFormInput
                             label="Code postal *"
@@ -5063,13 +5082,24 @@
                     )}
 
                     <NewDiagnosticFormSelect
-                        label="Activité principale"
+                        label="Activite principale"
                         value={formData.activity}
                         onChange={(v) => setFormData({ ...formData, activity: v, mixedUsage1: '', mixedUsage2: '', ceilingHeight: DEFAULT_CEILING_HEIGHT[v] ? String(DEFAULT_CEILING_HEIGHT[v]) : '' })}
                         options={NEW_DIAGNOSTIC_ACTIVITIES}
                         required
                         error={errors.activity}
-                        placeholder="Sélectionnez une activité"
+                        placeholder="Selectionnez une activite"
+                    />
+
+                    <NewDiagnosticFormInput
+                        label="Surface totale"
+                        value={formData.surface}
+                        onChange={(v) => setFormData({ ...formData, surface: v })}
+                        type="number"
+                        placeholder="300"
+                        suffix="m2"
+                        required
+                        error={errors.surface}
                     />
 
                     {isMixed && (
@@ -5163,25 +5193,30 @@
             );
         };
 
-        // Étape 2 : Bâtiment & Usage
-        const NewDiagnosticStep2Building = ({ formData, setFormData, onNext, onBack }) => {
+        // Etape 2 : Equipements
+        const NewDiagnosticStep2Equipment = ({ formData, setFormData, onNext, onBack }) => {
             const [errors, setErrors] = useState({});
+            const [showAdvanced, setShowAdvanced] = useState(false);
             const isMixed = formData.activity === 'mixed';
+
+            // M9 backward compat : ancienne valeur 'electric' (localStorage / Supabase) → 'electric_convector'
+            React.useEffect(() => {
+                if (formData.mainHeating === 'electric') {
+                    setFormData(prev => ({ ...prev, mainHeating: 'electric_convector' }));
+                }
+            }, []);
 
             const validate = () => {
                 const newErrors = {};
 
-                if (!newDiagnosticValidateNumber(formData.surface, 1)) {
-                    newErrors.surface = 'Surface invalide (doit être > 0)';
-                }
                 if (!formData.mainHeating) {
-                    newErrors.mainHeating = 'Veuillez sélectionner le mode de chauffage principal';
+                    newErrors.mainHeating = 'Veuillez selectionner le mode de chauffage principal';
                 }
                 if (!formData.ecsSameSystem && !formData.ecsSystem) {
-                    newErrors.ecsSystem = 'Veuillez préciser votre système d\'eau chaude';
+                    newErrors.ecsSystem = 'Veuillez preciser votre systeme d\'eau chaude';
                 }
                 if (!formData.buildingAge) {
-                    newErrors.buildingAge = "Veuillez sélectionner l'année de construction";
+                    newErrors.buildingAge = "Veuillez selectionner l'annee de construction";
                 }
 
                 setErrors(newErrors);
@@ -5197,29 +5232,8 @@
 
             return (
                 <div className="max-w-2xl mx-auto">
-                    <h2 className="text-2xl font-bold text-[#102A43] mb-2">Votre bâtiment</h2>
-                    <p className="text-[#475569] mb-8">Quelques détails sur votre local</p>
-
-                    <NewDiagnosticFormInput
-                        label="Surface totale"
-                        value={formData.surface}
-                        onChange={(v) => setFormData({ ...formData, surface: v })}
-                        type="number"
-                        placeholder="300"
-                        suffix="m²"
-                        required
-                        error={errors.surface}
-                    />
-
-                    <NewDiagnosticFormInput
-                        label="Hauteur sous plafond (m)"
-                        value={formData.ceilingHeight || (DEFAULT_CEILING_HEIGHT[formData.activity] ? String(DEFAULT_CEILING_HEIGHT[formData.activity]) : '')}
-                        onChange={(v) => setFormData({ ...formData, ceilingHeight: v })}
-                        type="number"
-                        placeholder="2.7"
-                        suffix="m"
-                        helper="Pre-rempli selon votre activite, modifiable"
-                    />
+                    <h2 className="text-2xl font-bold text-[#102A43] mb-2">Comment est equipe votre batiment ?</h2>
+                    <p className="text-[#475569] mb-8">Ces informations permettent d'affiner le diagnostic</p>
 
                     {isMixed && (
                         <div className="mb-8 p-5 bg-white border border-[#E2E8F0] rounded-xl shadow-sm">
@@ -5240,29 +5254,60 @@
                         </div>
                     )}
 
-                    {/* Gate Questions */}
+                    {/* Chauffage principal */}
                     <div className="mb-6">
                         <label className="block text-sm font-medium text-neutral-700 mb-2">
                             Chauffage principal <span className="text-red-500">*</span>
                         </label>
                         <NewDiagnosticFormSelect
                             value={formData.mainHeating}
-                            onChange={(v) => setFormData({ ...formData, mainHeating: v })}
+                            onChange={(v) => setFormData({ ...formData, mainHeating: v, pacAge: '' })}
                             options={[
-                                { id: 'electric', label: 'Électrique (radiateurs, pompe à chaleur)' },
-                                { id: 'gas', label: 'Gaz (chaudière)' },
-                                { id: 'network', label: 'Chauffage collectif (réseau de chaleur)' },
-                                { id: 'other', label: 'Autre (fioul, bois...)' }
+                                { id: 'electric_convector', label: 'Convecteurs / Radiateurs electriques' },
+                                { id: 'electric_pac', label: 'Pompe a chaleur (PAC)' },
+                                { id: 'gas', label: 'Gaz (chaudiere)' },
+                                { id: 'fuel', label: 'Fioul' },
+                                { id: 'network', label: 'Chauffage collectif (reseau de chaleur)' },
+                                { id: 'other', label: 'Autre (bois...)' }
                             ]}
-                            placeholder="Sélectionnez..."
+                            placeholder="Selectionnez..."
                             error={errors.mainHeating}
                         />
                     </div>
 
+                    {(formData.mainHeating === 'gas' || formData.mainHeating === 'fuel') && (
+                        <div className="mb-6 fade-in">
+                            <NewDiagnosticFormSelect
+                                label="Age de la chaudiere"
+                                value={formData.boilerAge}
+                                onChange={(v) => setFormData({ ...formData, boilerAge: v })}
+                                options={NEW_DIAGNOSTIC_BOILER_AGES}
+                                placeholder="Selectionnez..."
+                                error={errors.boilerAge}
+                            />
+                        </div>
+                    )}
+
+                    {formData.mainHeating === 'electric_pac' && (
+                        <div className="mb-6 fade-in">
+                            <NewDiagnosticFormSelect
+                                label="Age de la PAC (optionnel)"
+                                value={formData.pacAge || ''}
+                                onChange={(v) => setFormData({ ...formData, pacAge: v })}
+                                options={[
+                                    { id: 'under5', label: 'Moins de 5 ans' },
+                                    { id: '5to15', label: '5 a 15 ans' },
+                                    { id: 'over15', label: 'Plus de 15 ans (fin de vie)' }
+                                ]}
+                                placeholder="Selectionnez (optionnel)..."
+                            />
+                        </div>
+                    )}
+
                     <div className="mb-6 bg-white border border-[#E2E8F0] p-4 rounded-xl flex items-center justify-between">
                         <div>
                             <p className="text-sm font-medium text-neutral-900">Climatisation</p>
-                            <p className="text-xs text-neutral-500">Le bâtiment est-il climatisé (totalement ou en partie) ?</p>
+                            <p className="text-xs text-neutral-500">Le batiment est-il climatise (totalement ou en partie) ?</p>
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer">
                             <input
@@ -5271,11 +5316,11 @@
                                 checked={formData.hasCooling}
                                 onChange={(e) => setFormData({ ...formData, hasCooling: e.target.checked })}
                             />
-                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#1D4ED8] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#16A34A]"></div>
+                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#1D4ED8] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#1D4ED8]"></div>
                         </label>
                     </div>
 
-                    {/* ECS Section */}
+                    {/* ECS */}
                     <div className="mb-8">
                         <label className="block text-sm font-medium text-neutral-700 mb-4">
                             Eau chaude <span className="text-red-500">*</span>
@@ -5289,9 +5334,9 @@
                                     : 'border-[#E2E8F0] hover:border-[#1D4ED8]/40'
                                     }`}
                             >
-                                <Icon icon="solar:fire-bold" className={`text-2xl mb-2 block ${formData.ecsSameSystem ? 'text-[#1D4ED8]' : 'text-neutral-500'}`} />
-                                <div className="font-semibold text-neutral-900 mb-1">Même système que le chauffage</div>
-                                <div className="text-xs text-neutral-600">Chaudière, pompe à chaleur ou chauffage collectif</div>
+                                <Icon icon="solar:fire-bold-duotone" className={`text-2xl mb-2 block ${formData.ecsSameSystem ? 'text-[#1D4ED8]' : 'text-neutral-500'}`} />
+                                <div className="font-semibold text-neutral-900 mb-1">Meme systeme que le chauffage</div>
+                                <div className="text-xs text-neutral-600">Chaudiere, pompe a chaleur ou chauffage collectif</div>
                             </button>
                             <button
                                 type="button"
@@ -5301,12 +5346,11 @@
                                     : 'border-[#E2E8F0] hover:border-[#1D4ED8]/40'
                                     }`}
                             >
-                                <Icon icon="solar:bath-bold" className={`text-2xl mb-2 block ${!formData.ecsSameSystem ? 'text-[#1D4ED8]' : 'text-neutral-500'}`} />
-                                <div className="font-semibold text-neutral-900 mb-1">Système séparé (ballon électrique, etc.)</div>
-                                <div className="text-xs text-neutral-600">Ballon électrique, chauffe-eau gaz séparé, etc.</div>
+                                <Icon icon="solar:bath-bold-duotone" className={`text-2xl mb-2 block ${!formData.ecsSameSystem ? 'text-[#1D4ED8]' : 'text-neutral-500'}`} />
+                                <div className="font-semibold text-neutral-900 mb-1">Systeme separe (ballon electrique, etc.)</div>
+                                <div className="text-xs text-neutral-600">Ballon electrique, chauffe-eau gaz separe, etc.</div>
                             </button>
                         </div>
-
                         {!formData.ecsSameSystem && (
                             <div className="fade-in">
                                 <NewDiagnosticFormSelect
@@ -5314,150 +5358,65 @@
                                     value={formData.ecsSystem}
                                     onChange={(v) => setFormData({ ...formData, ecsSystem: v })}
                                     options={[
-                                        { id: 'electric_boiler', label: 'Chauffe-eau électrique (standard)' },
-                                        { id: 'gas_boiler', label: 'Chauffe-eau gaz indépendant' },
-                                        { id: 'heat_pump', label: 'Pompe à chaleur' },
+                                        { id: 'electric_boiler', label: 'Chauffe-eau electrique (standard)' },
+                                        { id: 'gas_boiler', label: 'Chauffe-eau gaz independant' },
+                                        { id: 'heat_pump', label: 'Pompe a chaleur' },
                                         { id: 'solar', label: 'Solaire thermique' },
-                                        { id: 'network_dedicated', label: 'Réseau de chaleur (échangeur dédié)' }
+                                        { id: 'network_dedicated', label: 'Reseau de chaleur (echangeur dedie)' }
                                     ]}
                                     required
                                     error={errors.ecsSystem}
-                                    placeholder="Sélectionnez..."
+                                    placeholder="Selectionnez..."
                                 />
                             </div>
                         )}
                     </div>
 
-                    {/* ── BLOC A — Enveloppe ────────────────────────────────────────────── */}
-                    <div role="group" aria-labelledby="bloc-enveloppe-title" className="p-5 bg-white border border-[#E2E8F0] rounded-xl shadow-sm mb-6">
-                        <div className="flex items-center gap-2 mb-4">
-                            <Icon icon="solar:home-angle-bold" aria-hidden="true" className="text-[#1D4ED8] text-xl" />
-                            <h3 id="bloc-enveloppe-title" className="font-semibold text-[#102A43]">Isolation et structure</h3>
+                    {/* Annee de construction */}
+                    <div className="mb-6">
+                        <label className="block text-sm font-medium text-[#475569] mb-3">Annee de construction <span className="text-red-500">*</span></label>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            {NEW_DIAGNOSTIC_BUILDING_AGES.map(age => (
+                                <button
+                                    key={age.id}
+                                    type="button"
+                                    onClick={() => setFormData({ ...formData, buildingAge: age.id })}
+                                    className={`p-4 rounded-xl border-2 text-center transition-all ${formData.buildingAge === age.id
+                                        ? 'border-[#1D4ED8] bg-[#EFF6FF]'
+                                        : 'border-[#E2E8F0] hover:border-[#1D4ED8]/40'
+                                        }`}
+                                >
+                                    <iconify-icon
+                                        icon={age.icon}
+                                        class={`text-2xl mb-2 block mx-auto ${formData.buildingAge === age.id ? 'text-[#1D4ED8]' : 'text-neutral-500'}`}
+                                    />
+                                    <span className="text-sm font-semibold">{age.label}</span>
+                                </button>
+                            ))}
                         </div>
-                        <div className="mb-4">
-                            <label className="block text-sm font-medium text-[#475569] mb-3">Année de construction <span className="text-red-500">*</span></label>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                {NEW_DIAGNOSTIC_BUILDING_AGES.map(age => (
-                                    <button
-                                        key={age.id}
-                                        type="button"
-                                        onClick={() => setFormData({ ...formData, buildingAge: age.id })}
-                                        className={`p-4 rounded-xl border-2 text-center transition-all ${formData.buildingAge === age.id
-                                            ? 'border-[#1D4ED8] bg-[#EFF6FF]'
-                                            : 'border-[#E2E8F0] hover:border-[#1D4ED8]/40'
-                                            }`}
-                                    >
-                                        <iconify-icon
-                                            icon={age.icon}
-                                            class={`text-2xl mb-2 block mx-auto ${formData.buildingAge === age.id ? 'text-[#1D4ED8]' : 'text-neutral-500'
-                                                }`}
-                                        />
-                                        <span className="text-sm font-semibold">{age.label}</span>
-                                    </button>
-                                ))}
-                            </div>
-                            {errors.buildingAge && <p role="alert" className="text-red-500 text-xs mt-1">{errors.buildingAge}</p>}
-                        </div>
-                        <div className="mb-4">
-                            <label className="block text-sm font-medium text-[#475569] mb-2">Isolation de la toiture</label>
-                            <div className="grid grid-cols-3 gap-2">
-                                {[
-                                    { id: 'yes', label: 'Isolée' },
-                                    { id: 'no', label: 'Non isolée' },
-                                    { id: 'unknown', label: 'Je ne sais pas' }
-                                ].map(opt => (
-                                    <button key={opt.id} type="button"
-                                        onClick={() => setFormData({ ...formData, roofInsulation: opt.id })}
-                                        className={`p-3 rounded-lg border-2 text-sm font-medium transition-all ${formData.roofInsulation === opt.id
-                                            ? 'border-[#1D4ED8] bg-[#EFF6FF] text-[#1D4ED8]'
-                                            : 'border-[#E2E8F0] hover:border-[#1D4ED8]/40'
-                                            }`}
-                                    >{opt.label}</button>
-                                ))}
-                            </div>
-                            {errors.roofInsulation && <p role="alert" className="text-red-500 text-xs mt-1">{errors.roofInsulation}</p>}
-                        </div>
-                        <div className="mb-2">
-                            <label className="block text-sm font-medium text-[#475569] mb-2">Isolation des murs</label>
-                            <div className="grid grid-cols-3 gap-2">
-                                {[
-                                    { id: 'yes', label: 'Isolés' },
-                                    { id: 'no', label: 'Non isolés' },
-                                    { id: 'unknown', label: 'Je ne sais pas' }
-                                ].map(opt => (
-                                    <button key={opt.id} type="button"
-                                        onClick={() => setFormData({ ...formData, wallInsulation: opt.id })}
-                                        className={`p-3 rounded-lg border-2 text-sm font-medium transition-all ${formData.wallInsulation === opt.id
-                                            ? 'border-[#1D4ED8] bg-[#EFF6FF] text-[#1D4ED8]'
-                                            : 'border-[#E2E8F0] hover:border-[#1D4ED8]/40'
-                                            }`}
-                                    >{opt.label}</button>
-                                ))}
-                            </div>
-                            {errors.wallInsulation && <p role="alert" className="text-red-500 text-xs mt-1">{errors.wallInsulation}</p>}
-                        </div>
+                        {errors.buildingAge && <p role="alert" className="text-red-500 text-xs mt-1">{errors.buildingAge}</p>}
                     </div>
 
-                    {/* ── BLOC B — Systèmes techniques ──────────────────────────────────── */}
-                    <div role="group" aria-labelledby="bloc-systemes-title" className="p-5 bg-white border border-[#E2E8F0] rounded-xl shadow-sm mb-6">
-                        <div className="flex items-center gap-2 mb-4">
-                            <Icon icon="solar:settings-bold" aria-hidden="true" className="text-[#1D4ED8] text-xl" />
-                            <h3 id="bloc-systemes-title" className="font-semibold text-[#102A43]">Systèmes techniques</h3>
-                        </div>
-                        {formData.mainHeating === 'gas' && (
-                            <div className="mb-4 fade-in">
-                                <label className="block text-sm font-medium text-[#475569] mb-2">Âge de la chaudière gaz</label>
-                                <NewDiagnosticFormSelect
-                                    value={formData.boilerAge}
-                                    onChange={(v) => setFormData({ ...formData, boilerAge: v })}
-                                    options={NEW_DIAGNOSTIC_BOILER_AGES}
-                                    placeholder="Sélectionnez..."
-                                    error={errors.boilerAge}
-                                />
-                            </div>
-                        )}
-                        <div className="mb-4">
-                            <label className="flex items-center gap-3 cursor-pointer">
-                                <div
-                                    onClick={() => setFormData(p => ({ ...p, hasVmc: !p.hasVmc, vmcType: !p.hasVmc ? p.vmcType : '' }))}
-                                    className={`relative w-10 h-6 rounded-full transition-colors flex-shrink-0 ${formData.hasVmc ? 'bg-[#1D4ED8]' : 'bg-gray-300'}`}
+                    {/* Type de toiture */}
+                    <div className="mb-6">
+                        <label className="block text-sm font-medium text-[#475569] mb-2">Type de toiture</label>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            {[
+                                { val: 'flat', label: 'Terrasse (plate)', icon: 'solar:home-bold-duotone' },
+                                { val: 'pitched', label: 'Inclinee', icon: 'solar:home-bold-duotone' },
+                                { val: 'none', label: 'Pas de toiture exploitable', icon: 'solar:buildings-bold-duotone' },
+                            ].map(opt => (
+                                <button key={opt.val} type="button"
+                                    onClick={() => setFormData(p => ({ ...p, roofType: opt.val, roofOrientation: opt.val !== 'pitched' ? '' : p.roofOrientation }))}
+                                    className={`min-h-[72px] px-4 py-3 rounded-xl border-2 text-center transition-all ${formData.roofType === opt.val ? 'border-[#1D4ED8] bg-[#EFF6FF]' : 'border-[#E2E8F0] hover:border-[#1D4ED8]/40'}`}
                                 >
-                                    <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${formData.hasVmc ? 'left-5' : 'left-1'}`}></span>
-                                </div>
-                                <span className="text-sm font-medium text-[#475569]">Avez-vous une ventilation mécanique ?</span>
-                            </label>
-                            {formData.hasVmc && (
-                                <select
-                                    value={formData.vmcType}
-                                    onChange={e => setFormData(p => ({ ...p, vmcType: e.target.value }))}
-                                    className="new-diagnostic-select-surface mt-2 w-full border border-[#E2E8F0] rounded-lg p-2.5 text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]"
-                                >
-                                    <option value="">-- Type de ventilation --</option>
-                                    <option value="simple_flux">Ventilation simple</option>
-                                    <option value="double_flux">Ventilation performante (double flux)</option>
-                                </select>
-                            )}
-                        </div>
-                        <div className="mb-2">
-                            <label className="block text-sm font-medium text-[#475569] mb-2">Type de toiture</label>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                {[
-                                    { val: 'flat', label: 'Terrasse (plate)', icon: 'solar:home-linear' },
-                                    { val: 'pitched', label: 'Inclinee', icon: 'solar:home-angle-linear' },
-                                    { val: 'none', label: 'Pas de toiture exploitable', icon: 'solar:buildings-linear' },
-                                ].map(opt => (
-                                    <button key={opt.val} type="button"
-                                        onClick={() => setFormData(p => ({ ...p, roofType: opt.val, roofOrientation: opt.val !== 'pitched' ? '' : p.roofOrientation }))}
-                                        className={`min-h-[72px] px-4 py-3 rounded-xl border-2 text-center transition-all ${formData.roofType === opt.val ? 'border-[#1D4ED8] bg-[#EFF6FF]' : 'border-[#E2E8F0] hover:border-[#1D4ED8]/40'}`}
-                                    >
-                                        <Icon icon={opt.icon} className="text-2xl mb-1 mx-auto" />
-                                        <div className="text-sm font-medium">{opt.label}</div>
-                                    </button>
-                                ))}
-                            </div>
+                                    <Icon icon={opt.icon} className="text-2xl mb-1 mx-auto" />
+                                    <div className="text-sm font-medium">{opt.label}</div>
+                                </button>
+                            ))}
                         </div>
                         {formData.roofType === 'pitched' && (
-                            <div className="mt-4 mb-2">
+                            <div className="mt-4">
                                 <label className="block text-sm font-medium text-[#475569] mb-2">Orientation principale de la toiture</label>
                                 <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                                     {[
@@ -5477,7 +5436,94 @@
                         )}
                     </div>
 
-                    {/* ── BLOC C — Équipements spécifiques ─────────────────────────────── */}
+                    {/* Bloc optionnel : Informations complementaires */}
+                    <div className="mb-6">
+                        <button
+                            type="button"
+                            onClick={() => setShowAdvanced(!showAdvanced)}
+                            className="flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-[#1D4ED8] transition-colors"
+                        >
+                            <iconify-icon icon={showAdvanced ? "solar:alt-arrow-up-linear" : "solar:alt-arrow-down-linear"} />
+                            Informations complementaires
+                            <span className="text-xs text-slate-400">(optionnel)</span>
+                        </button>
+
+                        {showAdvanced && (
+                            <div className="mt-4 p-5 bg-slate-50/50 border border-[#E2E8F0] rounded-xl space-y-4 fade-in">
+                                <div>
+                                    <label className="block text-sm font-medium text-[#475569] mb-2">Isolation de la toiture</label>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        {[
+                                            { id: 'yes', label: 'Isolee' },
+                                            { id: 'no', label: 'Non isolee' },
+                                            { id: 'unknown', label: 'Je ne sais pas' }
+                                        ].map(opt => (
+                                            <button key={opt.id} type="button"
+                                                onClick={() => setFormData({ ...formData, roofInsulation: opt.id })}
+                                                className={`p-3 rounded-lg border-2 text-sm font-medium transition-all ${formData.roofInsulation === opt.id
+                                                    ? 'border-[#1D4ED8] bg-[#EFF6FF] text-[#1D4ED8]'
+                                                    : 'border-[#E2E8F0] hover:border-[#1D4ED8]/40'
+                                                    }`}
+                                            >{opt.label}</button>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-[#475569] mb-2">Isolation des murs</label>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        {[
+                                            { id: 'yes', label: 'Isoles' },
+                                            { id: 'no', label: 'Non isoles' },
+                                            { id: 'unknown', label: 'Je ne sais pas' }
+                                        ].map(opt => (
+                                            <button key={opt.id} type="button"
+                                                onClick={() => setFormData({ ...formData, wallInsulation: opt.id })}
+                                                className={`p-3 rounded-lg border-2 text-sm font-medium transition-all ${formData.wallInsulation === opt.id
+                                                    ? 'border-[#1D4ED8] bg-[#EFF6FF] text-[#1D4ED8]'
+                                                    : 'border-[#E2E8F0] hover:border-[#1D4ED8]/40'
+                                                    }`}
+                                            >{opt.label}</button>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="flex items-center gap-3 cursor-pointer">
+                                        <div
+                                            onClick={() => setFormData(p => ({ ...p, hasVmc: !p.hasVmc, vmcType: !p.hasVmc ? p.vmcType : '' }))}
+                                            className={`relative w-10 h-6 rounded-full transition-colors flex-shrink-0 ${formData.hasVmc ? 'bg-[#1D4ED8]' : 'bg-gray-300'}`}
+                                        >
+                                            <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${formData.hasVmc ? 'left-5' : 'left-1'}`}></span>
+                                        </div>
+                                        <span className="text-sm font-medium text-[#475569]">Ventilation mecanique (VMC) presente ?</span>
+                                    </label>
+                                    {formData.hasVmc && (
+                                        <select
+                                            value={formData.vmcType}
+                                            onChange={e => setFormData(p => ({ ...p, vmcType: e.target.value }))}
+                                            className="new-diagnostic-select-surface mt-2 w-full border border-[#E2E8F0] rounded-lg p-2.5 text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]"
+                                        >
+                                            <option value="">-- Type de ventilation --</option>
+                                            <option value="simple_flux">Ventilation simple</option>
+                                            <option value="double_flux">Ventilation performante (double flux)</option>
+                                        </select>
+                                    )}
+                                </div>
+                                <div>
+                                    <label className="flex items-center gap-3 cursor-pointer">
+                                        <div
+                                            onClick={() => setFormData(p => ({ ...p, hasGtb: !p.hasGtb }))}
+                                            className={`relative w-10 h-6 rounded-full transition-colors flex-shrink-0 ${formData.hasGtb ? 'bg-[#1D4ED8]' : 'bg-gray-300'}`}
+                                        >
+                                            <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${formData.hasGtb ? 'left-5' : 'left-1'}`}></span>
+                                        </div>
+                                        <span className="text-sm font-medium text-[#475569]">Gestion automatisee (chauffage, eclairage...)</span>
+                                    </label>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* ── Equipements specifiques ─────────────────────────────── */}
                     {(['commerce_alim', 'restaurant', 'hotel', 'offices', 'light_warehouse', 'education'].includes(formData.activity) || Number(formData.surface) > 300) && (
                         <div role="group" aria-labelledby="bloc-equipements-title" className="p-5 bg-white border border-[#E2E8F0] rounded-xl shadow-sm mb-6">
                             <div className="flex items-center gap-2 mb-4">
@@ -5584,16 +5630,6 @@
                             )}
                             {(['offices', 'light_warehouse', 'education', 'hotel'].includes(formData.activity) || Number(formData.surface) > 300) && (
                                 <div>
-                                    <p className="text-xs font-semibold text-[#475569] uppercase tracking-wide mb-3">Automatisation</p>
-                                    <label className="flex items-center gap-3 cursor-pointer mb-3">
-                                        <div
-                                            onClick={() => setFormData(p => ({ ...p, hasGtb: !p.hasGtb }))}
-                                            className={`relative w-10 h-6 rounded-full transition-colors flex-shrink-0 ${formData.hasGtb ? 'bg-[#1D4ED8]' : 'bg-gray-300'}`}
-                                        >
-                                            <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${formData.hasGtb ? 'left-5' : 'left-1'}`}></span>
-                                        </div>
-                                        <span className="text-sm font-medium text-[#475569]">Gestion automatisée (chauffage, éclairage...)</span>
-                                    </label>
                                     <label className="flex items-center gap-3 cursor-pointer">
                                         <div
                                             onClick={() => setFormData(p => ({ ...p, hasExteriorLighting: !p.hasExteriorLighting }))}
@@ -5601,7 +5637,7 @@
                                         >
                                             <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${formData.hasExteriorLighting ? 'left-5' : 'left-1'}`}></span>
                                         </div>
-                                        <span className="text-sm font-medium text-[#475569]">Éclairage extérieur / parking présent</span>
+                                        <span className="text-sm font-medium text-[#475569]">Eclairage exterieur / parking present</span>
                                     </label>
                                 </div>
                             )}
@@ -5635,8 +5671,8 @@
            Étape 4 : Travaux déjà réalisés
            ═══════════════════════════════════════════════════════════════════════════ */
 
-        // Étape 3 : Énergies
-        const NewDiagnosticStep3Energies = ({ formData, setFormData, onNext, onBack }) => {
+        // Etape 3 : Consommations
+        const NewDiagnosticStep3Energy = ({ formData, setFormData, onNext, onBack }) => {
             const [errors, setErrors] = useState([]);
 
             const validate = () => {
@@ -5695,6 +5731,35 @@
                     )}
 
 
+                    {/* Réseau de chaleur (conditionnel si mainHeating = 'network') */}
+                    {formData.mainHeating === 'network' && (
+                        <div className="mb-8 p-6 bg-white border border-[#0EA5E9] rounded-xl">
+                            <p className="text-sm font-semibold text-[#0369A1] mb-4">
+                                Réseau de chaleur
+                            </p>
+                            <div className="grid md:grid-cols-2 gap-4">
+                                <NewDiagnosticFormInput
+                                    label="Consommation annuelle reseau"
+                                    value={formData.networkKwh}
+                                    onChange={(v) => setFormData({ ...formData, networkKwh: v, networkUsed: true })}
+                                    type="number"
+                                    placeholder="80000"
+                                    suffix="kWh/an"
+                                    helper="kWh ou MWh indiques sur votre facture reseau"
+                                />
+                                <NewDiagnosticFormInput
+                                    label="Montant annuel payé (toutes taxes)"
+                                    value={formData.networkEuro}
+                                    onChange={(v) => setFormData({ ...formData, networkEuro: v, networkUsed: true })}
+                                    type="number"
+                                    placeholder="7600"
+                                    suffix="€/an"
+                                    helper="Total annuel toutes taxes"
+                                />
+                            </div>
+                        </div>
+                    )}
+
                     {/* Électricité */}
                     <div className="mb-8 p-6 bg-white border border-neutral-200 rounded-xl">
                         <NewDiagnosticCheckbox
@@ -5727,17 +5792,12 @@
                                     />
                                 </div>
 
-                                <NewDiagnosticCheckbox
-                                    label="Mon montant inclut l'abonnement"
-                                    checked={formData.elecIncludesSubscription}
-                                    onChange={(v) => setFormData({ ...formData, elecIncludesSubscription: v })}
-                                    helper="L'abonnement sera deduit automatiquement de votre estimation"
-                                />
                             </div>
                         )}
                     </div>
 
-                    {/* Gaz */}
+                    {/* Gaz (masqué si mainHeating = network, car le gaz n'est pas le vecteur de chauffage) */}
+                    {formData.mainHeating !== 'network' && (
                     <div className="mb-8 p-6 bg-white border border-neutral-200 rounded-xl">
                         <NewDiagnosticCheckbox
                             label="J'utilise du gaz"
@@ -5769,15 +5829,10 @@
                                     />
                                 </div>
 
-                                <NewDiagnosticCheckbox
-                                    label="Mon montant inclut l'abonnement"
-                                    checked={formData.gasIncludesSubscription}
-                                    onChange={(v) => setFormData({ ...formData, gasIncludesSubscription: v })}
-                                    helper="L'abonnement sera deduit automatiquement de votre estimation"
-                                />
                             </div>
                         )}
                     </div>
+                    )}
 
                     {(() => {
                         const activity = formData.activity || 'offices';
@@ -5809,33 +5864,27 @@
                             onClick={onBack}
                             className="px-6 py-3 text-neutral-600 hover:text-neutral-900 font-semibold transition-colors"
                         >
-                            ← Retour
+                            Retour
                         </button>
                         <button
                             onClick={handleNext}
                             className="px-8 py-3 bg-[#1D4ED8] text-white font-semibold rounded-lg hover:bg-[#1E40AF] transition-colors shadow-sm"
                         >
-                            Continuer →
+                            Continuer
                         </button>
                     </div>
                 </div>
             );
         };
 
-        // Étape 4 : Contact + Travaux déjà réalisés
-        const NewDiagnosticStep4Works = ({ formData, setFormData, onNext, onBack }) => {
+        // Etape 4 : Projet
+        const NewDiagnosticStep4Project = ({ formData, setFormData, onNext, onBack }) => {
             const [errors, setErrors] = useState({});
 
             const validate = () => {
                 const newErrors = {};
-                if (!formData.firstName || formData.firstName.trim().length < 2) {
-                    newErrors.firstName = 'Prénom requis (min 2 caractères)';
-                }
-                if (!formData.email || !newDiagnosticValidateEmail(formData.email)) {
-                    newErrors.email = 'Email valide requis';
-                }
-                if (!formData.opt_in_politique) {
-                    newErrors.opt_in_politique = 'Vous devez accepter la politique de confidentialité';
+                if (!formData.role) {
+                    newErrors.role = 'Veuillez selectionner votre role';
                 }
                 setErrors(newErrors);
                 return Object.keys(newErrors).length === 0;
@@ -5844,9 +5893,204 @@
             const handleNext = () => {
                 if (validate()) {
                     newDiagnosticTrack('diagnostic_step4_completed', {
-                        works_count: formData.worksDone.length,
+                        works_count: (formData.worksDone || []).length,
                         objective: formData.projectObjective,
                         horizon: formData.decisionHorizon,
+                        budget: formData.budgetRange,
+                        role: formData.role
+                    });
+                    onNext();
+                }
+            };
+
+            return (
+                <div className="max-w-2xl mx-auto">
+                    <h2 className="text-2xl font-bold text-[#102A43] mb-2">Pour personnaliser vos recommandations</h2>
+                    <p className="text-[#475569] mb-8">Ces informations permettent de calibrer le rapport a votre situation</p>
+
+                    {/* Travaux deja realises */}
+                    <div className="mb-8 p-6 bg-white border border-[#E2E8F0] rounded-xl shadow-sm">
+                        <h3 className="text-sm font-bold text-neutral-900 mb-2 flex items-center gap-2">
+                            <iconify-icon icon="solar:magic-stick-3-bold-duotone" class="text-lg text-[#1D4ED8]" />
+                            Travaux deja realises
+                        </h3>
+                        <p className="text-xs text-slate-500 mb-4">Selectionnez les travaux deja effectues pour les exclure des recommandations</p>
+                        <div className="grid md:grid-cols-2 gap-3">
+                            {NEW_DIAGNOSTIC_WORKS_DONE.map(work => (
+                                <label
+                                    key={work.id}
+                                    className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${(formData.worksDone || []).includes(work.id)
+                                        ? 'border-[#1D4ED8] bg-[#EFF6FF]'
+                                        : 'border-[#E2E8F0] hover:border-[#1D4ED8]/40'
+                                        }`}
+                                >
+                                    <input
+                                        type="checkbox"
+                                        checked={(formData.worksDone || []).includes(work.id)}
+                                        onChange={(e) => {
+                                            const current = formData.worksDone || [];
+                                            setFormData({ ...formData, worksDone: e.target.checked ? [...current, work.id] : current.filter(id => id !== work.id) });
+                                        }}
+                                        className="w-4 h-4 text-[#1D4ED8] rounded"
+                                    />
+                                    <span className="text-sm">{work.label}</span>
+                                </label>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Role */}
+                    <div className="mb-8 p-6 bg-white border border-[#E2E8F0] rounded-xl shadow-sm">
+                        <h3 className="text-sm font-bold text-neutral-900 mb-2 flex items-center gap-2">
+                            <iconify-icon icon="solar:users-group-rounded-bold-duotone" class="text-lg text-[#1D4ED8]" />
+                            Votre role <span className="text-red-500">*</span>
+                        </h3>
+                        <p className="text-xs text-slate-500 mb-4">Pour adapter l'horizon de projection du rapport</p>
+                        <NewDiagnosticRadioCards
+                            options={NEW_DIAGNOSTIC_ROLES.map(r => ({ ...r, desc: null }))}
+                            selected={formData.role}
+                            onChange={(v) => setFormData({ ...formData, role: v })}
+                        />
+                        {errors.role && <p role="alert" className="text-xs text-red-500 mt-2">{errors.role}</p>}
+                    </div>
+
+                    {/* Objectif principal */}
+                    <div className="mb-8 p-6 bg-white border border-[#E2E8F0] rounded-xl shadow-sm">
+                        <h3 className="text-sm font-bold text-neutral-900 mb-4 flex items-center gap-2">
+                            <iconify-icon icon="solar:target-bold-duotone" class="text-lg text-[#1D4ED8]" />
+                            Objectif principal
+                        </h3>
+                        <div className="grid gap-3">
+                            {NEW_DIAGNOSTIC_PROJECT_OBJECTIVES.map(obj => (
+                                <button
+                                    key={obj.id}
+                                    type="button"
+                                    onClick={() => setFormData({ ...formData, projectObjective: obj.id })}
+                                    className={`p-4 rounded-xl border-2 text-left flex items-center gap-4 transition-all ${formData.projectObjective === obj.id
+                                        ? 'border-[#1D4ED8] bg-[#EFF6FF]'
+                                        : 'border-[#E2E8F0] hover:border-[#1D4ED8]/40'
+                                        }`}
+                                >
+                                    <iconify-icon icon={obj.icon} class={`text-2xl ${formData.projectObjective === obj.id ? 'text-[#1D4ED8]' : 'text-neutral-500'}`} />
+                                    <span className="font-medium">{obj.label}</span>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Calendrier et moyens */}
+                    <div className="mb-8 p-6 bg-white border border-[#E2E8F0] rounded-xl shadow-sm">
+                        <h3 className="text-sm font-bold text-neutral-900 mb-4 flex items-center gap-2">
+                            <iconify-icon icon="solar:calendar-bold-duotone" class="text-lg text-[#1D4ED8]" />
+                            Calendrier et moyens
+                        </h3>
+
+                        <div className="mb-5">
+                            <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">Horizon de decision</label>
+                            <p className="text-xs text-slate-400 mb-2">Pour prioriser les actions selon votre calendrier</p>
+                            <div className="grid grid-cols-2 gap-2">
+                                {NEW_DIAGNOSTIC_DECISION_HORIZONS.map(h => {
+                                    const selected = formData.decisionHorizon === h.id;
+                                    return (
+                                        <button
+                                            key={h.id}
+                                            type="button"
+                                            onClick={() => setFormData({ ...formData, decisionHorizon: h.id })}
+                                            className={`px-3 py-2.5 rounded-lg text-xs font-semibold border-2 transition-all ${selected
+                                                ? 'border-[#1D4ED8] bg-[#EFF6FF] text-[#1D4ED8]'
+                                                : 'border-[#E2E8F0] text-slate-600 hover:border-[#1D4ED8]/40'
+                                                }`}
+                                        >
+                                            {h.label}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        <div className="mb-5">
+                            <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">Budget envisage</label>
+                            <p className="text-xs text-slate-400 mb-2">Pour calibrer les recommandations a votre situation</p>
+                            <div className="grid grid-cols-2 gap-2">
+                                {NEW_DIAGNOSTIC_BUDGET_RANGES.map(b => {
+                                    const selected = formData.budgetRange === b.id;
+                                    return (
+                                        <button
+                                            key={b.id}
+                                            type="button"
+                                            onClick={() => setFormData({ ...formData, budgetRange: b.id })}
+                                            className={`px-3 py-2.5 rounded-lg text-xs font-semibold border-2 transition-all ${selected
+                                                ? 'border-[#1D4ED8] bg-[#EFF6FF] text-[#1D4ED8]'
+                                                : 'border-[#E2E8F0] text-slate-600 hover:border-[#1D4ED8]/40'
+                                                }`}
+                                        >
+                                            {b.label}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wide">Etes-vous le decideur ?</label>
+                            <div className="grid grid-cols-2 gap-2">
+                                {[{ id: 'yes', label: 'Oui' }, { id: 'no', label: 'Non / A valider' }].map(d => {
+                                    const selected = formData.isDecisionMaker === d.id;
+                                    return (
+                                        <button
+                                            key={d.id}
+                                            type="button"
+                                            onClick={() => setFormData({ ...formData, isDecisionMaker: d.id })}
+                                            className={`px-3 py-2.5 rounded-lg text-xs font-semibold border-2 transition-all ${selected
+                                                ? 'border-[#1D4ED8] bg-[#EFF6FF] text-[#1D4ED8]'
+                                                : 'border-[#E2E8F0] text-slate-600 hover:border-[#1D4ED8]/40'
+                                                }`}
+                                        >
+                                            {d.label}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex justify-between mt-8">
+                        <button onClick={onBack} className="px-6 py-3 text-neutral-600 hover:text-neutral-900 font-semibold transition-colors">
+                            Retour
+                        </button>
+                        <button
+                            onClick={handleNext}
+                            className="px-8 py-3 bg-[#1D4ED8] text-white font-semibold rounded-lg hover:bg-[#1E40AF] transition-colors shadow-sm"
+                        >
+                            Continuer
+                        </button>
+                    </div>
+                </div>
+            );
+        };
+
+        // Etape 5 : Contact (extrait de l'ancien Step4Works)
+        const NewDiagnosticStep5Contact = ({ formData, setFormData, onNext, onBack }) => {
+            const [errors, setErrors] = useState({});
+
+            const validate = () => {
+                const newErrors = {};
+                if (!formData.firstName || formData.firstName.trim().length < 2) {
+                    newErrors.firstName = 'Prenom requis (min 2 caracteres)';
+                }
+                if (!formData.email || !newDiagnosticValidateEmail(formData.email)) {
+                    newErrors.email = 'Email valide requis';
+                }
+                if (!formData.opt_in_politique) {
+                    newErrors.opt_in_politique = 'Vous devez accepter la politique de confidentialite';
+                }
+                setErrors(newErrors);
+                return Object.keys(newErrors).length === 0;
+            };
+
+            const handleNext = () => {
+                if (validate()) {
+                    newDiagnosticTrack('diagnostic_step5_completed', {
                         contact_optin: formData.contactOptIn
                     });
                     onNext();
@@ -5855,18 +6099,18 @@
 
             return (
                 <div className="max-w-2xl mx-auto">
-                    <h2 className="text-2xl font-bold text-[#102A43] mb-2">Dernière étape</h2>
-                    <p className="text-[#475569] mb-8">Pour recevoir votre rapport par email</p>
+                    <h2 className="text-2xl font-bold text-[#102A43] mb-2">Plus qu'une etape</h2>
+                    <p className="text-[#475569] mb-8">Vos coordonnees pour recevoir le rapport</p>
 
-                    {/* Coordonnées */}
+                    {/* Coordonnees */}
                     <div className="mb-8 p-6 bg-white border border-[#E2E8F0] rounded-xl shadow-sm">
                         <h3 className="text-sm font-bold text-neutral-900 mb-4 flex items-center gap-2">
-                            <iconify-icon icon="solar:user-linear" class="text-lg text-[#1D4ED8]" />
-                            Vos coordonnées
+                            <iconify-icon icon="solar:users-group-rounded-bold-duotone" class="text-lg text-[#1D4ED8]" />
+                            Vos coordonnees
                         </h3>
                         <div className="grid md:grid-cols-2 gap-4">
                             <NewDiagnosticFormInput
-                                label="Prénom"
+                                label="Prenom"
                                 value={formData.firstName || ''}
                                 onChange={(v) => setFormData({ ...formData, firstName: v })}
                                 placeholder="Jean"
@@ -5887,102 +6131,22 @@
                         </div>
                         <div className="grid md:grid-cols-2 gap-4 mt-4">
                             <NewDiagnosticFormInput
-                                label="Téléphone"
+                                label="Telephone"
                                 value={formData.phone || ''}
                                 onChange={(v) => setFormData({ ...formData, phone: v })}
                                 type="tel"
                                 placeholder="06 12 34 56 78"
-                                helper="Optionnel"
+                                helper="Optionnel -- utile si vous souhaitez etre recontacte"
                                 autoComplete="tel"
                             />
                             <NewDiagnosticFormInput
-                                label="Société"
+                                label="Societe"
                                 value={formData.company || ''}
                                 onChange={(v) => setFormData({ ...formData, company: v })}
                                 placeholder="Nom de votre entreprise"
                                 helper="Optionnel"
                                 autoComplete="organization"
                             />
-                        </div>
-                    </div>
-
-                    {/* Projet */}
-                    <div className="mb-8 p-6 bg-white border border-[#E2E8F0] rounded-xl shadow-sm">
-                        <h3 className="text-sm font-bold text-neutral-900 mb-4 flex items-center gap-2">
-                            <iconify-icon icon="solar:target-linear" class="text-lg text-[#1D4ED8]" />
-                            Votre projet
-                        </h3>
-                        <div className="mb-6">
-                            <label className="block text-sm font-medium text-neutral-700 mb-3">Objectif principal</label>
-                            <div className="grid gap-3">
-                                {NEW_DIAGNOSTIC_PROJECT_OBJECTIVES.map(obj => (
-                                    <button
-                                        key={obj.id}
-                                        type="button"
-                                        onClick={() => setFormData({ ...formData, projectObjective: obj.id })}
-                                        className={`p-4 rounded-xl border-2 text-left flex items-center gap-4 transition-all ${formData.projectObjective === obj.id
-                                            ? 'border-[#1D4ED8] bg-[#EFF6FF]'
-                                            : 'border-[#E2E8F0] hover:border-[#1D4ED8]/40'
-                                            }`}
-                                    >
-                                        <iconify-icon icon={obj.icon} class={`text-2xl ${formData.projectObjective === obj.id ? 'text-[#1D4ED8]' : 'text-neutral-500'}`} />
-                                        <span className="font-medium">{obj.label}</span>
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                        <div className="grid md:grid-cols-2 gap-4">
-                            <NewDiagnosticFormSelect
-                                label="Horizon de décision"
-                                value={formData.decisionHorizon || ''}
-                                onChange={(v) => setFormData({ ...formData, decisionHorizon: v })}
-                                options={NEW_DIAGNOSTIC_DECISION_HORIZONS}
-                                placeholder="Sélectionnez..."
-                            />
-                            <NewDiagnosticFormSelect
-                                label="Êtes-vous décideur ?"
-                                value={formData.isDecisionMaker || ''}
-                                onChange={(v) => setFormData({ ...formData, isDecisionMaker: v })}
-                                options={[
-                                    { id: 'yes', label: 'Oui, je décide' },
-                                    { id: 'no', label: 'Non, je prépare le dossier' }
-                                ]}
-                                placeholder="Sélectionnez..."
-                            />
-                        </div>
-                    </div>
-
-                    {/* Travaux déjà réalisés */}
-                    <div className="mb-8 p-6 bg-white border border-[#E2E8F0] rounded-xl shadow-sm">
-                        <h3 className="text-sm font-bold text-neutral-900 mb-4 flex items-center gap-2">
-                            <iconify-icon icon="solar:hammer-linear" class="text-lg text-[#1D4ED8]" />
-                            Travaux déjà réalisés
-                        </h3>
-                        <p className="text-sm text-neutral-500 mb-4">Ces travaux seront exclus des recommandations du rapport.</p>
-                        <div className="grid md:grid-cols-2 gap-3">
-                            {NEW_DIAGNOSTIC_WORKS_DONE.map(work => (
-                                <label
-                                    key={work.id}
-                                    className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${formData.worksDone.includes(work.id)
-                                        ? 'border-[#1D4ED8] bg-[#EFF6FF]'
-                                        : 'border-[#E2E8F0] hover:border-[#1D4ED8]/40'
-                                        }`}
-                                >
-                                    <input
-                                        type="checkbox"
-                                        checked={formData.worksDone.includes(work.id)}
-                                        onChange={(e) => {
-                                            if (e.target.checked) {
-                                                setFormData({ ...formData, worksDone: [...formData.worksDone, work.id] });
-                                            } else {
-                                                setFormData({ ...formData, worksDone: formData.worksDone.filter(id => id !== work.id) });
-                                            }
-                                        }}
-                                        className="w-4 h-4 text-[#1D4ED8] rounded"
-                                    />
-                                    <span className="text-sm">{work.label}</span>
-                                </label>
-                            ))}
                         </div>
                     </div>
 
@@ -5998,7 +6162,7 @@
                                 />
                                 <div>
                                     <span className="text-sm text-neutral-700">
-                                        J'accepte la <a href="/politique-confidentialite.html" className="text-[#1D4ED8] underline" target="_blank">politique de confidentialité</a> (vos données sont protégées et jamais revendues) *
+                                        J'accepte la <a href="/politique-confidentialite.html" className="text-[#1D4ED8] underline" target="_blank">politique de confidentialite</a> (vos donnees sont protegees et jamais revendues) <span className="text-red-500">*</span>
                                     </span>
                                     {errors.opt_in_politique && (
                                         <p className="text-xs text-red-500 mt-1">{errors.opt_in_politique}</p>
@@ -6013,8 +6177,8 @@
                                     className="mt-1 w-5 h-5 text-green-600 rounded"
                                 />
                                 <div>
-                                    <span className="text-sm font-semibold text-green-800">Je souhaite être contacté par un expert en énergie si mon rapport le justifie</span>
-                                    <p className="text-xs text-green-700 mt-1">Gratuit et sans engagement. Nos experts sont sélectionnés pour leur sérieux.</p>
+                                    <span className="text-sm font-semibold text-green-800">Je souhaite etre contacte par un expert en energie si mon rapport le justifie</span>
+                                    <p className="text-xs text-green-700 mt-1">Gratuit et sans engagement. Nos experts sont selectionnes pour leur serieux.</p>
                                 </div>
                             </label>
                         </div>
@@ -6022,22 +6186,23 @@
 
                     <div className="flex justify-between">
                         <button onClick={onBack} className="px-6 py-3 text-neutral-600 hover:text-[#102A43] font-semibold transition-colors">
-                            ← Retour
+                            Retour
                         </button>
                         <button
                             onClick={handleNext}
                             disabled={!formData.opt_in_politique}
                             className={`px-8 py-3 font-semibold rounded-lg transition-colors shadow-sm ${formData.opt_in_politique
-                                ? 'bg-[#1D4ED8] text-white hover:bg-[#1E40AF]'
+                                ? 'bg-[#2563EB] text-white hover:bg-[#1E40AF]'
                                 : 'bg-neutral-200 text-neutral-400 cursor-not-allowed'
                                 }`}
                         >
-                            Voir mon rapport gratuit →
+                            Generer mon rapport gratuit
                         </button>
                     </div>
                 </div>
             );
         };
+
 
         /* ─────────────────────────────────────────────────────────────────────────
            MOTEUR DE CALCUL + RAPPORT DU NOUVEAU FORMULAIRE (RÉCUPÉRÉ DU FICHIER SOURCE)
@@ -6101,7 +6266,7 @@
 
             const KEYS = ['sans_travaux', 'avec_actions_rapides', 'avec_travaux'];
             const meta = {
-                sans_travaux: { label: 'Situation actuelle (cumulé)', color: '#EF4444' },
+                sans_travaux: { label: 'Situation actuelle (cumulé)', color: '#EA580C' },
                 avec_actions_rapides: { label: 'Actions sans travaux (cumulé)', color: '#F59E0B' },
                 avec_travaux: { label: 'Actions légères + travaux (cumulé)', color: '#10B981' },
             };
@@ -6182,7 +6347,7 @@
                     {/* Légende lisible avec couleurs */}
                     <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mb-5 p-3 bg-slate-50 rounded-xl border border-slate-200">
                         <div className="flex items-center gap-2">
-                            <span className="inline-block w-8 shrink-0" style={{ borderTop: '2px dashed #EF4444', height: 0 }}></span>
+                            <span className="inline-block w-8 shrink-0" style={{ borderTop: '2px dashed #EA580C', height: 0 }}></span>
                             <span className="text-xs font-semibold text-slate-700">Situation actuelle</span>
                         </div>
                         {projection.hasLightScenario && (
@@ -6197,13 +6362,13 @@
                         </div>
                         <span className="ml-auto text-[11px] text-slate-400 shrink-0">Inflation : {projection.tauxPct}%/an</span>
                     </div>
-                    <div ref={chartHostRef} className="h-[340px] w-full">
+                    <div ref={chartHostRef} className="h-[340px] w-full" role="img" aria-label="Projection financière cumulée sur 10 ans : comparaison des charges sans et avec travaux">
                         {chartWidth > 0 && (
                             <ComposedChart width={chartWidth} height={340} data={projection.data} margin={{ top: 12, right: 24, bottom: 6, left: 2 }}>
                                 <defs>
                                     <linearGradient id="newDiagProjSans" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#EF4444" stopOpacity={0.10} />
-                                        <stop offset="95%" stopColor="#EF4444" stopOpacity={0} />
+                                        <stop offset="5%" stopColor="#EA580C" stopOpacity={0.10} />
+                                        <stop offset="95%" stopColor="#EA580C" stopOpacity={0} />
                                     </linearGradient>
                                     <linearGradient id="newDiagProjAvec" x1="0" y1="0" x2="0" y2="1">
                                         <stop offset="5%" stopColor="#10B981" stopOpacity={0.14} />
@@ -6222,7 +6387,7 @@
                                 <GrTooltip content={props => <NewDiagnosticProjectionTooltipCompact {...props} projection={projection} />} />
                                 <Area type="monotone" dataKey="sans_travaux" stroke="none" fill="url(#newDiagProjSans)" />
                                 <Area type="monotone" dataKey="avec_travaux" stroke="none" fill="url(#newDiagProjAvec)" />
-                                <Line type="monotone" dataKey="sans_travaux" name="Situation actuelle" stroke="#EF4444" strokeWidth={2.5} strokeDasharray="6 3" dot={false} />
+                                <Line type="monotone" dataKey="sans_travaux" name="Situation actuelle" stroke="#EA580C" strokeWidth={2.5} strokeDasharray="6 3" dot={false} />
                                 {projection.hasLightScenario && (
                                     <Line type="monotone" dataKey="avec_actions_rapides" name="Actions sans travaux" stroke="#F59E0B" strokeWidth={2.5} strokeDasharray="10 4" dot={false} connectNulls={false} />
                                 )}
@@ -6335,6 +6500,20 @@
             E: { positioning: 'Tres energivore', color: '#DC2626', bg: '#FEF2F2' }
         };
         const NEW_DIAGNOSTIC_SECTOR_ORDER = ['A', 'B', 'C', 'D', 'E'];
+
+        // M8 : labels d'affichage pour mainHeating (inclut les nouvelles valeurs detaillees et le backward compat)
+        const NEW_DIAGNOSTIC_HEATING_LABELS = {
+            'electric_convector': 'Convecteurs electriques',
+            'electric_pac': 'Pompe a chaleur (PAC)',
+            'electric': 'Electrique',
+            'pac': 'Pompe a chaleur',
+            'gas': 'Gaz naturel',
+            'fuel': 'Fioul',
+            'network': 'Reseau de chaleur',
+            'other': 'Autre'
+        };
+        const newDiagnosticGetHeatingLabel = (mainHeating) =>
+            NEW_DIAGNOSTIC_HEATING_LABELS[mainHeating] || mainHeating || 'Inconnu';
 
         function newDiagnosticComputeSectorLabel(intensityValue, medianValue) {
             const safeIntensity = Math.max(0, Number(intensityValue) || 0);
@@ -6482,10 +6661,10 @@
                     'Identifier les actions faisables rapidement, sans grands travaux.',
                     'Structurer un plan adapté à votre horizon de décision.'
                 ],
-                proof: "Gratuit, sans engagement. Si vous le souhaitez, votre demande peut etre etudiee pour un accompagnement adapte.",
-                cta: 'Demander un echange',
+                proof: "Gratuit, sans engagement. Si vous le souhaitez, votre demande peut être étudiée pour un accompagnement adapté.",
+                cta: 'Demander un échange',
                 secondary: 'Conserver ce rapport',
-                success: 'Votre demande est enregistree. Nous reviendrons vers vous avec une premiere orientation adaptee a votre site.'
+                success: 'Votre demande est enregistrée. Nous reviendrons vers vous avec une première orientation adaptée à votre site.'
             }
         };
 
@@ -7270,7 +7449,7 @@
             const formatKwh = (value) => newDiagnosticFormatUnitValue(value, 'kWh/an');
             const formatKgCo2 = (value) => newDiagnosticFormatUnitValue(value, 'kgCO2e');
             const formatYears = (value) => newDiagnosticFormatYears(value, 1);
-            const horizonLabel = role === 'tenant' ? 'Lecture charges à 3 ans' : 'Lecture patrimoniale à 10 ans';
+            const horizonLabel = 'Projection à 10 ans';
             const actionCopy = NEW_DIAGNOSTIC_REPORT_COPY.actions;
             const impactCopy = NEW_DIAGNOSTIC_REPORT_COPY.impact;
             const nextStepCopy = NEW_DIAGNOSTIC_REPORT_COPY.nextStep;
@@ -7458,7 +7637,7 @@
                                                 )}
                                             </div>
                                             <div className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/10 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-slate-200">
-                                                <Icon icon="solar:document-text-bold" className="text-base" />
+                                                <Icon icon="solar:document-text-bold-duotone" className="text-base" />
                                                 Votre comparatif énergétique
                                             </div>
                                         </div>
@@ -7562,10 +7741,10 @@
 
                             <div className="bg-[#F8FAFC] px-6 py-6 md:px-8">
                                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-5">
-                                    <HeroKpiCard icon="solar:wallet-bold" label="Coût annuel actuel" value={formatMoney(calc.total_cost_euro_an.value)} sub="Charges énergie estimées" tone={{ bg: 'bg-slate-100', text: 'text-slate-700' }} />
-                                    <HeroKpiCard icon="solar:leaf-bold" label="Économie annuelle" value={formatMoney(composite.annual_euro.value)} sub="3 actions prioritaires visibles" tone={{ bg: 'bg-emerald-50', text: 'text-emerald-700' }} />
-                                    <HeroKpiCard icon="solar:wallet-bold" label="Budget net indicatif" value={formatMoney(budgetProgram.capex_net)} sub="Même périmètre, aides déduites" tone={{ bg: 'bg-indigo-50', text: 'text-indigo-700' }} />
-                                    <HeroKpiCard icon="solar:chart-square-bold" label="Rentabilisé en" value={budgetProgram.roi_global_years !== null ? formatYears(budgetProgram.roi_global_years) : 'À confirmer'} sub="Ordre de grandeur à confirmer" tone={{ bg: 'bg-amber-50', text: 'text-amber-700' }} />
+                                    <HeroKpiCard icon="solar:wallet-bold-duotone" label="Coût annuel actuel" value={formatMoney(calc.total_cost_euro_an.value)} sub="Charges énergie estimées" tone={{ bg: 'bg-slate-100', text: 'text-slate-700' }} />
+                                    <HeroKpiCard icon="solar:leaf-bold-duotone" label="Économie annuelle" value={formatMoney(composite.annual_euro.value)} sub="3 actions prioritaires visibles" tone={{ bg: 'bg-emerald-50', text: 'text-emerald-700' }} />
+                                    <HeroKpiCard icon="solar:wallet-bold-duotone" label="Budget net indicatif" value={formatMoney(budgetProgram.capex_net)} sub="Même périmètre, aides déduites" tone={{ bg: 'bg-indigo-50', text: 'text-indigo-700' }} />
+                                    <HeroKpiCard icon="solar:chart-square-bold-duotone" label="Rentabilisé en" value={budgetProgram.roi_global_years !== null ? formatYears(budgetProgram.roi_global_years) : 'À confirmer'} sub="Ordre de grandeur à confirmer" tone={{ bg: 'bg-amber-50', text: 'text-amber-700' }} />
                                 </div>
 
                                 <div className="report-subcard p-5 mb-5 border-l-4" style={{ borderLeftColor: diagIndex.color }}>
@@ -7575,9 +7754,9 @@
                                 </div>
 
                                 <div className="grid gap-4 lg:grid-cols-3 mb-5">
-                                    <DecisionCard icon="solar:chart-square-bold" title="Diagnostic" text={decisionReadout.diagnostic} tone={{ bg: 'bg-white', border: 'border-slate-200', text: 'text-slate-700' }} />
+                                    <DecisionCard icon="solar:chart-square-bold-duotone" title="Diagnostic" text={decisionReadout.diagnostic} tone={{ bg: 'bg-white', border: 'border-slate-200', text: 'text-slate-700' }} />
                                     <DecisionCard icon="solar:danger-triangle-bold" title="Risque principal" text={decisionReadout.risk} tone={{ bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700' }} />
-                                    <DecisionCard icon="solar:leaf-bold" title="Opportunité" text={decisionReadout.opportunity} tone={{ bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700' }} />
+                                    <DecisionCard icon="solar:leaf-bold-duotone" title="Opportunité" text={decisionReadout.opportunity} tone={{ bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700' }} />
                                 </div>
 
                                 <div className="grid lg:grid-cols-2 gap-5 mb-8 lg:items-start">
@@ -7635,7 +7814,7 @@
                                                         onClick={openCoverModal}
                                                         className="mt-4 inline-flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-semibold text-[#1D4ED8] hover:bg-blue-100 transition-colors"
                                                     >
-                                                        <Icon icon="solar:camera-linear" className="text-base" />
+                                                        <Icon icon="solar:gallery-add-bold-duotone" className="text-base" />
                                                         {coverCtaLabel}
                                                     </button>
                                                 </div>
@@ -7758,7 +7937,7 @@
                             <div className="report-card p-8 mb-8" style={{ borderLeft: '4px solid #7C3AED' }}>
                                 <div className="flex items-start gap-4">
                                     <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(124,58,237,0.1)' }}>
-                                        <Icon icon="solar:document-text-bold" className="text-2xl" style={{ color: '#7C3AED' }} />
+                                        <Icon icon="solar:document-text-bold-duotone" className="text-2xl" style={{ color: '#7C3AED' }} />
                                     </div>
                                     <div className="flex-1">
                                         <h2 className="text-xl font-bold text-neutral-900 mb-2">
@@ -7794,10 +7973,10 @@
                             <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-5">
                                 <div>
                                     <h2 className="report-section-title">
-                                        <Icon icon="solar:graph-new-up-bold" className="text-[#1D4ED8]" />
+                                        <Icon icon="solar:graph-new-up-bold-duotone" className="text-[#1D4ED8]" />
                                         Projection financière sur 10 ans
                                     </h2>
-                                    <p className="text-sm text-slate-500 mt-2">Cumul des charges énergétiques selon trois scénarios. Chaque courbe intègre l'inflation et le coût réel d'investissement.</p>
+                                    <p className="text-sm text-slate-500 mt-2">Cumul des charges énergétiques avec et sans travaux, inflation incluse. Document de référence utile pour tout arbitrage ou présentation à un tiers.</p>
                                 </div>
                                 <div className="text-xs text-slate-400 md:text-right shrink-0">
                                     <p>Aides estimées déduites : {formatMoney(projection.aidesTotal)}</p>
@@ -8032,7 +8211,7 @@
                                             <div className="mt-6 rounded-[22px] border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-amber-50/70 p-5 md:p-6">
                                                 <div className="flex items-start gap-4">
                                                     <div className="w-11 h-11 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
-                                                        <Icon icon="solar:sun-2-bold" className="text-xl" />
+                                                        <Icon icon="solar:sun-2-bold-duotone" className="text-xl" />
                                                     </div>
                                                     <div className="flex-1 min-w-0">
                                                         <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-amber-700">Opportunité complémentaire identifiée</p>
@@ -8081,7 +8260,7 @@
                                 <div className="rounded-[28px] border-2 border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-emerald-50/40 p-6 md:p-8 flex flex-col justify-between">
                                     <div className="flex items-center gap-3 mb-5">
                                         <div className="w-14 h-14 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shadow-md shrink-0">
-                                            <Icon icon="solar:leaf-bold" className="text-[32px]" />
+                                            <Icon icon="solar:leaf-bold-duotone" className="text-[32px]" />
                                         </div>
                                         <div>
                                             <p className="text-[11px] font-bold uppercase tracking-widest text-emerald-700">{impactCopy.annualLabel}</p>
@@ -8130,7 +8309,7 @@
                             <div className="max-w-2xl mx-auto rounded-[24px] border-2 border-[#BFDBFE] bg-gradient-to-br from-[#EFF6FF] via-white to-[#F0FDF4] p-7 md:p-9">
                                 <div className="flex flex-col items-center text-center gap-4">
                                     <div className="inline-flex items-center gap-2 text-[#1D4ED8] px-3 py-1.5 rounded-full bg-blue-50 border border-blue-200">
-                                        <Icon icon="solar:chat-round-call-bold" className="text-base" />
+                                        <Icon icon="solar:chat-round-call-bold-duotone" className="text-base" />
                                         <p className="text-xs font-bold uppercase tracking-wide">Prochaine étape</p>
                                     </div>
                                     <div>
@@ -8157,10 +8336,10 @@
                                             <>
                                                 <button
                                                     onClick={openCtaPanel}
-                                                    className="w-full px-5 py-4 bg-[#1D4ED8] text-white rounded-2xl text-sm font-bold hover:bg-[#1E40AF] active:scale-[0.99] transition-all shadow-lg flex items-center justify-center gap-2"
+                                                    className="w-full px-5 py-4 bg-[#16A34A] text-white rounded-2xl text-sm font-bold hover:bg-[#15803D] active:scale-[0.99] transition-all shadow-lg flex items-center justify-center gap-2"
                                                 >
-                                                    <Icon icon="solar:users-group-rounded-bold" className="text-lg shrink-0" />
-                                                    Demander un echange
+                                                    <Icon icon="solar:users-group-rounded-bold-duotone" className="text-lg shrink-0" />
+                                                    {nextStepCopy.cta}
                                                 </button>
                                                 <p className="text-[11px] text-slate-500 leading-relaxed">{nextStepCopy.proof}</p>
                                             </>
@@ -8168,9 +8347,9 @@
                                     </div>
                                     <div className="flex flex-wrap justify-center gap-4 pt-1">
                                         {[
-                                            { icon: 'solar:shield-check-bold', text: 'Aucun engagement ni frais', color: 'text-emerald-600' },
-                                            { icon: 'solar:clock-circle-bold', text: 'Réponse sous 48h', color: 'text-blue-600' },
-                                            { icon: 'solar:star-bold', text: 'Echange adapte a votre situation', color: 'text-amber-500' },
+                                            { icon: 'solar:shield-check-bold-duotone', text: 'Aucun engagement ni frais', color: 'text-emerald-600' },
+                                            { icon: 'solar:clock-circle-bold-duotone', text: 'Réponse sous 48h', color: 'text-blue-600' },
+                                            { icon: 'solar:star-bold-duotone', text: 'Échange adapté à votre situation', color: 'text-amber-500' },
                                         ].map(({ icon, text, color }, i) => (
                                             <div key={i} className="flex items-center gap-1.5">
                                                 <Icon icon={icon} className={`text-base shrink-0 ${color}`} />
@@ -8224,11 +8403,11 @@
                                                     await newDiagnosticSubmitPartnerLead(leadPayload, leadId);
                                                     setCtaSent(true);
                                                 }}
-                                                className="w-full py-3.5 px-6 bg-[#1D4ED8] text-white rounded-xl text-sm font-bold hover:bg-[#1E40AF] transition-colors shadow-sm"
+                                                className="w-full py-3.5 px-6 bg-[#16A34A] text-white rounded-xl text-sm font-bold hover:bg-[#15803D] transition-colors shadow-sm"
                                             >
                                                 Confirmer ma demande de contact
                                             </button>
-                                            <p className="text-xs text-slate-400 text-center">Gratuit | Sans engagement | Reponse sous 48h</p>
+                                            <p className="text-xs text-slate-400 text-center">Gratuit | Sans engagement | Réponse sous 48h</p>
                                         </div>
                                     )}
                                 </div>
@@ -8240,13 +8419,13 @@
                             <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-5">
                                 <div>
                                     <h2 className="report-section-title">
-                                        <Icon icon="solar:shield-warning-linear" className="text-[#1D4ED8]" />
+                                        <Icon icon="solar:shield-warning-line-duotone" className="text-[#1D4ED8]" />
                                         Hypothèses et limites
                                     </h2>
                                     <p className="text-sm text-slate-500 mt-2">Le rapport reste volontairement simple et prudent. Les hypothèses et limites ci-dessous expliquent ce qui soutient le résultat et ce qui reste à confirmer.</p>
                                 </div>
                             </div>
-                            <NewDiagnosticAccordion title="Hypothèses du calcul" defaultOpen={false}>
+                            <NewDiagnosticAccordion title="Hypothèses du calcul" defaultOpen={true}>
                                 <ul className="space-y-2 text-sm text-neutral-600">
                                     {reportPayload.assumptions.map((assumption, i) => (
                                         <li key={i} className="flex items-start gap-2">
@@ -8348,6 +8527,19 @@
                         )}
 
                     </div>
+
+                    {/* ── Sticky CTA mobile — visible uniquement si pas encore confirmé ── */}
+                    {!hasCtaConfirmation && (
+                        <div className="fixed bottom-0 inset-x-0 z-50 md:hidden bg-white border-t border-slate-200 px-4 py-3 shadow-[0_-4px_16px_rgba(15,23,42,0.10)]" style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' }}>
+                            <button
+                                onClick={openCtaPanel}
+                                className="w-full py-3 bg-[#16A34A] text-white rounded-xl text-sm font-bold hover:bg-[#15803D] transition-colors flex items-center justify-center gap-2 shadow-sm"
+                            >
+                                <Icon icon="solar:users-group-rounded-bold" className="text-base shrink-0" aria-hidden="true" />
+                                Parler à un expert — gratuit
+                            </button>
+                        </div>
+                    )}
                 </div>
             );
 
@@ -8635,10 +8827,10 @@
                             </div>
                         )}
 
-                        <NewDiagnosticStepper currentStep={currentStep} totalSteps={4} />
+                        <NewDiagnosticStepper currentStep={currentStep} totalSteps={5} />
 
                         {currentStep === 1 && (
-                            <NewDiagnosticStep1Identification
+                            <NewDiagnosticStep1Building
                                 formData={formData}
                                 setFormData={setFormData}
                                 onNext={() => setCurrentStep(2)}
@@ -8646,7 +8838,7 @@
                         )}
 
                         {currentStep === 2 && (
-                            <NewDiagnosticStep2Building
+                            <NewDiagnosticStep2Equipment
                                 formData={formData}
                                 setFormData={setFormData}
                                 onNext={() => setCurrentStep(3)}
@@ -8655,7 +8847,7 @@
                         )}
 
                         {currentStep === 3 && (
-                            <NewDiagnosticStep3Energies
+                            <NewDiagnosticStep3Energy
                                 formData={formData}
                                 setFormData={setFormData}
                                 onNext={() => setCurrentStep(4)}
@@ -8664,11 +8856,20 @@
                         )}
 
                         {currentStep === 4 && (
-                            <NewDiagnosticStep4Works
+                            <NewDiagnosticStep4Project
+                                formData={formData}
+                                setFormData={setFormData}
+                                onNext={() => setCurrentStep(5)}
+                                onBack={() => setCurrentStep(3)}
+                            />
+                        )}
+
+                        {currentStep === 5 && (
+                            <NewDiagnosticStep5Contact
                                 formData={formData}
                                 setFormData={setFormData}
                                 onNext={handleComplete}
-                                onBack={() => setCurrentStep(3)}
+                                onBack={() => setCurrentStep(4)}
                             />
                         )}
                     </div>
@@ -8689,7 +8890,12 @@
         const resolvePublicPageFromPath = () => {
             const path = window.location.pathname || '/';
             if (path === '/diagnostic' || path.endsWith('/diagnostic')) return 'diagnostic';
-            if (path === '/exemple-rapport.html' || path.endsWith('/exemple-rapport.html')) return 'exemple';
+            if (
+                path === '/exemple-rapport' ||
+                path.endsWith('/exemple-rapport') ||
+                path === '/exemple-rapport.html' ||
+                path.endsWith('/exemple-rapport.html')
+            ) return 'exemple';
             if (path === '/methode.html' || path.endsWith('/methode.html')) return 'methode';
             return 'home';
         };

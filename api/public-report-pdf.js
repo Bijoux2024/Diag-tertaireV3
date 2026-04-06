@@ -148,12 +148,21 @@ const formatCurrency = (v) =>
 /* ─── Base URL ───────────────────────────────────────────────────────────── */
 
 const getBaseUrl = (req) => {
+  const requestHost = String(req?.headers?.host || '').trim();
+  const isLocalHost = /^(localhost|127\.0\.0\.1)(:\d+)?$/i.test(requestHost);
+  if (requestHost && isLocalHost) {
+    const forwardedProto = String(req.headers['x-forwarded-proto'] || 'http').split(',')[0].trim();
+    const protocol = forwardedProto || 'http';
+    return `${protocol}://${requestHost}`;
+  }
+
   const explicit = readEnv('APP_BASE_URL');
   if (explicit) return explicit.replace(/\/$/, '');
   
-  if (req && req.headers && req.headers.host) {
-    const protocol = req.headers['x-forwarded-proto'] || 'https';
-    return `${protocol}://${req.headers.host}`;
+  if (requestHost) {
+    const forwardedProto = String(req.headers['x-forwarded-proto'] || 'https').split(',')[0].trim();
+    const protocol = forwardedProto || 'https';
+    return `${protocol}://${requestHost}`;
   }
   
   const vercelUrl = readEnv('VERCEL_URL');

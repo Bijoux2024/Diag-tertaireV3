@@ -9,8 +9,8 @@
  *
  * Toute modification doit etre testee sur minimum 3 scenarios.
  */
-const ENGINE_VERSION = '1.5.0';
-const ENGINE_LAST_UPDATED = '2026-04-04';
+const ENGINE_VERSION = '1.5.1';
+const ENGINE_LAST_UPDATED = '2026-04-06';
 
 // ═══════════════════════════════════════════════════════════════
 // CONSTANTES PARTAGEES (utilisees par le moteur ET le formulaire)
@@ -31,6 +31,27 @@ const NEW_DIAGNOSTIC_BOILER_AGES = [
 ];
 
 const NEW_DIAGNOSTIC_MAX_TOTAL_SAVINGS_PCT = 0.65;
+
+// Normalisation mainHeating : mappe les nouvelles valeurs detaillees vers les valeurs internes
+// electric_convector → electric | electric_pac → pac | backward compat: electric/pac inchanges
+const HEATING_TYPE_NORMALIZE = {
+    'electric_convector': 'electric',
+    'electric_pac': 'pac',
+    'electric': 'electric',
+    'pac': 'pac',
+    'gas': 'gas',
+    'fuel': 'fuel',
+    'network': 'network',
+    'other': 'other'
+};
+
+// COP PAC par age du batiment (regime temperature eau plus eleve = COP degrade)
+const COP_PAC_BY_BUILDING_AGE = {
+    pre1975: 2.8,
+    '1975_2000': 3.0,
+    '2001_2012': 3.5,
+    post2012: 4.0
+};
 
 // ═══════════════════════════════════════════════════════════════
 // FONCTIONS DE FORMATAGE (utilisees par le moteur)
@@ -443,7 +464,7 @@ const NEW_DIAGNOSTIC_ACTIONS_LIBRARY = {
             name: 'Entretien du chauffage pour qu\'il consomme moins',
             category: 'heating',
             tier: 'light',
-            aid_pct: 0.10,
+            aid_pct: 0.00,
             trigger_rules: ['heating_post > 30%', 'age_building > 15'],
             gain_scope: 'heating_post',
             gain_pct_low: 0.05, gain_pct_med: 0.08, gain_pct_high: 0.12,
@@ -511,7 +532,7 @@ const NEW_DIAGNOSTIC_ACTIONS_LIBRARY = {
             name: 'Passage à l\'éclairage LED dans tous les locaux',
             category: 'lighting',
             tier: 'light',
-            aid_pct: 0.30,
+            aid_pct: 0.20,
             trigger_rules: ['lighting_post > 15%', 'no_led_done'],
             gain_scope: 'lighting_post',
             gain_pct_low: 0.45, gain_pct_med: 0.60, gain_pct_high: 0.75,
@@ -519,7 +540,7 @@ const NEW_DIAGNOSTIC_ACTIONS_LIBRARY = {
             capex_unit: '€/m²',
             roi_method: 'simple_payback',
             aid_tags: ['CEE'],
-            aid_detail: 'Certificats d\'économies d\'énergie : environ 25-30% du coût pris en charge en 2026 (primes en baisse depuis 2023). TVA 20%.',
+            aid_detail: 'Certificats d\'économies d\'énergie : environ 15-20% du coût pris en charge en 2026 (primes CEE LED en baisse significative depuis 2023). TVA 20%.',
             source_level_gain: 'source_strong', source_ref_gain: 'Données de référence publiques - LED professionnelle, gains mesurés (plafonné 75%)',
             source_level_capex: 'source_strong', source_ref_capex: 'Prix marché LED 2025-2026',
             source_level_roi: 'hypothesis'
@@ -563,14 +584,14 @@ const NEW_DIAGNOSTIC_ACTIONS_LIBRARY = {
             name: 'Isolation du ballon d\'eau chaude',
             category: 'dhw',
             tier: 'light',
-            aid_pct: 0.15,
+            aid_pct: 0.05,
             trigger_rules: ['dhw_post > 8%', 'no_dhw_done'],
             gain_scope: 'dhw_post',
             gain_pct_low: 0.08, gain_pct_med: 0.12, gain_pct_high: 0.20,
             capex_low: 200, capex_med: 500, capex_high: 1000,
             capex_unit: '€',
             roi_method: 'simple_payback',
-            aid_tags: ['CEE'],
+            aid_tags: [],
             source_level_gain: 'source_partial', source_ref_gain: 'Données de référence publiques - isolation ballons',
             source_level_capex: 'hypothesis', source_ref_capex: 'Estimation jaquette isolante',
             source_level_roi: 'hypothesis'
@@ -580,7 +601,7 @@ const NEW_DIAGNOSTIC_ACTIONS_LIBRARY = {
             name: 'Remplacement de la chaudière gaz par une pompe à chaleur air/eau',
             category: 'heating',
             tier: 'heavy',
-            aid_pct: 0.35,
+            aid_pct: 0.22,
             trigger_rules: ['mainHeating === gas', 'boilerAge >= 15to20'],
             gain_scope: 'heating_post',
             gain_pct_low: 0.35, gain_pct_med: 0.50, gain_pct_high: 0.65,
@@ -588,8 +609,8 @@ const NEW_DIAGNOSTIC_ACTIONS_LIBRARY = {
             capex_unit: '€',
             capex_method: 'pac_tranches',
             roi_method: 'simple_payback',
-            aid_tags: ['CEE', 'Fonds_Chaleur', 'MaPrimeRenov_pro'],
-            aid_detail: 'Aides cumulables : certificats d\'économies d\'énergie (15-20%) + fonds chaleur (15-25% si énergie renouvelable) + aide rénovation possible si local < 1000 m² sous conditions. Cumul plafonné 80% HT.',
+            aid_tags: ['CEE', 'Fonds_Chaleur'],
+            aid_detail: 'Aides tertiaire 2026 : certificats d\'économies d\'énergie BAT-TH-113 (15-20%) + Fonds Chaleur ADEME si puissance > 30 kW / surface > 300 m² (5-12% supplémentaires). Aides dégressives selon taille. MaPrimeRénov\' Pro réservée au résidentiel uniquement.',
             source_level_gain: 'source_strong', source_ref_gain: 'Données de référence publiques - pompe à chaleur air/eau vs chaudière gaz',
             source_level_capex: 'source_partial', source_ref_capex: 'Prix marché PAC 2025-2026',
             source_level_roi: 'hypothesis'
@@ -618,15 +639,15 @@ const NEW_DIAGNOSTIC_ACTIONS_LIBRARY = {
             name: 'Isolation thermique toiture',
             category: 'envelope_roof',
             tier: 'heavy',
-            aid_pct: 0.35,
+            aid_pct: 0.22,
             trigger_rules: ['roofInsulation !== yes'],
             gain_scope: 'heating_post',
             gain_pct_low: 0.15, gain_pct_med: 0.20, gain_pct_high: 0.25,
             capex_low: 40, capex_med: 80, capex_high: 120,
             capex_unit: '€/m²',
             roi_method: 'simple_payback',
-            aid_tags: ['CEE', 'MaPrimeRenov_pro'],
-            aid_detail: 'Certificats d\'économies d\'énergie (20-25%) + aide rénovation possible si local < 1000 m² sous conditions. TVA 20%.',
+            aid_tags: ['CEE'],
+            aid_detail: 'Certificats d\'économies d\'énergie BAT-EN-101 (15-22% du coût HT). MaPrimeRénov\' Pro réservée au résidentiel. TVA 20%.',
             source_level_gain: 'source_strong', source_ref_gain: 'Données de référence publiques - isolation toiture (plafonné 25%)',
             source_level_capex: 'source_partial', source_ref_capex: 'Prix marché isolation 2025',
             source_level_roi: 'hypothesis'
@@ -636,15 +657,15 @@ const NEW_DIAGNOSTIC_ACTIONS_LIBRARY = {
             name: 'Isolation thermique des murs par l\'extérieur',
             category: 'envelope_walls',
             tier: 'heavy',
-            aid_pct: 0.35,
+            aid_pct: 0.22,
             trigger_rules: ['wallInsulation !== yes'],
             gain_scope: 'heating_post',
             gain_pct_low: 0.12, gain_pct_med: 0.18, gain_pct_high: 0.25,
             capex_low: 120, capex_med: 190, capex_high: 280,
             capex_unit: '€/m²',
             roi_method: 'simple_payback',
-            aid_tags: ['CEE', 'MaPrimeRenov_pro'],
-            aid_detail: 'Certificats d\'économies d\'énergie (20-25%) + aide rénovation possible si local < 1000 m² sous conditions. TVA 20%.',
+            aid_tags: ['CEE'],
+            aid_detail: 'Certificats d\'économies d\'énergie BAT-EN-102 (15-22% du coût HT). MaPrimeRénov\' Pro réservée au résidentiel. TVA 20%.',
             source_level_gain: 'source_partial', source_ref_gain: 'Données de référence publiques - isolation murs par l\'extérieur',
             source_level_capex: 'source_partial', source_ref_capex: 'Prix marché ITE 2025-2026',
             source_level_roi: 'hypothesis'
@@ -654,15 +675,15 @@ const NEW_DIAGNOSTIC_ACTIONS_LIBRARY = {
             name: 'Remplacement fenêtres (double/triple vitrage)',
             category: 'envelope_windows',
             tier: 'heavy',
-            aid_pct: 0.22,
+            aid_pct: 0.12,
             trigger_rules: [],
             gain_scope: 'heating_post',
             gain_pct_low: 0.05, gain_pct_med: 0.12, gain_pct_high: 0.15,
             capex_low: 400, capex_med: 550, capex_high: 900,
             capex_unit: '€/m² vitré',
             roi_method: 'simple_payback',
-            aid_tags: ['CEE', 'MaPrimeRenov_pro'],
-            aid_detail: 'Certificats d\'économies d\'énergie (12-18%) + aide rénovation possible si local < 1000 m² sous conditions. TVA 20%.',
+            aid_tags: ['CEE'],
+            aid_detail: 'Certificats d\'économies d\'énergie BAT-EN-104 : aide limitée en tertiaire (8-12% du coût HT). MaPrimeRénov\' Pro réservée au résidentiel. TVA 20%.',
             source_level_gain: 'source_partial', source_ref_gain: 'Données de référence publiques - menuiseries',
             source_level_capex: 'source_partial', source_ref_capex: 'Prix marché menuiseries 2025',
             source_level_roi: 'hypothesis'
@@ -672,15 +693,15 @@ const NEW_DIAGNOSTIC_ACTIONS_LIBRARY = {
             name: 'Chauffe-eau thermodynamique (eau chaude haute performance)',
             category: 'dhw',
             tier: 'heavy',
-            aid_pct: 0.20,
+            aid_pct: 0.15,
             trigger_rules: ['ecsSystem === electric_boiler'],
             gain_scope: 'dhw_post',
             gain_pct_low: 0.50, gain_pct_med: 0.60, gain_pct_high: 0.75,
             capex_low: 2500, capex_med: 4500, capex_high: 6000,
             capex_unit: '€',
             roi_method: 'simple_payback',
-            aid_tags: ['CEE', 'Fonds_Chaleur', 'MaPrimeRenov_pro'],
-            aid_detail: 'Aides cumulables : certificats d\'économies d\'énergie (15-20%) + fonds chaleur (15-20% si énergie renouvelable) + aide rénovation possible si local < 1000 m². Cumul plafonné 80% HT.',
+            aid_tags: ['CEE'],
+            aid_detail: 'Certificats d\'économies d\'énergie BAT-TH-116 (12-15% du coût HT). Fonds Chaleur non applicable (puissance < 30 kW). MaPrimeRénov\' Pro réservée au résidentiel. TVA 20%.',
             source_level_gain: 'source_strong', source_ref_gain: 'Données de référence publiques - chauffe-eau thermodynamique',
             source_level_capex: 'source_partial', source_ref_capex: 'Prix marché CET 2025-2026',
             source_level_roi: 'hypothesis'
@@ -690,7 +711,7 @@ const NEW_DIAGNOSTIC_ACTIONS_LIBRARY = {
             name: 'Rafraîchissement naturel par ventilation nocturne',
             category: 'cooling',
             tier: 'light',
-            aid_pct: 0.10,
+            aid_pct: 0.00,
             trigger_rules: ['hasCooling === true'],
             gain_scope: 'cooling_post',
             gain_pct_low: 0.15, gain_pct_med: 0.25, gain_pct_high: 0.40,
@@ -724,7 +745,7 @@ const NEW_DIAGNOSTIC_ACTIONS_LIBRARY = {
             name: 'Suivi détaillé de ce qui consomme quoi dans votre local',
             category: 'pilotage',
             tier: 'light',
-            aid_pct: 0.15,
+            aid_pct: 0.00,
             trigger_rules: ['surface > 300'],
             gain_scope: 'total',
             gain_pct_low: 0.03, gain_pct_med: 0.05, gain_pct_high: 0.08,
@@ -1034,7 +1055,7 @@ const newDiagnosticSplitByEnergySource = (formData, elecKwh, gasKwh, activity) =
     const elec = Math.max(0, elecKwh || 0);
     const gas = Math.max(0, gasKwh || 0);
     const totalKwh = elec + gas;
-    const mainHeating = formData.mainHeating || 'gas';
+    const mainHeating = HEATING_TYPE_NORMALIZE[formData.mainHeating] || formData.mainHeating || 'gas';
 
     // ──────────────────────────────────────────────────────────────────
     // ÉTAPE 1 : Répartition de RÉFÉRENCE du secteur (fixe)
@@ -1443,18 +1464,26 @@ const newDiagnosticCalculateActionGain = (action, splitResult, surface, formData
             break;
     }
 
-    // ── BASCULE SOURCE : PAC chauffage (ACT13) - gaz → élec ──
+    // ── BASCULE SOURCE : PAC chauffage (ACT13) - gaz/fioul → élec ──
     if (action.id === 'ACT13' && splitResult.heatingSource === 'gas') {
-        // Si la chaudière gaz fait aussi l'ECS, la PAC couvre les deux postes
-        const ecsAlsoOnGasBoiler = (splitResult.ecsSource === 'gas') &&
+        // Si la chaudière fait aussi l'ECS, la PAC couvre les deux postes
+        const ecsAlsoOnBoiler = (splitResult.ecsSource === 'gas') &&
             (formData.ecsSameSystem !== false || !formData.ecsSystem || formData.ecsSystem === 'gas_boiler');
-        const heatingGasKwh = posts.heating.kwh + (ecsAlsoOnGasBoiler ? posts.ecs.kwh : 0);
-        const copPac = 3.5;
+        const heatingGasKwh = posts.heating.kwh + (ecsAlsoOnBoiler ? posts.ecs.kwh : 0);
+        // W4 : COP module par age du batiment (regime haute temperature = COP degrade)
+        const copPac = COP_PAC_BY_BUILDING_AGE[formData.buildingAge] || 3.5;
         const newElecKwh = Math.round(heatingGasKwh / copPac);
 
-        const economieGaz = Math.round(heatingGasKwh * ePrices.gas);
+        // W2 : prix correct selon vecteur (fioul 0.125 EUR/kWh vs gaz 0.108)
+        const isFuel = formData.mainHeating === 'fuel' || formData.mainHeating === 'fioul';
+        const oldFuelPrice = isFuel
+            ? NEW_DIAGNOSTIC_ENERGY_PRICES.fuel_oil.price_default_eur_kwh
+            : ePrices.gas;
+        const oldFuelLabel = isFuel ? 'fioul' : 'gaz';
+
+        const economieAncienCombustible = Math.round(heatingGasKwh * oldFuelPrice);
         const surcoutElec = Math.round(newElecKwh * ePrices.elec);
-        const gainEuro = Math.max(0, economieGaz - surcoutElec);
+        const gainEuro = Math.max(0, economieAncienCombustible - surcoutElec);
         const gainKwh = Math.max(0, heatingGasKwh - newElecKwh);
 
         let capex = 0;
@@ -1462,7 +1491,8 @@ const newDiagnosticCalculateActionGain = (action, splitResult, surface, formData
         else if (safeSurface <= 500) capex = 200 * 95 + (safeSurface - 200) * 65;
         else capex = 200 * 95 + 300 * 65 + (safeSurface - 500) * 45;
 
-        const aidPct = action.aid_pct || 0;
+        // Aides PAC dégressives selon surface (Fonds Chaleur inaccessible < 30 kW ≈ < 300 m²)
+        const aidPct = safeSurface <= 200 ? 0.18 : safeSurface <= 600 ? 0.25 : 0.30;
         const aidAmount = Math.round(capex * aidPct);
         const capexNet = Math.round(capex * (1 - aidPct));
         const roi_years = gainEuro > 0 ? Math.round((capexNet / gainEuro) * 10) / 10 : null;
@@ -1478,22 +1508,23 @@ const newDiagnosticCalculateActionGain = (action, splitResult, surface, formData
             gain_pct_total: totalKwh > 0 ? Math.round((gainKwh / totalKwh) * 1000) / 10 : 0,
             energy_switch: true,
             energy_switch_detail: {
-                old_source: 'gas',
+                old_source: isFuel ? 'fuel' : 'gas',
                 new_source: 'elec',
                 old_kwh: heatingGasKwh,
                 new_kwh: newElecKwh,
                 cop: copPac,
-                economie_old_euro: economieGaz,
+                economie_old_euro: economieAncienCombustible,
                 surcout_new_euro: surcoutElec
             },
-            energy_switch_note: `Remplacement de la chaudière gaz par une pompe à chaleur air/eau (coefficient de performance ${copPac})${ecsAlsoOnGasBoiler ? ' (chauffage + eau chaude)' : ''}. Suppression de ${newDiagnosticFormatInteger(heatingGasKwh)} kWh gaz, ajout de ${newDiagnosticFormatInteger(newElecKwh)} kWh électriques. Gain net : ${newDiagnosticFormatInteger(gainEuro)} €/an.`
+            energy_switch_note: `Remplacement de la chaudiere ${oldFuelLabel} par une pompe a chaleur air/eau (COP ${copPac})${ecsAlsoOnBoiler ? ' (chauffage + eau chaude)' : ''}. Suppression de ${newDiagnosticFormatInteger(heatingGasKwh)} kWh ${oldFuelLabel}, ajout de ${newDiagnosticFormatInteger(newElecKwh)} kWh electriques. Gain net : ${newDiagnosticFormatInteger(gainEuro)} EUR/an.`
         };
     }
 
-    // ── BASCULE SOURCE : PAC chauffage (ACT13) - chauffage ELEC existant ──
+    // ── BASCULE SOURCE : PAC chauffage (ACT13) - convecteurs electriques existants ──
     if (action.id === 'ACT13' && splitResult.heatingSource === 'elec' && formData.mainHeating !== 'pac') {
         const heatingElecKwh = posts.heating.kwh;
-        const copPac = 3.5;
+        // W4 : COP module par age du batiment
+        const copPac = COP_PAC_BY_BUILDING_AGE[formData.buildingAge] || 3.5;
         const newElecKwh = Math.round(heatingElecKwh / copPac);
         const gainKwh = heatingElecKwh - newElecKwh;
         const gainEuro = Math.round(gainKwh * ePrices.elec);
@@ -1503,7 +1534,8 @@ const newDiagnosticCalculateActionGain = (action, splitResult, surface, formData
         else if (safeSurface <= 500) capex = 200 * 95 + (safeSurface - 200) * 65;
         else capex = 200 * 95 + 300 * 65 + (safeSurface - 500) * 45;
 
-        const aidPct = action.aid_pct || 0;
+        // Aides PAC dégressives selon surface (Fonds Chaleur inaccessible < 30 kW ≈ < 300 m²)
+        const aidPct = safeSurface <= 200 ? 0.18 : safeSurface <= 600 ? 0.25 : 0.30;
         const aidAmount = Math.round(capex * aidPct);
         const capexNet = Math.round(capex * (1 - aidPct));
         const roi_years = gainEuro > 0 ? Math.round((capexNet / gainEuro) * 10) / 10 : null;
@@ -1630,7 +1662,13 @@ const newDiagnosticCalculateActionGain = (action, splitResult, surface, formData
         });
     }
 
-    const aidPct = action.aid_pct || 0;
+    // ACT13 (PAC) : aides dégressives selon surface (Fonds Chaleur inaccessible < 30 kW ≈ < 300 m²)
+    let aidPct = action.aid_pct || 0;
+    if (action.id === 'ACT13') {
+        if (safeSurface <= 200) aidPct = 0.18;       // CEE seul (< 30 kW, Fonds Chaleur non éligible)
+        else if (safeSurface <= 600) aidPct = 0.25;  // CEE + Fonds Chaleur partiel
+        else aidPct = 0.30;                           // CEE + Fonds Chaleur plein
+    }
     const capexNet = Math.round(capex * (1 - aidPct));
     const aidAmount = Math.round(capex * aidPct);
     const roi_years = gainEuro > 0 ? Math.round((capexNet / gainEuro) * 10) / 10 : null;
@@ -1652,8 +1690,10 @@ const newDiagnosticCalculateActionGain = (action, splitResult, surface, formData
 const newDiagnosticFilterAndScoreActions = (formData, splitResult) => {
     const worksDone = formData.worksDone || [];
     const surface = Math.max(1, Number(formData.surface || 100));
-    const buildingAge = formData.buildingAge || '2006_2012';
+    const buildingAge = formData.buildingAge || 'post2012';
     const boilerAge = formData.boilerAge || 'under5';
+    // W7-BIS M3 : normaliser mainHeating pour les regles d'eligibilite
+    const mainHeatingNorm = HEATING_TYPE_NORMALIZE[formData.mainHeating] || formData.mainHeating || 'gas';
 
     let eligibleActions = NEW_DIAGNOSTIC_ACTIONS_LIBRARY.actions.filter(action => {
         // EXCLUSIONS PAR TRAVAUX DÉJÀ RÉALISÉS
@@ -1671,16 +1711,52 @@ const newDiagnosticFilterAndScoreActions = (formData, splitResult) => {
 
         // EXCLUSIONS PAR ÉTAT DU BÂTIMENT
         if (!formData.hasCooling && ['ACT19', 'ACT20'].includes(action.id)) return false;
-        if (formData.mainHeating === 'electric' && action.id === 'ACT04') return false;
-        // ACT13 PAC : autorisé pour gaz ET électrique (convecteurs → PAC), exclu si déjà PAC
-        if (!['gas', 'electric'].includes(formData.mainHeating) && action.id === 'ACT13') return false;
-        if (formData.mainHeating === 'pac' && action.id === 'ACT13') return false;
+        // ACT04 (entretien chaudiere) : sans objet pour chauffage electrique ou PAC
+        if (['electric', 'pac'].includes(mainHeatingNorm) && action.id === 'ACT04') return false;
+
+        // ACT13 (PAC) : eligibilite detaillee
+        // - autorise si gaz, fioul ou convecteurs electriques
+        // - exclu si batiment post-2012 + electrique (probable PAC RT2012 deja installee)
+        // - si PAC existante : exclu SAUF si pacAge = over15 (remplacement PAC vieillissante)
+        // - exclu pour reseau de chaleur, other, network
+        if (action.id === 'ACT13') {
+            if (mainHeatingNorm === 'pac') {
+                if (formData.pacAge !== 'over15') return false;
+            } else if (!['gas', 'fuel', 'electric'].includes(mainHeatingNorm)) {
+                return false;
+            } else if (mainHeatingNorm === 'electric' && buildingAge === 'post2012') {
+                return false;
+            }
+        }
+
         if (formData.hasGtb && ['ACT14', 'ACT21'].includes(action.id)) return false;
         if (formData.roofInsulation === 'yes' && action.id === 'ACT15') return false;
         if (formData.wallInsulation === 'yes' && action.id === 'ACT16') return false;
-        // ACT18 CET : autorisé pour ballon élec OU gaz (remplacement par thermodynamique)
-        if (action.id === 'ACT18' && !formData.ecsSameSystem && !['electric_boiler', 'gas_boiler', 'gas_instant'].includes(formData.ecsSystem)) return false;
-        if (action.id === 'ACT18' && formData.ecsSameSystem) return false;
+
+        // ACT06 (VMC présence) : pertinent uniquement pour activités à présence intermittente
+        // (bureaux, enseignement, coworking, santé). Non pertinent pour restaurant/commerce/hôtel
+        // où la ventilation est quasi-continue et réglementairement imposée.
+        if (action.id === 'ACT06') {
+            const activityNorm = formData.activity || 'offices';
+            if (!['offices', 'education', 'health_local', 'health', 'coworking', 'mixed'].includes(activityNorm)) return false;
+        }
+
+        // ACT07 (VMC CO2 / qualité d'air) : pertinent pour haute occupation
+        // (restaurant, hôtel, enseignement, santé, grands bureaux > 500 m²)
+        if (action.id === 'ACT07') {
+            const activityNorm = formData.activity || 'offices';
+            const highOccupancy = ['restaurant', 'hotel', 'education', 'health_local', 'health'].includes(activityNorm)
+                || (activityNorm === 'offices' && surface >= 500);
+            if (!highOccupancy) return false;
+        }
+        // ACT18 (CET) : autorise pour ballon elec ou gaz, exclu si ECS deja thermodynamique
+        // W7-BIS M5 : exclure si ECS = CET deja installe ou PAC double service
+        if (action.id === 'ACT18') {
+            if (formData.ecsSystem === 'heat_pump') return false;
+            if (formData.ecsSameSystem && mainHeatingNorm === 'pac') return false;
+            if (!formData.ecsSameSystem && !['electric_boiler', 'gas_boiler', 'gas_instant'].includes(formData.ecsSystem)) return false;
+            if (formData.ecsSameSystem && mainHeatingNorm !== 'pac') return false;
+        }
         // ACT22 conditions
         if (action.id === 'ACT22' && surface < 100) return false;
         if (action.id === 'ACT22' && (formData.roofType === 'none' || formData.roofAccessible === 'no')) return false;
@@ -1691,7 +1767,11 @@ const newDiagnosticFilterAndScoreActions = (formData, splitResult) => {
     const buildingAgeCoef = (NEW_DIAGNOSTIC_BUILDING_AGES || []).find(a => a.id === buildingAge)?.coef || 1.0;
     const boilerAgePriority = (NEW_DIAGNOSTIC_BOILER_AGES || []).find(a => a.id === boilerAge)?.pacPriority || 0;
 
-    const energyPrices = { elec: NEW_DIAGNOSTIC_ENERGY_PRICES.electricity.price_default_eur_kwh, gas: NEW_DIAGNOSTIC_ENERGY_PRICES.gas.price_default_eur_kwh };
+    // Pour les batiments fioul, le prix "gaz" dans le calcul ACT13 doit refléter le fioul
+    const gasOrFuelPrice = (mainHeatingNorm === 'fuel')
+        ? NEW_DIAGNOSTIC_ENERGY_PRICES.fuel_oil.price_default_eur_kwh
+        : NEW_DIAGNOSTIC_ENERGY_PRICES.gas.price_default_eur_kwh;
+    const energyPrices = { elec: NEW_DIAGNOSTIC_ENERGY_PRICES.electricity.price_default_eur_kwh, gas: gasOrFuelPrice };
     const scoredActions = eligibleActions.map(action => {
         const calc = newDiagnosticCalculateActionGain(action, splitResult, surface, formData, energyPrices);
 
@@ -1956,8 +2036,33 @@ const newDiagnosticGenerateWarnings = (formData, conversionResults) => {
         }
     });
 
-    // Warning mix usage (ne devrait pas arriver car validation formulaire)
-    // (Supprimé car le mix est maintenant géré via mixedUsage1/mixedUsage2 en Step1)
+    // Warning réseau de chaleur sans kWh déclarés (W6)
+    // Le réseau chaleur est la source principale de chauffage mais n'a pas de champ dédié kWh.
+    // Si seule l'électricité est déclarée, l'intensité site est sous-estimée → score A trompeur.
+    if (formData.mainHeating === 'network' && !formData.elecUsed && !formData.gasUsed) {
+        warnings.push({
+            code: 'NETWORK_HEAT_NO_DATA',
+            severity: 'warning',
+            message: 'Réseau de chaleur : aucune consommation renseignée. Le diagnostic ne peut pas estimer votre intensité énergétique réelle. Renseignez vos kWh électriques (ou vos factures) pour obtenir un diagnostic fiable.'
+        });
+    } else if (formData.mainHeating === 'network') {
+        warnings.push({
+            code: 'NETWORK_HEAT_PARTIAL',
+            severity: 'info',
+            message: 'Réseau de chaleur : la consommation thermique du réseau n\'est pas prise en compte dans ce diagnostic (pas de champ kWh réseau). L\'intensité affichée reflète uniquement votre consommation électrique déclarée et peut sous-estimer votre consommation réelle.'
+        });
+    }
+
+    // Warning aucune consommation saisie (W9)
+    const noElec = !formData.elecUsed && !formData.elecKwh && !formData.elecEuros;
+    const noGas = !formData.gasUsed && !formData.gasKwh && !formData.gasEuros;
+    if (noElec && noGas) {
+        warnings.push({
+            code: 'NO_CONSUMPTION_DATA',
+            severity: 'warning',
+            message: 'Aucune consommation énergétique renseignée. Le diagnostic affiche une intensité de 0 kWh/m²/an et ne peut pas générer de recommandations. Renseignez vos consommations électriques et/ou gaz pour obtenir un rapport exploitable.'
+        });
+    }
 
     return warnings;
 };
@@ -2003,7 +2108,7 @@ const newDiagnosticCalculateLeadScore = (formData, compositeSavingsPct) => {
     const reasons = [];
 
     // Urgence (0–30)
-    const hScore = { immediate: 30, '3to6months': 24, '6to12months': 16, over1year: 8, exploring: 4 };
+    const hScore = { immediate: 30, '3to6months': 24, '6months': 24, '6to12months': 16, '1year': 16, over1year: 8, later: 8, exploring: 4 };
     score += hScore[formData.decisionHorizon] || 8;
     if (formData.decisionHorizon === 'immediate') reasons.push('Décision imminente');
 
@@ -2026,7 +2131,7 @@ const newDiagnosticCalculateLeadScore = (formData, compositeSavingsPct) => {
     else score += 3;
 
     // Objectif (0–10)
-    const oScore = { reduce_costs: 10, comply_regulation: 9, valorise_asset: 7, comfort: 5 };
+    const oScore = { reduce_costs: 10, comply_regulation: 9, compliance: 9, valorise_asset: 7, valorization: 7, comfort: 5 };
     score += oScore[formData.projectObjective] || 5;
 
     const s = Math.min(100, score);
@@ -2067,7 +2172,24 @@ const newDiagnosticBuildReportData = (formData) => {
     const elecConversion = formData.elecUsed ? newDiagnosticConvertEuroToKwh('elec', formData) : { value: 0, method: 'not_used' };
     const gasConversion = formData.gasUsed ? newDiagnosticConvertEuroToKwh('gas', formData) : { value: 0, method: 'not_used' };
 
-    const totalKwh = elecConversion.value + gasConversion.value;
+    // W6 : reseau de chaleur -- kWh saisis quand mainHeating = 'network'
+    // On utilise le prix reseau (0.095 EUR/kWh) pour la conversion €→kWh
+    let networkConversion = { value: 0, method: 'not_used' };
+    if (formData.networkUsed && formData.mainHeating === 'network') {
+        const networkKwh = parseFloat(formData.networkKwh) || 0;
+        const networkEuro = parseFloat(formData.networkEuro) || 0;
+        const networkPrice = NEW_DIAGNOSTIC_ENERGY_PRICES.heat_network.price_default_eur_kwh;
+        if (networkKwh > 0) {
+            networkConversion = { value: networkKwh, method: 'kwh_provided' };
+        } else if (networkEuro > 0) {
+            networkConversion = { value: Math.round(networkEuro / networkPrice), method: 'euro_converted' };
+        }
+    }
+
+    // Pour le reseau de chaleur, les kWh reseau remplacent les kWh gaz dans le split
+    const gasKwhForSplit = formData.mainHeating === 'network' ? networkConversion.value : gasConversion.value;
+
+    const totalKwh = elecConversion.value + gasConversion.value + networkConversion.value;
 
     // Garde-fou NaN
     if (isNaN(totalKwh) || !isFinite(totalKwh)) {
@@ -2081,7 +2203,7 @@ const newDiagnosticBuildReportData = (formData) => {
     const splitResult = newDiagnosticSplitByEnergySource(
         formData,
         elecConversion.value,
-        gasConversion.value,
+        gasKwhForSplit,
         activity
     );
 
@@ -2132,6 +2254,12 @@ const newDiagnosticBuildReportData = (formData) => {
             ? Number(formData.gasEuro)
             : gasConversion.value * gasPrice;
     }
+    if (formData.networkUsed && formData.mainHeating === 'network') {
+        const networkPrice = NEW_DIAGNOSTIC_ENERGY_PRICES.heat_network.price_default_eur_kwh;
+        totalEuro += (formData.networkEuro && parseFloat(formData.networkEuro) > 0)
+            ? Number(formData.networkEuro)
+            : networkConversion.value * networkPrice;
+    }
     const avgPrice = totalKwh > 0
         ? Math.min(Math.max(totalEuro / totalKwh, 0.05), 0.40)
         : elecPrice;
@@ -2157,6 +2285,56 @@ const newDiagnosticBuildReportData = (formData) => {
         unit: '€',
         period: '3 ans'
     };
+
+    // ──────────────────────────────────────────────────────────────────────
+    // TRAVAUX D'ENVELOPPE (W3 - section dédiée hors tri ROI)
+    // Pour les bâtiments pré-2000, signaler les travaux d'enveloppe même si ROI > 10 ans.
+    // Ces travaux sont patrimoniaux et requis par le Décret Tertiaire.
+    // ──────────────────────────────────────────────────────────────────────
+    const envelopeOpportunities = (() => {
+        const age = formData.buildingAge || 'post2012';
+        const worksDone = formData.worksDone || [];
+        if (!['pre1975', '1975_2000'].includes(age)) return null;
+
+        const safeSurf = Math.max(1, surface || 100);
+        const heatingCostEuro = Math.round(totalEuro * (splitResult.breakdown_pct?.heating || 0) / 100);
+        const opps = [];
+
+        if (!worksDone.includes('roof_done') && formData.roofInsulation !== 'yes') {
+            const capexEst = Math.round(safeSurf * 80);  // 80 EUR/m² médian
+            const gainEst = Math.round(heatingCostEuro * 0.20);
+            opps.push({
+                id: 'ACT15',
+                name: 'Isolation thermique de la toiture',
+                capex_estimate: { value: capexEst, unit: '€' },
+                gain_estimate: { value: gainEst, unit: '€/an' },
+                roi_indicatif: capexEst > 0 && gainEst > 0 ? Math.round((capexEst * 0.78) / gainEst) : null,
+                aid_pct: 0.22,
+                note: 'Travaux prioritaires pour les bâtiments antérieurs à 2000. ROI long terme (10-18 ans) mais indispensable pour atteindre les objectifs Décret Tertiaire -40% en 2030. CEE BAT-EN-101 applicable (22% du coût HT).'
+            });
+        }
+
+        if (!worksDone.includes('walls_done') && formData.wallInsulation !== 'yes' && safeSurf >= 300) {
+            const capexEst = Math.round(safeSurf * 190 * 0.6);  // 190 EUR/m² × ratio façade/surface
+            const gainEst = Math.round(heatingCostEuro * 0.18);
+            opps.push({
+                id: 'ACT16',
+                name: 'Isolation thermique des murs par l\'extérieur',
+                capex_estimate: { value: capexEst, unit: '€' },
+                gain_estimate: { value: gainEst, unit: '€/an' },
+                roi_indicatif: capexEst > 0 && gainEst > 0 ? Math.round((capexEst * 0.78) / gainEst) : null,
+                aid_pct: 0.22,
+                note: 'Pertinent si la toiture est déjà isolée et que les murs sont en mono-paroi (briques, blocs béton). ROI 15-25 ans, mais impact fort sur le score DPE et la valeur patrimoniale. CEE BAT-EN-102 applicable.'
+            });
+        }
+
+        return opps.length > 0 ? {
+            applicable: true,
+            building_age: age,
+            note: 'Ces travaux d\'enveloppe ne figurent pas dans les recommandations prioritaires car leur retour sur investissement dépasse le seuil de 10 ans. Ils restent néanmoins essentiels pour atteindre les objectifs réglementaires (Décret Tertiaire -40% en 2030, -50% en 2040) et améliorer le confort.',
+            items: opps
+        } : { applicable: false };
+    })();
 
     // ──────────────────────────────────────────────────────────────────────
     // WARNINGS & CONFIANCE
@@ -2222,17 +2400,20 @@ const newDiagnosticBuildReportData = (formData) => {
             phone: formData.phone || null,
             ecsSameSystem: formData.ecsSameSystem,
             ecsSystem: formData.ecsSystem || null,
-            primary_goal: formData.primaryGoal || null,
-            project_horizon: formData.projectHorizon || null,
-            decision_role: formData.decisionRole || null,
+            primary_goal: formData.projectObjective || formData.primaryGoal || null,
+            project_horizon: formData.decisionHorizon || formData.projectHorizon || null,
+            decision_role: formData.decisionRole || formData.role || null,
             contactOptIn: formData.contactOptIn || false,
-            mainHeating: formData.mainHeating || 'gas'
+            mainHeating: formData.mainHeating || 'gas',
+            networkUsed: formData.networkUsed || false,
+            pacAge: formData.pacAge || null
         },
 
         // Calculation results
         calculation_results: {
             elec_kwh_an: { value: elecConversion.value, unit: 'kWh/an', method: elecConversion.method },
             gas_kwh_an: { value: gasConversion.value, unit: 'kWh/an', method: gasConversion.method },
+            network_kwh_an: { value: networkConversion.value, unit: 'kWh/an', method: networkConversion.method },
             total_kwh_an: { value: totalKwh, unit: 'kWh/an' },
             intensity_kwh_m2_an: { value: intensity_kwh_m2_an, unit: 'kWh/m²/an' },
             total_cost_euro_an: { value: Math.round(totalKwh * avgPrice), unit: '€/an', price_avg: avgPrice }
@@ -2331,6 +2512,9 @@ const newDiagnosticBuildReportData = (formData) => {
             has_phone: leadScore.hasPhone,
             can_contact: leadScore.canContact
         },
+
+        // Travaux d'enveloppe (hors top actions — ROI long terme, requis Décret Tertiaire)
+        envelope_opportunities: envelopeOpportunities,
 
         // Metadata
         confidence: confidence,

@@ -1,5 +1,46 @@
 # Changelog - DiagTertiaire V3
 
+## [v1.5.1 - Corrections moteur post-audit expert] - 2026-04-06
+
+ENGINE_VERSION : 1.5.0 → 1.5.1
+
+### Corrections IMPORTANT (moteur + formulaire)
+
+**W1 - Seuils scoring (simulate30.js)** : La divergence de seuils A-E observee a l'audit etait dans le script de simulation, pas dans la production. `simulate30.js` utilisait 0.85/1.15/1.60 au lieu de 0.90/1.20/1.70. Corrige : le script est desormais aligne sur les seuils de production (`index.html` et `public-report-print.html` etaient deja corrects).
+
+**W2 - ACT13 (PAC) absente pour fioul** : Angle mort corrige. Le filtre eligibilite excluait `mainHeating = 'fuel'` de la PAC. Fix : `fuel` ajoute aux sources eligibles. Gain PAC calcule avec le prix fioul (0.125 EUR/kWh). Label `energy_switch_note` desormais correct ("chaudiere fioul" au lieu de "chaudiere gaz").
+
+**W4 - COP PAC irrealiste sur batiments anciens** : COP fixe a 3.5 remplace par une table modulee par `buildingAge` :
+- pre1975 : COP 2.8 (regime haute temperature 70/55, label degrade)
+- 1975_2000 : COP 3.0
+- 2001_2012 : COP 3.5
+- post2012 : COP 4.0
+Impact : ROI PAC pre-1975 passe de ~2.6 ans a ~4-5 ans (plus realiste).
+
+**W5 - PAC recommandee a tort (post-2012 tout electrique)** : Garde ajouteee -- `buildingAge = 'post2012' + mainHeating = 'electric'` → ACT13 exclue (RT2012 = systeme electrique performant probable).
+
+**W6 - Reseau de chaleur sans kWh dedie** : Champ reseau de chaleur ajoute dans le formulaire (etape 3 consommations), conditionnel a `mainHeating = 'network'`. Le bloc gaz est masque pour les utilisateurs reseau. Validation mise a jour. Engine.js integre `networkKwh` dans `totalKwh` et le split energetique. PDF synchronise.
+
+**W7-BIS - Distinction convecteur / PAC electrique** :
+- Formulaire : option "Electrique" scindee en "Convecteurs / Radiateurs electriques" (`electric_convector`) et "Pompe a chaleur (PAC)" (`electric_pac`)
+- Champ optionnel `pacAge` affiche si `electric_pac` (under5 / 5to15 / over15)
+- Moteur : `HEATING_TYPE_NORMALIZE` mappe les nouvelles valeurs vers les valeurs internes (`electric_convector → electric`, `electric_pac → pac`)
+- ACT13 exclue si `electric_pac` (PAC existante) sauf `pacAge = over15` (remplacement PAC vieillissante)
+- ACT18 (CET) exclue si ECS = `heat_pump` (CET deja installe) ou PAC double service
+- ACT04 (entretien chaudiere) exclue pour `pac` (sans objet)
+- Backward compat : `mainHeating = 'electric'` (anciens diagnostics) auto-remapping vers `electric_convector` au chargement du formulaire
+- `HEATING_LABELS` et `newDiagnosticGetHeatingLabel()` ajoutes dans `index.html`
+
+### Fichiers modifies
+
+- `src/engine.js` (ENGINE_VERSION 1.5.1)
+- `index.html`
+- `public-report-print.html`
+- `scripts/simulate30.js`
+- `CHANGELOG.md`
+
+---
+
 ## [Audit PDF - anti-coupure + sync] - 2026-04-05
 
 ### Corrections critiques (public-report-print.html)

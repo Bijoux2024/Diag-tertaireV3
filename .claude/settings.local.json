@@ -37,7 +37,23 @@
       "Bash(grep -v \"^.*//\\\\|^\\\\s*//\")",
       "Bash(grep -v \"^\\\\s*//\")",
       "Bash(vercel --version)",
-      "Bash(vercel --prod)"
+      "Bash(vercel --prod)",
+      "Bash(start \"\" \"http://localhost:3000\")",
+      "Bash(pkill -f \"node.*serve\")",
+      "Bash(start \"\" \"http://localhost:61129\")",
+      "Bash(start http://localhost:4173/public-report-print.html)",
+      "Bash(start http://localhost:4173/public-report-print.html?mock=1)",
+      "Bash(start c:/Users/yanni/Diag-tertaireV3/rapport-mock-audit.pdf)",
+      "Bash(sort -k2 -n)",
+      "Bash(start rapport-mock-audit.pdf)",
+      "Bash(start rapport-mock-typo.pdf)",
+      "Bash(python3 add_icons.py)",
+      "Bash(python3 apply_icons.py)",
+      "Bash(python3 update_exemple.py)",
+      "Bash(python3 apply_legal.py)",
+      "Bash(python3 apply_pro.py)",
+      "Bash(python3 -m http.server 3333)",
+      "mcp__claude_ai_Vercel__list_deployments"
     ]
   }
 }

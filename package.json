@@ -28,5 +28,8 @@
     "@sparticuz/chromium": "^138.0.2",
     "@vercel/analytics": "^1.6.1",
     "puppeteer-core": "^24.38.0"
+  },
+  "devDependencies": {
+    "xlsx": "^0.18.5"
   }
 }

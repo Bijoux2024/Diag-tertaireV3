@@ -46,25 +46,72 @@ C'est un outil d'ORIENTATION DECISIONNELLE, pas un audit energetique.
 7. **Toute modification du moteur** doit etre testee sur minimum 3 scenarios (bureau, restaurant, commerce)
 8. **Exclusion des actions deja realisees** dans le calcul des recommandations
 
-## Prix de reference (MVP V1)
+## Prix de reference (2026 - mis a jour)
 
 | Parametre | Valeur | Source |
 |---|---|---|
-| Electricite | 0.194 euros/kWh | Simplifie |
-| Gaz | 0.10 euros/kWh | Simplifie |
-| Facteur emission elec | 0.0640 kgCO2/kWh | Base Carbone ADEME 2024 (corrige prospectif) |
+| Electricite | 0.196 euros/kWh TTC | TRVE pro <= 36 kVA, CRE fev 2026 |
+| Gaz | 0.108 euros/kWh TTC | CRE prix repere pro 2026 |
+| Fioul | 0.118 euros/kWh | Prix livraison pro Q1 2026 |
+| Reseau chaleur | 0.095 euros/kWh | Moyenne nationale SNCU |
+| Facteur emission elec | 0.079 kgCO2/kWh | ADEME RE2020 mensualisee par usage |
+| Facteur emission gaz | 0.227 kgCO2/kWh | Base Carbone ADEME 2024 |
+| Facteur emission fioul | 0.324 kgCO2/kWh | Base Carbone ADEME 2024 |
+
+## Seuils de scoring A-E (index.html ligne 6523)
+
+Le score est calcule sur le ratio intensite / mediane sectorielle :
+
+| Score | Seuil ratio | Signification |
+|---|---|---|
+| A | ratio < 60% | Tres performant |
+| B | ratio < 90% | Performant |
+| C | ratio < 120% | Dans la reference |
+| D | ratio < 170% | Sous-performant |
+| E | ratio >= 170% | Tres sous-performant |
+
+## Medianes sectorielles (src/engine.js - NEW_DIAGNOSTIC_BENCHMARKS_INTENSITY)
+
+| Activite | Mediane kWh/m2/an | Source |
+|---|---|---|
+| offices (bureaux) | 135 | ADEME ECNA 2022 |
+| retail (commerce non-alim) | 210 | CEREN 2019 revise |
+| retail_food / commerce_alim | 360 | ADEME froid alimentaire |
+| hotel | 230 | ADEME Hotellerie 2024 |
+| restaurant | 270 | ADEME HORECA |
+| education (enseignement) | 110 | ADEME / OPERAT |
+| health_local (sante) | 195 | Estimation |
+| warehouse_heated (entrepot chauffe) | 135 | Estimation |
+| light_warehouse (entrepot leger) | 45 | CEREN Logistique |
+
+## Aides financieres par action (src/engine.js - aid_pct)
+
+Les aides sont exclusivement en tertiaire commercial (hors MaPrimeRenov' Pro qui est residentiel uniquement) :
+
+| Action | aid_pct | Dispositif |
+|---|---|---|
+| ACT13 PAC chauffage | 18-30% selon surface | CEE BAT-TH-113 + Fonds Chaleur si > 300 m² |
+| ACT15 Isolation toiture | 22% | CEE BAT-EN-101 |
+| ACT16 Isolation murs | 22% | CEE BAT-EN-102 |
+| ACT08 LED | 20% | CEE BAT-EQ-162 |
+| ACT14 GTB | 28% | CEE BAT-TH-116 (partiel) |
+| ACT04 Entretien chauffage | 0% | Pas de fiche CEE |
+| ACT19 Rafraichissement naturel | 0% | Pas de fiche CEE |
+| ACT21 Sous-comptage | 0% | Pas de fiche CEE |
 
 ## Structure du moteur de calcul (src/engine.js)
 
-Le moteur est extrait dans `src/engine.js` (2 420 lignes, source unique). Charge via `<script src="/src/engine.js">` avant le bloc Babel.
+Le moteur est extrait dans `src/engine.js` (source unique). Charge via `<script src="/src/engine.js">` avant le bloc Babel.
 
-- **Constantes partagees** : NEW_DIAGNOSTIC_BUILDING_AGES, BOILER_AGES, MAX_TOTAL_SAVINGS_PCT
+- **Constantes partagees** : NEW_DIAGNOSTIC_BUILDING_AGES, BOILER_AGES, MAX_TOTAL_SAVINGS_PCT, COP_PAC_BY_BUILDING_AGE
 - **Fonctions de formatage** : newDiagnosticFormatNumber, FormatInteger, FormatDecimal
 - **Tables de reference** : benchmarks, breakdowns par activite, CABS, prix energie, facteurs CO2
 - **Bibliotheque des 22 actions** : LED, PAC, isolation, PV, etc. (NEW_DIAGNOSTIC_ACTIONS_LIBRARY)
 - **Tables de split energetique** et constantes PV
 - **Fonctions de calcul** : split energetique, calcul PV, gains par action, CAPEX, scoring
 - **Pipeline principal** : `newDiagnosticBuildReportData(formData)` - retourne l'objet rapport complet
+  - Inclut `envelope_opportunities` pour les batiments pre-2000 (travaux d'enveloppe hors seuil ROI)
+  - Inclut `warnings` : NETWORK_HEAT_PARTIAL, NO_CONSUMPTION_DATA, PRICE_IMPLIED_OUT_OF_RANGE
 - **Projection** : `newDiagnosticBuildProjectionData({...})` - projection 10 ans avec inflation
 
 Note : `espace-professionnel.html` utilise son propre moteur (`ENGINE_PRO`, inline) qui diverge de engine.js. Migration future prevue mais pas prioritaire.

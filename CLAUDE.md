@@ -42,13 +42,13 @@ Toute modification du moteur (`src/engine.js`) doit etre testee avec ces 3 scena
 
 ```javascript
 // Bureau 500m2 tout elec
-newDiagnosticBuildReportData({ activity: 'bureau', surface: 500, annualElecKwh: 100000, annualGasKwh: 0, heatingType: 'elec', coolingType: 'elec', dhwType: 'elec', completedActions: [] });
+newDiagnosticBuildReportData({ activity: 'offices', surface: '500', elecUsed: true, elecKwh: '100000', gasUsed: false, mainHeating: 'electric', hasCooling: true, ecsSameSystem: true, worksDone: [], buildingAge: 'post2012' });
 
 // Restaurant 200m2 gaz+elec
-newDiagnosticBuildReportData({ activity: 'restauration', surface: 200, annualElecKwh: 40000, annualGasKwh: 30000, heatingType: 'gaz', coolingType: 'elec', dhwType: 'gaz', completedActions: [] });
+newDiagnosticBuildReportData({ activity: 'restaurant', surface: '200', elecUsed: true, elecKwh: '40000', gasUsed: true, gasKwh: '30000', mainHeating: 'gas', hasCooling: true, ecsSameSystem: false, ecsSystem: 'electric_boiler', worksDone: [], buildingAge: '1975_2000' });
 
 // Commerce alimentaire 1000m2
-newDiagnosticBuildReportData({ activity: 'commerce_alim', surface: 1000, annualElecKwh: 200000, annualGasKwh: 50000, heatingType: 'gaz', coolingType: 'elec', dhwType: 'elec', completedActions: [] });
+newDiagnosticBuildReportData({ activity: 'commerce_alim', surface: '1000', elecUsed: true, elecKwh: '200000', gasUsed: true, gasKwh: '50000', mainHeating: 'gas', hasCooling: true, ecsSameSystem: true, worksDone: [], buildingAge: 'pre1975' });
 ```
 
 Chaque test doit retourner : intensity > 0, actions.length >= 3, aucun NaN, breakdown total = 100%.

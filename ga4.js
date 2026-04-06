@@ -7,10 +7,11 @@
     var GTAG_SCRIPT_ATTR = 'data-dt-ga4-loader';
     var GTAG_SCRIPT_SRC = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(MEASUREMENT_ID);
     var DIAGNOSTIC_STEPS = {
-        diagnostic_step1_completed: { step: 1, step_name: 'identification' },
-        diagnostic_step2_completed: { step: 2, step_name: 'building_usage' },
-        diagnostic_step3_completed: { step: 3, step_name: 'energies' },
-        diagnostic_step4_completed: { step: 4, step_name: 'contact_project' }
+        diagnostic_step1_completed: { step: 1, step_name: 'building' },
+        diagnostic_step2_completed: { step: 2, step_name: 'equipment' },
+        diagnostic_step3_completed: { step: 3, step_name: 'energy' },
+        diagnostic_step4_completed: { step: 4, step_name: 'project' },
+        diagnostic_step5_completed: { step: 5, step_name: 'contact' }
     };
 
     var state = {

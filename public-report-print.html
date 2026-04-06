@@ -970,8 +970,9 @@
       const annualEuro = num(composite.annual_euro?.value);
       const annualKwh  = num(composite.annual_kwh?.value);
       const totalCost  = num(calc.total_cost_euro_an?.value);
-      const elecKwhPr  = num(calc.elec_kwh_an?.value);
-      const gasKwhPr   = num(calc.gas_kwh_an?.value);
+      const elecKwhPr    = num(calc.elec_kwh_an?.value);
+      const gasKwhPr     = num(calc.gas_kwh_an?.value);
+      const networkKwhPr = num(calc.network_kwh_an?.value);
 
       const score       = computeScore(siteI, benchMed);
       const targetI     = Math.max(0, Math.round(siteI - (surface > 0 ? annualKwh / surface : 0)));
@@ -983,19 +984,22 @@
         annualEuro,
         actions,
         elecKwh: elecKwhPr,
-        gasKwh: gasKwhPr
+        gasKwh: gasKwhPr + networkKwhPr
       });
 
       // ── CO₂ impact ────────────────────────────────────────────────────────
+      // @sync heating-type-normalize: electric_pac / electric_convector = electrique pur
       const _mainHeatingPr = inputs.mainHeating || 'gas';
       const _nonElecCo2Pr = (_mainHeatingPr === 'fuel' || _mainHeatingPr === 'fioul')
         ? 0.324
         : (_mainHeatingPr === 'network')
             ? 0.100
             : 0.227;
-      const totKnownPr  = elecKwhPr + gasKwhPr;
+      // Le kWh reseau de chaleur est compte dans le non-elec
+      const nonElecKwhPr = gasKwhPr + networkKwhPr;
+      const totKnownPr  = elecKwhPr + nonElecKwhPr;
       const co2FactorPr = totKnownPr > 0
-        ? (elecKwhPr / totKnownPr) * 0.079 + (gasKwhPr / totKnownPr) * _nonElecCo2Pr
+        ? (elecKwhPr / totKnownPr) * 0.079 + (nonElecKwhPr / totKnownPr) * _nonElecCo2Pr
         : 0.12;
       const co2EvitePr  = Math.max(0, Math.round(annualKwh * co2FactorPr));
       const co2ArbPr    = Math.round(co2EvitePr / 22);

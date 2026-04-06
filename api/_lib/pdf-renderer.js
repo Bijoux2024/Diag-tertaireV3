@@ -1,3 +1,5 @@
+const fs = require('fs');
+
 /**
  * ═══════════════════════════════════════════════════════════════════════════
  * api/_lib/pdf-renderer.js — Moteur de rendu PDF via Puppeteer + Chromium
@@ -64,11 +66,52 @@ const createPdfRenderError = (message, statusCode = 500) => {
   return error;
 };
 
+const getLocalBrowserExecutablePath = () => {
+  if (cachedLocalBrowserExecutablePath && fs.existsSync(cachedLocalBrowserExecutablePath)) {
+    return cachedLocalBrowserExecutablePath;
+  }
+
+  const candidates = LOCAL_BROWSER_CANDIDATES[process.platform] || [];
+  const resolvedPath = candidates.find((candidate) => candidate && fs.existsSync(candidate)) || null;
+  cachedLocalBrowserExecutablePath = resolvedPath;
+  return resolvedPath;
+};
+
 let cachedPuppeteerCore = null;
 let cachedChromiumRuntime = null;
 
 let cachedExecutablePathPromise = null;
 let cachedExecutablePath = null;
+let cachedLocalBrowserExecutablePath = null;
+
+const buildWindowsCandidatePaths = (envVarName, suffix) => {
+  const root = String(process.env[envVarName] || '').trim();
+  return root ? [`${root}\\${suffix}`] : [];
+};
+
+const LOCAL_BROWSER_CANDIDATES = Object.freeze({
+  win32: [
+    ...buildWindowsCandidatePaths('PROGRAMFILES', 'Google\\Chrome\\Application\\chrome.exe'),
+    ...buildWindowsCandidatePaths('PROGRAMFILES(X86)', 'Google\\Chrome\\Application\\chrome.exe'),
+    ...buildWindowsCandidatePaths('LOCALAPPDATA', 'Google\\Chrome\\Application\\chrome.exe'),
+    ...buildWindowsCandidatePaths('PROGRAMFILES', 'Microsoft\\Edge\\Application\\msedge.exe'),
+    ...buildWindowsCandidatePaths('PROGRAMFILES(X86)', 'Microsoft\\Edge\\Application\\msedge.exe'),
+    ...buildWindowsCandidatePaths('LOCALAPPDATA', 'Microsoft\\Edge\\Application\\msedge.exe')
+  ],
+  darwin: [
+    '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+    '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge'
+  ],
+  linux: [
+    '/usr/bin/google-chrome-stable',
+    '/usr/bin/google-chrome',
+    '/usr/bin/chromium-browser',
+    '/usr/bin/chromium',
+    '/snap/bin/chromium',
+    '/opt/google/chrome/chrome',
+    '/opt/microsoft/msedge/msedge'
+  ]
+});
 
 // Keep literal requires so Vercel's runtime tracing includes these modules.
 const getPuppeteerCore = () => {
@@ -129,22 +172,50 @@ const resolveChromiumExecutablePath = async (chromium) => {
 
 };
 
+const launchWithPuppeteer = async (puppeteer, {
+  executablePath,
+  args = [],
+  headless = true,
+  defaultViewport = DEFAULT_VIEWPORT
+}) => {
+  return puppeteer.launch({
+    args: [...args, '--hide-scrollbars', '--font-render-hinting=medium'],
+    executablePath,
+    headless,
+    defaultViewport
+  });
+};
+
 const launchChromiumBrowser = async () => {
   const puppeteer = getPuppeteerCore();
   const explicitPath = String(process.env.PUPPETEER_EXECUTABLE_PATH || '').trim();
-  const chromium = explicitPath ? null : getChromiumRuntime();
+  const localBrowserPath = explicitPath ? null : getLocalBrowserExecutablePath();
+
+  if (explicitPath) {
+    return launchWithPuppeteer(puppeteer, {
+      executablePath: explicitPath
+    });
+  }
+
+  if (localBrowserPath) {
+    return launchWithPuppeteer(puppeteer, {
+      executablePath: localBrowserPath
+    });
+  }
+
+  const chromium = getChromiumRuntime();
 
   if (chromium && typeof chromium.setGraphicsMode !== 'undefined') {
     chromium.setGraphicsMode = false;
   }
 
-  const executablePath = explicitPath || await resolveChromiumExecutablePath(chromium);
+  const executablePath = await resolveChromiumExecutablePath(chromium);
   const args = chromium && Array.isArray(chromium.args) ? chromium.args.slice() : [];
 
   try {
-    return await puppeteer.launch({
-      args: [...args, '--hide-scrollbars', '--font-render-hinting=medium'],
+    return await launchWithPuppeteer(puppeteer, {
       executablePath,
+      args,
       headless: chromium ? chromium.headless !== false : true,
       defaultViewport: chromium?.defaultViewport || DEFAULT_VIEWPORT
     });
@@ -154,6 +225,15 @@ const launchChromiumBrowser = async () => {
     if (/ETXTBSY/i.test(message) && chromium) {
       cachedExecutablePath = null;
       cachedExecutablePathPromise = null;
+    }
+
+    if (/ENOENT|Chromium executable unavailable/i.test(message)) {
+      const fallbackBrowserPath = getLocalBrowserExecutablePath();
+      if (fallbackBrowserPath) {
+        return launchWithPuppeteer(puppeteer, {
+          executablePath: fallbackBrowserPath
+        });
+      }
     }
 
     throw error;

@@ -16,10 +16,18 @@
       "Bash(mv /tmp/feature.md api/.claude/commands/feature.md)",
       "Bash(mv /tmp/check.md api/.claude/commands/check.md)",
       "Read(//c/tmp/**)",
-      "Read(//c/Users/yanni/Downloads/Diag-tertaireV3/$TEMP/**)"
+      "Read(//c/Users/yanni/Downloads/Diag-tertaireV3/$TEMP/**)",
+      "Read(//c/Users/yanni/**)",
+      "Bash(mkdir -p /c/Users/yanni/Documents/GitHub/diag-tertiaire-blog/public/styles /c/Users/yanni/Documents/GitHub/diag-tertiaire-blog/public/authors)",
+      "Bash(cp /c/Users/yanni/Documents/GitHub/diag-tertiaire-blog/public/blog/styles/global.css /c/Users/yanni/Documents/GitHub/diag-tertiaire-blog/public/styles/global.css)",
+      "Bash(cp /c/Users/yanni/Documents/GitHub/diag-tertiaire-blog/public/blog/favicon.ico /c/Users/yanni/Documents/GitHub/diag-tertiaire-blog/public/favicon.ico)",
+      "Bash(cp /c/Users/yanni/Documents/GitHub/diag-tertiaire-blog/public/blog/favicon.svg /c/Users/yanni/Documents/GitHub/diag-tertiaire-blog/public/favicon.svg)",
+      "Bash(cp /c/Users/yanni/Documents/GitHub/diag-tertiaire-blog/public/blog/placeholder.png /c/Users/yanni/Documents/GitHub/diag-tertiaire-blog/public/placeholder.png)"
     ],
     "additionalDirectories": [
-      "C:\\Users\\yanni\\Downloads\\Diag-tertaireV3\\api\\.claude\\commands\\.claude"
+      "C:\\Users\\yanni\\Downloads\\Diag-tertaireV3\\api\\.claude\\commands\\.claude",
+      "c:\\Users\\yanni\\Documents\\GitHub\\diag-tertiaire-blog\\src\\pages",
+      "c:\\Users\\yanni\\Documents\\GitHub\\diag-tertiaire-blog\\public"
     ]
   }
 }

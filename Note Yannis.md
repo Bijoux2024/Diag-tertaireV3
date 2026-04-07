@@ -38,9 +38,12 @@ git commit -m "update"
 git push
 
 Vercel :
-npm run deploy:preview : (deploy de verification)
-npm run deploy:prod : (deploy en production)
-npx vercel --prod : (alternative directe)
+npm run deploy:preview 
+: (deploy de verification)
+npm run deploy
+:prod : (deploy en production)
+npx vercel --prod 
+: (alternative directe)
 ---
 
 ## 🔄 3. Récupérer les dernières mises à jour (Pull)

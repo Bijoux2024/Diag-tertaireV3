@@ -22,12 +22,16 @@
       "Bash(cp /c/Users/yanni/Documents/GitHub/diag-tertiaire-blog/public/blog/styles/global.css /c/Users/yanni/Documents/GitHub/diag-tertiaire-blog/public/styles/global.css)",
       "Bash(cp /c/Users/yanni/Documents/GitHub/diag-tertiaire-blog/public/blog/favicon.ico /c/Users/yanni/Documents/GitHub/diag-tertiaire-blog/public/favicon.ico)",
       "Bash(cp /c/Users/yanni/Documents/GitHub/diag-tertiaire-blog/public/blog/favicon.svg /c/Users/yanni/Documents/GitHub/diag-tertiaire-blog/public/favicon.svg)",
-      "Bash(cp /c/Users/yanni/Documents/GitHub/diag-tertiaire-blog/public/blog/placeholder.png /c/Users/yanni/Documents/GitHub/diag-tertiaire-blog/public/placeholder.png)"
+      "Bash(cp /c/Users/yanni/Documents/GitHub/diag-tertiaire-blog/public/blog/placeholder.png /c/Users/yanni/Documents/GitHub/diag-tertiaire-blog/public/placeholder.png)",
+      "mcp__claude_ai_Vercel__list_teams",
+      "mcp__claude_ai_Vercel__list_projects",
+      "mcp__claude_ai_Vercel__get_deployment"
     ],
     "additionalDirectories": [
       "C:\\Users\\yanni\\Downloads\\Diag-tertaireV3\\api\\.claude\\commands\\.claude",
       "c:\\Users\\yanni\\Documents\\GitHub\\diag-tertiaire-blog\\src\\pages",
-      "c:\\Users\\yanni\\Documents\\GitHub\\diag-tertiaire-blog\\public"
+      "c:\\Users\\yanni\\Documents\\GitHub\\diag-tertiaire-blog\\public",
+      "c:\\Users\\yanni\\Documents\\GitHub\\diag-tertiaire-blog"
     ]
   }
 }

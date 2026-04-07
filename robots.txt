@@ -1,6 +1,7 @@
 User-agent: *
 Allow: /
 Disallow: /espace-professionnel.html
+Disallow: /partenaire.html
 Disallow: /diagtertiaire-pro-alpha.html
 Disallow: /diagnostic.html
 Disallow: /public-report-print.html

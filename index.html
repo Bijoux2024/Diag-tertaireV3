@@ -21,17 +21,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Diagnostic Énergétique Gratuit pour Professionnels | DiagTertiaire</title>
-    <meta name="description" content="Vos charges d'énergie sont-elles normales ? Comparez vos consommations aux références de votre secteur et recevez un rapport PDF gratuit avec vos économies chiffrées. 3 min, sans engagement.">
+    <meta name="description" content="Pré-diagnostic énergétique gratuit pour locaux tertiaires. Rapport PDF avec économies chiffrées et actions prioritaires. 3 min, sans engagement.">
     <link rel="canonical" href="https://diag-tertiaire.fr/">
+    <meta name="robots" content="index, follow">
     <link rel="alternate" hreflang="fr" href="https://diag-tertiaire.fr/">
     <link rel="alternate" hreflang="x-default" href="https://diag-tertiaire.fr/">
     <meta property="og:title" content="Diagnostic Énergétique Gratuit pour Professionnels | DiagTertiaire">
-    <meta property="og:description" content="Vos charges d'énergie sont-elles normales ? Comparez vos consommations aux références de votre secteur et recevez un rapport PDF gratuit avec vos économies chiffrées.">
+    <meta property="og:description" content="Pré-diagnostic énergétique gratuit pour locaux tertiaires. Rapport PDF avec économies chiffrées et actions prioritaires. 3 min, sans engagement.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://diag-tertiaire.fr/">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Diagnostic Énergétique Gratuit pour Professionnels | DiagTertiaire">
-    <meta name="twitter:description" content="Vos charges d'énergie sont-elles normales ? Comparez vos consommations aux références de votre secteur et recevez un rapport PDF gratuit avec vos économies chiffrées.">
+    <meta name="twitter:description" content="Pré-diagnostic énergétique gratuit pour locaux tertiaires. Rapport PDF avec économies chiffrées et actions prioritaires. 3 min, sans engagement.">
     <meta property="og:image" content="https://diag-tertiaire.fr/og-image.png">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
@@ -781,24 +782,13 @@
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "DiagTertiaire",
-      "url": "https://diag-tertiaire.fr/",
-      "description": "Comparatif energetique gratuit pour locaux professionnels. Rapport PDF complet en 3 minutes avec estimation des economies et actions prioritaires.",
-      "applicationCategory": "BusinessApplication",
-      "operatingSystem": "Web",
-      "inLanguage": "fr",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "EUR"
-      },
-      "creator": {
-        "@type": "Organization",
-        "name": "DiagTertiaire",
-        "url": "https://diag-tertiaire.fr/",
-        "logo": "https://diag-tertiaire.fr/android-chrome-512x512.png"
-      }
+      "@type": "ProfessionalService",
+      "name": "Diag-Tertiaire",
+      "url": "https://diag-tertiaire.fr",
+      "description": "Pré-diagnostic énergétique bâtiments tertiaires pour TPE/PME",
+      "areaServed": "FR",
+      "serviceType": "Diagnostic énergétique",
+      "inLanguage": "fr"
     }
     </script>
     <script type="application/ld+json">
@@ -8916,7 +8906,8 @@
 
             const headerPages = [
                 { page: 'comment-ca-marche', label: 'Comment ça marche', href: '/#comment-ca-marche' },
-                { page: 'exemple', label: 'Exemple de rapport', href: '/exemple-rapport.html' }
+                { page: 'exemple', label: 'Exemple de rapport', href: '/exemple-rapport.html' },
+                { page: 'blog', label: 'Blog', href: '/blog/' }
             ];
 
             const NavLink = ({ page, label, href, mobile = false }) => {
@@ -9029,7 +9020,7 @@
                                         <div className="space-y-2">
                                             <a href="#faq" className="block text-sm text-slate-400 hover:text-white transition-colors font-medium">FAQ</a>
                                             <a href="#qui-sommes-nous" className="block text-sm text-slate-400 hover:text-white transition-colors font-medium">Qui sommes-nous</a>
-                                            <a href="https://diag-tertiaire.fr/blog/" className="block text-sm text-slate-400 hover:text-white transition-colors font-medium">Blog</a>
+                                            <a href="/blog/" className="block text-sm text-slate-400 hover:text-white transition-colors font-medium">Blog</a>
                                         </div>
                                     </div>
 

@@ -1,8 +1,6 @@
 {
   "rewrites": [
-    { "source": "/blog/", "destination": "https://diag-tertiaire-blog.vercel.app/blog/" },
-    { "source": "/blog/:path+/", "destination": "https://diag-tertiaire-blog.vercel.app/blog/:path+/" },
-    { "source": "/blog/:path*", "destination": "https://diag-tertiaire-blog.vercel.app/blog/:path*" },
+    { "source": "/blog/:path*", "destination": "https://diag-tertiaire-blog.vercel.app/:path*" },
     { "source": "/diagnostic", "destination": "/" },
     { "source": "/exemple-rapport", "destination": "/exemple-rapport.html" },
     { "source": "/espace-professionnel", "destination": "/espace-professionnel.html" },

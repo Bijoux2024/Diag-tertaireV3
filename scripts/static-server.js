@@ -5,6 +5,14 @@ const path = require("path");
 const rootDir = path.resolve(__dirname, "..");
 const port = Number(process.env.PORT || 4173);
 
+// Mirrors vercel.json rewrites (excluding blog proxy, not available locally)
+const REWRITES = [
+  { source: /^\/diagnostic$/, destination: "/index.html" },
+  { source: /^\/exemple-rapport$/, destination: "/exemple-rapport.html" },
+  { source: /^\/espace-professionnel$/, destination: "/espace-professionnel.html" },
+  { source: /^\/index\.saaspro\.html$/, destination: "/espace-professionnel.html" },
+];
+
 const mimeTypes = {
   ".css": "text/css; charset=utf-8",
   ".html": "text/html; charset=utf-8",
@@ -52,7 +60,15 @@ function resolveRequestPath(requestPath) {
 }
 
 const server = http.createServer((request, response) => {
-  const filePath = resolveRequestPath(request.url || "/");
+  let requestUrl = request.url || "/";
+  const urlPath = requestUrl.split("?")[0];
+  for (const rewrite of REWRITES) {
+    if (rewrite.source.test(urlPath)) {
+      requestUrl = rewrite.destination;
+      break;
+    }
+  }
+  const filePath = resolveRequestPath(requestUrl);
 
   if (!filePath) {
     response.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });

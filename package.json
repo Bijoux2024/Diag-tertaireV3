@@ -30,6 +30,7 @@
     "puppeteer-core": "^24.38.0"
   },
   "devDependencies": {
+    "@babel/standalone": "^7.29.2",
     "xlsx": "^0.18.5"
   }
 }

@@ -56,7 +56,7 @@
     <link rel="dns-prefetch" href="https://cdn.tailwindcss.com">
     <link rel="preload" href="https://unpkg.com/react@18/umd/react.production.min.js" as="script" crossorigin>
     <link rel="preload" href="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" as="script" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Bibliothèques externes -->
     <!-- TailwindCSS : framework CSS utilitaire (mode CDN, pas de build requis) -->
@@ -77,18 +77,22 @@
     <style>
         /* Global & Reset */
         :root {
+            --font-display: 'DM Serif Display', Georgia, serif;
+            --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
             --bg: #F8FAFC;
             --text: #0F172A;
             --muted: #64748B;
             --border: #E2E8F0;
             --border-strong: #CBD5E1;
-            --navy-dark: #102A43;
+            --navy-dark: #0A1628;
+            --navy-mid: #102A43;
             --blue-action: #2563EB;
             --blue-hover: #1D4ED8;
             --blue-premium: #1D4ED8;
             --blue-light: #EFF6FF;
             --blue-xlight: #F0F5FF;
-            --amber: #F59E0B;
+            --amber: #D97706;
+            --amber-light: #FEF3C7;
             --green: #16A34A;
             --card: #FFFFFF;
             --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
@@ -127,14 +131,14 @@
         }
 
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: var(--font-body);
             background-color: var(--bg);
             color: var(--text);
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
             font-size: 16px;
             line-height: 1.6;
-            letter-spacing: -0.3px;
+            letter-spacing: -0.2px;
         }
 
         img,
@@ -183,18 +187,20 @@
 
         /* Typographic Hierarchy */
         h1 {
-            font-size: clamp(2.25rem, 5.5vw, 3.5rem);
-            line-height: 1.06;
-            font-weight: 800;
-            letter-spacing: -1.8px;
+            font-family: var(--font-display);
+            font-size: clamp(2.25rem, 5.5vw, 3.75rem);
+            line-height: 1.08;
+            font-weight: 400;
+            letter-spacing: -0.5px;
             margin-bottom: 1.625rem;
         }
 
         h2 {
-            font-size: clamp(1.5rem, 4vw, 2.125rem);
-            line-height: 1.2;
-            font-weight: 700;
-            letter-spacing: -0.7px;
+            font-family: var(--font-display);
+            font-size: clamp(1.5rem, 4vw, 2.375rem);
+            line-height: 1.15;
+            font-weight: 400;
+            letter-spacing: -0.3px;
             margin-bottom: 1rem;
         }
 
@@ -221,12 +227,12 @@
 
         @media (max-width: 768px) {
             h1 {
-                font-size: clamp(1.875rem, 8vw, 2.25rem);
-                letter-spacing: -1px;
+                font-size: clamp(1.875rem, 8vw, 2.5rem);
+                letter-spacing: -0.3px;
             }
 
             h2 {
-                font-size: 1.375rem;
+                font-size: 1.5rem;
             }
 
             h3 {
@@ -380,8 +386,8 @@
             animation: ctaPulse 3s ease-in-out 1.5s infinite;
         }
         @keyframes ctaPulse {
-            0%, 100% { box-shadow: 0 4px 20px rgba(29, 78, 216, 0.25); }
-            50% { box-shadow: 0 4px 30px rgba(29, 78, 216, 0.5); }
+            0%, 100% { box-shadow: 0 4px 20px rgba(217, 119, 6, 0.3); }
+            50% { box-shadow: 0 6px 36px rgba(217, 119, 6, 0.55); }
         }
 
         /* Primary CTA button — gradient validé, halo maximum */
@@ -806,6 +812,140 @@
             }
         }
 
+        /* ===== SCROLL REVEAL ===== */
+        .sr { opacity: 0; transform: translateY(28px); transition: opacity 0.7s cubic-bezier(.16,1,.3,1), transform 0.7s cubic-bezier(.16,1,.3,1); }
+        .sr.visible { opacity: 1; transform: none; }
+        .sr-delay-1 { transition-delay: 0.1s; }
+        .sr-delay-2 { transition-delay: 0.2s; }
+        .sr-delay-3 { transition-delay: 0.3s; }
+        .sr-delay-4 { transition-delay: 0.4s; }
+
+        /* ===== GRAIN TEXTURE OVERLAY ===== */
+        .grain-overlay { position: relative; }
+        .grain-overlay::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            opacity: 0.035;
+            pointer-events: none;
+            z-index: 1;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            background-repeat: repeat;
+            background-size: 180px 180px;
+        }
+
+        /* ===== SECTION WAVE DIVIDER ===== */
+        .wave-divider {
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            overflow: hidden;
+            line-height: 0;
+        }
+        .wave-divider svg {
+            display: block;
+            width: 100%;
+            height: 48px;
+        }
+        .wave-divider-top {
+            top: -1px;
+            bottom: auto;
+        }
+
+        /* ===== ENHANCED CARD ===== */
+        .card-premium {
+            background: #FFFFFF;
+            border: 1px solid #E2E8F0;
+            border-radius: 20px;
+            padding: 2.5rem 2rem;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.32s cubic-bezier(.16,1,.3,1), box-shadow 0.32s cubic-bezier(.16,1,.3,1);
+        }
+        .card-premium::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--blue-premium), var(--amber));
+            opacity: 0;
+            transition: opacity 0.32s ease;
+        }
+        .card-premium:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 20px 50px rgba(15, 23, 42, 0.12), 0 8px 20px rgba(29, 78, 216, 0.08);
+        }
+        .card-premium:hover::before {
+            opacity: 1;
+        }
+
+        /* ===== HERO DARK ===== */
+        .hero-dark {
+            background: linear-gradient(165deg, #0A1628 0%, #0E1F3D 35%, #122E54 65%, #0A1628 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        .hero-dark::before {
+            content: '';
+            position: absolute;
+            top: -40%;
+            right: -20%;
+            width: 70%;
+            height: 120%;
+            background: radial-gradient(ellipse, rgba(29, 78, 216, 0.15) 0%, transparent 60%);
+            pointer-events: none;
+        }
+        .hero-dark::after {
+            content: '';
+            position: absolute;
+            bottom: -30%;
+            left: -10%;
+            width: 50%;
+            height: 80%;
+            background: radial-gradient(ellipse, rgba(217, 119, 6, 0.08) 0%, transparent 55%);
+            pointer-events: none;
+        }
+
+        /* ===== MOCKUP GLOW (dark hero) ===== */
+        .mockup-glow {
+            filter: drop-shadow(0 0 60px rgba(29, 78, 216, 0.25)) drop-shadow(0 30px 60px rgba(10, 22, 40, 0.5));
+            transition: transform 350ms cubic-bezier(.16,1,.3,1), filter 350ms ease;
+        }
+        .mockup-glow:hover {
+            transform: translateY(-8px) rotate(0.5deg);
+            filter: drop-shadow(0 0 80px rgba(29, 78, 216, 0.35)) drop-shadow(0 35px 70px rgba(10, 22, 40, 0.5));
+        }
+
+        /* ===== AMBER ACCENT TAG ===== */
+        .tag-amber {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: linear-gradient(135deg, rgba(217, 119, 6, 0.15), rgba(217, 119, 6, 0.08));
+            color: var(--amber);
+            font-weight: 700;
+            font-size: 0.8125rem;
+            padding: 6px 14px;
+            border-radius: 999px;
+            border: 1px solid rgba(217, 119, 6, 0.2);
+            letter-spacing: 0.03em;
+        }
+
+        /* ===== SECTION BACKGROUNDS ===== */
+        .section-mesh-light {
+            background:
+                radial-gradient(ellipse at 15% 20%, rgba(29, 78, 216, 0.04) 0%, transparent 50%),
+                radial-gradient(ellipse at 85% 80%, rgba(217, 119, 6, 0.03) 0%, transparent 50%),
+                linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
+        }
+        .section-deep {
+            background: linear-gradient(180deg, #0A1628 0%, #0E1F3D 50%, #0A1628 100%);
+            position: relative;
+        }
+
         .seo-static-content {
             position: absolute !important;
             left: -9999px !important;
@@ -912,14 +1052,6 @@
           "acceptedAnswer": {
             "@type": "Answer",
             "text": "Non. Ce comparatif est un outil d'orientation, pas un document réglementaire. Il vous aide à y voir clair avant de décider si un audit certifié est nécessaire."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Qui est derrière DiagTertiaire ?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Un collectif d'ingénieurs en performance énergétique, issus de leaders du bâtiment et de bureaux d'études spécialisés. DiagTertiaire est un outil indépendant, sans dépendance à un fournisseur d'énergie ni à un prestataire de travaux."
           }
         },
         {
@@ -1529,7 +1661,7 @@
                     ok: false,
                     status: 0,
                     data: null,
-                    error: err && err.message ? err.message : `Erreur reseau lors de la sauvegarde dans ${tableName}.`
+                    error: err && err.message ? err.message : `Erreur réseau lors de la sauvegarde dans ${tableName}.`
                 };
             }
         };
@@ -1756,53 +1888,48 @@
             const [openFaq, setOpenFaq] = React.useState(null);
             return (
                 <div className="fade-in">
-                    {/* HERO — VERROUILLAGE FINAL */}
-                    <section className="relative w-full overflow-hidden" style={{ paddingTop: 'clamp(1.5rem, 5vw, 8rem)', paddingBottom: 'clamp(2rem, 5vw, 7rem)', background: 'linear-gradient(180deg, #FFFFFF 0%, #F8FBFF 100%)' }}>
-                        {/* GLOW — halos structurés */}
-                        <div className="absolute inset-0 pointer-events-none z-0" aria-hidden="true">
-                            <div className="absolute top-0 left-0"
-                                style={{ width: '720px', height: '620px', background: 'radial-gradient(ellipse at 6% 15%, rgba(29,78,216,0.11), transparent 46%)' }} />
-                            <div className="absolute top-0 right-0"
-                                style={{ width: '500px', height: '500px', background: 'radial-gradient(ellipse at 94% 12%, rgba(29,78,216,0.06), transparent 50%)' }} />
-                            <div className="absolute bottom-0 left-1/3"
-                                style={{ width: '380px', height: '300px', background: 'radial-gradient(ellipse at 35% 85%, rgba(245,158,11,0.04), transparent 55%)' }} />
-                        </div>
+                    {/* HERO — DARK PREMIUM */}
+                    <section className="hero-dark grain-overlay" style={{ paddingTop: 'clamp(3rem, 8vw, 9rem)', paddingBottom: 'clamp(3rem, 8vw, 8rem)' }}>
 
                         {/* CONTENT LAYER */}
                         <div className="relative z-10 max-w-7xl mx-auto px-4 lg:px-10">
-                            <div className="grid landing-hero-shell lg:grid-cols-2 gap-12 md:gap-16 lg:gap-28 items-center">
+                            <div className="grid landing-hero-shell lg:grid-cols-2 gap-12 md:gap-16 lg:gap-24 items-center">
 
                                 {/* LEFT COLUMN */}
                                 <div className="order-1 lg:order-1">
-                                    {/* Étiquette positionnement */}
-                                    <p className="hero-cascade hero-cascade-1" style={{ fontSize: '0.9375rem', fontWeight: 600, letterSpacing: '0.01em', color: 'var(--blue-action)', marginBottom: '0.75rem' }}>
-                                        Le seul pré-diagnostic énergie gratuit pour <span className="badge-cible">le tertiaire</span>
-                                    </p>
-                                    {/* Titre — signature */}
-                                    <h1 className="hero-cascade hero-cascade-2" style={{ fontSize: 'clamp(1.5rem, 4.5vw, 2.5rem)', lineHeight: 1.2, fontWeight: 800, letterSpacing: '-0.02em', color: 'var(--text)', marginBottom: 'clamp(1rem, 5vw, 1.875rem)', maxWidth: '30rem' }}>
-                                        Votre énergie coûte trop cher.<br />
-                                        <span style={{ color: 'var(--green)' }}>3 minutes pour chiffrer vos économies.</span>
+                                    {/* Etiquette positionnement */}
+                                    <div className="hero-cascade hero-cascade-1" style={{ marginBottom: '1.25rem' }}>
+                                        <span className="tag-amber">
+                                            <Icon icon="solar:bolt-circle-bold" width="15" height="15" />
+                                            Le seul pré-diagnostic gratuit pour le tertiaire
+                                        </span>
+                                    </div>
+                                    {/* Titre - signature serif */}
+                                    <h1 className="hero-cascade hero-cascade-2" style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(2rem, 5.5vw, 3.25rem)', lineHeight: 1.1, fontWeight: 400, letterSpacing: '-0.01em', color: '#FFFFFF', marginBottom: 'clamp(1rem, 4vw, 1.75rem)', maxWidth: '32rem' }}>
+                                        Votre énergie coûte trop cher.{' '}
+                                        <span style={{ color: '#FCD34D' }}>Chiffrez vos économies en 3 minutes.</span>
                                     </h1>
 
-                                    {/* Sous-titre — densité réduite par largeur */}
-                                    <p className="hero-cascade hero-cascade-3" style={{ maxWidth: '28rem', fontSize: 'clamp(1rem, 2.7vw, 1.0625rem)', lineHeight: 1.8, color: '#4B5B71', marginBottom: 'clamp(1.5rem, 6vw, 3.25rem)' }}>
+                                    {/* Sous-titre */}
+                                    <p className="hero-cascade hero-cascade-3" style={{ maxWidth: '30rem', fontSize: 'clamp(1rem, 2.7vw, 1.0625rem)', lineHeight: 1.8, color: 'rgba(255,255,255,0.6)', marginBottom: 'clamp(1.5rem, 5vw, 2.5rem)' }}>
                                         Comparez votre bâtiment aux références de votre secteur et recevez un plan d'action concret. Rapport PDF immédiat.
                                     </p>
 
-                                    {/* Zone CTA — air maximal autour */}
-                                    <div className="hero-cascade hero-cascade-4" style={{ marginBottom: 'clamp(1.5rem, 6vw, 3rem)' }}>
+                                    {/* Zone CTA */}
+                                    <div className="hero-cascade hero-cascade-4" style={{ marginBottom: 'clamp(1.5rem, 5vw, 2.5rem)' }}>
                                         <a
                                             href="/diagnostic"
+                                            onClick={(e) => { e.preventDefault(); navigate('diagnostic'); }}
                                             className="btn-primary cta-pulse"
-                                            style={{ display: 'inline-flex', alignItems: 'center', gap: '10px' }}
+                                            style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', background: 'linear-gradient(135deg, #D97706 0%, #B45309 100%)', boxShadow: '0 10px 30px rgba(217, 119, 6, 0.3), 0 4px 12px rgba(217, 119, 6, 0.15)' }}
                                         >
                                             Obtenir mon comparatif gratuit
                                             <Icon icon="solar:arrow-right-linear" width="20" height="20" />
                                         </a>
-                                        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '12px 16px', marginTop: '16px' }}>
-                                            {['Sans inscription', 'Sans engagement', 'Résultat en PDF', 'Adapté à votre secteur d\'activité'].map((g, i) => (
-                                                <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--muted)' }}>
-                                                    <Icon icon="solar:check-circle-linear" width="16" height="16" style={{ color: 'var(--green)' }} />
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '12px 18px', marginTop: '18px' }}>
+                                            {['Sans inscription', 'Sans engagement', 'Resultat en PDF', 'Adapte a votre secteur'].map((g, i) => (
+                                                <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'rgba(255,255,255,0.45)' }}>
+                                                    <Icon icon="solar:check-circle-linear" width="15" height="15" style={{ color: '#34D399' }} />
                                                     {g}
                                                 </span>
                                             ))}
@@ -1810,18 +1937,16 @@
                                     </div>
 
                                     {/* Mention cible */}
-                                    <div className="hero-cascade hero-cascade-5" style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', paddingTop: 'clamp(1rem, 4vw, 1.5rem)', borderTop: '1px solid #D6E1F0' }}>
-                                        <Icon icon="solar:star-bold" style={{ color: '#F59E0B', fontSize: '1rem', flexShrink: 0, marginTop: '2px' }} />
-                                        <p style={{ fontSize: '0.875rem', color: '#334455', fontWeight: 500, lineHeight: 1.65 }}>
-                                            Bureaux, commerces, restaurants, hôtels, cabinets, entrepôts et santé.
+                                    <div className="hero-cascade hero-cascade-5" style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', paddingTop: 'clamp(1rem, 3vw, 1.25rem)', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                                        <Icon icon="solar:star-bold" style={{ color: '#FCD34D', fontSize: '1rem', flexShrink: 0, marginTop: '2px' }} />
+                                        <p style={{ fontSize: '0.8125rem', color: 'rgba(255,255,255,0.45)', fontWeight: 500, lineHeight: 1.65 }}>
+                                            Bureaux, commerces, restaurants, hotels, cabinets, entrepots et sante.
                                         </p>
                                     </div>
                                 </div>
-                                {/* RIGHT COLUMN - MOCKUP PDF PREMIUM V3 */}
-                                {/* Performance estimée */}
-                                {/* RIGHT COLUMN - MOCKUP PDF PREMIUM V4 */}
+                                {/* RIGHT COLUMN - MOCKUP PDF PREMIUM */}
                                 <div className="landing-hero-mockup flex justify-center items-center order-3 lg:order-2 mt-2 sm:mt-6 lg:mt-0">
-                                    <div className="mockup-float relative" style={{ width: 'min(280px, 80vw)', maxWidth: '100%' }} data-desktop-w="450">
+                                    <div className="mockup-glow relative" style={{ width: 'clamp(280px, 85vw, 460px)', maxWidth: '100%' }}>
 
                                         {/* Depth layer */}
                                         <div
@@ -1831,8 +1956,8 @@
                                                 zIndex: 0,
                                                 borderRadius: '22px',
                                                 transform: 'translate(10px, 14px)',
-                                                background: 'linear-gradient(145deg, #B8C8E4, #C5D3ED)',
-                                                opacity: 0.6,
+                                                background: 'linear-gradient(145deg, rgba(29,78,216,0.3), rgba(14,31,61,0.5))',
+                                                opacity: 0.7,
                                                 pointerEvents: 'none'
                                             }}
                                         />
@@ -1843,9 +1968,9 @@
                                                 position: 'relative',
                                                 zIndex: 1,
                                                 borderRadius: '22px',
-                                                border: '1px solid #B8C8E0',
+                                                border: '1px solid rgba(255,255,255,0.12)',
                                                 background: '#FFFFFF',
-                                                boxShadow: '0 24px 70px rgba(15,23,42,0.17), 0 8px 22px rgba(15,23,42,0.09)',
+                                                boxShadow: '0 30px 80px rgba(0,0,0,0.35), 0 10px 30px rgba(0,0,0,0.2)',
                                                 overflow: 'hidden'
                                             }}
                                         >
@@ -2097,138 +2222,138 @@
 
                             </div>
                         </div>
+                        {/* Wave divider */}
+                        <div className="wave-divider" style={{ zIndex: 2 }}>
+                            <svg viewBox="0 0 1440 48" preserveAspectRatio="none" fill="#FFFFFF">
+                                <path d="M0,48 L0,16 C360,40 720,0 1080,24 C1260,36 1380,44 1440,42 L1440,48 Z" />
+                            </svg>
+                        </div>
                     </section>
 
-                    {/* COMMENT ÇA MARCHE */}
-                    <section id="comment-ca-marche" style={{ padding: 'clamp(3rem, 8vw, 6rem) 1.5rem', background: 'var(--navy-dark, #102A43)', position: 'relative', overflow: 'hidden' }}>
+                    {/* COMMENT CA MARCHE */}
+                    <section id="comment-ca-marche" className="section-mesh-light" style={{ padding: 'clamp(4rem, 10vw, 7rem) 1.5rem', position: 'relative', overflow: 'hidden' }}>
                         <div style={{ maxWidth: '72rem', margin: '0 auto', textAlign: 'center' }}>
-                            <h2 style={{ fontSize: 'clamp(1.5rem, 4.2vw, 2.25rem)', fontWeight: 800, color: 'white', marginBottom: '8px' }}>
-                                Comment ça marche ?
-                            </h2>
-                            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '1.0625rem', maxWidth: '32rem', margin: '0 auto 3rem' }}>
-                                Trois étapes, aucune surprise. Vous gardez le contrôle de bout en bout.
-                            </p>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.5rem', maxWidth: '60rem', margin: '0 auto', position: 'relative' }}>
+                            <div className="sr">
+                                <span className="tag-amber" style={{ marginBottom: '1rem', display: 'inline-flex' }}>
+                                    <Icon icon="solar:routing-2-bold" width="14" height="14" />
+                                    Simple et transparent
+                                </span>
+                                <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.75rem, 4.5vw, 2.75rem)', fontWeight: 400, color: '#0A1628', marginBottom: '10px' }}>
+                                    Comment ca marche ?
+                                </h2>
+                                <p style={{ color: 'var(--muted)', fontSize: '1.0625rem', maxWidth: '32rem', margin: '0 auto 3.5rem' }}>
+                                    Trois étapes, aucune surprise.
+                                </p>
+                            </div>
+
+                            {/* Timeline steps */}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '2rem', maxWidth: '60rem', margin: '0 auto', position: 'relative' }}>
                                 {[
-                                    { num: '1', icon: 'solar:document-text-bold-duotone', title: 'Décrivez votre local', desc: 'Vous renseignez votre activité, votre surface et vos consommations (facture ou estimation)', gradient: 'linear-gradient(135deg, #1E3A5F 0%, #1E3A8A 100%)' },
-                                    { num: '2', icon: 'solar:chart-2-bold-duotone', title: 'On compare pour vous', desc: 'Notre outil compare vos données aux repères de consommation de votre secteur (données publiques officielles)', gradient: 'linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%)' },
-                                    { num: '3', icon: 'solar:download-bold-duotone', title: 'Recevez votre rapport', desc: 'Vous recevez votre rapport en PDF : positionnement, économies possibles, et 3 actions prioritaires', gradient: 'linear-gradient(135deg, #2563EB 0%, #3B82F6 100%)' }
+                                    { num: '1', icon: 'solar:document-text-bold-duotone', title: 'Décrivez votre local', desc: 'Vous renseignez votre activité, votre surface et vos consommations (facture ou estimation)', accent: '#1D4ED8' },
+                                    { num: '2', icon: 'solar:chart-2-bold-duotone', title: 'On compare pour vous', desc: 'Notre outil compare vos données aux repères de consommation de votre secteur (données publiques officielles)', accent: '#D97706' },
+                                    { num: '3', icon: 'solar:download-bold-duotone', title: 'Recevez votre rapport', desc: 'Vous recevez votre rapport en PDF : positionnement, économies possibles, et 3 actions prioritaires', accent: '#16A34A' }
                                 ].map((step, i) => (
-                                    <div key={i} style={{
-                                        background: step.gradient,
-                                        borderRadius: '16px',
-                                        padding: '2rem 1.5rem',
-                                        textAlign: 'center',
-                                        border: '1px solid rgba(255,255,255,0.1)',
-                                        transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-                                        cursor: 'default'
-                                    }}
-                                        onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-6px)'; e.currentTarget.style.boxShadow = '0 20px 40px rgba(0,0,0,0.3)'; }}
-                                        onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
-                                    >
-                                        <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(255,255,255,0.15)', color: 'white', fontWeight: 800, fontSize: '1.125rem', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem', border: '2px solid rgba(255,255,255,0.3)' }}>{step.num}</div>
-                                        <div style={{ marginBottom: '1rem' }}>
-                                            <Icon icon={step.icon} width="36" height="36" style={{ color: 'rgba(255,255,255,0.9)' }} />
+                                    <div key={i} className={`sr sr-delay-${i + 1} card-premium`} style={{ textAlign: 'center', padding: '2.5rem 1.75rem' }}>
+                                        <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: step.accent, color: 'white', fontWeight: 800, fontSize: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.25rem', boxShadow: `0 8px 20px ${step.accent}33` }}>{step.num}</div>
+                                        <div style={{ marginBottom: '1.125rem' }}>
+                                            <Icon icon={step.icon} width="36" height="36" style={{ color: step.accent }} />
                                         </div>
-                                        <h3 style={{ fontWeight: 700, fontSize: '1.125rem', marginBottom: '0.75rem', color: 'white' }}>{step.title}</h3>
-                                        <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.9375rem', lineHeight: 1.6 }}>{step.desc}</p>
+                                        <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 400, fontSize: '1.25rem', marginBottom: '0.75rem', color: '#0A1628' }}>{step.title}</h3>
+                                        <p style={{ color: 'var(--muted)', fontSize: '0.9375rem', lineHeight: 1.7 }}>{step.desc}</p>
                                     </div>
                                 ))}
                             </div>
-                            <div style={{ marginTop: '2.5rem', padding: '12px 24px', background: 'rgba(255,255,255,0.08)', borderRadius: '8px', display: 'inline-flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap', fontSize: '13px', color: 'rgba(255,255,255,0.5)' }}>
+                            <div className="sr sr-delay-4" style={{ marginTop: '3rem', padding: '14px 28px', background: 'rgba(29,78,216,0.06)', borderRadius: '12px', display: 'inline-flex', alignItems: 'center', gap: '18px', flexWrap: 'wrap', fontSize: '13px', color: 'var(--muted)', border: '1px solid rgba(29,78,216,0.08)' }}>
                                 <span>Durée : environ 3 min</span>
-                                <span style={{ color: 'rgba(255,255,255,0.2)' }}>|</span>
+                                <span style={{ color: 'var(--border)' }}>|</span>
                                 <span>Vos données restent confidentielles</span>
-                                <span style={{ color: 'rgba(255,255,255,0.2)' }}>|</span>
+                                <span style={{ color: 'var(--border)' }}>|</span>
                                 <span>Accès à un réseau d'experts sur demande</span>
                             </div>
                         </div>
                     </section>
 
                     {/* BENEFITS */}
-                    <section style={{ padding: 'clamp(1.75rem, 5vw, 6.5rem) 0', background: '#FFFFFF' }}>
-                        <div className="max-w-6xl mx-auto px-4">
-                            <div style={{ textAlign: 'center', marginBottom: 'clamp(2rem, 5vw, 4.25rem)' }}>
-                                <h2 style={{ fontSize: 'clamp(1.5rem, 4.2vw, 2.25rem)', fontWeight: 700, color: '#0A1929', marginBottom: '1rem', letterSpacing: '-0.8px', lineHeight: 1.15 }}>Savoir où vous en êtes avant de dépenser un euro</h2>
-                                <p style={{ fontSize: '1rem', color: '#64748B', maxWidth: '33rem', margin: '0 auto', lineHeight: 1.75 }}>Le comparatif vous donne trois réponses concrètes, sans jargon ni surprise.</p>
+                    <section className="grain-overlay" style={{ padding: 'clamp(4rem, 8vw, 7rem) 0', background: 'linear-gradient(180deg, #0A1628 0%, #0E1F3D 50%, #0A1628 100%)', position: 'relative' }}>
+                        <div className="max-w-6xl mx-auto px-4" style={{ position: 'relative', zIndex: 2 }}>
+                            <div className="sr" style={{ textAlign: 'center', marginBottom: 'clamp(2.5rem, 6vw, 4.5rem)' }}>
+                                <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.75rem, 4.5vw, 2.75rem)', fontWeight: 400, color: '#FFFFFF', marginBottom: '1rem', lineHeight: 1.15 }}>Savoir où vous en êtes<br className="md:hidden" /><span style={{ color: '#FCD34D' }}> avant de dépenser un euro</span></h2>
+                                <p className="md:whitespace-nowrap" style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.5)', maxWidth: '33rem', margin: '0 auto', lineHeight: 1.75 }}>Le comparatif vous donne des réponses concrètes, et un plan d'action</p>
                             </div>
                             <div className="grid sm:grid-cols-3 gap-7">
                                 {[
-                                    { icon: 'solar:buildings-2-bold-duotone', color: '#1D4ED8', bg: '#EBF1FF', title: 'Savoir si vous consommez trop', desc: 'Votre consommation est comparée automatiquement aux données moyennes de votre secteur, issues de sources publiques officielles.' },
-                                    { icon: 'solar:target-bold-duotone', color: '#1D4ED8', bg: '#EBF1FF', title: 'Savoir par où commencer', desc: 'Le rapport classe les travaux les plus rentables pour votre situation : isolation, chauffage, éclairage... avec le retour sur investissement estimé.' },
-                                    { icon: 'solar:graph-new-up-bold-duotone', color: '#1D4ED8', bg: '#EBF1FF', title: 'Chiffrer vos économies possibles', desc: 'Recevez une estimation en euros par an, avec une projection sur 10 ans - coût des travaux inclus.' }
+                                    { icon: 'solar:buildings-2-bold-duotone', color: '#60A5FA', title: 'Savoir si vous consommez trop', desc: 'Votre consommation est comparée automatiquement aux données moyennes de votre secteur, issues de sources publiques officielles.' },
+                                    { icon: 'solar:target-bold-duotone', color: '#FBBF24', title: 'Savoir par où commencer', desc: 'Le rapport classe les travaux les plus rentables pour votre situation : isolation, chauffage, éclairage... avec le retour sur investissement estimé.' },
+                                    { icon: 'solar:graph-new-up-bold-duotone', color: '#34D399', title: 'Chiffrer vos économies possibles', desc: 'Recevez une estimation en euros par an, avec une projection sur 10 ans - coût des travaux inclus.' }
                                 ].map((item, i) => (
-                                    <div key={i} style={{
-                                        background: '#FCFCFF',
-                                        borderRadius: '18px',
+                                    <div key={i} className={`sr sr-delay-${i + 1}`} style={{
+                                        background: 'rgba(255,255,255,0.05)',
+                                        borderRadius: '20px',
                                         padding: '2.75rem 2.25rem',
-                                        border: '1px solid #D4DDEF',
-                                        boxShadow: '0 4px 18px rgba(15,23,42,0.07), 0 1px 4px rgba(15,23,42,0.04)',
-                                        borderTop: '3.5px solid #1D4ED8',
-                                        transition: 'box-shadow 0.28s ease, transform 0.22s ease'
+                                        border: '1px solid rgba(255,255,255,0.08)',
+                                        transition: 'background 0.32s ease, transform 0.32s cubic-bezier(.16,1,.3,1), box-shadow 0.32s ease'
                                     }}
-                                        onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 14px 40px rgba(29,78,216,0.13), 0 4px 10px rgba(15,23,42,0.06)'; e.currentTarget.style.transform = 'translateY(-5px)'; }}
-                                        onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 4px 18px rgba(15,23,42,0.07), 0 1px 4px rgba(15,23,42,0.04)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+                                        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.transform = 'translateY(-6px)'; e.currentTarget.style.boxShadow = '0 20px 50px rgba(0,0,0,0.3)'; }}
+                                        onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
                                     >
-                                        <div style={{ width: '52px', height: '52px', borderRadius: '14px', background: item.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.625rem', border: '1px solid rgba(29,78,216,0.16)', boxShadow: '0 3px 8px rgba(29,78,216,0.10)' }}>
-                                            <Icon icon={item.icon} style={{ color: item.color, fontSize: '1.5rem' }} />
+                                        <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: `${item.color}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.625rem' }}>
+                                            <Icon icon={item.icon} style={{ color: item.color, fontSize: '1.625rem' }} />
                                         </div>
-                                        <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#0A1929', marginBottom: '0.875rem', lineHeight: 1.25 }}>{item.title}</h3>
-                                        <p style={{ fontSize: '0.9375rem', color: '#64748B', lineHeight: 1.78 }}>{item.desc}</p>
+                                        <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 400, color: '#FFFFFF', marginBottom: '0.875rem', lineHeight: 1.25 }}>{item.title}</h3>
+                                        <p style={{ fontSize: '0.9375rem', color: 'rgba(255,255,255,0.5)', lineHeight: 1.78 }}>{item.desc}</p>
                                     </div>
                                 ))}
                             </div>
                         </div>
                     </section>
 
-                    {/* QUI EST DERRIÈRE */}
-                    <section id="qui-sommes-nous" style={{ padding: 'clamp(3rem, 8vw, 5rem) 0', background: '#F8FAFC', textAlign: 'center' }}>
-                        <div style={{ maxWidth: '40rem', margin: '0 auto', padding: '0 1.5rem' }}>
-                            <h2 style={{ fontSize: 'clamp(1.25rem, 3.5vw, 1.75rem)', fontWeight: 800, color: 'var(--text)', marginBottom: '1rem' }}>
-                                Qui est derrière DiagTertiaire ?
-                            </h2>
-                            <p style={{ color: 'var(--muted)', fontSize: '1rem', lineHeight: 1.7 }}>
-                                Un collectif d'ingénieurs en performance énergétique, issus de leaders du bâtiment et de bureaux d'études spécialisés. DiagTertiaire est un outil indépendant, sans dépendance à un fournisseur d'énergie ni à un prestataire de travaux.
-                            </p>
-                        </div>
-                    </section>
-
                     {/* FAQ */}
-                    <section id="faq" style={{ padding: 'clamp(3rem, 8vw, 6rem) 0', background: 'white' }}>
+                    <section id="faq" style={{ padding: 'clamp(4rem, 8vw, 7rem) 0', background: 'white' }}>
                         <div style={{ maxWidth: '48rem', margin: '0 auto', padding: '0 1.5rem' }}>
-                            <h2 style={{ fontSize: 'clamp(1.5rem, 4.2vw, 2.25rem)', fontWeight: 800, color: 'var(--text)', textAlign: 'center', marginBottom: '2.5rem' }}>
-                                Questions fréquentes
-                            </h2>
+                            <div className="sr" style={{ textAlign: 'center', marginBottom: '3rem' }}>
+                                <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.75rem, 4.5vw, 2.75rem)', fontWeight: 400, color: 'var(--text)', marginBottom: '0.75rem' }}>
+                                    Questions fréquentes
+                                </h2>
+                                <p style={{ color: 'var(--muted)', fontSize: '1rem' }}>Tout ce que vous devez savoir avant de commencer.</p>
+                            </div>
                             {[
-                                { q: "C'est vraiment gratuit ? Pourquoi ?", a: "Oui. Le comparatif est 100 % gratuit et le restera. L'outil est entièrement automatisé - aucun intervenant humain. Si vous le souhaitez, vous pouvez être mis en relation avec un professionnel de l'énergie : c'est cette mise en relation, facultative, qui finance le service. Les partenaires investissent sur leur propre budget, sans que rien ne vous soit facturé." },
+                                { q: "C'est vraiment gratuit ? Pourquoi ?", a: "Oui. Le comparatif est 100 % gratuit et le restera. L'outil est entièrement automatisé - aucun intervenant humain. Si vous le souhaitez, vous pouvez être mis en relation avec un professionnel de l'énergie : c'est cette mise en relation, facultative, qui finance le service." },
                                 { q: "Qu'est-ce que je reçois exactement ?", a: "Un rapport PDF avec : votre positionnement par rapport aux consommations moyennes de votre secteur, vos 3 actions prioritaires avec économies estimées en euros/an, une projection financière sur 10 ans, et les principales aides disponibles (CEE, aides locales)." },
                                 { q: "Sur quoi se basent vos calculs ?", a: "Sur des données de référence publiques officielles (consommations moyennes par type d'activité en France), croisées avec les informations que vous déclarez. La précision visée est de +/-20 % - suffisante pour identifier les vraies priorités." },
                                 { q: "Mes données sont-elles protégées ?", a: "Oui. Vos données sont traitées conformément au RGPD. Elles ne sont jamais transmises à un tiers sans votre consentement explicite. Vous pouvez obtenir votre comparatif sans fournir d'email." },
                                 { q: "Est-ce que ça remplace un DPE ou un audit ?", a: "Non. Ce comparatif est un outil d'orientation, pas un document réglementaire. Il vous aide à y voir clair avant de décider si un audit certifié est nécessaire - et à éviter de dépenser à l'aveugle." },
-                                { q: "Qui est derrière DiagTertiaire ?", a: "Un collectif d'ingénieurs en performance énergétique, issus de leaders du bâtiment et de bureaux d'études spécialisés. DiagTertiaire est un outil indépendant, sans dépendance à un fournisseur d'énergie ni à un prestataire de travaux." },
                                 { q: "Combien coûte un vrai audit énergétique ?", a: "Entre 800 et 3 000 euros selon la taille du bâtiment. Notre comparatif gratuit vous aide à savoir si cet investissement est pertinent pour votre situation." }
                             ].map((item, i) => (
-                                <div key={i} style={{ borderBottom: '1px solid var(--border)' }}>
+                                <div key={i} className="sr" style={{ marginBottom: '4px' }}>
                                     <button
                                         onClick={() => setOpenFaq(openFaq === i ? null : i)}
                                         style={{
                                             width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                                            padding: '20px 0', background: 'none', border: 'none', cursor: 'pointer',
+                                            padding: '1.25rem 1.5rem',
+                                            background: openFaq === i ? 'var(--blue-light)' : '#F8FAFC',
+                                            border: openFaq === i ? '1px solid rgba(29,78,216,0.15)' : '1px solid transparent',
+                                            borderRadius: openFaq === i ? '14px 14px 0 0' : '14px',
+                                            cursor: 'pointer',
                                             textAlign: 'left', fontWeight: 600, fontSize: '1rem', color: 'var(--text)',
-                                            fontFamily: 'inherit'
+                                            fontFamily: 'inherit',
+                                            transition: 'all 0.25s ease'
                                         }}
                                     >
                                         <span>{item.q}</span>
                                         <span style={{
                                             transform: openFaq === i ? 'rotate(180deg)' : 'rotate(0)',
-                                            transition: 'transform 0.3s ease', fontSize: '1.25rem', color: 'var(--muted)', flexShrink: 0, marginLeft: '16px'
+                                            transition: 'transform 0.3s ease', fontSize: '1.125rem', color: openFaq === i ? 'var(--blue-premium)' : 'var(--muted)', flexShrink: 0, marginLeft: '16px'
                                         }}>&#9662;</span>
                                     </button>
                                     <div style={{
                                         maxHeight: openFaq === i ? '300px' : '0',
-                                        overflow: 'hidden', transition: 'max-height 0.3s ease'
+                                        overflow: 'hidden', transition: 'max-height 0.35s cubic-bezier(.16,1,.3,1)',
+                                        background: 'var(--blue-light)',
+                                        borderRadius: '0 0 14px 14px',
+                                        border: openFaq === i ? '1px solid rgba(29,78,216,0.15)' : '1px solid transparent',
+                                        borderTop: 'none'
                                     }}>
-                                        <p style={{ paddingBottom: '20px', color: 'var(--muted)', fontSize: '0.9375rem', lineHeight: 1.7 }}>
+                                        <p style={{ padding: '0 1.5rem 1.25rem', color: 'var(--muted)', fontSize: '0.9375rem', lineHeight: 1.75 }}>
                                             {item.a}
                                         </p>
                                     </div>
@@ -2238,15 +2363,16 @@
                     </section>
 
                     {/* CTA FINAL */}
-                    <section style={{ padding: 'clamp(3rem, 8vw, 5rem) 0', background: 'var(--navy-dark)', textAlign: 'center' }}>
-                        <div style={{ maxWidth: '36rem', margin: '0 auto', padding: '0 1.5rem' }}>
-                            <h2 style={{ fontSize: 'clamp(1.5rem, 4vw, 2rem)', fontWeight: 800, color: 'white', marginBottom: '12px' }}>
+                    <section className="grain-overlay" style={{ padding: 'clamp(4rem, 10vw, 7rem) 0', background: 'linear-gradient(165deg, #0A1628 0%, #0E1F3D 40%, #1D4ED8 100%)', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+                        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '600px', height: '600px', background: 'radial-gradient(circle, rgba(217,119,6,0.12) 0%, transparent 60%)', pointerEvents: 'none' }} />
+                        <div className="sr" style={{ maxWidth: '38rem', margin: '0 auto', padding: '0 1.5rem', position: 'relative', zIndex: 2 }}>
+                            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.75rem, 5vw, 2.75rem)', fontWeight: 400, color: 'white', marginBottom: '1rem', lineHeight: 1.15, whiteSpace: 'nowrap' }}>
                                 Prêt à savoir où vous en êtes ?
                             </h2>
-                            <p style={{ color: 'rgba(255,255,255,0.6)', marginBottom: '2rem' }}>
+                            <p style={{ color: 'rgba(255,255,255,0.55)', marginBottom: '2.5rem', fontSize: '1.0625rem', lineHeight: 1.7, whiteSpace: 'nowrap' }}>
                                 En 3 minutes, comparez votre consommation et recevez votre rapport gratuit.
                             </p>
-                            <a href="/diagnostic" className="btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '10px' }}>
+                            <a href="/diagnostic" onClick={(e) => { e.preventDefault(); navigate('diagnostic'); }} className="btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', background: 'linear-gradient(135deg, #D97706 0%, #B45309 100%)', boxShadow: '0 10px 30px rgba(217,119,6,0.3)' }}>
                                 Obtenir mon comparatif gratuit
                                 <Icon icon="solar:arrow-right-linear" width="20" height="20" />
                             </a>
@@ -2254,32 +2380,31 @@
                     </section>
 
                     {/* SECTION PRO DISCRETE */}
-                    <section style={{ padding: 'clamp(1.5rem, 4vw, 2.5rem) 0 clamp(1.75rem, 4.5vw, 3.25rem)', background: 'linear-gradient(180deg, #F8FAFC 0%, #FFFFFF 100%)', borderTop: '1px solid #E2E8F0' }}>
+                    <section className="section-mesh-light" style={{ padding: 'clamp(2rem, 5vw, 3.5rem) 0 clamp(2rem, 5vw, 3.5rem)' }}>
                         <div className="max-w-6xl mx-auto px-4">
-                            <div className="landing-pro-bridge max-w-5xl mx-auto px-5 py-5 md:px-7 md:py-6">
+                            <div className="sr" style={{ maxWidth: '56rem', margin: '0 auto', background: '#FFFFFF', border: '1px solid var(--border)', borderRadius: '20px', padding: 'clamp(1.5rem, 4vw, 2.5rem)', boxShadow: 'var(--shadow-md)' }}>
                                 <div className="flex flex-col gap-3.5 md:flex-row md:items-center md:justify-between md:gap-6">
                                     <div className="max-w-[41rem]">
-                                        <h2 className="text-[1.2rem] md:text-[1.35rem] font-bold tracking-[-0.02em] text-[#0C1D30] leading-tight">
+                                        <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.25rem, 3vw, 1.625rem)', fontWeight: 400, color: '#0A1628', marginBottom: '0.5rem' }}>
                                             Vous êtes un professionnel ?
                                         </h2>
-                                        <p className="mt-2 text-sm md:text-[0.95rem] leading-relaxed text-[#475569]">
-                                            Découvrez l’espace dédié aux professionnels qui veulent qualifier plus vite leurs dossiers tertiaires.
+                                        <p className="text-sm md:text-[0.95rem] leading-relaxed text-[#475569]">
+                                            Découvrez l'espace dédié aux professionnels qui veulent qualifier plus vite leurs dossiers tertiaires.
                                         </p>
                                     </div>
 
                                     <a
                                         href="espace-professionnel.html"
-                                        className="inline-flex min-h-[46px] w-full shrink-0 items-center justify-center gap-1.5 self-start rounded-xl border border-[#C7D8F8] bg-white px-4 py-2.5 text-sm font-semibold text-[#1D4ED8] no-underline shadow-sm transition-all hover:border-[#AFC6F5] hover:bg-[#EFF6FF] hover:text-[#1E40AF] focus:outline-none focus:ring-2 focus:ring-slate-200 focus:ring-offset-2 sm:w-auto md:self-center"
+                                        className="inline-flex min-h-[46px] w-full shrink-0 items-center justify-center gap-1.5 self-start rounded-xl px-5 py-2.5 text-sm font-bold text-white no-underline transition-all sm:w-auto md:self-center"
+                                        style={{ background: 'linear-gradient(135deg, #1D4ED8, #1E40AF)', boxShadow: '0 6px 20px rgba(29,78,216,0.25)' }}
                                     >
-                                        Découvrir l’Espace Pro
-                                        <Icon icon="solar:arrow-right-linear" style={{ fontSize: '0.95rem', opacity: 0.75 }} />
+                                        Découvrir l'Espace Pro
+                                        <Icon icon="solar:arrow-right-linear" style={{ fontSize: '0.95rem' }} />
                                     </a>
                                 </div>
                             </div>
                         </div>
                     </section>
-                    {/* VISUAL SEPARATOR */}
-                    <div style={{ height: '1px', opacity: 0.7, background: 'linear-gradient(90deg, rgba(15,23,42,0), rgba(37,99,235,0.42), rgba(15,23,42,0))' }} />
                 </div>
             );
         };
@@ -2293,14 +2418,14 @@
                                 Notre approche
                             </div>
 
-                            <h1 className="text-3xl md:text-4xl tracking-tight font-semibold text-[#102A43] mb-4 leading-tight">
+                            <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 400 }} className="text-3xl md:text-4xl tracking-tight text-[#102A43] mb-4 leading-tight">
                                 Une estimation utile pour décider
                             </h1>
 
                             <p className="text-[#475569] leading-relaxed text-sm md:text-base">
                                 DiagTertiaire est un <strong>comparatif</strong> : un outil de cadrage rapide pour comprendre
-                                si la consommation d’un local professionnel est cohérente, identifier les leviers les plus probables
-                                et décider s’il faut lancer un audit complet.
+                                si la consommation d'un local professionnel est cohérente, identifier les leviers les plus probables
+                                et décider s'il faut lancer un audit complet.
                             </p>
                         </div>
 
@@ -2311,8 +2436,8 @@
                                     Ce que DiagTertiaire fait
                                 </h3>
                                 <ul className="space-y-2 text-sm text-[#475569]">
-                                    <li className="flex items-start gap-2"><Icon icon="solar:arrow-right-linear" className="text-sm mt-0.5 text-[#102A43] shrink-0" /><span>Estime la performance et l’écart à une référence sectorielle</span></li>
-                                    <li className="flex items-start gap-2"><Icon icon="solar:arrow-right-linear" className="text-sm mt-0.5 text-[#102A43] shrink-0" /><span>Priorise les postes d’action (chauffage, éclairage, pilotage…)</span></li>
+                                    <li className="flex items-start gap-2"><Icon icon="solar:arrow-right-linear" className="text-sm mt-0.5 text-[#102A43] shrink-0" /><span>Estime la performance et l'écart à une référence sectorielle</span></li>
+                                    <li className="flex items-start gap-2"><Icon icon="solar:arrow-right-linear" className="text-sm mt-0.5 text-[#102A43] shrink-0" /><span>Priorise les postes d'action (chauffage, éclairage, pilotage…)</span></li>
                                     <li className="flex items-start gap-2"><Icon icon="solar:arrow-right-linear" className="text-sm mt-0.5 text-[#102A43] shrink-0" /><span>Donne des ordres de grandeur coûts / gains / retour sur investissement</span></li>
                                     <li className="flex items-start gap-2"><Icon icon="solar:arrow-right-linear" className="text-sm mt-0.5 text-[#102A43] shrink-0" /><span>Fournit une base de discussion avant audit ou devis</span></li>
                                 </ul>
@@ -2326,7 +2451,7 @@
                                 <ul className="space-y-2 text-sm text-[#0F172A]">
                                     <li className="flex items-start gap-2"><Icon icon="solar:close-circle-linear" className="text-sm mt-0.5 text-[#F59E0B] shrink-0" /><span>Un audit réglementaire ou une visite technique terrain</span></li>
                                     <li className="flex items-start gap-2"><Icon icon="solar:close-circle-linear" className="text-sm mt-0.5 text-[#F59E0B] shrink-0" /><span>Un devis entreprise ou un dimensionnement CVC détaillé</span></li>
-                                    <li className="flex items-start gap-2"><Icon icon="solar:close-circle-linear" className="text-sm mt-0.5 text-[#F59E0B] shrink-0" /><span>Une promesse contractuelle d’économies</span></li>
+                                    <li className="flex items-start gap-2"><Icon icon="solar:close-circle-linear" className="text-sm mt-0.5 text-[#F59E0B] shrink-0" /><span>Une promesse contractuelle d'économies</span></li>
                                     <li className="flex items-start gap-2"><Icon icon="solar:close-circle-linear" className="text-sm mt-0.5 text-[#F59E0B] shrink-0" /><span>Une validation définitive des aides disponibles</span></li>
                                 </ul>
                             </div>
@@ -2335,8 +2460,8 @@
                         <div className="mt-5 bg-white rounded-2xl border border-[#E2E8F0] p-5">
                             <h3 className="text-sm font-semibold text-[#102A43] mb-2">Pourquoi ce comparatif existe</h3>
                             <p className="text-sm text-[#475569] leading-relaxed">
-                                L’objectif : une <strong>estimation fiable</strong> avant d’engager du temps,
-                                un budget d’audit ou des travaux. Un cadrage rapide pour décider sereinement.
+                                L'objectif : une <strong>estimation fiable</strong> avant d'engager du temps,
+                                un budget d'audit ou des travaux. Un cadrage rapide pour décider sereinement.
                             </p>
                         </div>
                     </div>
@@ -2345,14 +2470,14 @@
                 <section className="py-14 px-4 bg-white border-b border-[#E2E8F0]">
                     <div className="max-w-6xl mx-auto">
                         <SectionTitle sub="Une logique simple, transparente et orientée décision">
-                            Comment l’estimation est construite
+                            Comment l'estimation est construite
                         </SectionTitle>
 
                         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                             {[
                                 { icon: 'solar:buildings-2-bold-duotone', color: '#102A43', title: 'Référence sectorielle', desc: "Chaque activité tertiaire a sa consommation de référence (bureaux, commerce, santé...)." },
-                                { icon: 'solar:calendar-bold-duotone', color: '#F59E0B', title: 'Ajustement bâtiment', desc: "L’âge du bâtiment et des équipements affine l’ordre de grandeur estimé." },
-                                { icon: 'solar:wallet-money-bold-duotone', color: '#16A34A', title: 'Lecture économique', desc: "L’estimation est convertie en coût annuel pour une lecture décisionnelle immédiate." },
+                                { icon: 'solar:calendar-bold-duotone', color: '#F59E0B', title: 'Ajustement bâtiment', desc: "L'âge du bâtiment et des équipements affine l'ordre de grandeur estimé." },
+                                { icon: 'solar:wallet-money-bold-duotone', color: '#16A34A', title: 'Lecture économique', desc: "L'estimation est convertie en coût annuel pour une lecture décisionnelle immédiate." },
                                 { icon: 'solar:chart-2-bold-duotone', color: '#1D4ED8', title: 'Priorisation', desc: "Le rapport propose des actions types avec gains, coûts et délai de rentabilisation indicatifs." },
                             ].map((item, i) => (
                                 <div key={i} className="bg-[#F8FAFC] rounded-xl border border-[#E2E8F0] p-4 hover:shadow-sm transition-shadow">
@@ -2475,7 +2600,7 @@
                                 <Icon icon="solar:document-text-linear" className="text-sm" />
                                 Exemple de rapport
                             </div>
-                            <h1 className="text-3xl tracking-tight font-semibold text-[#102A43] mb-2">
+                            <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 400 }} className="text-3xl tracking-tight text-[#102A43] mb-2">
                                 {NEW_DIAGNOSTIC_REPORT_COPY.example.title}
                             </h1>
                             <p className="text-[#475569] text-sm md:text-base">
@@ -2612,7 +2737,7 @@
                                     Pour les professionnels
                                 </div>
 
-                                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-7 leading-tight">
+                                <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 400 }} className="text-4xl md:text-5xl lg:text-6xl text-white mb-7 leading-tight">
                                     Votre outil de diagnostic<br />
                                     <span className="bg-gradient-to-r from-[#16A34A] to-[#16A34A] bg-clip-text text-transparent">en marque blanche</span>
                                 </h1>
@@ -2815,7 +2940,7 @@
                     <section className="py-16 px-4 bg-white">
                         <div className="max-w-7xl mx-auto">
                             <div className="text-center mb-12">
-                                <h2 className="text-3xl md:text-4xl font-bold text-[#102A43] mb-4">
+                                <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 400 }} className="text-3xl md:text-4xl text-[#102A43] mb-4">
                                     Fonctionnalités & Roadmap
                                 </h2>
                                 <p className="text-lg text-[#475569] max-w-2xl mx-auto">
@@ -2953,7 +3078,7 @@
                     <section className="py-16 px-4 bg-[#F8FAFC]">
                         <div className="max-w-7xl mx-auto">
                             <div className="text-center mb-12">
-                                <h2 className="text-3xl md:text-4xl font-bold text-[#102A43] mb-4">
+                                <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 400 }} className="text-3xl md:text-4xl text-[#102A43] mb-4">
                                     Qui utilise DiagTertiaire Pro ?
                                 </h2>
                             </div>
@@ -3006,7 +3131,7 @@
                     <section className="py-20 px-4 bg-gradient-to-br from-slate-50 via-white to-blue-50">
                         <div className="max-w-4xl mx-auto">
                             <div className="text-center mb-16">
-                                <h2 className="text-3xl md:text-4xl font-bold text-[#102A43] mb-4">
+                                <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 400 }} className="text-3xl md:text-4xl text-[#102A43] mb-4">
                                     Questions fréquentes
                                 </h2>
                                 <p className="text-lg text-[#475569]">
@@ -3077,7 +3202,7 @@
                                     Prêt à démarrer
                                 </div>
 
-                                <h2 className="text-3xl md:text-4xl font-bold text-white mb-5">
+                                <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 400 }} className="text-3xl md:text-4xl text-white mb-5">
                                     Rejoignez les pros qui font confiance à DiagTertiaire
                                 </h2>
                                 <p className="text-lg text-[#EFF6FF] max-w-2xl mx-auto">
@@ -5165,7 +5290,7 @@
                     if (!formData.mixedUsage1) newErrors.mixedUsage1 = 'Veuillez choisir le premier type d\'activité';
                     if (!formData.mixedUsage2) newErrors.mixedUsage2 = 'Veuillez choisir le deuxième type d\'activité';
                     if (formData.mixedUsage1 && formData.mixedUsage2 && formData.mixedUsage1 === formData.mixedUsage2) {
-                        newErrors.mixedUsage2 = 'Ces deux activites doivent etre differentes';
+                        newErrors.mixedUsage2 = 'Ces deux activités doivent être différentes';
                     }
                 }
 
@@ -5875,7 +6000,7 @@
                                         >
                                             <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${formData.hasExteriorLighting ? 'left-5' : 'left-1'}`}></span>
                                         </div>
-                                        <span className="text-sm font-medium text-[#475569]">Eclairage exterieur / parking present</span>
+                                        <span className="text-sm font-medium text-[#475569]">Éclairage extérieur / parking présent</span>
                                     </label>
                                 </div>
                             )}
@@ -7170,7 +7295,7 @@
             heating: 'Chauffage',
             cooling: 'Climatisation',
             ventilation: 'Ventilation',
-            lighting: 'Eclairage',
+            lighting: 'Éclairage',
             dhw: 'Eau chaude',
             envelope: 'Enveloppe',
             other_specific: 'Autres usages'
@@ -7270,7 +7395,7 @@
             } else if (gainEuro >= 2500) {
                 why = 'Cette action est prioritaire pour capter un gain annuel significatif sur un poste déjà lourd.';
             } else if (capex <= 2000) {
-                why = 'Cette action permet d’enclencher des gains sans engager de chantier lourd.';
+                why = "Cette action permet d'enclencher des gains sans engager de chantier lourd.";
             } else if (roi !== null && roi > 7) {
                 why = 'Cette action a du sens mais doit être validée techniquement avant arbitrage budgétaire.';
             }
@@ -7298,7 +7423,7 @@
                 diagnostic = 'Le site est bien positionné ; la suite repose surtout sur une optimisation ciblée.';
             }
 
-            let risk = 'Le risque principal est de laisser des gains rapides non captés faute d’ordre d’action.';
+            let risk = "Le risque principal est de laisser des gains rapides non captés faute d'ordre d'action.";
             if (position === 'far_above_range' || position === 'above_range') {
                 risk = 'Sans plan gradué, la hausse des charges peut repousser les arbitrages utiles.';
             } else if (position === 'below_range') {
@@ -7308,11 +7433,11 @@
                 risk = 'Le risque immédiat est de décider sur des données encore trop approximatives.';
             }
 
-            let opportunity = `Un plan progressif peut capter environ ${Math.round(totalPct)}% d’économies estimées, sans engager d’emblée des travaux lourds.`;
+            let opportunity = `Un plan progressif peut capter environ ${Math.round(totalPct)}% d'économies estimées, sans engager d'emblée des travaux lourds.`;
             if (totalPct >= 30) {
-                opportunity = `Le potentiel est élevé (~${Math.round(totalPct)}%) ; un échange expert permet surtout de confirmer le bon ordre d’action.`;
+                opportunity = `Le potentiel est élevé (~${Math.round(totalPct)}%) ; un échange expert permet surtout de confirmer le bon ordre d'action.`;
             } else if (totalPct <= 15) {
-                opportunity = 'Le potentiel est ciblé ; la valeur vient surtout d’un tri fin des actions sans regret.';
+                opportunity = "Le potentiel est ciblé ; la valeur vient surtout d'un tri fin des actions sans regret.";
             }
 
             return { diagnostic, risk, opportunity };
@@ -7847,7 +7972,7 @@
                     ? 'La cible suggérée vous rapproche du cœur de marché.'
                     : "La cible suggérée réduit déjà significativement l'écart de performance.";
             const keyBusinessSentence = (diagIndex.label === 'A' || diagIndex.label === 'B')
-                ? 'Le site est déjà bien placé. L’enjeu est de capter des gains ciblés sans surinvestir.'
+                ? "Le site est déjà bien placé. L'enjeu est de capter des gains ciblés sans surinvestir."
                 : diagIndex.label === 'C'
                     ? 'Le site est dans la médiane. Un plan sélectif peut réduire durablement les charges.'
                     : 'Le site est en retrait par rapport au marché. Les premiers leviers doivent être priorisés rapidement.';
@@ -8167,7 +8292,7 @@
                                     </div>
                                 </div>
 
-                                <p className="text-xs text-slate-300 mt-4">Étiquette estimative relative à votre activité. Elle n’a pas valeur de diagnostic réglementaire.</p>
+                                <p className="text-xs text-slate-300 mt-4">Étiquette estimative relative à votre activité. Elle n'a pas valeur de diagnostic réglementaire.</p>
                             </div>
 
                             <div className="bg-[#F8FAFC] px-6 py-6 md:px-8">
@@ -8866,7 +8991,7 @@
                                     ))}
                                 </ul>
                             </NewDiagnosticAccordion>
-                            <NewDiagnosticAccordion title="Limites de l’approche" defaultOpen={false}>
+                            <NewDiagnosticAccordion title="Limites de l'approche" defaultOpen={false}>
                                 <ul className="space-y-2 text-sm text-neutral-600">
                                     {reportPayload.limits.map((limit, i) => (
                                         <li key={i} className="flex items-start gap-2">
@@ -9314,7 +9439,7 @@
         const DiagTertiaireBrand = ({ dark, size }) => (
             React.createElement('span', { style: { display: 'inline-flex', alignItems: 'center', gap: '7px' } },
                 React.createElement('span', { style: { width: size || 28, height: size || 28, flexShrink: 0, display: 'inline-block' }, dangerouslySetInnerHTML: { __html: DIAGTERTIAIRE_LOGO_SVG } }),
-                React.createElement('span', { style: { fontWeight: 700, fontSize: '1.0625rem', letterSpacing: '-0.025em', color: dark ? '#FFFFFF' : '#102A43', lineHeight: 1 } }, 'DiagTertiaire')
+                React.createElement('span', { style: { fontFamily: "'DM Serif Display', Georgia, serif", fontWeight: 400, fontSize: '1.125rem', letterSpacing: '-0.01em', color: dark ? '#FFFFFF' : '#0A1628', lineHeight: 1 } }, 'DiagTertiaire')
             )
         );
 
@@ -9335,11 +9460,23 @@
             const [currentPage, setCurrentPage] = useState(() => resolvePublicPageFromPath());
             const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+            const PAGE_URLS = { home: '/', diagnostic: '/diagnostic', exemple: '/exemple-rapport.html', methode: '/methode.html' };
+
             const navigate = (page) => {
                 setCurrentPage(page);
                 setIsMobileMenuOpen(false);
                 window.scrollTo(0, 0);
+                const url = PAGE_URLS[page];
+                if (url && window.location.pathname !== url) {
+                    history.pushState(null, '', url);
+                }
             };
+
+            useEffect(() => {
+                const handlePop = () => setCurrentPage(resolvePublicPageFromPath());
+                window.addEventListener('popstate', handlePop);
+                return () => window.removeEventListener('popstate', handlePop);
+            }, []);
 
             const isLandingPage = currentPage === 'home';
 
@@ -9379,6 +9516,7 @@
                                 <div className="hidden md:block">
                                     <a
                                         href="/diagnostic"
+                                        onClick={(e) => { e.preventDefault(); navigate('diagnostic'); }}
                                         className="btn-primary inline-flex items-center justify-center px-5 py-2.5 text-sm font-bold rounded-xl"
                                     >
                                         Obtenir mon comparatif gratuit
@@ -9406,6 +9544,7 @@
                                     </div>
                                     <a
                                         href="/diagnostic"
+                                        onClick={(e) => { e.preventDefault(); navigate('diagnostic'); }}
                                         className="btn-primary mt-3 w-full inline-flex items-center justify-center px-5 py-3 text-sm font-bold rounded-xl"
                                     >
                                         Obtenir mon comparatif gratuit
@@ -9445,16 +9584,16 @@
                     </main>
 
                     {currentPage !== 'diagnostic' && (
-                        <footer className="bg-[linear-gradient(180deg,#0F172A_0%,#122039_100%)] py-14 md:py-16 border-t border-white/5">
+                        <footer className="bg-[linear-gradient(180deg,#0A1628_0%,#0E1F3D_100%)] py-14 md:py-16 border-t border-white/5">
                             <div className="max-w-6xl mx-auto px-4">
                                 <div className="landing-footer-grid grid md:grid-cols-4 gap-8 md:gap-10 mb-8">
 
                                     <div>
                                         <div className="flex items-center gap-2 mb-4">
                                             <div className="w-8 h-8 bg-[#1D4ED8]/20 rounded-lg flex items-center justify-center">
-                                                <Icon icon="solar:buildings-2-linear" style={{ color: '#1D4ED8', fontSize: '18px' }} />
+                                                <Icon icon="solar:buildings-2-linear" style={{ color: '#60A5FA', fontSize: '18px' }} />
                                             </div>
-                                            <span className="font-bold text-white">DiagTertiaire</span>
+                                            <span style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontWeight: 400, fontSize: '1.125rem', color: '#FFFFFF' }}>DiagTertiaire</span>
                                         </div>
                                         <p className="text-sm text-[#64748B] leading-relaxed mb-4">Comparatif énergétique pour professionnels. Indépendant de tout fournisseur.</p>
                                         <div className="space-y-2">
@@ -9467,7 +9606,7 @@
                                     <div>
                                         <h4 className="text-sm font-bold text-white mb-4">Outil</h4>
                                         <ul className="space-y-2.5">
-                                            <li><a href="/diagnostic" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Obtenir mon comparatif</a></li>
+                                            <li><a href="/diagnostic" onClick={(e) => { e.preventDefault(); navigate('diagnostic'); }} className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Obtenir mon comparatif</a></li>
                                             <li><a href="/exemple-rapport.html" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Exemple de rapport</a></li>
                                         </ul>
                                     </div>
@@ -9509,6 +9648,40 @@
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
+    </script>
+
+    <!-- Scroll Reveal Observer -->
+    <script>
+        (function() {
+            var observer = new IntersectionObserver(function(entries) {
+                entries.forEach(function(entry) {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
+            function observeAll() {
+                document.querySelectorAll('.sr').forEach(function(el) {
+                    observer.observe(el);
+                });
+            }
+
+            // Initial observation + re-observe on SPA navigation
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', observeAll);
+            } else {
+                observeAll();
+            }
+
+            // MutationObserver to catch React re-renders
+            var mo = new MutationObserver(function() {
+                document.querySelectorAll('.sr:not(.visible)').forEach(function(el) {
+                    observer.observe(el);
+                });
+            });
+            mo.observe(document.getElementById('root') || document.body, { childList: true, subtree: true });
+        })();
     </script>
 
 </body>

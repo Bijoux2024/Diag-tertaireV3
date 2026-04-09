@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>404 — Page introuvable · DiagTertiaire</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #F8FAFC;
+      --text: #0F172A;
+      --muted: #64748B;
+      --border: #E2E8F0;
+      --navy: #0A1628;
+      --blue: #2563EB;
+      --blue-hover: #1D4ED8;
+      --blue-light: #EFF6FF;
+      --card: #FFFFFF;
+      --shadow-md: 0 4px 12px rgba(15,23,42,.08), 0 2px 6px rgba(15,23,42,.04);
+      --shadow-lg: 0 8px 24px rgba(15,23,42,.10), 0 4px 10px rgba(15,23,42,.04);
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Dot-grid background ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(circle, rgba(37,99,235,0.12) 1px, transparent 1px);
+      background-size: 28px 28px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Top nav strip ── */
+    .navbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 64px;
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 2rem;
+      z-index: 50;
+      opacity: 0;
+      animation: fadeDown 0.5s ease forwards 0.1s;
+    }
+    .navbar-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      text-decoration: none;
+      color: var(--navy);
+    }
+    .navbar-logo-mark {
+      width: 28px; height: 28px;
+      background: var(--blue);
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .navbar-logo-mark svg { display: block; }
+    .navbar-logo-name {
+      font-weight: 700;
+      font-size: 0.9rem;
+      letter-spacing: -0.3px;
+    }
+    .navbar-logo-name span { color: var(--blue); }
+
+    /* ── Main layout ── */
+    .page {
+      position: relative;
+      z-index: 10;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 5rem 1.5rem 3rem;
+      text-align: center;
+    }
+
+    /* ── Orbital ring (single animated element) ── */
+    .orbital-wrap {
+      position: relative;
+      width: 220px;
+      height: 220px;
+      margin: 0 auto 2.5rem;
+      opacity: 0;
+      animation: fadeScale 0.7s cubic-bezier(0.16,1,0.3,1) forwards 0.4s;
+    }
+    .orbital-ring {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 1.5px dashed rgba(37, 99, 235, 0.28);
+      animation: spin 14s linear infinite;
+    }
+    .orbital-ring::after {
+      content: '';
+      position: absolute;
+      top: -4px; left: 50%;
+      transform: translateX(-50%);
+      width: 8px; height: 8px;
+      background: var(--blue);
+      border-radius: 50%;
+      box-shadow: 0 0 10px rgba(37,99,235,0.6);
+    }
+    .orbital-ring-outer {
+      position: absolute;
+      inset: -18px;
+      border-radius: 50%;
+      border: 1px dashed rgba(37, 99, 235, 0.12);
+      animation: spin 22s linear infinite reverse;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ── 404 number inside orbital ── */
+    .num-404 {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: 5.5rem;
+      font-style: italic;
+      line-height: 1;
+      color: var(--navy);
+      letter-spacing: -2px;
+    }
+    .num-404-accent {
+      color: var(--blue);
+    }
+
+    /* ── Error chip ── */
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.3rem 0.8rem;
+      background: var(--blue-light);
+      border: 1px solid rgba(37,99,235,0.2);
+      border-radius: 100px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--blue);
+      margin-bottom: 1.5rem;
+      opacity: 0;
+      animation: fadeUp 0.5s ease forwards 0.9s;
+    }
+    .chip-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--blue);
+    }
+
+    /* ── Headline ── */
+    .headline {
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: clamp(1.8rem, 4vw, 2.6rem);
+      font-weight: 400;
+      line-height: 1.2;
+      color: var(--navy);
+      letter-spacing: -0.5px;
+      max-width: 460px;
+      opacity: 0;
+      animation: fadeUp 0.6s ease forwards 1s;
+    }
+    .headline em {
+      font-style: italic;
+      color: var(--blue);
+    }
+
+    /* ── Subline ── */
+    .subline {
+      font-size: 0.92rem;
+      font-weight: 400;
+      color: var(--muted);
+      line-height: 1.7;
+      max-width: 360px;
+      margin-top: 1rem;
+      opacity: 0;
+      animation: fadeUp 0.5s ease forwards 1.15s;
+    }
+
+    /* ── Divider ── */
+    .divider {
+      width: 40px;
+      height: 2px;
+      background: var(--border);
+      border-radius: 2px;
+      margin: 1.8rem auto;
+      opacity: 0;
+      animation: fadeUp 0.5s ease forwards 1.25s;
+    }
+
+    /* ── CTA ── */
+    .cta-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.85rem;
+      opacity: 0;
+      animation: fadeUp 0.5s ease forwards 1.35s;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.8rem 1.75rem;
+      background: var(--blue);
+      color: #fff;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 600;
+      font-size: 0.875rem;
+      text-decoration: none;
+      border-radius: 10px;
+      box-shadow: 0 1px 3px rgba(37,99,235,0.3), 0 4px 16px rgba(37,99,235,0.18);
+      transition: background 0.18s, box-shadow 0.18s, transform 0.12s;
+    }
+    .btn-primary:hover {
+      background: var(--blue-hover);
+      box-shadow: 0 2px 6px rgba(37,99,235,0.35), 0 8px 24px rgba(37,99,235,0.22);
+      transform: translateY(-1px);
+    }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-icon { transition: transform 0.18s; flex-shrink: 0; }
+    .btn-primary:hover .btn-icon { transform: translateX(3px); }
+
+    .btn-ghost {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .btn-ghost:hover { color: var(--blue); }
+
+    /* ── Footer hint ── */
+    .footer-hint {
+      position: fixed;
+      bottom: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.7rem;
+      color: rgba(100,116,139,0.5);
+      letter-spacing: 0.06em;
+      white-space: nowrap;
+    }
+
+    /* ── Animations ── */
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeScale {
+      from { opacity: 0; transform: scale(0.88); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    @media (max-width: 480px) {
+      .orbital-wrap { width: 180px; height: 180px; }
+      .num-404 { font-size: 4.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav class="navbar">
+    <a class="navbar-logo" href="/">
+      <div class="navbar-logo-mark">
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+          <path d="M7.5 2L2 5.5v7h11v-7L7.5 2z" stroke="white" stroke-width="1.5" stroke-linejoin="round" fill="none"/>
+          <path d="M5.5 12.5V8.5h4v4" stroke="white" stroke-width="1.3" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <span class="navbar-logo-name">Diag<span>Tertiaire</span></span>
+    </a>
+  </nav>
+
+  <!-- Page -->
+  <main class="page">
+
+    <!-- Orbital 404 -->
+    <div class="orbital-wrap" aria-hidden="true">
+      <div class="orbital-ring-outer"></div>
+      <div class="orbital-ring"></div>
+      <div class="num-404">4<span class="num-404-accent">0</span>4</div>
+    </div>
+
+    <!-- Chip -->
+    <div class="chip">
+      <span class="chip-dot"></span>
+      Page introuvable
+    </div>
+
+    <!-- Headline -->
+    <h1 class="headline">
+      Ce bâtiment<br><em>n'existe pas.</em>
+    </h1>
+
+    <!-- Subline -->
+    <p class="subline">
+      La page que vous cherchez a disparu, a été déplacée,
+      ou n'a jamais existé dans notre base.
+    </p>
+
+    <div class="divider"></div>
+
+    <!-- CTA -->
+    <div class="cta-wrap">
+      <a class="btn-primary" href="/">
+        Retour à l'accueil
+        <svg class="btn-icon" width="15" height="15" viewBox="0 0 15 15" fill="none">
+          <path d="M1 7.5h13M8.5 2l6 5.5-6 5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </a>
+      <a class="btn-ghost" href="javascript:history.back()">Revenir en arrière</a>
+    </div>
+
+  </main>
+
+  <p class="footer-hint">HTTP 404 &nbsp;·&nbsp; DiagTertiaire</p>
+
+</body>
+</html>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>404 — Page introuvable · DiagTertiaire</title>
+  <title>404 — Erreur système · DiagTertiaire</title>
   <meta name="robots" content="noindex, nofollow">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,17 +12,19 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #F8FAFC;
-      --text: #0F172A;
-      --muted: #64748B;
-      --border: #E2E8F0;
+      --bg: #0A1628;
+      --text: #F8FAFC;
+      --muted: #94A3B8;
+      --border: rgba(255, 255, 255, 0.09);
       --navy: #0A1628;
+      --navy-mid: #102A43;
       --blue: #2563EB;
-      --blue-hover: #1D4ED8;
-      --blue-light: #EFF6FF;
-      --card: #FFFFFF;
-      --shadow-md: 0 4px 12px rgba(15,23,42,.08), 0 2px 6px rgba(15,23,42,.04);
-      --shadow-lg: 0 8px 24px rgba(15,23,42,.10), 0 4px 10px rgba(15,23,42,.04);
+      --blue-hover: #3B82F6;
+      --blue-light: rgba(37, 99, 235, 0.15);
+      --blue-bright: #93C5FD;
+      --card: rgba(255, 255, 255, 0.04);
+      --shadow-md: 0 4px 12px rgba(0,0,0,.3), 0 2px 6px rgba(0,0,0,.2);
+      --shadow-lg: 0 8px 24px rgba(0,0,0,.4), 0 4px 10px rgba(0,0,0,.2);
     }
 
     html, body {
@@ -38,7 +40,7 @@
       content: '';
       position: fixed;
       inset: 0;
-      background-image: radial-gradient(circle, rgba(37,99,235,0.12) 1px, transparent 1px);
+      background-image: radial-gradient(circle, rgba(37,99,235,0.25) 1px, transparent 1px);
       background-size: 28px 28px;
       pointer-events: none;
       z-index: 0;
@@ -49,7 +51,7 @@
       position: fixed;
       top: 0; left: 0; right: 0;
       height: 64px;
-      background: rgba(255,255,255,0.85);
+      background: rgba(10, 22, 40, 0.88);
       backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--border);
       display: flex;
@@ -64,7 +66,7 @@
       align-items: center;
       gap: 0.55rem;
       text-decoration: none;
-      color: var(--navy);
+      color: var(--text);
     }
     .navbar-logo-mark {
       width: 28px; height: 28px;
@@ -109,7 +111,7 @@
       position: absolute;
       inset: 0;
       border-radius: 50%;
-      border: 1.5px dashed rgba(37, 99, 235, 0.28);
+      border: 1.5px dashed rgba(37, 99, 235, 0.55);
       animation: spin 14s linear infinite;
     }
     .orbital-ring::after {
@@ -118,15 +120,15 @@
       top: -4px; left: 50%;
       transform: translateX(-50%);
       width: 8px; height: 8px;
-      background: var(--blue);
+      background: var(--blue-bright);
       border-radius: 50%;
-      box-shadow: 0 0 10px rgba(37,99,235,0.6);
+      box-shadow: 0 0 14px 3px rgba(147, 197, 253, 0.7);
     }
     .orbital-ring-outer {
       position: absolute;
       inset: -18px;
       border-radius: 50%;
-      border: 1px dashed rgba(37, 99, 235, 0.12);
+      border: 1px dashed rgba(37, 99, 235, 0.25);
       animation: spin 22s linear infinite reverse;
     }
     @keyframes spin {
@@ -144,11 +146,11 @@
       font-size: 5.5rem;
       font-style: italic;
       line-height: 1;
-      color: var(--navy);
+      color: #F8FAFC;
       letter-spacing: -2px;
     }
     .num-404-accent {
-      color: var(--blue);
+      color: var(--blue-bright);
     }
 
     /* ── Error chip ── */
@@ -164,7 +166,7 @@
       font-weight: 600;
       letter-spacing: 0.06em;
       text-transform: uppercase;
-      color: var(--blue);
+      color: var(--blue-bright);
       margin-bottom: 1.5rem;
       opacity: 0;
       animation: fadeUp 0.5s ease forwards 0.9s;
@@ -172,7 +174,7 @@
     .chip-dot {
       width: 5px; height: 5px;
       border-radius: 50%;
-      background: var(--blue);
+      background: var(--blue-bright);
     }
 
     /* ── Headline ── */
@@ -181,7 +183,7 @@
       font-size: clamp(1.8rem, 4vw, 2.6rem);
       font-weight: 400;
       line-height: 1.2;
-      color: var(--navy);
+      color: var(--text);
       letter-spacing: -0.5px;
       max-width: 460px;
       opacity: 0;
@@ -189,7 +191,7 @@
     }
     .headline em {
       font-style: italic;
-      color: var(--blue);
+      color: var(--blue-bright);
     }
 
     /* ── Subline ── */
@@ -252,11 +254,26 @@
     .btn-ghost {
       font-size: 0.8rem;
       font-weight: 500;
-      color: var(--muted);
+      color: rgba(148, 163, 184, 0.65);
       text-decoration: none;
       transition: color 0.15s;
     }
-    .btn-ghost:hover { color: var(--blue); }
+    .btn-ghost:hover { color: var(--blue-bright); }
+
+    /* ── Support hint ── */
+    .support-hint {
+      margin-top: 1.5rem;
+      font-size: 0.78rem;
+      color: var(--muted);
+      opacity: 0;
+      animation: fadeUp 0.5s ease forwards 1.5s;
+    }
+    .support-hint a {
+      color: var(--blue-bright);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .support-hint a:hover { text-decoration: underline; }
 
     /* ── Footer hint ── */
     .footer-hint {
@@ -294,7 +311,7 @@
 
   <!-- Nav -->
   <nav class="navbar">
-    <a class="navbar-logo" href="/">
+    <a class="navbar-logo" href="https://diagtertiaire.fr">
       <div class="navbar-logo-mark">
         <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
           <path d="M7.5 2L2 5.5v7h11v-7L7.5 2z" stroke="white" stroke-width="1.5" stroke-linejoin="round" fill="none"/>
@@ -318,25 +335,25 @@
     <!-- Chip -->
     <div class="chip">
       <span class="chip-dot"></span>
-      Page introuvable
+      Erreur système
     </div>
 
     <!-- Headline -->
     <h1 class="headline">
-      Ce bâtiment<br><em>n'existe pas.</em>
+      Une erreur s'est produite<br><em>de notre côté.</em>
     </h1>
 
     <!-- Subline -->
     <p class="subline">
-      La page que vous cherchez a disparu, a été déplacée,
-      ou n'a jamais existé dans notre base.
+      Ce n'est pas de votre fait. Le lien que vous avez suivi est peut-être
+      expiré ou temporairement indisponible. Vos données sont en sécurité.
     </p>
 
     <div class="divider"></div>
 
     <!-- CTA -->
     <div class="cta-wrap">
-      <a class="btn-primary" href="/">
+      <a class="btn-primary" href="https://diagtertiaire.fr">
         Retour à l'accueil
         <svg class="btn-icon" width="15" height="15" viewBox="0 0 15 15" fill="none">
           <path d="M1 7.5h13M8.5 2l6 5.5-6 5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
@@ -345,9 +362,16 @@
       <a class="btn-ghost" href="javascript:history.back()">Revenir en arrière</a>
     </div>
 
+    <!-- Support -->
+    <p class="support-hint">
+      Si le problème persiste :
+      <a href="mailto:contact@diag-tertiaire.fr">contact@diag-tertiaire.fr</a>
+    </p>
+
   </main>
 
   <p class="footer-hint">HTTP 404 &nbsp;·&nbsp; DiagTertiaire</p>
+
 
 </body>
 </html>

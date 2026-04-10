@@ -3,7 +3,7 @@
     { "source": "/blog", "destination": "https://diag-tertiaire-blog.vercel.app/" },
     { "source": "/blog/", "destination": "https://diag-tertiaire-blog.vercel.app/" },
     { "source": "/blog/(.*)", "destination": "https://diag-tertiaire-blog.vercel.app/$1" },
-    { "source": "/diagnostic", "destination": "/" },
+    { "source": "/diagnostic", "destination": "/diagnostic.html" },
     { "source": "/exemple-rapport", "destination": "/exemple-rapport.html" },
     { "source": "/espace-professionnel", "destination": "/espace-professionnel.html" },
     { "source": "/index.saaspro.html", "destination": "/espace-professionnel.html" }
@@ -46,6 +46,12 @@
       "source": "/public-report-print.html",
       "headers": [
         { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
+      ]
+    },
+    {
+      "source": "/diagnostic.html",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noindex, follow" }
       ]
     },
     {

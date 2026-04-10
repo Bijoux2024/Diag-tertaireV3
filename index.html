@@ -240,8 +240,8 @@
     }
 
     /* ── HERO LAYOUT ── */
-    .hero-content { max-width: 80rem; margin: 0 auto; padding: 0 1rem 0 1.5rem; position: relative; z-index: 2; }
-    .hero-grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(2rem,6vw,5rem); align-items: center; }
+    .hero-content { max-width: 80rem; margin: 0 auto; padding: 0 clamp(1rem,3vw,2.5rem); position: relative; z-index: 2; }
+    .hero-grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(3rem,8vw,6rem); align-items: center; }
     .hero-grid > * { min-width: 0; }
     @media (max-width: 900px) { .hero-grid { grid-template-columns: 1fr; } .landing-hero-mockup { display: none; } }
     .hero-cascade { opacity: 0; transform: translateY(16px); }
@@ -340,8 +340,7 @@
       <li><a href="/blog/">Blog</a></li>
       <li>
         <a href="/diagnostic" class="nav-cta-btn">
-          Lancer le diagnostic
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          Obtenir mon comparatif gratuit
         </a>
       </li>
     </ul>
@@ -420,7 +419,7 @@
         </div>
 
         <!-- Mockup PDF -->
-        <div class="landing-hero-mockup" style="display:flex;justify-content:center;align-items:center;order:3">
+        <div class="landing-hero-mockup" style="display:flex;justify-content:center;align-items:center;margin-top:0.5rem">
           <div class="mockup-glow mockup-wrap">
             <div class="mockup-depth"></div>
             <div class="mockup-card">

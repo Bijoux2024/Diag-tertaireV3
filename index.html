@@ -207,36 +207,47 @@
     .card-premium:hover::before { opacity: 1; }
 
     /* ── NAV ── */
+    /* ── NAV ── */
     nav.main-nav {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      position: sticky; top: 0; z-index: 50;
       height: var(--nav-height-desktop);
-      background: #0A1928; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-      border-bottom: 1px solid rgba(255,255,255,0.07);
+      background: rgba(255,255,255,0.80);
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      border-bottom: 1px solid #E2E8F0;
+      box-shadow: 0 2px 12px rgba(15,23,42,0.04);
       display: flex; align-items: center;
     }
-    .nav-inner { max-width: 80rem; margin: 0 auto; padding: 0 1.5rem; width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 2rem; }
-    .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-    .nav-logo svg { width: 36px; height: 36px; flex-shrink: 0; }
-    .nav-logo-diag { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 1.1875rem; color: #fff; letter-spacing: -0.02em; }
-    .nav-logo-tertiaire { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 400; font-size: 1.1875rem; color: rgba(255,255,255,0.82); letter-spacing: -0.01em; }
-    .nav-links { display: flex; align-items: center; gap: 2rem; list-style: none; margin: 0; padding: 0; }
-    .nav-links a { color: rgba(255,255,255,0.65); font-size: .9375rem; font-weight: 500; transition: color .2s; }
-    .nav-links a:hover { color: #fff; }
+    .nav-inner { max-width: 72rem; margin: 0 auto; padding: 0 1rem; width: 100%; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 1rem; }
+    .nav-right { display: flex; justify-content: flex-end; align-items: center; }
+    .nav-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; color: #102A43; transition: color .2s; }
+    .nav-logo:hover { color: #1D4ED8; }
+    .nav-logo svg { width: 28px; height: 28px; flex-shrink: 0; }
+    .nav-logo-diag { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 1.0625rem; color: inherit; letter-spacing: -0.02em; }
+    .nav-logo-tertiaire { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 400; font-size: 1.0625rem; color: inherit; letter-spacing: -0.01em; }
+    .nav-links { display: flex; align-items: center; gap: .25rem; list-style: none; margin: 0; padding: 0; }
+    .nav-links a { display: inline-flex; align-items: center; height: 40px; padding: 0 .75rem; border-radius: 8px; font-size: .875rem; font-weight: 600; color: #475569; text-decoration: none; transition: color .2s, background .2s; }
+    .nav-links a:hover { color: #102A43; background: #F8FAFC; }
     .nav-cta-btn {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: linear-gradient(135deg, #D97706, #B45309);
+      display: inline-flex; align-items: center;
+      background: linear-gradient(135deg, #1D4ED8, #1E40AF);
       color: #fff !important; font-weight: 700; font-size: .875rem;
-      padding: .625rem 1.25rem; border-radius: 10px; transition: opacity .2s;
+      padding: .625rem 1.25rem; border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(29,78,216,0.2);
+      transition: background 0.2s ease, box-shadow 0.25s ease, transform 0.18s ease; white-space: nowrap;
     }
-    .nav-cta-btn:hover { opacity: .9; }
-    .hamburger { display: none; background: none; border: none; cursor: pointer; padding: .5rem; color: #fff; }
-    .mobile-menu { display: none; position: fixed; inset: var(--nav-height-desktop) 0 0 0; background: #0A1928; z-index: 99; padding: 2rem 1.5rem; flex-direction: column; gap: 0; overflow-y: auto; }
+    .nav-links a.nav-cta-btn:hover, .nav-cta-btn:hover { background: linear-gradient(135deg, #1E40AF 0%, #1E3A8A 100%) !important; color: #fff !important; transform: translateY(-2px); box-shadow: 0 14px 32px rgba(29,78,216,0.28), 0 6px 14px rgba(29,78,216,0.14); }
+    .nav-links a.nav-cta-btn:active, .nav-cta-btn:active { transform: translateY(0); box-shadow: 0 4px 12px rgba(29,78,216,0.32); }
+    .hamburger { display: none; background: #fff; border: 1px solid #E2E8F0; border-radius: 10px; cursor: pointer; padding: .5rem; color: #102A43; box-shadow: 0 1px 4px rgba(15,23,42,0.06); }
+    .mobile-menu { display: none; position: fixed; inset: var(--nav-height-desktop) 0 0 0; background: #fff; z-index: 99; padding: 1rem 1.5rem; flex-direction: column; gap: 0; overflow-y: auto; border-top: 1px solid #E2E8F0; }
     .mobile-menu.open { display: flex; }
-    .mobile-menu a { color: rgba(255,255,255,0.8); font-size: 1.125rem; font-weight: 500; padding: 1rem 0; border-bottom: 1px solid rgba(255,255,255,0.08); display: block; }
-    .mobile-cta-link { background: linear-gradient(135deg,#D97706,#B45309); border-radius: 12px; padding: 1rem 1.5rem !important; text-align: center; font-weight: 700 !important; color: #fff !important; margin-top: 1rem; border-bottom: none !important; }
+    .mobile-menu a { color: #475569; font-size: 1rem; font-weight: 600; padding: .875rem 0; border-bottom: 1px solid #F1F5F9; display: block; text-decoration: none; }
+    .mobile-menu a:hover { color: #1D4ED8; }
+    .mobile-cta-link { background: linear-gradient(135deg,#1D4ED8,#1E40AF); border-radius: 12px; padding: 1rem 1.5rem !important; text-align: center; font-weight: 700 !important; color: #fff !important; margin-top: 1rem; border-bottom: none !important; }
     @media (max-width: 768px) {
+      .nav-inner { grid-template-columns: 1fr auto; }
       .hamburger { display: flex; align-items: center; justify-content: center; }
       .nav-links { display: none; }
+      .nav-right { display: none; }
     }
 
     /* ── HERO LAYOUT ── */
@@ -254,11 +265,11 @@
     @keyframes heroIn { to { opacity: 1; transform: none; } }
 
     /* Mockup */
-    .mockup-wrap { width: clamp(280px,85vw,460px); max-width: 100%; position: relative; }
+    .mockup-wrap { width: clamp(300px,46vw,440px); max-width: 100%; position: relative; }
     .mockup-depth { position: absolute; inset: 0; border-radius: 22px; transform: translate(10px,14px); background: linear-gradient(145deg,rgba(29,78,216,0.3),rgba(14,31,61,0.5)); opacity: .7; pointer-events: none; }
     .mockup-card { position: relative; border-radius: 22px; border: 1px solid rgba(255,255,255,0.12); background: #fff; box-shadow: 0 30px 80px rgba(0,0,0,0.35),0 10px 30px rgba(0,0,0,0.2); overflow: hidden; }
-    .mockup-header { background: linear-gradient(135deg,#0A1928,#1D4ED8 50%,#0F2236); padding: clamp(.875rem,4.5vw,1.625rem) clamp(.875rem,5vw,1.75rem); display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
-    .mockup-body { padding: clamp(.625rem,3.5vw,1.5rem) clamp(.625rem,4vw,1.625rem); display: flex; flex-direction: column; gap: clamp(.5rem,2.5vw,1.125rem); font-size: 13px; }
+    .mockup-header { background: linear-gradient(135deg,#0A1928,#1D4ED8 50%,#0F2236); padding: clamp(.5rem,2vw,.875rem) clamp(.625rem,3.5vw,1.25rem); display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+    .mockup-body { padding: clamp(.35rem,1.8vw,.75rem) clamp(.4rem,2.5vw,1rem); display: flex; flex-direction: column; gap: clamp(.25rem,1.2vw,.5rem); font-size: 13px; }
 
     /* Steps */
     .steps-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(260px,1fr)); gap: 2rem; max-width: 60rem; margin: 3.5rem auto 0; }
@@ -338,12 +349,12 @@
       <li><a href="#comment-ca-marche">Comment ça marche</a></li>
       <li><a href="/exemple-rapport.html">Exemple de rapport</a></li>
       <li><a href="/blog/">Blog</a></li>
-      <li>
-        <a href="/diagnostic" class="nav-cta-btn">
-          Obtenir mon comparatif gratuit
-        </a>
-      </li>
     </ul>
+    <div class="nav-right">
+      <a href="/diagnostic" class="nav-cta-btn">
+        Obtenir mon comparatif gratuit
+      </a>
+    </div>
     <button class="hamburger" id="hamburger" aria-label="Menu" aria-expanded="false" aria-controls="mobile-menu">
       <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
         <line x1="3" y1="7" x2="21" y2="7"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="17" x2="21" y2="17"/>
@@ -412,7 +423,7 @@
 
           <div class="hero-cascade hero-cascade-5" style="display:flex;align-items:flex-start;gap:.75rem;padding-top:clamp(1rem,3vw,1.25rem);border-top:1px solid rgba(255,255,255,0.1)">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="#FCD34D" style="flex-shrink:0;margin-top:2px"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-            <p style="font-size:.8125rem;color:rgba(255,255,255,0.45);font-weight:500;line-height:1.65">
+            <p style="font-size:.8125rem;color:rgba(255,255,255,0.45);font-weight:500;line-height:1.65;margin:0">
               Bureaux, commerces, restaurants, hôtels, cabinets, entrepôts et santé.
             </p>
           </div>
@@ -429,54 +440,57 @@
                   <p style="font-size:9.5px;font-weight:700;opacity:.55;text-transform:uppercase;letter-spacing:.12em;color:white;margin-bottom:5px">Diagnostic</p>
                   <p style="font-size:clamp(.875rem,3.8vw,1.1875rem);font-weight:800;color:white;line-height:1.2;letter-spacing:-.4px">Comparatif Tertiaire</p>
                 </div>
-                <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0">
+                <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0">
                   <div style="display:flex;align-items:center;gap:clamp(.2rem,1.2vw,.55rem)">
-                    <p style="width:clamp(28px,9.5vw,48px);text-align:center;font-size:clamp(5.5px,1.8vw,7.5px);font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:rgba(255,255,255,0.55);margin:0">avant travaux</p>
-                    <span style="width:clamp(8px,2.5vw,12px);display:inline-block"></span>
-                    <p style="width:clamp(28px,9.5vw,48px);text-align:center;font-size:clamp(5.5px,1.8vw,7.5px);font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:rgba(255,255,255,0.55);margin:0">après travaux</p>
+                    <p style="width:clamp(22px,7vw,36px);text-align:center;font-size:clamp(5px,1.5vw,6.5px);font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:rgba(255,255,255,0.55);margin:0">avant travaux</p>
+                    <span style="width:clamp(6px,2vw,10px);display:inline-block"></span>
+                    <p style="width:clamp(22px,7vw,36px);text-align:center;font-size:clamp(5px,1.5vw,6.5px);font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:rgba(255,255,255,0.55);margin:0">après travaux</p>
                   </div>
                   <div style="display:flex;align-items:center;gap:clamp(.2rem,1.2vw,.55rem)">
-                    <div style="width:clamp(28px,9.5vw,48px);height:clamp(28px,9.5vw,48px);border-radius:10px;background:#F59E0B;display:flex;align-items:center;justify-content:center;box-shadow:0 5px 16px rgba(0,0,0,0.32)"><span style="font-size:clamp(.875rem,3.8vw,1.4375rem);font-weight:900;color:#0A1929">D</span></div>
-                    <span style="font-size:clamp(.7rem,2.5vw,1rem);font-weight:900;color:rgba(255,255,255,0.85)">→</span>
-                    <div style="width:clamp(28px,9.5vw,48px);height:clamp(28px,9.5vw,48px);border-radius:10px;background:#22C55E;display:flex;align-items:center;justify-content:center;box-shadow:0 5px 16px rgba(0,0,0,0.22)"><span style="font-size:clamp(.875rem,3.8vw,1.4375rem);font-weight:900;color:white">C</span></div>
+                    <div style="width:clamp(22px,7vw,36px);height:clamp(22px,7vw,36px);border-radius:8px;background:#F59E0B;display:flex;align-items:center;justify-content:center;box-shadow:0 5px 16px rgba(0,0,0,0.32)"><span style="font-size:clamp(.75rem,3.2vw,1.125rem);font-weight:900;color:#0A1929">D</span></div>
+                    <span style="font-size:clamp(.6rem,2vw,.85rem);font-weight:900;color:rgba(255,255,255,0.85)">→</span>
+                    <div style="width:clamp(22px,7vw,36px);height:clamp(22px,7vw,36px);border-radius:8px;background:#22C55E;display:flex;align-items:center;justify-content:center;box-shadow:0 5px 16px rgba(0,0,0,0.22)"><span style="font-size:clamp(.75rem,3.2vw,1.125rem);font-weight:900;color:white">C</span></div>
                   </div>
                 </div>
               </div>
               <!-- Body -->
               <div class="mockup-body">
                 <!-- Performance -->
-                <div style="border-radius:13px;border:1.5px solid #DAE2EF;background:#F7F9FC;padding:clamp(.5rem,2.5vw,1.125rem) clamp(.625rem,3vw,1.25rem)">
-                  <p style="font-size:9.5px;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.09em;margin-bottom:clamp(.375rem,2vw,.9rem)">Performance estimée</p>
-                  <div style="display:grid;grid-template-columns:1fr clamp(28px,8vw,44px) 1fr;align-items:center;gap:clamp(.3rem,1.8vw,.75rem)">
-                    <div style="display:flex;align-items:baseline;gap:clamp(.25rem,1.5vw,1rem)">
-                      <span style="font-size:clamp(1.5rem,6.5vw,2.75rem);font-weight:900;color:#1D4ED8;line-height:1">D</span>
-                      <div><span style="display:block;font-size:clamp(.875rem,4vw,1.5rem);font-weight:800;color:#1D4ED8;line-height:1">245</span><span style="font-size:clamp(8.5px,2.5vw,11px);font-weight:500;color:#64748B;margin-top:3px;display:block">kWh/m²/an</span></div>
+                <div style="border-radius:13px;border:1.5px solid #DAE2EF;background:#F7F9FC;padding:clamp(.3rem,1.8vw,.7rem) clamp(.5rem,2.5vw,1rem)">
+                  <p style="font-size:9.5px;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.09em;margin-bottom:clamp(.2rem,1.2vw,.5rem)">Performance estimée</p>
+                  <div style="display:grid;grid-template-columns:1fr clamp(24px,7vw,38px) 1fr;align-items:center;gap:clamp(.25rem,1.5vw,.6rem)">
+                    <div style="display:flex;align-items:baseline;gap:clamp(.2rem,1.2vw,.75rem)">
+                      <span style="font-size:clamp(1.25rem,5vw,2rem);font-weight:900;color:#1D4ED8;line-height:1">D</span>
+                      <div><span style="display:block;font-size:clamp(.75rem,3.5vw,1.2rem);font-weight:800;color:#1D4ED8;line-height:1">245</span><span style="font-size:clamp(8px,2.2vw,10px);font-weight:500;color:#64748B;margin-top:2px;display:block">kWh/m²/an</span></div>
                     </div>
-                    <div style="display:flex;justify-content:center"><span style="font-size:clamp(.9rem,3.5vw,1.35rem);font-weight:900;color:#94A3B8">→</span></div>
-                    <div style="display:flex;flex-direction:column;align-items:flex-start;gap:.45rem">
-                      <div style="display:flex;align-items:baseline;gap:clamp(.3rem,1.8vw,.7rem);padding:clamp(.375rem,1.8vw,.75rem) clamp(.4rem,2vw,.9rem);border-radius:10px;background:#ECFDF5;border:1px solid #BBF7D0">
-                        <span style="font-size:clamp(1.5rem,6.5vw,2rem);font-weight:900;color:#16A34A;line-height:1">C</span>
-                        <div><span style="display:block;font-size:clamp(.875rem,4vw,1.125rem);font-weight:800;color:#16A34A;line-height:1">185</span><span style="font-size:clamp(8px,2.2vw,10px);font-weight:600;color:#15803D;margin-top:3px;display:block">kWh/m²/an</span></div>
+                    <div style="display:flex;justify-content:center"><span style="font-size:clamp(.8rem,3vw,1.1rem);font-weight:900;color:#94A3B8">→</span></div>
+                    <div style="display:flex;flex-direction:column;align-items:flex-start;gap:.3rem">
+                      <div style="display:flex;align-items:baseline;gap:clamp(.25rem,1.5vw,.6rem);padding:clamp(.25rem,1.2vw,.5rem) clamp(.3rem,1.5vw,.65rem);border-radius:10px;background:#ECFDF5;border:1px solid #BBF7D0">
+                        <span style="font-size:clamp(1.25rem,5vw,1.625rem);font-weight:900;color:#16A34A;line-height:1">C</span>
+                        <div><span style="display:block;font-size:clamp(.75rem,3.5vw,.95rem);font-weight:800;color:#16A34A;line-height:1">185</span><span style="font-size:clamp(7.5px,2vw,9.5px);font-weight:600;color:#15803D;margin-top:2px;display:block">kWh/m²/an</span></div>
                       </div>
                     </div>
                   </div>
                 </div>
                 <!-- Savings -->
-                <div style="border-radius:13px;background:linear-gradient(135deg,#065F46,#059669 50%,#16A34A);padding:clamp(.5rem,2.5vw,1.125rem) clamp(.625rem,3vw,1.25rem);box-shadow:0 4px 14px rgba(5,150,105,0.22)">
-                  <p style="font-size:9.5px;font-weight:700;opacity:.72;text-transform:uppercase;letter-spacing:.09em;color:white;margin-bottom:.375rem">Économies annuelles potentielles</p>
-                  <p style="font-size:clamp(1.5rem,6.5vw,2.125rem);font-weight:900;color:white;line-height:1.1;letter-spacing:-.5px">3 600 €</p>
+                <div style="border-radius:13px;background:linear-gradient(135deg,#065F46,#059669 50%,#16A34A);padding:clamp(.25rem,1.2vw,.5rem) clamp(.5rem,2.5vw,1rem);box-shadow:0 4px 14px rgba(5,150,105,0.22)">
+                  <p style="font-size:9px;font-weight:700;opacity:.72;text-transform:uppercase;letter-spacing:.09em;color:white;margin-bottom:.15rem">Économies estimées sur votre facture</p>
+                  <div style="display:flex;align-items:baseline;gap:.5rem">
+                    <p style="font-size:clamp(1.1rem,4.5vw,1.4rem);font-weight:900;color:white;line-height:1.1;letter-spacing:-.5px">- 26 %</p>
+                    <p style="font-size:10px;font-weight:500;color:rgba(255,255,255,0.65);line-height:1.3">ex. ~1 900 €/an<br>selon votre surface</p>
+                  </div>
                 </div>
                 <!-- Priorities -->
-                <div style="border-top:1.5px solid #E8EDF5;padding-top:clamp(.5rem,2.2vw,1rem)">
-                  <p style="font-size:9.5px;font-weight:700;color:#0A1929;text-transform:uppercase;letter-spacing:.09em;margin-bottom:clamp(.375rem,2vw,.8rem)">3 priorités de travaux</p>
-                  <div style="display:flex;flex-direction:column;gap:clamp(.3rem,1.5vw,.5rem)">
-                    <div style="display:flex;align-items:center;justify-content:space-between;padding:clamp(.3rem,1.8vw,.625rem) clamp(.5rem,2.5vw,1rem);border-radius:10px;background:#F7F9FC;border:1px solid #DAE2EF"><span style="font-size:clamp(10px,3.2vw,12.5px);font-weight:600;color:#0A1929">Régulation thermique</span><span style="font-size:10px;font-weight:700;color:#0F766E;background:#ECFEFF;padding:2px 7px;border-radius:6px;white-space:nowrap">2-4 ans</span></div>
-                    <div style="display:flex;align-items:center;justify-content:space-between;padding:clamp(.3rem,1.8vw,.625rem) clamp(.5rem,2.5vw,1rem);border-radius:10px;background:#F7F9FC;border:1px solid #DAE2EF"><span style="font-size:clamp(10px,3.2vw,12.5px);font-weight:600;color:#0A1929">Isolation toiture</span><span style="font-size:10px;font-weight:700;color:#B45309;background:#FFF7ED;padding:2px 7px;border-radius:6px;white-space:nowrap">Rentabilité moyenne</span></div>
-                    <div style="display:flex;align-items:center;justify-content:space-between;padding:clamp(.3rem,1.8vw,.625rem) clamp(.5rem,2.5vw,1rem);border-radius:10px;background:#F7F9FC;border:1px solid #DAE2EF"><span style="font-size:clamp(10px,3.2vw,12.5px);font-weight:600;color:#0A1929">LED / Éclairage</span><span style="font-size:10px;font-weight:700;color:#16A34A;background:#ECFDF5;padding:2px 7px;border-radius:6px;white-space:nowrap">Retour rapide</span></div>
+                <div style="border-top:1.5px solid #E8EDF5;padding-top:clamp(.3rem,1.5vw,.625rem)">
+                  <p style="font-size:9.5px;font-weight:700;color:#0A1929;text-transform:uppercase;letter-spacing:.09em;margin-bottom:clamp(.2rem,1.2vw,.5rem)">3 priorités de travaux</p>
+                  <div style="display:flex;flex-direction:column;gap:clamp(.2rem,1vw,.35rem)">
+                    <div style="display:flex;align-items:center;justify-content:space-between;padding:clamp(.2rem,1.2vw,.4rem) clamp(.4rem,2vw,.75rem);border-radius:10px;background:#F7F9FC;border:1px solid #DAE2EF"><span style="font-size:clamp(10px,3.2vw,12.5px);font-weight:600;color:#0A1929">LED / Éclairage</span><span style="font-size:10px;font-weight:700;color:#16A34A;background:#ECFDF5;padding:2px 7px;border-radius:6px;white-space:nowrap">&lt; 2 ans</span></div>
+                    <div style="display:flex;align-items:center;justify-content:space-between;padding:clamp(.2rem,1.2vw,.4rem) clamp(.4rem,2vw,.75rem);border-radius:10px;background:#F7F9FC;border:1px solid #DAE2EF"><span style="font-size:clamp(10px,3.2vw,12.5px);font-weight:600;color:#0A1929">Isolation toiture-terrasse</span><span style="font-size:10px;font-weight:700;color:#0F766E;background:#ECFEFF;padding:2px 7px;border-radius:6px;white-space:nowrap">4-7 ans</span></div>
+                    <div style="display:flex;align-items:center;justify-content:space-between;padding:clamp(.2rem,1.2vw,.4rem) clamp(.4rem,2vw,.75rem);border-radius:10px;background:#F7F9FC;border:1px solid #DAE2EF"><span style="font-size:clamp(10px,3.2vw,12.5px);font-weight:600;color:#0A1929">Pompe à chaleur</span><span style="font-size:10px;font-weight:700;color:#B45309;background:#FFF7ED;padding:2px 7px;border-radius:6px;white-space:nowrap">7-12 ans</span></div>
                   </div>
                 </div>
                 <!-- Footer note -->
-                <div style="border-top:1px solid #E8EDF5;padding-top:clamp(.5rem,2.2vw,.875rem);text-align:center">
+                <div style="border-top:1px solid #E8EDF5;padding-top:clamp(.3rem,1.5vw,.5rem);text-align:center">
                   <p style="font-size:11.5px;color:#64748B;font-weight:500">Rapport PDF + plan d'action disponible en téléchargement</p>
                 </div>
               </div>

@@ -210,7 +210,7 @@
     nav.main-nav {
       position: fixed; top: 0; left: 0; right: 0; z-index: 100;
       height: var(--nav-height-desktop);
-      background: rgba(10,25,40,0.92); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      background: #0A1928; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
       border-bottom: 1px solid rgba(255,255,255,0.07);
       display: flex; align-items: center;
     }
@@ -242,6 +242,7 @@
     /* ── HERO LAYOUT ── */
     .hero-content { max-width: 80rem; margin: 0 auto; padding: 0 1rem 0 1.5rem; position: relative; z-index: 2; }
     .hero-grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(2rem,6vw,5rem); align-items: center; }
+    .hero-grid > * { min-width: 0; }
     @media (max-width: 900px) { .hero-grid { grid-template-columns: 1fr; } .landing-hero-mockup { display: none; } }
     .hero-cascade { opacity: 0; transform: translateY(16px); }
     .hero-cascade.anim { animation: heroIn .6s ease forwards; }
@@ -322,17 +323,12 @@
   <div class="nav-inner">
     <a class="nav-logo" href="/" aria-label="DiagTertiaire — accueil">
       <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <!-- Fond bleu -->
         <rect width="40" height="40" rx="9" fill="#2B4ECC"/>
-        <!-- Coin plié blanc (haut-droite) -->
         <path d="M27 0 L40 0 L40 13 Z" fill="rgba(255,255,255,0.88)"/>
-        <!-- Barre 1 — longue (haut) -->
         <circle cx="9.5" cy="16" r="2.2" fill="rgba(10,22,46,0.65)"/>
         <rect x="13" y="14.5" width="17" height="3" rx="1.5" fill="white"/>
-        <!-- Barre 2 — moyenne -->
         <circle cx="9.5" cy="24" r="2.2" fill="rgba(10,22,46,0.65)"/>
         <rect x="13" y="22.5" width="12" height="3" rx="1.5" fill="white"/>
-        <!-- Barre 3 — courte (bas) -->
         <circle cx="9.5" cy="32" r="2.2" fill="rgba(10,22,46,0.65)"/>
         <rect x="13" y="30.5" width="7.5" height="3" rx="1.5" fill="white"/>
       </svg>
@@ -670,12 +666,6 @@
         <span style="font-family:'Plus Jakarta Sans',sans-serif;font-size:1.0625rem;"><strong style="font-weight:800;color:#E2E8F0;letter-spacing:-0.02em;">Diag</strong><span style="font-weight:400;color:rgba(226,232,240,0.75);letter-spacing:-0.01em;">Tertiaire</span></span>
       </div>
       <p style="font-size:.875rem;color:#64748B;line-height:1.6;max-width:18rem;">Comparatif énergétique pour professionnels. Indépendant de tout fournisseur.</p>
-      <div style="margin-top:1.25rem;">
-        <p style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#475569;margin-bottom:.625rem;">Projet soutenu par</p>
-        <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:9px;padding:8px 14px;display:inline-flex;align-items:center;">
-          <img src="/public/bic-montpellier.svg" alt="BIC Montpellier" style="height:28px;width:auto;filter:brightness(0) invert(1);opacity:.65;"/>
-        </div>
-      </div>
     </div>
     <div class="footer-col">
       <p>Outil</p>
@@ -694,6 +684,16 @@
       <a href="/politique-confidentialite.html">Confidentialité</a>
       <a href="/conditions-generales-utilisation.html">CGU</a>
       <a href="/cookies.html">Cookies</a>
+    </div>
+    <div class="footer-col">
+      <p>Professionnel</p>
+      <a href="/espace-professionnel.html">Espace pro</a>
+    </div>
+  </div>
+  <div style="border-top:1px solid rgba(255,255,255,0.06);margin-top:2.5rem;padding-top:2rem;display:flex;flex-direction:column;align-items:center;gap:.875rem;">
+    <p style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#475569;">Projet soutenu par</p>
+    <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:10px 20px;display:inline-flex;align-items:center;">
+      <img src="/public/bic-montpellier.svg" alt="BIC Montpellier - Business & Innovation Centre" style="height:36px;width:auto;filter:brightness(0) invert(1);opacity:.7;"/>
     </div>
   </div>
   <div class="footer-bottom">

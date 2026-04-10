@@ -48,15 +48,12 @@
     <meta name="theme-color" content="#2563EB">
 
     <!-- Polices -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://unpkg.com" crossorigin>
     <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
     <link rel="dns-prefetch" href="https://unpkg.com">
     <link rel="dns-prefetch" href="https://cdn.tailwindcss.com">
     <link rel="preload" href="https://unpkg.com/react@18/umd/react.production.min.js" as="script" crossorigin>
     <link rel="preload" href="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" as="script" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Bibliothèques externes -->
     <!-- TailwindCSS : framework CSS utilitaire (mode CDN, pas de build requis) -->
@@ -75,6 +72,72 @@
          En production à fort trafic, envisager une pré-compilation (Vite, esbuild). -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
+        /* Self-hosted fonts */
+        @font-face {
+            font-family: 'DM Serif Display';
+            font-style: normal;
+            font-weight: 400;
+            font-display: swap;
+            src: url('/public/fonts/dm-serif-display-400-normal-latin-ext.woff2') format('woff2');
+            unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+        }
+        @font-face {
+            font-family: 'DM Serif Display';
+            font-style: normal;
+            font-weight: 400;
+            font-display: swap;
+            src: url('/public/fonts/dm-serif-display-400-normal-latin.woff2') format('woff2');
+            unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+        }
+        @font-face {
+            font-family: 'DM Serif Display';
+            font-style: italic;
+            font-weight: 400;
+            font-display: swap;
+            src: url('/public/fonts/dm-serif-display-400-italic-latin-ext.woff2') format('woff2');
+            unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+        }
+        @font-face {
+            font-family: 'DM Serif Display';
+            font-style: italic;
+            font-weight: 400;
+            font-display: swap;
+            src: url('/public/fonts/dm-serif-display-400-italic-latin.woff2') format('woff2');
+            unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+        }
+        @font-face {
+            font-family: 'Plus Jakarta Sans';
+            font-style: normal;
+            font-weight: 300 800;
+            font-display: swap;
+            src: url('/public/fonts/plus-jakarta-sans-cyrillic-ext.woff2') format('woff2');
+            unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+        }
+        @font-face {
+            font-family: 'Plus Jakarta Sans';
+            font-style: normal;
+            font-weight: 300 800;
+            font-display: swap;
+            src: url('/public/fonts/plus-jakarta-sans-vietnamese.woff2') format('woff2');
+            unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+        }
+        @font-face {
+            font-family: 'Plus Jakarta Sans';
+            font-style: normal;
+            font-weight: 300 800;
+            font-display: swap;
+            src: url('/public/fonts/plus-jakarta-sans-latin-ext.woff2') format('woff2');
+            unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+        }
+        @font-face {
+            font-family: 'Plus Jakarta Sans';
+            font-style: normal;
+            font-weight: 300 800;
+            font-display: swap;
+            src: url('/public/fonts/plus-jakarta-sans-latin.woff2') format('woff2');
+            unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+        }
+
         /* Global & Reset */
         :root {
             --font-display: 'DM Serif Display', Georgia, serif;
@@ -386,8 +449,8 @@
             animation: ctaPulse 3s ease-in-out 1.5s infinite;
         }
         @keyframes ctaPulse {
-            0%, 100% { box-shadow: 0 4px 20px rgba(217, 119, 6, 0.3); }
-            50% { box-shadow: 0 6px 36px rgba(217, 119, 6, 0.55); }
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.03); opacity: 0.92; }
         }
 
         /* Primary CTA button — gradient validé, halo maximum */
@@ -1183,7 +1246,7 @@
     <div id="root"></div>
 
     <script src="/src/solar-icons.js"></script>
-    <script src="/src/engine.js"></script>
+    <script src="/src/engine.min.js"></script>
     <script type="text/babel">
         /* ╔═══════════════════════════════════════════════════════════════════════════╗
            ║                           DIAGTERTIAIRE                                   ║
@@ -3777,6 +3840,7 @@
 
             return (
                 <div className="mb-10 lg:mb-12">
+                    <p className="text-center text-sm font-medium text-slate-400 mb-4 sm:hidden">Étape {currentStep} sur {totalSteps}</p>
                     <div className="flex items-center justify-between sm:justify-center sm:gap-4 lg:gap-8 max-w-3xl mx-auto px-2">
                         {steps.map((step) => {
                             const isActive = step === currentStep;
@@ -5307,13 +5371,16 @@
 
             return (
                 <div className="max-w-2xl mx-auto">
-                    <h2 className="text-2xl font-bold text-[#102A43] mb-2">Parlez-nous de votre local</h2>
-                    <p className="text-[#475569] mb-8">Juste les infos essentielles pour commencer</p>
+                    <div className="mb-8">
+                        <h2 className="mb-2" style={{ fontFamily: 'var(--font-display)', fontWeight: 400, fontSize: 'clamp(1.625rem, 4vw, 2rem)', color: '#102A43', letterSpacing: '-0.01em' }}>Votre bâtiment</h2>
+                        <p className="text-[#475569] text-base leading-relaxed">3 informations suffisent pour démarrer votre diagnostic</p>
+                    </div>
 
                     <div className="mb-6 relative" ref={autocompleteRef}>
                         <label htmlFor="diag-address" className="block text-sm font-semibold text-neutral-700 mb-1">
                             Adresse du bâtiment <span className="text-red-500">*</span>
                         </label>
+                        <p className="text-xs text-slate-400 mb-4">Commencez par le numéro, ex : 12 rue de la Paix, Paris</p>
                         <div className="relative">
                             <input
                                 id="diag-address"
@@ -5399,15 +5466,69 @@
                         <NewDiagnosticCoverPreview formData={formData} setFormData={setFormData} />
                     )}
 
-                    <NewDiagnosticFormSelect
-                        label="Activité principale"
-                        value={formData.activity}
-                        onChange={(v) => setFormData({ ...formData, activity: v, mixedUsage1: '', mixedUsage2: '', ceilingHeight: DEFAULT_CEILING_HEIGHT[v] ? String(DEFAULT_CEILING_HEIGHT[v]) : '' })}
-                        options={NEW_DIAGNOSTIC_ACTIVITIES}
-                        required
-                        error={errors.activity}
-                        placeholder="Sélectionnez une activité"
-                    />
+                    {/* Sélecteur d'activité — cartes visuelles */}
+                    <div className="mb-8">
+                        <label className="block text-sm font-semibold text-neutral-700 mb-1">
+                            Type d'activité <span className="text-red-500">*</span>
+                        </label>
+                        <p className="text-xs text-slate-400 mb-5">Choisissez ce qui correspond le mieux à votre local</p>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                            {NEW_DIAGNOSTIC_ACTIVITIES.map(act => {
+                                const activityCardIcons = {
+                                    offices: 'solar:buildings-2-bold-duotone',
+                                    retail: 'solar:shop-bold-duotone',
+                                    hotel: 'solar:bed-bold-duotone',
+                                    restaurant: 'solar:cup-hot-bold',
+                                    commerce_alim: 'solar:fridge-bold',
+                                    health_local: 'solar:heart-angle-bold',
+                                    education: 'solar:book-bold-duotone',
+                                    light_warehouse: 'solar:box-bold-duotone',
+                                    mixed: 'solar:widget-bold'
+                                };
+                                const activityCardLabels = {
+                                    commerce_alim: 'Commerce alim.',
+                                    health_local: 'Cabinet santé',
+                                    light_warehouse: 'Entrepôt',
+                                    mixed: 'Activités mixtes'
+                                };
+                                const activityCardDescs = {
+                                    offices: 'Open space, bureau',
+                                    retail: 'Boutique, showroom',
+                                    hotel: 'Hôtel, résidence',
+                                    restaurant: 'Café, brasserie',
+                                    commerce_alim: 'Épicerie, boucherie',
+                                    health_local: 'Médecin, dentiste',
+                                    education: 'École, formation',
+                                    light_warehouse: 'Stockage, logistique',
+                                    mixed: 'Plusieurs activités'
+                                };
+                                const isSelected = formData.activity === act.id;
+                                return (
+                                    <button
+                                        key={act.id}
+                                        type="button"
+                                        onClick={() => setFormData({ ...formData, activity: act.id, mixedUsage1: '', mixedUsage2: '', ceilingHeight: DEFAULT_CEILING_HEIGHT[act.id] ? String(DEFAULT_CEILING_HEIGHT[act.id]) : '' })}
+                                        className={`p-3 sm:p-4 rounded-xl border-2 text-left transition-all duration-150 ${isSelected
+                                            ? 'border-[#1D4ED8] bg-[#EFF6FF] shadow-sm'
+                                            : 'border-[#E2E8F0] bg-white hover:border-[#1D4ED8]/50 hover:bg-slate-50'
+                                        }`}
+                                    >
+                                        <Icon
+                                            icon={activityCardIcons[act.id] || act.icon}
+                                            className={`text-2xl mb-1.5 block ${isSelected ? 'text-[#1D4ED8]' : 'text-neutral-400'}`}
+                                        />
+                                        <div className={`text-sm font-semibold leading-tight ${isSelected ? 'text-[#1D4ED8]' : 'text-neutral-800'}`}>
+                                            {activityCardLabels[act.id] || act.label}
+                                        </div>
+                                        <div className="text-xs text-neutral-400 mt-0.5 leading-tight">
+                                            {activityCardDescs[act.id]}
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                        {errors.activity && <p role="alert" className="text-xs text-red-500 mt-2">{errors.activity}</p>}
+                    </div>
 
                     <NewDiagnosticFormInput
                         label="Surface totale"
@@ -5500,12 +5621,13 @@
                         </div>
                     )}
 
-                    <div className="flex justify-end mt-8">
+                    <div className="mt-10 flex justify-center sm:justify-end">
                         <button
                             onClick={handleNext}
-                            className="px-8 py-3 bg-[#1D4ED8] text-white font-semibold rounded-lg hover:bg-[#1E40AF] transition-colors shadow-sm"
+                            className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-4 bg-[#1D4ED8] text-white font-semibold rounded-xl hover:bg-[#1E40AF] active:scale-[0.98] transition-all duration-150 shadow-md text-base"
                         >
                             Continuer
+                            <Icon icon="solar:arrow-right-bold" className="text-lg" />
                         </button>
                     </div>
                 </div>
@@ -5559,8 +5681,10 @@
 
             return (
                 <div className="max-w-2xl mx-auto">
-                    <h2 className="text-2xl font-bold text-[#102A43] mb-2">Comment est équipé votre bâtiment ?</h2>
-                    <p className="text-[#475569] mb-8">Ces informations permettent d'affiner le diagnostic</p>
+                    <div className="mb-8">
+                        <h2 className="mb-2" style={{ fontFamily: 'var(--font-display)', fontWeight: 400, fontSize: 'clamp(1.625rem, 4vw, 2rem)', color: '#102A43', letterSpacing: '-0.01em' }}>Les équipements</h2>
+                        <p className="text-[#475569] text-base leading-relaxed">Ces informations permettent d'affiner le diagnostic</p>
+                    </div>
 
                     {isMixed && (
                         <div className="mb-8 p-5 bg-white border border-[#E2E8F0] rounded-xl shadow-sm">
@@ -5586,26 +5710,26 @@
                         <label className="block text-sm font-medium text-neutral-700 mb-2">
                             Chauffage principal <span className="text-red-500">*</span>
                         </label>
-                        <p className="text-xs text-slate-400 mb-3">En cas de doute, choisissez ce qui ressemble le plus à votre installation</p>
+                        <p className="text-xs text-slate-400 mb-5">En cas de doute, choisissez ce qui ressemble le plus à votre installation</p>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                             {[
-                                { id: 'electric_convector', label: 'Radiateurs électriques', desc: 'Appareils fixes au mur, chaleur directe', icon: 'solar:bolt-circle-bold-duotone' },
-                                { id: 'electric_pac', label: 'Pompe à chaleur', desc: 'Unité extérieure + splits ou plancher chauffant', icon: 'solar:wind-bold-duotone' },
-                                { id: 'gas', label: 'Chaudière gaz', desc: 'Chaudière avec radiateurs à eau', icon: 'solar:fire-bold-duotone' },
-                                { id: 'fuel', label: 'Fioul', desc: 'Cuve de fioul + chaudière', icon: 'solar:gas-station-bold-duotone' },
-                                { id: 'network', label: 'Réseau de chaleur', desc: 'Chauffage collectif, pas de chaudière chez vous', icon: 'solar:city-bold-duotone' },
-                                { id: 'other', label: 'Autre', desc: 'Bois, poêle, autre système', icon: 'solar:flame-bold-duotone' }
+                                { id: 'electric_convector', label: 'Radiateurs électriques', desc: 'Appareils fixes au mur', icon: 'solar:bolt-bold' },
+                                { id: 'electric_pac', label: 'Pompe à chaleur', desc: 'Unité extérieure + splits', icon: 'solar:wind-bold' },
+                                { id: 'gas', label: 'Chaudière gaz', desc: 'Chaudière + radiateurs à eau', icon: 'solar:fire-bold-duotone' },
+                                { id: 'fuel', label: 'Fioul', desc: 'Cuve de fioul + chaudière', icon: 'solar:home-2-bold' },
+                                { id: 'network', label: 'Réseau de chaleur', desc: 'Chauffage collectif urbain', icon: 'solar:buildings-bold-duotone' },
+                                { id: 'other', label: 'Autre', desc: 'Bois, poêle, autre système', icon: 'solar:settings-bold' }
                             ].map(opt => (
                                 <button key={opt.id} type="button"
                                     onClick={() => setFormData({ ...formData, mainHeating: opt.id, pacAge: '' })}
-                                    className={`p-4 rounded-xl border-2 text-left transition-all ${formData.mainHeating === opt.id
-                                        ? 'border-[#1D4ED8] bg-[#EFF6FF]'
-                                        : 'border-[#E2E8F0] hover:border-[#1D4ED8]/40'
+                                    className={`p-3 sm:p-4 rounded-xl border-2 text-left transition-all duration-150 ${formData.mainHeating === opt.id
+                                        ? 'border-[#1D4ED8] bg-[#EFF6FF] shadow-sm'
+                                        : 'border-[#E2E8F0] bg-white hover:border-[#1D4ED8]/50 hover:bg-slate-50'
                                     }`}
                                 >
                                     <Icon icon={opt.icon} className={`text-2xl mb-2 block ${formData.mainHeating === opt.id ? 'text-[#1D4ED8]' : 'text-neutral-400'}`} />
-                                    <div className="text-sm font-semibold text-neutral-900">{opt.label}</div>
-                                    <div className="text-xs text-neutral-500 mt-0.5">{opt.desc}</div>
+                                    <div className={`text-sm font-semibold leading-tight ${formData.mainHeating === opt.id ? 'text-[#1D4ED8]' : 'text-neutral-800'}`}>{opt.label}</div>
+                                    <div className="text-xs text-neutral-400 mt-0.5 leading-tight">{opt.desc}</div>
                                 </button>
                             ))}
                         </div>
@@ -5641,20 +5765,31 @@
                         </div>
                     )}
 
-                    <div className="mb-6 bg-white border border-[#E2E8F0] p-4 rounded-xl flex items-center justify-between">
-                        <div>
-                            <p className="text-sm font-medium text-neutral-900">Climatisation</p>
-                            <p className="text-xs text-neutral-500">Le bâtiment est-il climatisé (totalement ou en partie) ?</p>
+                    <div className="mb-8">
+                        <label className="block text-sm font-semibold text-neutral-700 mb-1">Climatisation</label>
+                        <p className="text-xs text-slate-400 mb-5">Le bâtiment est-il climatisé (totalement ou en partie) ?</p>
+                        <div className="grid grid-cols-2 gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setFormData({ ...formData, hasCooling: true })}
+                                className={`py-3 px-4 rounded-xl border-2 text-sm font-semibold transition-all duration-150 ${formData.hasCooling
+                                    ? 'border-[#1D4ED8] bg-[#EFF6FF] text-[#1D4ED8] shadow-sm'
+                                    : 'border-[#E2E8F0] bg-white text-neutral-600 hover:border-[#1D4ED8]/50 hover:bg-slate-50'
+                                }`}
+                            >
+                                Oui
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setFormData({ ...formData, hasCooling: false })}
+                                className={`py-3 px-4 rounded-xl border-2 text-sm font-semibold transition-all duration-150 ${!formData.hasCooling
+                                    ? 'border-[#1D4ED8] bg-[#EFF6FF] text-[#1D4ED8] shadow-sm'
+                                    : 'border-[#E2E8F0] bg-white text-neutral-600 hover:border-[#1D4ED8]/50 hover:bg-slate-50'
+                                }`}
+                            >
+                                Non
+                            </button>
                         </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                            <input
-                                type="checkbox"
-                                className="sr-only peer"
-                                checked={formData.hasCooling}
-                                onChange={(e) => setFormData({ ...formData, hasCooling: e.target.checked })}
-                            />
-                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#1D4ED8] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#1D4ED8]"></div>
-                        </label>
                     </div>
 
                     {/* ECS */}
@@ -5735,9 +5870,9 @@
                     </div>
 
                     {/* Annee de construction */}
-                    <div className="mb-6">
+                    <div className="mb-8">
                         <label className="block text-sm font-medium text-[#475569] mb-1">Année de construction <span className="text-red-500">*</span></label>
-                        <p className="text-xs text-slate-400 mb-3">Date de construction du bâtiment (pas de la dernière rénovation)</p>
+                        <p className="text-xs text-slate-400 mb-5">Date de construction du bâtiment (pas de la dernière rénovation)</p>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                             {NEW_DIAGNOSTIC_BUILDING_AGES.map(age => (
                                 <button
@@ -5760,9 +5895,10 @@
                         {errors.buildingAge && <p role="alert" className="text-red-500 text-xs mt-1">{errors.buildingAge}</p>}
                     </div>
 
-                    {/* Type de toiture */}
-                    <div className="mb-6">
-                        <label className="block text-sm font-medium text-[#475569] mb-2">Type de toiture</label>
+                    {/* Type de toiture — hors deroulé, section standalone */}
+                    <div className="mb-8">
+                        <label className="block text-sm font-semibold text-neutral-700 mb-1">Type de toiture</label>
+                        <p className="text-xs text-slate-400 mb-5">Utile pour évaluer le potentiel solaire et d'isolation</p>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             {[
                                 { val: 'flat', label: 'Terrasse (plate)', icon: 'solar:home-bold-duotone' },
@@ -5771,16 +5907,16 @@
                             ].map(opt => (
                                 <button key={opt.val} type="button"
                                     onClick={() => setFormData(p => ({ ...p, roofType: opt.val, roofOrientation: opt.val !== 'pitched' ? '' : p.roofOrientation }))}
-                                    className={`min-h-[72px] px-4 py-3 rounded-xl border-2 text-center transition-all ${formData.roofType === opt.val ? 'border-[#1D4ED8] bg-[#EFF6FF]' : 'border-[#E2E8F0] hover:border-[#1D4ED8]/40'}`}
+                                    className={`min-h-[72px] px-4 py-3 rounded-xl border-2 text-center transition-all duration-150 ${formData.roofType === opt.val ? 'border-[#1D4ED8] bg-[#EFF6FF] shadow-sm' : 'border-[#E2E8F0] bg-white hover:border-[#1D4ED8]/50 hover:bg-slate-50'}`}
                                 >
-                                    <Icon icon={opt.icon} className="text-2xl mb-1 mx-auto" />
-                                    <div className="text-sm font-medium">{opt.label}</div>
+                                    <Icon icon={opt.icon} className={`text-2xl mb-1.5 mx-auto block ${formData.roofType === opt.val ? 'text-[#1D4ED8]' : 'text-neutral-400'}`} />
+                                    <div className={`text-sm font-semibold leading-tight ${formData.roofType === opt.val ? 'text-[#1D4ED8]' : 'text-neutral-700'}`}>{opt.label}</div>
                                 </button>
                             ))}
                         </div>
                         {formData.roofType === 'pitched' && (
                             <div className="mt-4">
-                                <label className="block text-sm font-medium text-[#475569] mb-2">Orientation principale de la toiture</label>
+                                <label className="block text-xs font-medium text-[#475569] mb-2">Orientation principale</label>
                                 <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                                     {[
                                         { val: 'south', label: 'Sud' },
@@ -5799,56 +5935,20 @@
                         )}
                     </div>
 
-                    {/* Bloc optionnel : Informations complementaires */}
+                    {/* Bloc optionnel : Affiner le diagnostic */}
                     <div className="mb-6">
                         <button
                             type="button"
                             onClick={() => setShowAdvanced(!showAdvanced)}
                             className="flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-[#1D4ED8] transition-colors"
                         >
-                            <iconify-icon icon={showAdvanced ? "solar:alt-arrow-up-linear" : "solar:alt-arrow-down-linear"} />
-                            Informations complementaires
+                            <Icon icon={showAdvanced ? 'solar:alt-arrow-up-linear' : 'solar:alt-arrow-down-linear'} />
+                            Affiner le diagnostic
                             <span className="text-xs text-slate-400">(optionnel)</span>
                         </button>
 
                         {showAdvanced && (
                             <div className="mt-4 p-5 bg-slate-50/50 border border-[#E2E8F0] rounded-xl space-y-4 fade-in">
-                                <div>
-                                    <label className="block text-sm font-medium text-[#475569] mb-2">Isolation de la toiture</label>
-                                    <div className="grid grid-cols-3 gap-2">
-                                        {[
-                                            { id: 'yes', label: 'Isolee' },
-                                            { id: 'no', label: 'Non isolee' },
-                                            { id: 'unknown', label: 'Je ne sais pas' }
-                                        ].map(opt => (
-                                            <button key={opt.id} type="button"
-                                                onClick={() => setFormData({ ...formData, roofInsulation: opt.id })}
-                                                className={`p-3 rounded-lg border-2 text-sm font-medium transition-all ${formData.roofInsulation === opt.id
-                                                    ? 'border-[#1D4ED8] bg-[#EFF6FF] text-[#1D4ED8]'
-                                                    : 'border-[#E2E8F0] hover:border-[#1D4ED8]/40'
-                                                    }`}
-                                            >{opt.label}</button>
-                                        ))}
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-[#475569] mb-2">Isolation des murs</label>
-                                    <div className="grid grid-cols-3 gap-2">
-                                        {[
-                                            { id: 'yes', label: 'Isoles' },
-                                            { id: 'no', label: 'Non isoles' },
-                                            { id: 'unknown', label: 'Je ne sais pas' }
-                                        ].map(opt => (
-                                            <button key={opt.id} type="button"
-                                                onClick={() => setFormData({ ...formData, wallInsulation: opt.id })}
-                                                className={`p-3 rounded-lg border-2 text-sm font-medium transition-all ${formData.wallInsulation === opt.id
-                                                    ? 'border-[#1D4ED8] bg-[#EFF6FF] text-[#1D4ED8]'
-                                                    : 'border-[#E2E8F0] hover:border-[#1D4ED8]/40'
-                                                    }`}
-                                            >{opt.label}</button>
-                                        ))}
-                                    </div>
-                                </div>
                                 <div>
                                     <label className="flex items-center gap-3 cursor-pointer">
                                         <div
@@ -5882,12 +5982,23 @@
                                         <span className="text-sm font-medium text-[#475569]">Pilotage automatique (chauffage/éclairage programmés)</span>
                                     </label>
                                 </div>
+                                <div>
+                                    <label className="flex items-center gap-3 cursor-pointer">
+                                        <div
+                                            onClick={() => setFormData(p => ({ ...p, hasExteriorLighting: !p.hasExteriorLighting }))}
+                                            className={`relative w-10 h-6 rounded-full transition-colors flex-shrink-0 ${formData.hasExteriorLighting ? 'bg-[#1D4ED8]' : 'bg-gray-300'}`}
+                                        >
+                                            <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${formData.hasExteriorLighting ? 'left-5' : 'left-1'}`}></span>
+                                        </div>
+                                        <span className="text-sm font-medium text-[#475569]">Éclairage extérieur / parking présent</span>
+                                    </label>
+                                </div>
                             </div>
                         )}
                     </div>
 
-                    {/* ── Équipements spécifiques ─────────────────────────────── */}
-                    {(['commerce_alim', 'restaurant', 'hotel', 'offices', 'light_warehouse', 'education'].includes(formData.activity) || Number(formData.surface) > 300) && (
+                    {/* Équipements spécifiques a l'activité */}
+                    {['commerce_alim', 'restaurant', 'hotel'].includes(formData.activity) && (
                         <div role="group" aria-labelledby="bloc-equipements-title" className="p-5 bg-white border border-[#E2E8F0] rounded-xl shadow-sm mb-6">
                             <div className="flex items-center gap-2 mb-4">
                                 <Icon icon="solar:widget-bold" aria-hidden="true" className="text-[#1D4ED8] text-xl" />
@@ -5991,34 +6102,22 @@
                                     </label>
                                 </div>
                             )}
-                            {(['offices', 'light_warehouse', 'education', 'hotel'].includes(formData.activity) || Number(formData.surface) > 300) && (
-                                <div>
-                                    <label className="flex items-center gap-3 cursor-pointer">
-                                        <div
-                                            onClick={() => setFormData(p => ({ ...p, hasExteriorLighting: !p.hasExteriorLighting }))}
-                                            className={`relative w-10 h-6 rounded-full transition-colors flex-shrink-0 ${formData.hasExteriorLighting ? 'bg-[#1D4ED8]' : 'bg-gray-300'}`}
-                                        >
-                                            <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${formData.hasExteriorLighting ? 'left-5' : 'left-1'}`}></span>
-                                        </div>
-                                        <span className="text-sm font-medium text-[#475569]">Éclairage extérieur / parking présent</span>
-                                    </label>
-                                </div>
-                            )}
                         </div>
                     )}
 
-                    <div className="flex justify-between mt-8">
+                    <div className="mt-10 flex flex-col-reverse sm:flex-row sm:justify-between gap-3">
                         <button
                             onClick={onBack}
-                            className="px-6 py-3 text-neutral-600 hover:text-neutral-900 font-semibold transition-colors"
+                            className="px-6 py-3 text-neutral-500 hover:text-neutral-900 font-semibold transition-colors text-sm"
                         >
                             Retour
                         </button>
                         <button
                             onClick={handleNext}
-                            className="px-8 py-3 bg-[#1D4ED8] text-white font-semibold rounded-lg hover:bg-[#1E40AF] transition-colors shadow-sm"
+                            className="flex items-center justify-center gap-2 px-8 py-4 bg-[#1D4ED8] text-white font-semibold rounded-xl hover:bg-[#1E40AF] active:scale-[0.98] transition-all duration-150 shadow-md text-base"
                         >
                             Continuer
+                            <Icon icon="solar:arrow-right-bold" className="text-lg" />
                         </button>
                     </div>
                 </div>
@@ -6136,15 +6235,17 @@
 
             return (
                 <div className="max-w-3xl mx-auto">
-                    <h2 className="text-2xl font-bold text-[#102A43] mb-2">Vos consommations d'énergie</h2>
-                    <p className="text-[#475569] mb-3">
-                        Entrez vos chiffres, même approximatifs
-                    </p>
-                    <div className="mb-8 p-3 bg-blue-50 border border-blue-100 rounded-lg flex items-start gap-2">
-                        <Icon icon="solar:info-circle-bold" className="text-[#1D4ED8] text-lg shrink-0 mt-0.5" />
-                        <p className="text-xs text-slate-600">
-                            <strong>Renseignez les kWh ou les euros, un seul suffit.</strong> Vous trouverez ces informations sur votre facture annuelle ou votre espace client fournisseur (EDF, Engie, TotalEnergies...).
-                        </p>
+                    <div className="mb-8">
+                        <h2 className="mb-2" style={{ fontFamily: 'var(--font-display)', fontWeight: 400, fontSize: 'clamp(1.625rem, 4vw, 2rem)', color: '#102A43', letterSpacing: '-0.01em' }}>Vos consommations</h2>
+                        <p className="text-[#475569] text-base leading-relaxed">Entrez vos chiffres, même approximatifs</p>
+                    </div>
+
+                    <div className="mb-8 p-4 bg-[#EFF6FF] border-2 border-[#BFDBFE] rounded-xl flex items-start gap-3">
+                        <Icon icon="solar:info-circle-bold" className="text-[#1D4ED8] text-xl shrink-0 mt-0.5" />
+                        <div>
+                            <p className="text-sm font-semibold text-[#1D4ED8] mb-0.5">kWh ou euros, un seul suffit</p>
+                            <p className="text-xs text-slate-600">Retrouvez ces chiffres sur votre facture annuelle ou votre espace client (EDF, Engie, TotalEnergies...).</p>
+                        </div>
                     </div>
 
                     {/* Erreurs bloquantes */}
@@ -6210,29 +6311,34 @@
                         />
 
                         {formData.elecUsed && (
-                            <div className="mt-6 pl-8 border-l-4 border-[#1D4ED8] space-y-4">
-                                <div className="grid md:grid-cols-2 gap-4">
-                                    <NewDiagnosticFormInput
-                                        label="Consommation annuelle"
-                                        value={formData.elecKwh}
-                                        onChange={(v) => setFormData({ ...formData, elecKwh: v })}
-                                        type="number"
-                                        placeholder={String(estimations.elecKwh)}
-                                        suffix="kWh/an"
-                                        helper={`Estimation pour votre profil : ~${estimations.elecKwh.toLocaleString('fr-FR')} kWh/an`}
-                                    />
-
-                                    <NewDiagnosticFormInput
-                                        label="Montant annuel payé"
-                                        value={formData.elecEuro}
-                                        onChange={(v) => setFormData({ ...formData, elecEuro: v })}
-                                        type="number"
-                                        placeholder={String(estimations.elecEuro)}
-                                        suffix="€/an"
-                                        helper={`Estimation pour votre profil : ~${estimations.elecEuro.toLocaleString('fr-FR')} €/an`}
-                                    />
+                            <div className="mt-6 pl-8 border-l-4 border-[#1D4ED8]">
+                                <div className="flex flex-col md:flex-row md:items-start gap-0 md:gap-2">
+                                    <div className="flex-1 min-w-0">
+                                        <NewDiagnosticFormInput
+                                            label="Consommation annuelle"
+                                            value={formData.elecKwh}
+                                            onChange={(v) => setFormData({ ...formData, elecKwh: v })}
+                                            type="number"
+                                            placeholder={String(estimations.elecKwh)}
+                                            suffix="kWh/an"
+                                            helper={`Ref. votre profil : ~${estimations.elecKwh.toLocaleString('fr-FR')} kWh/an`}
+                                        />
+                                    </div>
+                                    <div className="hidden md:flex shrink-0 justify-center" style={{ width: '48px', paddingTop: '36px' }}>
+                                        <div style={{ width: '34px', height: '34px', background: 'white', border: '2px solid #e2e8f0', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 700, color: '#94a3b8', flexShrink: 0 }}>OU</div>
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <NewDiagnosticFormInput
+                                            label="Montant annuel payé"
+                                            value={formData.elecEuro}
+                                            onChange={(v) => setFormData({ ...formData, elecEuro: v })}
+                                            type="number"
+                                            placeholder={String(estimations.elecEuro)}
+                                            suffix="€/an"
+                                            helper={`Ref. votre profil : ~${estimations.elecEuro.toLocaleString('fr-FR')} €/an`}
+                                        />
+                                    </div>
                                 </div>
-
                             </div>
                         )}
                     </div>
@@ -6247,29 +6353,34 @@
                             />
 
                             {formData.gasUsed && (
-                                <div className="mt-6 pl-8 border-l-4 border-[#F59E0B] space-y-4">
-                                    <div className="grid md:grid-cols-2 gap-4">
-                                        <NewDiagnosticFormInput
-                                            label="Consommation annuelle"
-                                            value={formData.gasKwh}
-                                            onChange={(v) => setFormData({ ...formData, gasKwh: v })}
-                                            type="number"
-                                            placeholder={String(estimations.gasKwh)}
-                                            suffix="kWh/an"
-                                            helper={`Estimation pour votre profil : ~${estimations.gasKwh.toLocaleString('fr-FR')} kWh/an`}
-                                        />
-
-                                        <NewDiagnosticFormInput
-                                            label="Montant annuel payé"
-                                            value={formData.gasEuro}
-                                            onChange={(v) => setFormData({ ...formData, gasEuro: v })}
-                                            type="number"
-                                            placeholder={String(estimations.gasEuro)}
-                                            suffix="€/an"
-                                            helper={`Estimation pour votre profil : ~${estimations.gasEuro.toLocaleString('fr-FR')} €/an`}
-                                        />
+                                <div className="mt-6 pl-8 border-l-4 border-[#F59E0B]">
+                                    <div className="flex flex-col md:flex-row md:items-start gap-0 md:gap-2">
+                                        <div className="flex-1 min-w-0">
+                                            <NewDiagnosticFormInput
+                                                label="Consommation annuelle"
+                                                value={formData.gasKwh}
+                                                onChange={(v) => setFormData({ ...formData, gasKwh: v })}
+                                                type="number"
+                                                placeholder={String(estimations.gasKwh)}
+                                                suffix="kWh/an"
+                                                helper={`Ref. votre profil : ~${estimations.gasKwh.toLocaleString('fr-FR')} kWh/an`}
+                                            />
+                                        </div>
+                                        <div className="hidden md:flex shrink-0 justify-center" style={{ width: '48px', paddingTop: '36px' }}>
+                                            <div style={{ width: '34px', height: '34px', background: 'white', border: '2px solid #e2e8f0', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 700, color: '#94a3b8', flexShrink: 0 }}>OU</div>
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <NewDiagnosticFormInput
+                                                label="Montant annuel payé"
+                                                value={formData.gasEuro}
+                                                onChange={(v) => setFormData({ ...formData, gasEuro: v })}
+                                                type="number"
+                                                placeholder={String(estimations.gasEuro)}
+                                                suffix="€/an"
+                                                helper={`Ref. votre profil : ~${estimations.gasEuro.toLocaleString('fr-FR')} €/an`}
+                                            />
+                                        </div>
                                     </div>
-
                                 </div>
                             )}
                         </div>
@@ -6300,18 +6411,19 @@
                         return null;
                     })()}
 
-                    <div className="flex justify-between mt-8">
+                    <div className="mt-10 flex flex-col-reverse sm:flex-row sm:justify-between gap-3">
                         <button
                             onClick={onBack}
-                            className="px-6 py-3 text-neutral-600 hover:text-neutral-900 font-semibold transition-colors"
+                            className="px-6 py-3 text-neutral-500 hover:text-neutral-900 font-semibold transition-colors text-sm"
                         >
                             Retour
                         </button>
                         <button
                             onClick={handleNext}
-                            className="px-8 py-3 bg-[#1D4ED8] text-white font-semibold rounded-lg hover:bg-[#1E40AF] transition-colors shadow-sm"
+                            className="flex items-center justify-center gap-2 px-8 py-4 bg-[#1D4ED8] text-white font-semibold rounded-xl hover:bg-[#1E40AF] active:scale-[0.98] transition-all duration-150 shadow-md text-base"
                         >
                             Continuer
+                            <Icon icon="solar:arrow-right-bold" className="text-lg" />
                         </button>
                     </div>
                 </div>
@@ -6347,18 +6459,27 @@
 
             return (
                 <div className="max-w-2xl mx-auto">
-                    <h2 className="text-2xl font-bold text-[#102A43] mb-2">Pour personnaliser vos recommandations</h2>
-                    <p className="text-[#475569] mb-8">Ces informations permettent de calibrer le rapport à votre situation</p>
+                    <div className="mb-8">
+                        <h2 className="mb-2" style={{ fontFamily: 'var(--font-display)', fontWeight: 400, fontSize: 'clamp(1.625rem, 4vw, 2rem)', color: '#102A43', letterSpacing: '-0.01em' }}>Votre projet</h2>
+                        <p className="text-[#475569] text-base leading-relaxed">Ces informations calibrent les recommandations à votre situation</p>
+                    </div>
 
                     {/* Travaux deja realises */}
-                    <div className="mb-6 p-5 sm:p-6 bg-white border border-[#E2E8F0] rounded-xl shadow-sm">
-                        <div className="flex items-start gap-3 mb-4">
+                    <div className="mb-8 p-5 sm:p-6 bg-white border border-[#E2E8F0] rounded-xl shadow-sm">
+                        <div className="flex items-start gap-3 mb-6">
                             <div className="w-8 h-8 rounded-lg bg-[#EFF6FF] flex items-center justify-center flex-shrink-0 mt-0.5">
                                 <Icon icon="solar:magic-stick-3-bold-duotone" className="text-base text-[#1D4ED8]" />
                             </div>
-                            <div>
-                                <h3 className="text-sm font-bold text-[#102A43] leading-tight">Travaux déjà réalisés</h3>
-                                <p className="text-xs text-slate-500 mt-1">Sélectionnez les travaux déjà effectués pour les exclure des recommandations</p>
+                            <div className="flex-1">
+                                <div className="flex items-center justify-between">
+                                    <h3 className="text-sm font-bold text-[#102A43] leading-tight">Travaux déjà réalisés</h3>
+                                    {(formData.worksDone || []).length > 0 && (
+                                        <span className="text-xs font-semibold text-[#1D4ED8] bg-[#EFF6FF] px-2 py-0.5 rounded-full">
+                                            {(formData.worksDone || []).length} sélectionné{(formData.worksDone || []).length > 1 ? 's' : ''}
+                                        </span>
+                                    )}
+                                </div>
+                                <p className="text-xs text-slate-500 mt-1">Ces travaux seront exclus des recommandations</p>
                             </div>
                         </div>
                         <div className="grid md:grid-cols-2 gap-3">
@@ -6386,8 +6507,8 @@
                     </div>
 
                     {/* Role */}
-                    <div className="mb-6 p-5 sm:p-6 bg-white border border-[#E2E8F0] rounded-xl shadow-sm">
-                        <div className="flex items-start gap-3 mb-4">
+                    <div className="mb-8 p-5 sm:p-6 bg-white border border-[#E2E8F0] rounded-xl shadow-sm">
+                        <div className="flex items-start gap-3 mb-6">
                             <div className="w-8 h-8 rounded-lg bg-[#EFF6FF] flex items-center justify-center flex-shrink-0 mt-0.5">
                                 <Icon icon="solar:users-group-rounded-bold-duotone" className="text-base text-[#1D4ED8]" />
                             </div>
@@ -6405,18 +6526,23 @@
                     </div>
 
                     {/* Objectifs prioritaires (2 max, classés) */}
-                    <div className="mb-6 p-5 sm:p-6 bg-white border border-[#E2E8F0] rounded-xl shadow-sm">
-                        <div className="flex items-start gap-3 mb-4">
+                    <div className="mb-8 p-5 sm:p-6 bg-white border border-[#E2E8F0] rounded-xl shadow-sm">
+                        <div className="flex items-start gap-3 mb-6">
                             <div className="w-8 h-8 rounded-lg bg-[#EFF6FF] flex items-center justify-center flex-shrink-0 mt-0.5">
                                 <Icon icon="solar:target-bold-duotone" className="text-base text-[#1D4ED8]" />
                             </div>
-                            <div>
-                                <h3 className="text-sm font-bold text-[#102A43] leading-tight">Vos 2 priorités</h3>
-                                <p className="text-xs text-slate-500 mt-1">
+                            <div className="flex-1">
+                                <div className="flex items-center justify-between">
+                                    <h3 className="text-sm font-bold text-[#102A43] leading-tight">Vos 2 priorités</h3>
+                                    <span className="text-xs font-semibold text-slate-400">
+                                        {formData.projectObjective && formData.projectObjective2 ? '2/2' : formData.projectObjective ? '1/2' : '0/2'}
+                                    </span>
+                                </div>
+                                <p className="text-sm text-slate-500 mt-1">
                                     {!formData.projectObjective
-                                        ? 'Cliquez sur votre priorité principale'
+                                        ? 'Choisissez votre priorité principale'
                                         : !formData.projectObjective2
-                                            ? 'Maintenant, choisissez votre seconde priorité'
+                                            ? 'Bien. Maintenant choisissez la seconde'
                                             : 'Cliquez sur un choix pour le retirer'}
                                 </p>
                             </div>
@@ -6469,8 +6595,8 @@
                     </div>
 
                     {/* Calendrier et moyens */}
-                    <div className="mb-6 p-5 sm:p-6 bg-white border border-[#E2E8F0] rounded-xl shadow-sm">
-                        <div className="flex items-start gap-3 mb-4">
+                    <div className="mb-8 p-5 sm:p-6 bg-white border border-[#E2E8F0] rounded-xl shadow-sm">
+                        <div className="flex items-start gap-3 mb-6">
                             <div className="w-8 h-8 rounded-lg bg-[#EFF6FF] flex items-center justify-center flex-shrink-0 mt-0.5">
                                 <Icon icon="solar:calendar-bold-duotone" className="text-base text-[#1D4ED8]" />
                             </div>
@@ -6481,8 +6607,8 @@
                         </div>
 
                         <div className="mb-5">
-                            <label className="block text-xs font-semibold text-slate-600 mb-1.5">Horizon de décision</label>
-                            <p className="text-xs text-slate-500 mb-2.5">Pour prioriser les actions selon votre calendrier</p>
+                            <label className="block text-sm font-semibold text-slate-700 mb-1.5">Horizon de décision</label>
+                            <p className="text-xs text-slate-400 mb-5">Pour prioriser les actions selon votre calendrier</p>
                             <div className="grid grid-cols-2 gap-2">
                                 {NEW_DIAGNOSTIC_DECISION_HORIZONS.map(h => {
                                     const selected = formData.decisionHorizon === h.id;
@@ -6504,22 +6630,34 @@
                         </div>
 
                         <div className="mb-5 border-t border-slate-100 pt-5">
-                            <label className="block text-xs font-semibold text-slate-600 mb-1.5">Budget envisagé</label>
-                            <p className="text-xs text-slate-500 mb-2.5">Pour calibrer les recommandations selon vos moyens</p>
-                            <div className="flex flex-wrap gap-2">
-                                {NEW_DIAGNOSTIC_BUDGET_RANGES.map(b => {
+                            <label className="block text-sm font-semibold text-slate-700 mb-1.5">Budget envisagé</label>
+                            <p className="text-xs text-slate-400 mb-5">Pour calibrer les recommandations selon vos moyens</p>
+                            <div className="grid grid-cols-2 gap-2">
+                                {[
+                                    { id: 'under5k', label: 'Moins de 5 000 EUR', icon: 'solar:wallet-bold', hint: 'Petites actions rapides' },
+                                    { id: '5to20k', label: '5 000 - 20 000 EUR', icon: 'solar:tag-price-bold', hint: 'Travaux ponctuels' },
+                                    { id: '20to80k', label: '20 000 - 80 000 EUR', icon: 'solar:chart-bold', hint: 'Rénovation partielle' },
+                                    { id: 'over80k', label: 'Plus de 80 000 EUR', icon: 'solar:rocket-bold', hint: 'Grand projet' },
+                                    { id: 'unknown', label: 'Je ne sais pas encore', icon: 'solar:question-circle-bold', hint: '' }
+                                ].map(b => {
                                     const selected = formData.budgetRange === b.id;
                                     return (
                                         <button
                                             key={b.id}
                                             type="button"
                                             onClick={() => setFormData({ ...formData, budgetRange: b.id })}
-                                            className={`px-3 py-2.5 rounded-lg text-sm font-medium border transition-all ${selected
-                                                ? 'border-[#1D4ED8] bg-[#EFF6FF] text-[#1D4ED8] ring-1 ring-[#1D4ED8]'
-                                                : 'border-[#E2E8F0] text-slate-600 hover:border-slate-300 hover:bg-slate-50'
-                                                }`}
+                                            className={`p-3 rounded-xl border-2 text-left transition-all duration-150 ${b.id === 'unknown' ? 'col-span-2' : ''} ${selected
+                                                ? 'border-[#1D4ED8] bg-[#EFF6FF] shadow-sm'
+                                                : 'border-[#E2E8F0] bg-white hover:border-[#1D4ED8]/50 hover:bg-slate-50'
+                                            }`}
                                         >
-                                            {b.label}
+                                            <div className="flex items-center gap-2.5">
+                                                <Icon icon={b.icon} className={`text-xl shrink-0 ${selected ? 'text-[#1D4ED8]' : 'text-neutral-400'}`} />
+                                                <div>
+                                                    <div className={`text-sm font-semibold leading-tight ${selected ? 'text-[#1D4ED8]' : 'text-neutral-800'}`}>{b.label}</div>
+                                                    {b.hint && <div className="text-xs text-neutral-400 mt-0.5">{b.hint}</div>}
+                                                </div>
+                                            </div>
                                         </button>
                                     );
                                 })}
@@ -6527,8 +6665,8 @@
                         </div>
 
                         <div className="border-t border-slate-100 pt-5">
-                            <label className="block text-xs font-semibold text-slate-600 mb-1.5">Etes-vous le décideur ?</label>
-                            <p className="text-xs text-slate-500 mb-2.5">Pour adapter le niveau de détail du rapport</p>
+                            <label className="block text-sm font-semibold text-slate-700 mb-1.5">Etes-vous le décideur ?</label>
+                            <p className="text-xs text-slate-400 mb-5">Pour adapter le niveau de détail du rapport</p>
                             <div className="grid grid-cols-2 gap-2">
                                 {[{ id: 'yes', label: 'Oui' }, { id: 'no', label: 'Non / A valider' }].map(d => {
                                     const selected = formData.isDecisionMaker === d.id;
@@ -6550,15 +6688,19 @@
                         </div>
                     </div>
 
-                    <div className="flex justify-between mt-8">
-                        <button onClick={onBack} className="px-6 py-3 text-neutral-600 hover:text-neutral-900 font-semibold transition-colors">
+                    <div className="mt-10 flex flex-col-reverse sm:flex-row sm:justify-between gap-3">
+                        <button
+                            onClick={onBack}
+                            className="px-6 py-3 text-neutral-500 hover:text-neutral-900 font-semibold transition-colors text-sm"
+                        >
                             Retour
                         </button>
                         <button
                             onClick={handleNext}
-                            className="px-8 py-3 bg-[#1D4ED8] text-white font-semibold rounded-lg hover:bg-[#1E40AF] transition-colors shadow-sm"
+                            className="flex items-center justify-center gap-2 px-8 py-4 bg-[#1D4ED8] text-white font-semibold rounded-xl hover:bg-[#1E40AF] active:scale-[0.98] transition-all duration-150 shadow-md text-base"
                         >
                             Continuer
+                            <Icon icon="solar:arrow-right-bold" className="text-lg" />
                         </button>
                     </div>
                 </div>
@@ -6630,12 +6772,25 @@
 
             return (
                 <div className="max-w-2xl mx-auto">
-                    <h2 className="text-2xl font-bold text-[#102A43] mb-2">Plus qu'une étape</h2>
-                    <p className="text-[#475569] mb-4">Vos coordonnées pour recevoir le rapport</p>
-                    <div className="mb-8 flex flex-wrap gap-4 text-xs text-slate-500">
-                        <span className="flex items-center gap-1"><Icon icon="solar:lock-bold" className="text-green-500" /> Données protégées</span>
-                        <span className="flex items-center gap-1"><Icon icon="solar:check-circle-bold" className="text-green-500" /> 100 % gratuit</span>
-                        <span className="flex items-center gap-1"><Icon icon="solar:shield-check-bold" className="text-green-500" /> Aucun engagement</span>
+                    <div className="mb-6">
+                        <h2 className="mb-2" style={{ fontFamily: 'var(--font-display)', fontWeight: 400, fontSize: 'clamp(1.625rem, 4vw, 2rem)', color: '#102A43', letterSpacing: '-0.01em' }}>Presque terminé</h2>
+                        <p className="text-[#475569] text-base leading-relaxed">Vos coordonnées pour recevoir le rapport</p>
+                    </div>
+
+                    {/* Badges de reassurance */}
+                    <div className="mb-8 grid grid-cols-3 gap-2 sm:gap-3">
+                        <div className="flex flex-col items-center text-center p-3 bg-green-50 rounded-xl border border-green-100">
+                            <Icon icon="solar:lock-bold" className="text-green-600 text-xl mb-1.5" />
+                            <span className="text-xs font-semibold text-green-800 leading-tight">Données protégées</span>
+                        </div>
+                        <div className="flex flex-col items-center text-center p-3 bg-green-50 rounded-xl border border-green-100">
+                            <Icon icon="solar:check-circle-bold" className="text-green-600 text-xl mb-1.5" />
+                            <span className="text-xs font-semibold text-green-800 leading-tight">100 % gratuit</span>
+                        </div>
+                        <div className="flex flex-col items-center text-center p-3 bg-green-50 rounded-xl border border-green-100">
+                            <Icon icon="solar:shield-check-bold" className="text-green-600 text-xl mb-1.5" />
+                            <span className="text-xs font-semibold text-green-800 leading-tight">Sans engagement</span>
+                        </div>
                     </div>
 
                     {/* Coordonnees */}
@@ -6689,7 +6844,7 @@
                                 onChange={(v) => setFormData({ ...formData, phone: v })}
                                 type="tel"
                                 placeholder="06 12 34 56 78"
-                                helper="Optionnel - utile si vous souhaitez être recontacté"
+                                helper="Jamais de spam - utile si vous souhaitez être rappelé"
                                 autoComplete="tel"
                             />
                             <NewDiagnosticCompanyAutocomplete
@@ -6701,59 +6856,88 @@
                                     siret: company.siret,
                                     company: company.nom
                                 }))}
-                                helper="Optionnel - tapez pour rechercher votre entreprise"
+                                helper="Tapez 3 lettres pour rechercher votre entreprise"
                             />
                         </div>
                     </div>
 
-                    {/* RGPD */}
-                    <div className="mb-8 p-6 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl">
-                        <div className="space-y-4">
+                    {/* Apercu rapport */}
+                    <div className="mb-6 p-4 bg-[#F0FDF4] border border-[#BBF7D0] rounded-xl">
+                        <p className="text-sm font-semibold text-green-800 mb-3">Votre rapport gratuit contiendra :</p>
+                        <ul className="space-y-2">
+                            <li className="flex items-center gap-2 text-sm text-green-700">
+                                <Icon icon="solar:check-circle-bold" className="text-green-500 shrink-0" />
+                                Score énergétique A-E comparé à votre secteur
+                            </li>
+                            <li className="flex items-center gap-2 text-sm text-green-700">
+                                <Icon icon="solar:check-circle-bold" className="text-green-500 shrink-0" />
+                                Top 3 des actions prioritaires avec gains estimés
+                            </li>
+                            <li className="flex items-center gap-2 text-sm text-green-700">
+                                <Icon icon="solar:check-circle-bold" className="text-green-500 shrink-0" />
+                                Aides financières disponibles pour votre situation
+                            </li>
+                        </ul>
+                    </div>
+
+                    {/* RGPD + opt-in contact */}
+                    <div className="mb-6 p-4 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl space-y-4">
+                        <label className="flex items-start gap-3 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={formData.opt_in_politique}
+                                onChange={(e) => setFormData({ ...formData, opt_in_politique: e.target.checked })}
+                                className="mt-1 w-5 h-5 text-[#1D4ED8] rounded shrink-0"
+                            />
+                            <div>
+                                <span className="text-sm text-neutral-700">
+                                    J'accepte la <a href="/politique-confidentialite.html" className="text-[#1D4ED8] underline" target="_blank">politique de confidentialité</a> — vos données ne sont jamais revendues <span className="text-red-500">*</span>
+                                </span>
+                                {errors.opt_in_politique && (
+                                    <p className="text-xs text-red-500 mt-1">{errors.opt_in_politique}</p>
+                                )}
+                            </div>
+                        </label>
+                        <div className="border-t border-[#E2E8F0] pt-4">
                             <label className="flex items-start gap-3 cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    checked={formData.opt_in_politique}
-                                    onChange={(e) => setFormData({ ...formData, opt_in_politique: e.target.checked })}
-                                    className="mt-1 w-5 h-5 text-[#1D4ED8] rounded"
-                                />
-                                <div>
-                                    <span className="text-sm text-neutral-700">
-                                        J'accepte la <a href="/politique-confidentialite.html" className="text-[#1D4ED8] underline" target="_blank">politique de confidentialité</a> (vos données sont protégées et jamais revendues) <span className="text-red-500">*</span>
-                                    </span>
-                                    {errors.opt_in_politique && (
-                                        <p className="text-xs text-red-500 mt-1">{errors.opt_in_politique}</p>
-                                    )}
-                                </div>
-                            </label>
-                            <label className="flex items-start gap-3 cursor-pointer p-4 bg-green-50 rounded-lg border border-green-200">
                                 <input
                                     type="checkbox"
                                     checked={formData.contactOptIn}
                                     onChange={(e) => setFormData({ ...formData, contactOptIn: e.target.checked })}
-                                    className="mt-1 w-5 h-5 text-green-600 rounded"
+                                    className="mt-1 w-5 h-5 text-green-600 rounded shrink-0"
                                 />
                                 <div>
-                                    <span className="text-sm font-semibold text-green-800">Je souhaite être contacté par un expert en énergie si mon rapport le justifie</span>
+                                    <span className="text-sm font-semibold text-green-800">Je souhaite être contacté par un expert si mon rapport le justifie</span>
                                     <p className="text-xs text-green-700 mt-1">Gratuit et sans engagement. Nos experts sont sélectionnés pour leur sérieux.</p>
                                 </div>
                             </label>
                         </div>
                     </div>
 
-                    <div className="flex justify-between">
-                        <button onClick={onBack} className="px-6 py-3 text-neutral-600 hover:text-[#102A43] font-semibold transition-colors">
+                    {/* Navigation */}
+                    <div className="flex flex-col-reverse sm:flex-row sm:justify-between gap-3">
+                        <button
+                            onClick={onBack}
+                            className="px-6 py-3 text-neutral-500 hover:text-neutral-900 font-semibold transition-colors text-sm"
+                        >
                             Retour
                         </button>
-                        <button
-                            onClick={handleNext}
-                            disabled={!formData.opt_in_politique}
-                            className={`px-8 py-3 font-semibold rounded-lg transition-colors shadow-sm ${formData.opt_in_politique
-                                ? 'bg-[#2563EB] text-white hover:bg-[#1E40AF]'
-                                : 'bg-neutral-200 text-neutral-400 cursor-not-allowed'
+                        <div className="flex flex-col items-stretch sm:items-end gap-2">
+                            <button
+                                onClick={handleNext}
+                                disabled={!formData.opt_in_politique}
+                                className={`flex items-center justify-center gap-2 px-8 py-4 font-semibold rounded-xl transition-all duration-150 text-base ${formData.opt_in_politique
+                                    ? 'bg-[#1D4ED8] text-white hover:bg-[#1E40AF] active:scale-[0.98] shadow-md'
+                                    : 'bg-neutral-200 text-neutral-400 cursor-not-allowed'
                                 }`}
-                        >
-                            Generer mon rapport gratuit
-                        </button>
+                            >
+                                Générer mon rapport gratuit
+                                {formData.opt_in_politique && <Icon icon="solar:arrow-right-bold" className="text-lg" />}
+                            </button>
+                            {!formData.opt_in_politique && (
+                                <p className="text-xs text-slate-400 text-center sm:text-right">Cochez la case ci-dessus pour débloquer</p>
+                            )}
+                        </div>
                     </div>
                 </div>
             );
@@ -9389,7 +9573,7 @@
                             <NewDiagnosticStep1Building
                                 formData={formData}
                                 setFormData={setFormData}
-                                onNext={() => setCurrentStep(2)}
+                                onNext={() => { setCurrentStep(2); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                             />
                         )}
 
@@ -9397,8 +9581,8 @@
                             <NewDiagnosticStep2Equipment
                                 formData={formData}
                                 setFormData={setFormData}
-                                onNext={() => setCurrentStep(3)}
-                                onBack={() => setCurrentStep(1)}
+                                onNext={() => { setCurrentStep(3); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                                onBack={() => { setCurrentStep(1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                             />
                         )}
 
@@ -9406,8 +9590,8 @@
                             <NewDiagnosticStep3Energy
                                 formData={formData}
                                 setFormData={setFormData}
-                                onNext={() => setCurrentStep(4)}
-                                onBack={() => setCurrentStep(2)}
+                                onNext={() => { setCurrentStep(4); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                                onBack={() => { setCurrentStep(2); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                             />
                         )}
 
@@ -9415,8 +9599,8 @@
                             <NewDiagnosticStep4Project
                                 formData={formData}
                                 setFormData={setFormData}
-                                onNext={() => setCurrentStep(5)}
-                                onBack={() => setCurrentStep(3)}
+                                onNext={() => { setCurrentStep(5); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                                onBack={() => { setCurrentStep(3); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                             />
                         )}
 
@@ -9425,7 +9609,7 @@
                                 formData={formData}
                                 setFormData={setFormData}
                                 onNext={handleComplete}
-                                onBack={() => setCurrentStep(4)}
+                                onBack={() => { setCurrentStep(4); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                             />
                         )}
                     </div>

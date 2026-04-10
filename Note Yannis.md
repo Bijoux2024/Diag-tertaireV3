@@ -1,81 +1,50 @@
-# Commandes Essentielles pour Développeur
-
-Voici une liste des principales commandes à copier-coller dans ton terminal pour gérer ton projet, ouvrir ton code, et le publier sur GitHub.
-
-## 📂 1. Ouvrir le projet et lancer en local
-
-### Ouvrir le code avec Visual Studio Code
-Si tu te trouves déjà dans le dossier de ton projet, tape cette commande pour ouvrir le projet directement dans VS Code :
-```bash
-code .
-```
-
-### Lancer le serveur local (si applicable)
-Si ton projet utilise NPM (présence d'un fichier `package.json`) :
-```bash
-# Pour installer les dépendances (à faire la première fois)
-npm install
-
-# Pour lancer le serveur de développement
-npm run dev
-# ou
-npm start
-```
+# Commandes — DiagTertiaire
 
 ---
 
-## 🚀 2. Publier / Sauvegarder le code sur GitHub (Git)
+## Tester en local (avant de publier)
 
-C'est la séquence classique à utiliser à chaque fois que tu veux sauvegarder et envoyer ton travail sur la plateforme GitHub.
+```bash
+npx serve . --listen 3000
+```
 
-**1. Voir les fichiers modifiés (vérification) :**
-**2. Ajouter TOUTES les modifications :**
-**3. Créer une sauvegarde (commit) avec un message explicatif :**
-**4. Envoyer (Push) le code pour le publier sur GitHub :**
+Ouvre ensuite http://localhost:3000 dans le navigateur.
+Pour arrêter : **Ctrl+C** dans le terminal.
+
+---
+
+## Publier sur diag-tertiaire.fr
+
+Le site est connecté à GitHub. Un simple `git push` suffit —
+Vercel détecte le push et redéploie automatiquement en ~1-2 min.
+
+```bash
+# 1. Voir ce qui a changé
 git status
+
+# 2. Ajouter les fichiers modifiés
+git add nom-du-fichier.html
+# ou tout ajouter :
 git add .
-git commit -m "update"
-git push
 
-Vercel :
-npm run deploy:preview 
-: (deploy de verification)
-npm run deploy
-:prod : (deploy en production)
-npx vercel --prod 
-: (alternative directe)
+# 3. Enregistrer avec un message
+git commit -m "description de la modification"
+
+# 4. Publier → le site se met à jour sur diag-tertiaire.fr
+git push origin main
+```
+
 ---
 
-## 🔄 3. Récupérer les dernières mises à jour (Pull)
-
-Si quelqu'un d'autre (ou une IA) a modifié le code sur GitHub et que tu dois le récupérer en local avant de travailler :
+## Autres commandes utiles
 
 ```bash
+# Récupérer les dernières modifs depuis GitHub (si quelqu'un d'autre a modifié)
 git pull
-```
 
----
+# Voir l'historique des commits
+git log --oneline
 
-## 🛠️ 4. Autres commandes très utiles
-
-### Gestion des branches (pour travailler sans casser le code principal)
-Créer une nouvelle branche et se placer dessus :
-```bash
-git checkout -b nom_de_la_nouvelle_branche
-```
-
-Revenir sur la branche principale (main) :
-```bash
-git checkout main
-```
-
-### Historique et Annulation
-Voir l'historique des sauvegardes (commits) :
-```bash
-git log
-```
-
-Annuler toutes les modifications locales non sauvegardées (⚠️ **Attention**, cela supprime tes changements récents non commités) :
-```bash
+# Annuler toutes les modifications non enregistrées (⚠️ irréversible)
 git restore .
 ```

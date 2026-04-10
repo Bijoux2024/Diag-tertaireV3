@@ -47,13 +47,25 @@
     <link rel="manifest" href="/site.webmanifest">
     <meta name="theme-color" content="#2563EB">
 
-    <!-- Polices -->
+    <!-- Polices self-hosted -->
     <link rel="preconnect" href="https://unpkg.com" crossorigin>
     <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
     <link rel="dns-prefetch" href="https://unpkg.com">
     <link rel="dns-prefetch" href="https://cdn.tailwindcss.com">
     <link rel="preload" href="https://unpkg.com/react@18/umd/react.production.min.js" as="script" crossorigin>
     <link rel="preload" href="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" as="script" crossorigin>
+    <link rel="preload" href="/fonts/plus-jakarta-sans-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/fonts/dm-serif-display-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+    <style>
+      @font-face { font-family: 'DM Serif Display'; src: url('/fonts/dm-serif-display-400-normal.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }
+      @font-face { font-family: 'DM Serif Display'; src: url('/fonts/dm-serif-display-400-italic.woff2') format('woff2'); font-weight: 400; font-style: italic; font-display: swap; }
+      @font-face { font-family: 'Plus Jakarta Sans'; src: url('/fonts/plus-jakarta-sans-300-normal.woff2') format('woff2'); font-weight: 300; font-style: normal; font-display: swap; }
+      @font-face { font-family: 'Plus Jakarta Sans'; src: url('/fonts/plus-jakarta-sans-400-normal.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }
+      @font-face { font-family: 'Plus Jakarta Sans'; src: url('/fonts/plus-jakarta-sans-500-normal.woff2') format('woff2'); font-weight: 500; font-style: normal; font-display: swap; }
+      @font-face { font-family: 'Plus Jakarta Sans'; src: url('/fonts/plus-jakarta-sans-600-normal.woff2') format('woff2'); font-weight: 600; font-style: normal; font-display: swap; }
+      @font-face { font-family: 'Plus Jakarta Sans'; src: url('/fonts/plus-jakarta-sans-700-normal.woff2') format('woff2'); font-weight: 700; font-style: normal; font-display: swap; }
+      @font-face { font-family: 'Plus Jakarta Sans'; src: url('/fonts/plus-jakarta-sans-800-normal.woff2') format('woff2'); font-weight: 800; font-style: normal; font-display: swap; }
+    </style>
 
     <!-- Bibliothèques externes -->
     <!-- TailwindCSS : framework CSS utilitaire (mode CDN, pas de build requis) -->
@@ -72,64 +84,6 @@
          En production à fort trafic, envisager une pré-compilation (Vite, esbuild). -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
-        /* Self-hosted fonts */
-        @font-face {
-            font-family: 'DM Serif Display';
-            src: url('/public/fonts/dm-serif-display-400.woff2') format('woff2');
-            font-weight: 400;
-            font-style: normal;
-            font-display: swap;
-        }
-        @font-face {
-            font-family: 'DM Serif Display';
-            src: url('/public/fonts/dm-serif-display-400-italic.woff2') format('woff2');
-            font-weight: 400;
-            font-style: italic;
-            font-display: swap;
-        }
-        @font-face {
-            font-family: 'Plus Jakarta Sans';
-            src: url('/public/fonts/plus-jakarta-sans-300.woff2') format('woff2');
-            font-weight: 300;
-            font-style: normal;
-            font-display: swap;
-        }
-        @font-face {
-            font-family: 'Plus Jakarta Sans';
-            src: url('/public/fonts/plus-jakarta-sans-400.woff2') format('woff2');
-            font-weight: 400;
-            font-style: normal;
-            font-display: swap;
-        }
-        @font-face {
-            font-family: 'Plus Jakarta Sans';
-            src: url('/public/fonts/plus-jakarta-sans-500.woff2') format('woff2');
-            font-weight: 500;
-            font-style: normal;
-            font-display: swap;
-        }
-        @font-face {
-            font-family: 'Plus Jakarta Sans';
-            src: url('/public/fonts/plus-jakarta-sans-600.woff2') format('woff2');
-            font-weight: 600;
-            font-style: normal;
-            font-display: swap;
-        }
-        @font-face {
-            font-family: 'Plus Jakarta Sans';
-            src: url('/public/fonts/plus-jakarta-sans-700.woff2') format('woff2');
-            font-weight: 700;
-            font-style: normal;
-            font-display: swap;
-        }
-        @font-face {
-            font-family: 'Plus Jakarta Sans';
-            src: url('/public/fonts/plus-jakarta-sans-800.woff2') format('woff2');
-            font-weight: 800;
-            font-style: normal;
-            font-display: swap;
-        }
-
         /* Global & Reset */
         :root {
             --font-display: 'DM Serif Display', Georgia, serif;

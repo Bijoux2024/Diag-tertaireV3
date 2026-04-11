@@ -48,3 +48,11 @@ git log --oneline
 # Annuler toutes les modifications non enregistrées (⚠️ irréversible)
 git restore .
 ```
+
+Pour publier :
+
+
+git status
+git add fichier1 fichier2   # ou git add .
+git commit -m "description"
+git push origin main

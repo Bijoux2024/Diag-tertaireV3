@@ -238,11 +238,12 @@
     .nav-links a.nav-cta-btn:hover, .nav-cta-btn:hover { background: linear-gradient(135deg, #1E40AF 0%, #1E3A8A 100%) !important; color: #fff !important; transform: translateY(-2px); box-shadow: 0 14px 32px rgba(29,78,216,0.28), 0 6px 14px rgba(29,78,216,0.14); }
     .nav-links a.nav-cta-btn:active, .nav-cta-btn:active { transform: translateY(0); box-shadow: 0 4px 12px rgba(29,78,216,0.32); }
     .hamburger { display: none; background: #fff; border: 1px solid #E2E8F0; border-radius: 10px; cursor: pointer; padding: .5rem; color: #102A43; box-shadow: 0 1px 4px rgba(15,23,42,0.06); }
-    .mobile-menu { display: none; position: fixed; inset: var(--nav-height-desktop) 0 0 0; background: #fff; z-index: 99; padding: 1rem 1.5rem; flex-direction: column; gap: 0; overflow-y: auto; border-top: 1px solid #E2E8F0; }
+    .mobile-menu { display: none; position: absolute; top: 100%; left: 0; right: 0; height: auto; background: #fff; z-index: 99; padding: 1.5rem; flex-direction: column; gap: 0; border-top: 1px solid #E2E8F0; box-shadow: 0 8px 24px rgba(15,23,42,0.12); border-radius: 0 0 16px 16px; }
     .mobile-menu.open { display: flex; }
-    .mobile-menu a { color: #475569; font-size: 1rem; font-weight: 600; padding: .875rem 0; border-bottom: 1px solid #F1F5F9; display: block; text-decoration: none; }
+    .mobile-menu a { color: #334155; font-size: 1.0625rem; font-weight: 600; padding: 1rem 0; border-bottom: 1px solid #F1F5F9; display: flex; align-items: center; text-decoration: none; transition: color .2s; }
     .mobile-menu a:hover { color: #1D4ED8; }
-    .mobile-cta-link { background: linear-gradient(135deg,#1D4ED8,#1E40AF); border-radius: 12px; padding: 1rem 1.5rem !important; text-align: center; font-weight: 700 !important; color: #fff !important; margin-top: 1rem; border-bottom: none !important; }
+    .mobile-menu a:last-of-type { border-bottom: none; }
+    .mobile-cta-link { background: linear-gradient(135deg,#1D4ED8,#1E40AF) !important; border-radius: 12px; padding: 1rem 1.5rem !important; text-align: center; justify-content: center; font-weight: 700 !important; color: #fff !important; margin-top: 1.25rem; border-bottom: none !important; box-shadow: 0 6px 20px rgba(29,78,216,0.25); }
     @media (max-width: 768px) {
       .nav-inner { grid-template-columns: 1fr auto; }
       .hamburger { display: flex; align-items: center; justify-content: center; }
@@ -315,6 +316,8 @@
     .footer-col a:hover { color: #E2E8F0; }
     .footer-bottom { border-top: 1px solid rgba(255,255,255,0.06); margin-top: 2.5rem; padding-top: 1.5rem; text-align: center; color: #64748B; }
     .footer-bottom p + p { margin-top: .75rem; font-size: 11px; color: rgba(148,163,184,0.6); }
+    .cta-nowrap { white-space: normal; }
+    @media (min-width: 640px) { .cta-nowrap { white-space: nowrap; } }
 
     /* Layout helpers */
     .max-w-7xl { max-width: 80rem; margin: 0 auto; }
@@ -356,20 +359,23 @@
       </a>
     </div>
     <button class="hamburger" id="hamburger" aria-label="Menu" aria-expanded="false" aria-controls="mobile-menu">
-      <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <svg id="hamburger-icon" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
         <line x1="3" y1="7" x2="21" y2="7"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="17" x2="21" y2="17"/>
+      </svg>
+      <svg id="close-icon" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="display:none">
+        <line x1="4" y1="4" x2="20" y2="20"/><line x1="20" y1="4" x2="4" y2="20"/>
       </svg>
     </button>
   </div>
-</nav>
 
-<!-- MOBILE MENU -->
-<div class="mobile-menu" id="mobile-menu" role="dialog" aria-label="Menu mobile">
-  <a href="#comment-ca-marche" onclick="closeMobileMenu()">Comment ça marche</a>
-  <a href="/exemple-rapport.html">Exemple de rapport</a>
-  <a href="/blog/">Blog</a>
-  <a href="/diagnostic" class="mobile-cta-link">Obtenir mon comparatif gratuit</a>
-</div>
+  <!-- MOBILE MENU (inside nav for sticky sync) -->
+  <div class="mobile-menu" id="mobile-menu" role="dialog" aria-label="Menu mobile">
+    <a href="#comment-ca-marche" onclick="closeMobileMenu()">Comment ça marche</a>
+    <a href="/exemple-rapport.html">Exemple de rapport</a>
+    <a href="/blog/">Blog</a>
+    <a href="/diagnostic" class="mobile-cta-link">Obtenir mon comparatif gratuit</a>
+  </div>
+</nav>
 
 <main id="main-content">
 
@@ -634,8 +640,8 @@
   <section class="grain-overlay" style="padding:clamp(4rem,10vw,7rem) 0;background:linear-gradient(165deg,#0A1628 0%,#0E1F3D 40%,#1D4ED8 100%);text-align:center;position:relative;overflow:hidden">
     <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:600px;height:600px;background:radial-gradient(circle,rgba(217,119,6,0.12) 0%,transparent 60%);pointer-events:none"></div>
     <div class="sr" style="display:inline-flex;flex-direction:column;align-items:center;padding:0 1.5rem;position:relative;z-index:2;max-width:100%">
-      <h2 style="font-family:var(--font-display);font-size:clamp(1.75rem,5vw,2.75rem);font-weight:400;color:white;margin-bottom:1rem;line-height:1.15;white-space:nowrap">Prêt à savoir où vous en êtes ?</h2>
-      <p style="color:rgba(255,255,255,0.55);margin-bottom:2.5rem;font-size:1.0625rem;line-height:1.7;white-space:nowrap">En 3 minutes, comparez votre consommation et recevez votre rapport gratuit.</p>
+      <h2 class="cta-nowrap" style="font-family:var(--font-display);font-size:clamp(1.75rem,5vw,2.75rem);font-weight:400;color:white;margin-bottom:1rem;line-height:1.15">Prêt à savoir où vous en êtes ?</h2>
+      <p class="cta-nowrap" style="color:rgba(255,255,255,0.55);margin-bottom:2.5rem;font-size:1.0625rem;line-height:1.7">En 3 minutes, comparez votre consommation et recevez votre rapport gratuit.</p>
       <a href="/diagnostic" class="btn-primary" style="background:linear-gradient(135deg,#D97706 0%,#B45309 100%);box-shadow:0 10px 30px rgba(217,119,6,0.3)">
         Obtenir mon comparatif gratuit
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
@@ -739,15 +745,21 @@
   // Hamburger
   const hamburger = document.getElementById('hamburger');
   const mobileMenu = document.getElementById('mobile-menu');
+  const hamburgerIcon = document.getElementById('hamburger-icon');
+  const closeIcon = document.getElementById('close-icon');
   hamburger.addEventListener('click', () => {
     const isOpen = mobileMenu.classList.toggle('open');
     hamburger.setAttribute('aria-expanded', String(isOpen));
     document.body.style.overflow = isOpen ? 'hidden' : '';
+    hamburgerIcon.style.display = isOpen ? 'none' : '';
+    closeIcon.style.display = isOpen ? '' : 'none';
   });
   function closeMobileMenu() {
     mobileMenu.classList.remove('open');
     hamburger.setAttribute('aria-expanded', 'false');
     document.body.style.overflow = '';
+    hamburgerIcon.style.display = '';
+    closeIcon.style.display = 'none';
   }
 
   // Scroll reveal

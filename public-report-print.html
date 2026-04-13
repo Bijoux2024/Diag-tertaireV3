@@ -725,8 +725,8 @@
       const baseLineY = margin.top + plotHeight;
       const seriesMeta = [
         { key: 'sans_travaux', label: 'Situation actuelle', stroke: '#EA580C', dash: '6 4', fill: 'url(#printProjSans)' },
-        ...(hasLight ? [{ key: 'avec_actions_rapides', label: 'Actions sans travaux', stroke: '#F59E0B', dash: '9 4', fill: null }] : []),
-        { key: 'avec_travaux', label: 'Actions légères + travaux', stroke: '#059669', dash: null, fill: 'url(#printProjAvec)' },
+        ...(hasLight ? [{ key: 'avec_actions_rapides', label: 'Actions légères', stroke: '#F59E0B', dash: '9 4', fill: null }] : []),
+        { key: 'avec_travaux', label: 'Travaux', stroke: '#059669', dash: null, fill: 'url(#printProjAvec)' },
       ];
       const series = seriesMeta.map(meta => ({
         ...meta,
@@ -1485,7 +1485,7 @@
             const orderedGroups = [
               lightGroup.length > 0 ? {
                 key: 'light',
-                title: 'Sans gros travaux',
+                title: 'Actions légères',
                 subtitle: 'Faible investissement · mise en œuvre simple · ROI rapide',
                 bg: '#F0FDF4',
                 border: '#BBF7D0',
@@ -1493,7 +1493,7 @@
               } : null,
               heavyGroup.length > 0 ? {
                 key: 'heavy',
-                title: 'Actions structurantes',
+                title: 'Travaux',
                 subtitle: 'Investissements rentables sur la durée · aides disponibles',
                 bg: '#EFF6FF',
                 border: '#BFDBFE',

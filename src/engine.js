@@ -1886,11 +1886,10 @@ const newDiagnosticFilterAndScoreActions = (formData, splitResult) => {
 
     let topActions = [...lightActions, ...heavyActions];
 
-    // Si ACT13 couvre déjà l'ECS (PAC remplace chaudière gaz qui faisait chauffage+ECS),
-    // retirer ACT18 (ballon thermo) et ACT20 (récup chaleur groupe froid sur ECS)
+    // Si ACT13 (PAC air/eau) est retenue, retirer ACT18 (CET) et ACT20 (recup clim) :
+    // une seule solution ECS proposee, le partenaire precisera les alternatives.
     const act13Result = topActions.find(a => a.id === 'ACT13');
-    if (act13Result && act13Result.energy_switch_detail && splitResult.ecsSource === 'gas' &&
-        (formData.ecsSameSystem !== false)) {
+    if (act13Result) {
         topActions = topActions.filter(a => a.id !== 'ACT18' && a.id !== 'ACT20');
     }
 

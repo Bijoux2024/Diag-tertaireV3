@@ -7875,10 +7875,10 @@
             const roleLabel = role === 'tenant' ? 'Locataire / Gestionnaire' : role === 'owner' ? 'Propriétaire' : 'Partie prenante';
             const benchmarkGap = Math.round(benchmark.site_intensity.value - benchmark.benchmark_median.value);
             const benchmarkGapText = benchmarkGap > 0
-                ? `Vous êtes à +${newDiagnosticFormatInteger(benchmarkGap)} kWh/m²/an au-dessus de la moyenne de votre secteur.`
+                ? `Vous êtes à +${newDiagnosticFormatInteger(benchmarkGap)} kWh/m²/an au-dessus de la médiane de votre secteur.`
                 : benchmarkGap < 0
-                    ? `Vous êtes à ${newDiagnosticFormatInteger(Math.abs(benchmarkGap))} kWh/m²/an sous la moyenne de votre secteur.`
-                    : 'Vous êtes au niveau de la moyenne de votre secteur.';
+                    ? `Vous êtes à ${newDiagnosticFormatInteger(Math.abs(benchmarkGap))} kWh/m²/an sous la médiane de votre secteur.`
+                    : 'Vous êtes au niveau de la médiane de votre secteur.';
             const benchmarkComment = targetIntensity <= benchmark.benchmark_low.value
                 ? 'La cible suggérée vous rapproche de la zone basse du secteur.'
                 : targetIntensity <= benchmark.benchmark_median.value
@@ -9106,8 +9106,11 @@
                     const saved = window.localStorage.getItem('newDiagnosticLatestReport');
                     if (saved) {
                         const parsed = JSON.parse(saved);
-                        if (parsed && parsed.report_id) {
+                        const hasInstallationSummary = parsed && parsed.inputs_summary && parsed.inputs_summary.installation_summary;
+                        if (parsed && parsed.report_id && hasInstallationSummary) {
                             setReportPayload(parsed);
+                        } else {
+                            window.localStorage.removeItem('newDiagnosticLatestReport');
                         }
                     }
                 } catch (e) { /* silent */ }

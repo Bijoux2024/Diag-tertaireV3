@@ -9,7 +9,7 @@
  *
  * Toute modification doit etre testee sur minimum 3 scenarios.
  */
-const ENGINE_VERSION = '1.5.2';
+const ENGINE_VERSION = '1.5.3';
 const ENGINE_LAST_UPDATED = '2026-04-14';
 
 // ═══════════════════════════════════════════════════════════════
@@ -1886,12 +1886,10 @@ const newDiagnosticFilterAndScoreActions = (formData, splitResult) => {
 
     let topActions = [...lightActions, ...heavyActions];
 
-    // Si ACT13 (PAC air/eau) est retenue, retirer ACT18 (CET) et ACT20 (recup clim) :
-    // une seule solution ECS proposee, le partenaire precisera les alternatives.
-    const act13Result = topActions.find(a => a.id === 'ACT13');
-    if (act13Result) {
-        topActions = topActions.filter(a => a.id !== 'ACT18' && a.id !== 'ACT20');
-    }
+    // Retrait inconditionnel ACT18 (CET) et ACT20 (recup clim) :
+    // la PAC air/eau reste la seule solution proposee cote ECS, le partenaire
+    // precisera les alternatives pertinentes au cas par cas.
+    topActions = topActions.filter(a => a.id !== 'ACT18' && a.id !== 'ACT20');
 
     return topActions;
 };

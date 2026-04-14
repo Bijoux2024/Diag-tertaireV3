@@ -1,5 +1,18 @@
 # Changelog - DiagTertiaire V3
 
+## [v1.5.3 - Retrait inconditionnel ACT18 + ACT20] - 2026-04-14
+
+ENGINE_VERSION : 1.5.2 -> 1.5.3
+
+### Corrections
+
+**Retrait systematique ACT18 (chauffe-eau thermodynamique) et ACT20 (recuperation chaleur clim)** : ces deux actions ne doivent plus jamais apparaitre dans le plan d'actions. La PAC air/eau reste la seule solution ECS proposee cote moteur, le partenaire precise les alternatives pertinentes au cas par cas.
+
+- `src/engine.js` L1889-1892 : filtre unconditionnel apres `topActions = [...lightActions, ...heavyActions]`. L'ancienne logique conditionnelle (retrait uniquement si ACT13 retenue) laissait passer ACT18/ACT20 lorsque ACT13 etait ecartee (tout elec, ROI > 10 ans, eligibilite).
+- `diagnostic.html` L9109-9112 : invalidation du cache `newDiagnosticLatestReport` si le payload stocke contient encore ACT18 ou ACT20 (force un recalcul propre cote front).
+
+Code potentiellement mort a nettoyer apres validation : branches `cetAction` (L1256-1260 `newDiagnosticComputeTargetElecKwh`) et `cetAction` helper L692-730 de NEW_DIAGNOSTIC_ACTIONS (fiches ACT18 + ACT20). A conserver tant que la recette preview n'est pas validee.
+
 ## [v1.5.2 - Hotfix libelles, capex CET dynamique, cartouche installation] - 2026-04-14
 
 ENGINE_VERSION : 1.5.1 → 1.5.2

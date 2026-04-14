@@ -9107,7 +9107,9 @@
                     if (saved) {
                         const parsed = JSON.parse(saved);
                         const hasInstallationSummary = parsed && parsed.inputs_summary && parsed.inputs_summary.installation_summary;
-                        if (parsed && parsed.report_id && hasInstallationSummary) {
+                        const actionIds = (parsed && Array.isArray(parsed.actions)) ? parsed.actions.map(a => a && a.id) : [];
+                        const hasRemovedActions = actionIds.includes('ACT18') || actionIds.includes('ACT20');
+                        if (parsed && parsed.report_id && hasInstallationSummary && !hasRemovedActions) {
                             setReportPayload(parsed);
                         } else {
                             window.localStorage.removeItem('newDiagnosticLatestReport');

@@ -21,6 +21,7 @@
 - nettoyer le legacy neutralise encore mort
 - ajouter si necessaire un outillage de reprise pour les fichiers `pending_cleanup`
 - ouvrir ensuite seulement les sujets secondaires UX / backlog public
+- **Synchroniser ENGINE_PRO avec hotfix taxonomie convecteurs** : porter dans `espace-professionnel.html` (moteur ENGINE_PRO) les ajouts faits dans `src/engine.js` v1.5.2 — (1) action `ACT_PACAIR` pour convecteurs elec, (2) capex CET dynamique (`computeCetCapex` + `estimateRooms`) pour CHR/restauration/sport, (3) `displayName` dynamique ACT13 selon combustible (gaz/fioul) et couplage ECS, (4) `installation_summary` dans `inputs_summary`. Priorite moyenne : ne bloque pas la release publique, mais evite la divergence moteur. Reference : plan `fluttering-weaving-beacon.md`.
 
 ## A ne plus traiter comme sujets ouverts
 

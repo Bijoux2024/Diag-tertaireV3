@@ -9,8 +9,8 @@
  *
  * Toute modification doit etre testee sur minimum 3 scenarios.
  */
-const ENGINE_VERSION = '1.5.1';
-const ENGINE_LAST_UPDATED = '2026-04-06';
+const ENGINE_VERSION = '1.5.2';
+const ENGINE_LAST_UPDATED = '2026-04-14';
 
 // ═══════════════════════════════════════════════════════════════
 // CONSTANTES PARTAGEES (utilisees par le moteur ET le formulaire)
@@ -697,7 +697,10 @@ const NEW_DIAGNOSTIC_ACTIONS_LIBRARY = {
             trigger_rules: ['ecsSystem === electric_boiler'],
             gain_scope: 'dhw_post',
             gain_pct_low: 0.50, gain_pct_med: 0.60, gain_pct_high: 0.75,
+            // Lot 1.2 : capex dimensionné par activité/surface (cf. newDiagnosticComputeCetCapex).
+            // Les valeurs ci-dessous ne servent que de fallback quand activity = défaut.
             capex_low: 2500, capex_med: 4500, capex_high: 6000,
+            capex_method: 'cet_sized',
             capex_unit: '€',
             roi_method: 'simple_payback',
             aid_tags: ['CEE'],
@@ -1420,6 +1423,61 @@ const newDiagnosticEstimatePhotovoltaicScenario = ({ action, totalKwh, breakdown
     };
 };
 
+// ── Helper récap installation déclarée (Lot 2.3) ──
+// Produit une phrase fluide à afficher en tête de rapport.
+const newDiagnosticBuildInstallationSummary = (formData) => {
+    if (!formData) return '';
+    const heatingNorm = HEATING_TYPE_NORMALIZE[formData.mainHeating] || formData.mainHeating || 'gas';
+    const emitter = formData.emitterType;
+
+    let heatingLabel;
+    if (heatingNorm === 'gas') heatingLabel = 'une chaudière gaz';
+    else if (heatingNorm === 'fuel' || heatingNorm === 'fioul') heatingLabel = 'une chaudière fioul';
+    else if (heatingNorm === 'pac') heatingLabel = 'une pompe à chaleur';
+    else if (heatingNorm === 'network') heatingLabel = 'un raccordement au réseau de chaleur';
+    else if (heatingNorm === 'electric') {
+        if (emitter === 'electric_radiant_floor') heatingLabel = 'un plancher chauffant électrique';
+        else if (emitter === 'inertia_radiator') heatingLabel = 'des radiateurs électriques à inertie';
+        else heatingLabel = 'des radiateurs électriques';
+    } else heatingLabel = 'un système de chauffage non renseigné';
+
+    let ecsClause;
+    const ecsSame = formData.ecsSameSystem !== false;
+    if (ecsSame && (heatingNorm === 'gas' || heatingNorm === 'fuel' || heatingNorm === 'pac')) {
+        ecsClause = 'qui produit également l\'eau chaude sanitaire';
+    } else {
+        const ecsSys = formData.ecsSystem;
+        if (ecsSys === 'gas_boiler') ecsClause = 'avec une chaudière gaz dédiée à l\'eau chaude sanitaire';
+        else if (ecsSys === 'gas_instant') ecsClause = 'avec un chauffe-eau gaz instantané dédié à l\'eau chaude sanitaire';
+        else if (ecsSys === 'electric_boiler') ecsClause = 'avec un ballon électrique dédié à l\'eau chaude sanitaire';
+        else if (ecsSys === 'heat_pump') ecsClause = 'avec un chauffe-eau thermodynamique dédié à l\'eau chaude sanitaire';
+        else if (ecsSys === 'solar') ecsClause = 'avec un chauffe-eau solaire dédié à l\'eau chaude sanitaire';
+        else ecsClause = 'avec une production d\'eau chaude sanitaire séparée';
+    }
+
+    const coolingClause = formData.hasCooling ? ', et une climatisation existante' : '';
+    return `Votre bâtiment est chauffé par ${heatingLabel}, ${ecsClause}${coolingClause}.`;
+};
+
+// ── Helpers ECS dimensionnement (Lot 1.2) ──
+// (newDiagnosticClamp deja declare ligne 1265)
+
+const newDiagnosticEstimateRooms = (activity, surface) => {
+    if (activity === 'hotel') return Math.max(5, Math.round(surface / 25));
+    if (activity === 'residence' || activity === 'ehpad') return Math.max(5, Math.round(surface / 30));
+    return null;
+};
+
+const newDiagnosticComputeCetCapex = (activity, surface, numberOfRooms) => {
+    if (['hotel', 'residence', 'ehpad'].includes(activity)) {
+        const rooms = (numberOfRooms && numberOfRooms > 0) ? numberOfRooms : newDiagnosticEstimateRooms(activity, surface);
+        return newDiagnosticClamp(rooms * 700 + 8000, 8000, 45000);
+    }
+    if (activity === 'restaurant') return newDiagnosticClamp(surface * 30, 6000, 22000);
+    if (['sport', 'piscine', 'spa'].includes(activity)) return newDiagnosticClamp(surface * 25, 8000, 30000);
+    return 4500;
+};
+
 const newDiagnosticCalculateActionGain = (action, splitResult, surface, formData, energyPrices) => {
     const ePrices = energyPrices || { elec: NEW_DIAGNOSTIC_ENERGY_PRICES.electricity.price_default_eur_kwh, gas: NEW_DIAGNOSTIC_ENERGY_PRICES.gas.price_default_eur_kwh };
     const totalKwh = splitResult.totalKwh;
@@ -1497,6 +1555,13 @@ const newDiagnosticCalculateActionGain = (action, splitResult, surface, formData
         const capexNet = Math.round(capex * (1 - aidPct));
         const roi_years = gainEuro > 0 ? Math.round((capexNet / gainEuro) * 10) / 10 : null;
 
+        // Lot 1.1 : libellé dynamique selon source réelle et couplage ECS
+        const displayName = isFuel
+            ? 'Remplacer la chaudière fioul par une pompe à chaleur air/eau'
+            : (ecsAlsoOnBoiler
+                ? 'Remplacer la chaudière gaz par une pompe à chaleur air/eau (chauffage et eau chaude)'
+                : 'Remplacer la chaudière gaz par une pompe à chaleur air/eau');
+
         return {
             gainKwh,
             gainEuro,
@@ -1505,6 +1570,7 @@ const newDiagnosticCalculateActionGain = (action, splitResult, surface, formData
             aidAmount,
             aidPct,
             roi_years,
+            displayName,
             gain_pct_total: totalKwh > 0 ? Math.round((gainKwh / totalKwh) * 1000) / 10 : 0,
             energy_switch: true,
             energy_switch_detail: {
@@ -1516,7 +1582,7 @@ const newDiagnosticCalculateActionGain = (action, splitResult, surface, formData
                 economie_old_euro: economieAncienCombustible,
                 surcout_new_euro: surcoutElec
             },
-            energy_switch_note: `Remplacement de la chaudiere ${oldFuelLabel} par une pompe a chaleur air/eau (COP ${copPac})${ecsAlsoOnBoiler ? ' (chauffage + eau chaude)' : ''}. Suppression de ${newDiagnosticFormatInteger(heatingGasKwh)} kWh ${oldFuelLabel}, ajout de ${newDiagnosticFormatInteger(newElecKwh)} kWh electriques. Gain net : ${newDiagnosticFormatInteger(gainEuro)} EUR/an.`
+            energy_switch_note: `Remplacement de la chaudière ${oldFuelLabel} par une pompe à chaleur air/eau (coefficient de performance ${copPac})${ecsAlsoOnBoiler ? ' couvrant chauffage et eau chaude sanitaire' : ''}. Suppression de ${newDiagnosticFormatInteger(heatingGasKwh)} kWh ${oldFuelLabel}, ajout de ${newDiagnosticFormatInteger(newElecKwh)} kWh électriques. Gain net : ${newDiagnosticFormatInteger(gainEuro)} € par an.`
         };
     }
 
@@ -1542,6 +1608,7 @@ const newDiagnosticCalculateActionGain = (action, splitResult, surface, formData
 
         return {
             gainKwh, gainEuro, capex, capexNet, aidAmount, aidPct, roi_years,
+            displayName: 'Remplacer les radiateurs électriques par une pompe à chaleur',
             gain_pct_total: totalKwh > 0 ? Math.round((gainKwh / totalKwh) * 1000) / 10 : 0,
             energy_switch: true,
             energy_switch_detail: {
@@ -1550,7 +1617,7 @@ const newDiagnosticCalculateActionGain = (action, splitResult, surface, formData
                 economie_old_euro: Math.round(heatingElecKwh * ePrices.elec),
                 surcout_new_euro: Math.round(newElecKwh * ePrices.elec)
             },
-            energy_switch_note: `Remplacement des convecteurs électriques par une pompe à chaleur (coefficient de performance ${copPac}). Réduction de ${newDiagnosticFormatInteger(gainKwh)} kWh électriques.`
+            energy_switch_note: `Remplacement des radiateurs électriques par une pompe à chaleur (coefficient de performance ${copPac}). Réduction de ${newDiagnosticFormatInteger(gainKwh)} kWh électriques.`
         };
     }
 
@@ -1565,14 +1632,20 @@ const newDiagnosticCalculateActionGain = (action, splitResult, surface, formData
         const gainEuro = Math.max(0, economieGaz - surcoutElec);
         const gainKwh = Math.max(0, ecsGasKwh - newElecKwh);
 
-        const capex = action.capex_med || 4500;
+        // Lot 1.2 : capex dimensionné par activité (CHR : par chambre, restauration : surface, sport : surface)
+        const numberOfRooms = (formData.numberOfRooms && Number(formData.numberOfRooms) > 0)
+            ? Number(formData.numberOfRooms)
+            : newDiagnosticEstimateRooms(formData.activity, safeSurface);
+        const capex = newDiagnosticComputeCetCapex(formData.activity, safeSurface, numberOfRooms);
+        const capex_low = Math.round(capex * 0.75);
+        const capex_high = Math.round(capex * 1.25);
         const aidPct = action.aid_pct || 0;
         const aidAmount = Math.round(capex * aidPct);
         const capexNet = Math.round(capex * (1 - aidPct));
         const roi_years = gainEuro > 0 ? Math.round((capexNet / gainEuro) * 10) / 10 : null;
 
         return {
-            gainKwh, gainEuro, capex, capexNet, aidAmount, aidPct, roi_years,
+            gainKwh, gainEuro, capex, capex_low, capex_high, capexNet, aidAmount, aidPct, roi_years,
             gain_pct_total: totalKwh > 0 ? Math.round((gainKwh / totalKwh) * 1000) / 10 : 0,
             energy_switch: true,
             energy_switch_detail: {
@@ -1592,14 +1665,19 @@ const newDiagnosticCalculateActionGain = (action, splitResult, surface, formData
         const gainKwh = ecsElecKwh - newElecKwh;
         const gainEuro = Math.round(gainKwh * ePrices.elec);
 
-        const capex = action.capex_med || 4500;
+        const numberOfRooms = (formData.numberOfRooms && Number(formData.numberOfRooms) > 0)
+            ? Number(formData.numberOfRooms)
+            : newDiagnosticEstimateRooms(formData.activity, safeSurface);
+        const capex = newDiagnosticComputeCetCapex(formData.activity, safeSurface, numberOfRooms);
+        const capex_low = Math.round(capex * 0.75);
+        const capex_high = Math.round(capex * 1.25);
         const aidPct = action.aid_pct || 0;
         const aidAmount = Math.round(capex * aidPct);
         const capexNet = Math.round(capex * (1 - aidPct));
         const roi_years = gainEuro > 0 ? Math.round((capexNet / gainEuro) * 10) / 10 : null;
 
         return {
-            gainKwh, gainEuro, capex, capexNet, aidAmount, aidPct, roi_years,
+            gainKwh, gainEuro, capex, capex_low, capex_high, capexNet, aidAmount, aidPct, roi_years,
             gain_pct_total: totalKwh > 0 ? Math.round((gainKwh / totalKwh) * 1000) / 10 : 0,
             energy_switch: true,
             energy_switch_detail: {
@@ -2400,6 +2478,9 @@ const newDiagnosticBuildReportData = (formData) => {
             phone: formData.phone || null,
             ecsSameSystem: formData.ecsSameSystem,
             ecsSystem: formData.ecsSystem || null,
+            emitterType: formData.emitterType || null,
+            numberOfRooms: formData.numberOfRooms || null,
+            installation_summary: newDiagnosticBuildInstallationSummary(formData),
             primary_goal: formData.projectObjective || formData.primaryGoal || null,
             project_horizon: formData.decisionHorizon || formData.projectHorizon || null,
             decision_role: formData.decisionRole || formData.role || null,
@@ -2443,11 +2524,14 @@ const newDiagnosticBuildReportData = (formData) => {
         top_actions: topActions.map(a => ({
             id: a.id,
             name: a.name,
+            displayName: a.displayName || null,
             category: a.category,
             tier: a.tier || 'light',
             gain_kwh_an: { value: a.gainKwh, unit: 'kWh/an' },
             gain_euro_an: { value: a.gainEuro, unit: '€/an' },
             capex: { value: a.capex, unit: '€' },
+            capex_low: { value: (typeof a.capex_low === 'number') ? a.capex_low : null, unit: '€' },
+            capex_high: { value: (typeof a.capex_high === 'number') ? a.capex_high : null, unit: '€' },
             capex_net: { value: a.capexNet || a.capex, unit: '€' },
             aid_amount: { value: a.aidAmount || 0, unit: '€' },
             aid_pct: a.aidPct || 0,

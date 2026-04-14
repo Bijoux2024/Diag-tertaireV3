@@ -1,5 +1,44 @@
 # Changelog - DiagTertiaire V3
 
+## [v1.5.2 - Hotfix libelles, capex CET dynamique, cartouche installation] - 2026-04-14
+
+ENGINE_VERSION : 1.5.1 → 1.5.2
+
+### Corrections
+
+**Lot 1.1 - displayName ACT13 dynamique** : le libelle de l'action "Installer une pompe a chaleur" etait toujours "Remplacer la chaudiere gaz par une PAC air/eau" meme en l'absence de chaudiere gaz (ex : fioul, convecteurs elec). Ajout d'un `displayName` calcule au runtime dans la bascule ACT13 :
+- combustible fioul : "Remplacer la chaudiere fioul par une pompe a chaleur air/eau"
+- combustible gaz + ECS couplee : "Remplacer la chaudiere gaz par une pompe a chaleur air/eau (chauffage et eau chaude)"
+- combustible gaz : "Remplacer la chaudiere gaz par une pompe a chaleur air/eau"
+- convecteurs electriques : "Remplacer les radiateurs electriques par une pompe a chaleur"
+
+**Lot 1.2 - capex ACT18 (CET) dynamique pour CHR** : le capex forfaitaire 4 500 EUR etait sous-dimensionne pour les hotels, residences et EHPAD. Helpers ajoutes dans `src/engine.js` :
+- `newDiagnosticEstimateRooms(activity, surface)` : estimation chambres (surface / 25 a 30 selon typologie)
+- `newDiagnosticComputeCetCapex(activity, surface, numberOfRooms)` : capex borne 8 000 - 45 000 EUR pour CHR, 6 000 - 22 000 EUR pour restauration, 8 000 - 30 000 EUR pour sport/piscine/spa, 4 500 EUR par defaut
+- Ajout `capex_low` / `capex_high` (+/- 25%) exposes dans `top_actions`
+- Fiche ACT18 : `capex_method: 'cet_sized'`
+
+**Lot 2.3 - installation_summary exposee** : helper `newDiagnosticBuildInstallationSummary(formData)` ajoute dans `src/engine.js`. Retourne une phrase decrivant chauffage / ECS / climatisation declares. Expose via `inputs_summary.installation_summary`.
+
+**Lot 3.1 - cartouche "Votre installation declaree"** : insertion d'un encart visuel (fond gris clair, icone maison, titre 14px semi-bold) entre les KPI du header et la synthese rapide dans les 3 rapports :
+- `diagnostic.html` (SPA)
+- `exemple-rapport.html` (demo marketing, chaine hardcodee)
+- `public-report-print.html` (PDF serveur)
+
+**Lot 3.2 - fallback displayName dans les rendus** : `{action.name}` → `{action.displayName || action.name}` dans les 3 fichiers HTML (9 spots au total).
+
+**Docs** : CLAUDE.md mis a jour (chiffres de lignes reels : engine.js 2 821, diagnostic.html 9 608, exemple-rapport.html 11 135, public-report-print.html 2 192 ; 4e scenario test hotel 720m2 convecteurs ajoute). Backlog ENGINE_PRO ouvert pour porter les changements cote espace-professionnel.html.
+
+### Fichiers modifies
+
+- `src/engine.js` (ENGINE_VERSION 1.5.2)
+- `diagnostic.html`
+- `exemple-rapport.html`
+- `public-report-print.html`
+- `CLAUDE.md`
+- `.claude/context/backlog.md`
+- `CHANGELOG.md`
+
 ## [v1.5.1 - Corrections moteur post-audit expert] - 2026-04-06
 
 ENGINE_VERSION : 1.5.0 → 1.5.1

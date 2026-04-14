@@ -49,6 +49,9 @@ newDiagnosticBuildReportData({ activity: 'restaurant', surface: '200', elecUsed:
 
 // Commerce alimentaire 1000m2
 newDiagnosticBuildReportData({ activity: 'commerce_alim', surface: '1000', elecUsed: true, elecKwh: '200000', gasUsed: true, gasKwh: '50000', mainHeating: 'gas', hasCooling: true, ecsSameSystem: true, worksDone: [], buildingAge: 'pre1975' });
+
+// Hotel 720m2 convecteurs elec + ECS elec (scenario capex CET dynamique)
+newDiagnosticBuildReportData({ activity: 'hotel', surface: '720', elecUsed: true, elecKwh: '180000', gasUsed: false, mainHeating: 'electric_convector', hasCooling: true, ecsSameSystem: false, ecsSystem: 'electric_boiler', worksDone: [], buildingAge: '1975_2000' });
 ```
 
 Chaque test doit retourner : intensity > 0, actions.length >= 3, aucun NaN, breakdown total = 100%.
@@ -78,11 +81,13 @@ Chaque test doit retourner : intensity > 0, actions.length >= 3, aucun NaN, brea
 
 ```
 /
-├── index.html              # Landing + SPA diagnostic (8 700 lignes)
+├── index.html              # Landing (766 lignes)
+├── diagnostic.html         # SPA diagnostic (9 608 lignes)
+├── exemple-rapport.html    # Demo marketing rapport (11 135 lignes)
 ├── espace-professionnel.html # Espace Pro (moteur ENGINE_PRO independant)
-├── public-report-print.html # Template PDF serveur
+├── public-report-print.html # Template PDF serveur (2 192 lignes)
 ├── src/
-│   ├── engine.js           # Moteur de calcul - SOURCE UNIQUE (2 420 lignes)
+│   ├── engine.js           # Moteur de calcul - SOURCE UNIQUE (2 821 lignes)
 │   └── solar-icons.js      # Icones SVG - SOURCE UNIQUE (118 icones)
 ├── api/                    # Endpoints serverless Vercel
 │   ├── _lib/               # Utilitaires partages (PDF renderer, Supabase, guard)

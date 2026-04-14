@@ -9358,14 +9358,19 @@
         };
 
 
-        // ===== LOGO INLINE SVG — partagé nav + rapports =====
-        const DIAGTERTIAIRE_LOGO_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="7" fill="#1D4ED8"/><path d="M6 25V11l10-3.5L26 11v14" stroke="white" stroke-width="1.9" stroke-linejoin="round" fill="none"/><rect x="13" y="17" width="6" height="8" rx="1.2" fill="white" opacity="0.95"/><path d="M6 14h20" stroke="white" stroke-width="1.1" opacity="0.35"/><circle cx="10" cy="18" r="1.1" fill="white" opacity="0.65"/><circle cx="22" cy="18" r="1.1" fill="white" opacity="0.65"/></svg>';
-        const DiagTertiaireBrand = ({ dark, size }) => (
-            React.createElement('span', { style: { display: 'inline-flex', alignItems: 'center', gap: '7px' } },
+        // ===== LOGO INLINE SVG — harmonise avec landing (index.html) =====
+        const DIAGTERTIAIRE_LOGO_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none" aria-hidden="true"><rect width="40" height="40" rx="9" fill="#2B4ECC"/><path d="M27 0 L40 0 L40 13 Z" fill="rgba(255,255,255,0.88)"/><circle cx="9.5" cy="16" r="2.2" fill="rgba(10,22,46,0.65)"/><rect x="13" y="14.5" width="17" height="3" rx="1.5" fill="white"/><circle cx="9.5" cy="24" r="2.2" fill="rgba(10,22,46,0.65)"/><rect x="13" y="22.5" width="12" height="3" rx="1.5" fill="white"/><circle cx="9.5" cy="32" r="2.2" fill="rgba(10,22,46,0.65)"/><rect x="13" y="30.5" width="7.5" height="3" rx="1.5" fill="white"/></svg>';
+        const DiagTertiaireBrand = ({ dark, size }) => {
+            const color = dark ? '#FFFFFF' : '#0A1628';
+            const fontSize = '1.0625rem';
+            return React.createElement('span', { style: { display: 'inline-flex', alignItems: 'center', gap: '8px' } },
                 React.createElement('span', { style: { width: size || 28, height: size || 28, flexShrink: 0, display: 'inline-block' }, dangerouslySetInnerHTML: { __html: DIAGTERTIAIRE_LOGO_SVG } }),
-                React.createElement('span', { style: { fontFamily: "'DM Serif Display', Georgia, serif", fontWeight: 400, fontSize: '1.125rem', letterSpacing: '-0.01em', color: dark ? '#FFFFFF' : '#0A1628', lineHeight: 1 } }, 'DiagTertiaire')
-            )
-        );
+                React.createElement('span', { style: { fontFamily: "'Plus Jakarta Sans', sans-serif", lineHeight: 1, color } },
+                    React.createElement('span', { style: { fontWeight: 800, fontSize, letterSpacing: '-0.02em' } }, 'Diag'),
+                    React.createElement('span', { style: { fontWeight: 400, fontSize, letterSpacing: '-0.01em' } }, 'Tertiaire')
+                )
+            );
+        };
 
         const resolvePublicPageFromPath = () => {
             return 'diagnostic';
@@ -9504,11 +9509,8 @@
                                 <div className="landing-footer-grid grid md:grid-cols-4 gap-8 md:gap-10 mb-8">
 
                                     <div>
-                                        <div className="flex items-center gap-2 mb-4">
-                                            <div className="w-8 h-8 bg-[#1D4ED8]/20 rounded-lg flex items-center justify-center">
-                                                <Icon icon="solar:buildings-2-linear" style={{ color: '#60A5FA', fontSize: '18px' }} />
-                                            </div>
-                                            <span style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontWeight: 400, fontSize: '1.125rem', color: '#FFFFFF' }}>DiagTertiaire</span>
+                                        <div className="mb-4">
+                                            <DiagTertiaireBrand dark={true} size={28} />
                                         </div>
                                         <p className="text-sm text-[#64748B] leading-relaxed mb-4">Comparatif énergétique pour professionnels. Indépendant de tout fournisseur.</p>
                                         <div className="space-y-2">

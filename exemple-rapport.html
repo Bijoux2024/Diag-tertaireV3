@@ -6703,23 +6703,6 @@
                     source_level_roi: 'hypothesis'
                 },
                 {
-                    id: 'ACT20',
-                    name: 'Récupération chaleur sur groupe froid',
-                    category: 'heating',
-                    tier: 'heavy',
-                    aid_pct: 0.28,
-                    trigger_rules: ['hasCooling === true'],
-                    gain_scope: 'dhw_post',
-                    gain_pct_low: 0.30, gain_pct_med: 0.50, gain_pct_high: 0.70,
-                    capex_low: 3000, capex_med: 8000, capex_high: 15000,
-                    capex_unit: '€',
-                    roi_method: 'simple_payback',
-                    aid_tags: ['CEE'],
-                    source_level_gain: 'source_partial', source_ref_gain: 'ADEME - Récupération chaleur froid commercial',
-                    source_level_capex: 'hypothesis', source_ref_capex: 'Estimation échangeur + installation',
-                    source_level_roi: 'hypothesis'
-                },
-                {
                     id: 'ACT21',
                     name: 'Comptage intelligent / Sous-comptage',
                     category: 'pilotage',
@@ -7653,7 +7636,7 @@
                 if (worksDone.includes('pv_done') && action.id === 'ACT22') return false;
 
                 // EXCLUSIONS PAR ÉTAT DU BÂTIMENT
-                if (!formData.hasCooling && ['ACT19', 'ACT20'].includes(action.id)) return false;
+                if (!formData.hasCooling && action.id === 'ACT19') return false;
                 if (formData.mainHeating === 'electric' && action.id === 'ACT04') return false;
                 // ACT13 PAC : autorisé pour gaz ET électrique (convecteurs → PAC), exclu si déjà PAC
                 if (!['gas', 'electric'].includes(formData.mainHeating) && action.id === 'ACT13') return false;
@@ -7712,11 +7695,11 @@
             let topActions = [...lightActions, ...heavyActions];
 
             // Si ACT13 couvre déjà l'ECS (PAC remplace chaudière gaz qui faisait chauffage+ECS),
-            // retirer ACT18 (ballon thermo) et ACT20 (récup chaleur groupe froid sur ECS)
+            // retirer ACT18 (ballon thermo) car couvert par la PAC double service
             const act13Result = topActions.find(a => a.id === 'ACT13');
             if (act13Result && act13Result.energy_switch_detail && splitResult.ecsSource === 'gas' &&
                 (formData.ecsSameSystem !== false)) {
-                topActions = topActions.filter(a => a.id !== 'ACT18' && a.id !== 'ACT20');
+                topActions = topActions.filter(a => a.id !== 'ACT18');
             }
 
             return topActions;

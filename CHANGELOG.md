@@ -1,5 +1,24 @@
 # Changelog - DiagTertiaire V3
 
+## [v1.6.2 - Hotfix suppression ACT20, audit aid_pct conservateur, bascule engine.js] - 2026-04-15
+
+ENGINE_VERSION : 1.6.1 -> 1.6.2
+
+### Corrections
+
+- **Suppression ACT20** (recuperation chaleur clim) : action retiree de `NEW_DIAGNOSTIC_ACTIONS_LIBRARY` (zero code mort). Nettoyage du filtre `hasCooling` + suppression du filtre `selectable` redondant dans `filterAndScoreActions`. Nettoyage equivalent dans `exemple-rapport.html`.
+- **Audit aid_pct conservateur** : valeurs revues a la baisse pour rester sous les primes CEE/Fonds Chaleur reellement obtenues en tertiaire 2026 (politique : "le client doit avoir une bonne surprise a la demande"). ACT02 0.20->0.15, ACT06 0.20->0.15, ACT07 0.20->0.15, ACT08 0.20->0.15, ACT09 0.25->0.15, ACT10 0.20->0.15, ACT13 0.22->0.15, ACT14 0.28->0.18, ACT15 0.22->0.15, ACT16 0.22->0.15, ACT17 0.12->0.08, ACT18 0.15->0.12.
+- **Bascule `engine.min.js` -> `engine.js`** : diagnostic.html chargeait un `engine.min.js` stale (date 2026-04-10, anterieur a la release V1.6.1). Suppression du fichier minifie et chargement direct de `src/engine.js` (conforme a la regle CLAUDE.md "buildless, source unique").
+- **Invalidation localStorage** : bump `ENGINE_VERSION` a `1.6.2` force `isStaleEngine = true` et purge les payloads `newDiagnosticLatestReport` anterieurs (evite la fuite ACT20 via payload cache).
+
+### Fichiers modifies
+
+- `src/engine.js` : ENGINE_VERSION 1.6.2, suppression ACT20 (action + filtres), audit aid_pct.
+- `src/engine.min.js` : supprime (stale, non regenere).
+- `diagnostic.html` : `<script src="/src/engine.js">` au lieu de `.min.js`, garde localStorage ACT20 conservee (retire ACT18 du test, reintroduit comme action legitime).
+- `exemple-rapport.html` : suppression ACT20 (action + 2 filtres).
+- `CHANGELOG.md`, `AI-CONTEXT.md` : synchronises.
+
 ## [v1.6.1 - Fourchette capex +/- 15 %, fallback reseau de chaleur, garde CET > 2000 L] - 2026-04-15
 
 ENGINE_VERSION : 1.6.0 -> 1.6.1

@@ -9,7 +9,7 @@
  *
  * Toute modification doit etre testee sur minimum 3 scenarios.
  */
-const ENGINE_VERSION = '1.6.1';
+const ENGINE_VERSION = '1.6.2';
 const ENGINE_LAST_UPDATED = '2026-04-15';
 
 // ═══════════════════════════════════════════════════════════════
@@ -430,7 +430,7 @@ const NEW_DIAGNOSTIC_ACTIONS_LIBRARY = {
             name: 'Pilotage automatique du chauffage',
             category: 'heating',
             tier: 'light',
-            aid_pct: 0.20,
+            aid_pct: 0.15,
             trigger_rules: ['heating_post > 30%', 'no_regulation_done'],
             gain_scope: 'heating_post',
             gain_pct_low: 0.10, gain_pct_med: 0.15, gain_pct_high: 0.25,
@@ -498,7 +498,7 @@ const NEW_DIAGNOSTIC_ACTIONS_LIBRARY = {
             name: 'Ventilation qui s\'adapte à la présence dans les locaux',
             category: 'ventilation',
             tier: 'light',
-            aid_pct: 0.20,
+            aid_pct: 0.15,
             trigger_rules: ['vent_aux_post > 8%', 'offices or education'],
             gain_scope: 'vent_aux_post',
             gain_pct_low: 0.20, gain_pct_med: 0.30, gain_pct_high: 0.45,
@@ -515,7 +515,7 @@ const NEW_DIAGNOSTIC_ACTIONS_LIBRARY = {
             name: 'Ventilation qui se déclenche quand l\'air est saturé',
             category: 'ventilation',
             tier: 'heavy',
-            aid_pct: 0.20,
+            aid_pct: 0.15,
             trigger_rules: ['vent_aux_post > 10%', 'high_occupancy'],
             gain_scope: 'vent_aux_post',
             gain_pct_low: 0.15, gain_pct_med: 0.25, gain_pct_high: 0.35,
@@ -532,7 +532,7 @@ const NEW_DIAGNOSTIC_ACTIONS_LIBRARY = {
             name: 'Passage à l\'éclairage LED dans tous les locaux',
             category: 'lighting',
             tier: 'light',
-            aid_pct: 0.20,
+            aid_pct: 0.15,
             trigger_rules: ['lighting_post > 15%', 'no_led_done'],
             gain_scope: 'lighting_post',
             gain_pct_low: 0.45, gain_pct_med: 0.60, gain_pct_high: 0.75,
@@ -550,7 +550,7 @@ const NEW_DIAGNOSTIC_ACTIONS_LIBRARY = {
             name: 'Éclairage automatique par détection de présence',
             category: 'lighting',
             tier: 'light',
-            aid_pct: 0.25,
+            aid_pct: 0.15,
             trigger_rules: ['lighting_post > 15%', 'offices or education'],
             gain_scope: 'lighting_post',
             gain_pct_low: 0.15, gain_pct_med: 0.25, gain_pct_high: 0.35,
@@ -567,7 +567,7 @@ const NEW_DIAGNOSTIC_ACTIONS_LIBRARY = {
             name: 'Isolation des tuyaux d\'eau chaude',
             category: 'dhw',
             tier: 'light',
-            aid_pct: 0.20,
+            aid_pct: 0.15,
             trigger_rules: ['dhw_post > 8%', 'no_dhw_done'],
             gain_scope: 'dhw_post',
             gain_pct_low: 0.10, gain_pct_med: 0.15, gain_pct_high: 0.25,
@@ -601,7 +601,7 @@ const NEW_DIAGNOSTIC_ACTIONS_LIBRARY = {
             name: 'Remplacement de la chaudière gaz par une pompe à chaleur air/eau',
             category: 'heating',
             tier: 'heavy',
-            aid_pct: 0.22,
+            aid_pct: 0.15,
             trigger_rules: ['mainHeating === gas', 'boilerAge >= 15to20'],
             gain_scope: 'heating_post',
             gain_pct_low: 0.35, gain_pct_med: 0.50, gain_pct_high: 0.65,
@@ -620,7 +620,7 @@ const NEW_DIAGNOSTIC_ACTIONS_LIBRARY = {
             name: 'Gestion automatisée / Supervision centralisée',
             category: 'pilotage',
             tier: 'heavy',
-            aid_pct: 0.28,
+            aid_pct: 0.18,
             trigger_rules: ['surface > 500'],
             gain_scope: 'total',
             gain_pct_low: 0.12, gain_pct_med: 0.18, gain_pct_high: 0.22,
@@ -639,7 +639,7 @@ const NEW_DIAGNOSTIC_ACTIONS_LIBRARY = {
             name: 'Isolation thermique toiture',
             category: 'envelope_roof',
             tier: 'heavy',
-            aid_pct: 0.22,
+            aid_pct: 0.15,
             trigger_rules: ['roofInsulation !== yes'],
             gain_scope: 'heating_post',
             gain_pct_low: 0.15, gain_pct_med: 0.20, gain_pct_high: 0.25,
@@ -657,7 +657,7 @@ const NEW_DIAGNOSTIC_ACTIONS_LIBRARY = {
             name: 'Isolation thermique des murs par l\'extérieur',
             category: 'envelope_walls',
             tier: 'heavy',
-            aid_pct: 0.22,
+            aid_pct: 0.15,
             trigger_rules: ['wallInsulation !== yes'],
             gain_scope: 'heating_post',
             gain_pct_low: 0.12, gain_pct_med: 0.18, gain_pct_high: 0.25,
@@ -675,7 +675,7 @@ const NEW_DIAGNOSTIC_ACTIONS_LIBRARY = {
             name: 'Remplacement fenêtres (double/triple vitrage)',
             category: 'envelope_windows',
             tier: 'heavy',
-            aid_pct: 0.12,
+            aid_pct: 0.08,
             trigger_rules: [],
             gain_scope: 'heating_post',
             gain_pct_low: 0.05, gain_pct_med: 0.12, gain_pct_high: 0.15,
@@ -693,7 +693,7 @@ const NEW_DIAGNOSTIC_ACTIONS_LIBRARY = {
             name: 'Chauffe-eau thermodynamique (eau chaude haute performance)',
             category: 'dhw',
             tier: 'heavy',
-            aid_pct: 0.15,
+            aid_pct: 0.12,
             trigger_rules: ['ecsSystem === electric_boiler'],
             gain_scope: 'dhw_post',
             gain_pct_low: 0.50, gain_pct_med: 0.60, gain_pct_high: 0.75,
@@ -723,23 +723,6 @@ const NEW_DIAGNOSTIC_ACTIONS_LIBRARY = {
             aid_tags: [],
             source_level_gain: 'hypothesis', source_ref_gain: 'Estimation produit',
             source_level_capex: 'hypothesis', source_ref_capex: 'Estimation automatisation',
-            source_level_roi: 'hypothesis'
-        },
-        {
-            id: 'ACT20',
-            name: 'Récupération de la chaleur produite par la climatisation',
-            category: 'heating',
-            tier: 'heavy',
-            aid_pct: 0.28,
-            trigger_rules: ['hasCooling === true'],
-            gain_scope: 'dhw_post',
-            gain_pct_low: 0.30, gain_pct_med: 0.50, gain_pct_high: 0.70,
-            capex_low: 3000, capex_med: 8000, capex_high: 15000,
-            capex_unit: '€',
-            roi_method: 'simple_payback',
-            aid_tags: ['CEE'],
-            source_level_gain: 'source_partial', source_ref_gain: 'Données de référence publiques - récupération chaleur froid commercial',
-            source_level_capex: 'hypothesis', source_ref_capex: 'Estimation échangeur + installation',
             source_level_roi: 'hypothesis'
         },
         {
@@ -2115,7 +2098,7 @@ const newDiagnosticFilterAndScoreActions = (formData, splitResult) => {
         if (worksDone.includes('pv_done') && action.id === 'ACT22') return false;
 
         // EXCLUSIONS PAR ÉTAT DU BÂTIMENT
-        if (!formData.hasCooling && ['ACT19', 'ACT20'].includes(action.id)) return false;
+        if (!formData.hasCooling && action.id === 'ACT19') return false;
         // ACT04 (entretien chaudiere) : sans objet pour chauffage electrique ou PAC
         if (['electric', 'pac'].includes(mainHeatingNorm) && action.id === 'ACT04') return false;
 
@@ -2216,15 +2199,9 @@ const newDiagnosticFilterAndScoreActions = (formData, splitResult) => {
 
     filteredActions.sort((a, b) => b.priorityScore - a.priorityScore);
 
-    // V1.6.1 : ACT20 (recup chaleur clim) exclu en amont de la shortlist
-    // (trop dependant de la configuration CVC reelle, le partenaire precise au cas par cas).
-    // Ce retrait avant slice preserve 3 slots heavy pour les actions consommables,
-    // notamment ACT18 (CET) reintroduit par BUG-002.
-    const selectable = filteredActions.filter(a => a.id !== 'ACT20');
-
     // Sélection max 3 light + 3 heavy
-    const lightActions = selectable.filter(a => a.tier === 'light').slice(0, 3);
-    const heavyActions = selectable.filter(a => a.tier === 'heavy').slice(0, 3);
+    const lightActions = filteredActions.filter(a => a.tier === 'light').slice(0, 3);
+    const heavyActions = filteredActions.filter(a => a.tier === 'heavy').slice(0, 3);
 
     const topActions = [...lightActions, ...heavyActions];
 

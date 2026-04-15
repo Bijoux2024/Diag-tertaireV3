@@ -27,7 +27,7 @@ C'est un outil d'ORIENTATION DECISIONNELLE, pas un audit energetique.
 
 | Fichier | Role | Attention |
 |---|---|---|
-| `src/engine.js` | Moteur de calcul public (source unique) | ENGINE_VERSION 1.6.1 - toute modif = tester les 4 scenarios de CLAUDE.md |
+| `src/engine.js` | Moteur de calcul public (source unique) | ENGINE_VERSION 1.6.2 - toute modif = tester les 4 scenarios de CLAUDE.md |
 | `src/solar-icons.js` | Dictionnaire des 118 icones SVG Solar | Partage entre index.html et espace-professionnel.html |
 | `index.html` | Landing + composants React + rapport (~8 700 lignes) | Charge engine.js et solar-icons.js via script tags |
 | `espace-professionnel.html` | Espace professionnel (auth, workspace, branding) | Moteur Pro independant (ENGINE_PRO), pas encore migre sur engine.js. Divergence connue et acceptee a ce stade |

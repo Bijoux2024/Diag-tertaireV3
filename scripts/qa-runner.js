@@ -123,8 +123,8 @@ for (let i = 0; i < S.length; i++) {
     check(!isNaN(row.totalEuro) && isFinite(row.totalEuro), 'totalEuro NaN/Inf');
     check(Math.abs(row.breakdown_total - 100) < 2, `breakdown_total=${row.breakdown_total}%`);
     check(row.intensity > 0 || row.total_kwh === 0, 'intensity==0 malgré conso>0');
-    check(row.engine_version === '1.6.1', `engine_version=${row.engine_version}`); // cible V1.6.1
-    warn(row.engine_version === '1.6.1', `[V1.6.1-GAP] engine_version=${row.engine_version} attendu 1.6.1`);
+    check(row.engine_version === '1.6.2', `engine_version=${row.engine_version}`); // cible V1.6.1
+    warn(row.engine_version === '1.6.2', `[V1.6.1-GAP] engine_version=${row.engine_version} attendu 1.6.1`);
 
     // V1.6.1 : ACT18 reintroduit dans top_actions (BUG-002). Sa visibilite finale
     // depend desormais des memes filtres ROI/gainEuro que les autres actions :

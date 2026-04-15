@@ -1067,7 +1067,7 @@
     <div id="root"></div>
 
     <script src="/src/solar-icons.js"></script>
-    <script src="/src/engine.min.js"></script>
+    <script src="/src/engine.js"></script>
     <script type="text/babel">
         /* ╔═══════════════════════════════════════════════════════════════════════════╗
            ║                           DIAGTERTIAIRE                                   ║
@@ -9277,7 +9277,7 @@
                         const parsed = JSON.parse(saved);
                         const hasInstallationSummary = parsed && parsed.inputs_summary && parsed.inputs_summary.installation_summary;
                         const actionIds = (parsed && Array.isArray(parsed.actions)) ? parsed.actions.map(a => a && a.id) : [];
-                        const hasRemovedActions = actionIds.includes('ACT18') || actionIds.includes('ACT20');
+                        const hasRemovedActions = actionIds.includes('ACT20');
                         // V1.6.0 : invalider tout payload anterieur (capex CET/PAC dynamique)
                         const engineVersionSaved = parsed && parsed.engine_version;
                         const isStaleEngine = engineVersionSaved !== (typeof ENGINE_VERSION !== 'undefined' ? ENGINE_VERSION : '1.6.0');

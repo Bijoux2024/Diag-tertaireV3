@@ -1,5 +1,65 @@
 # Changelog - DiagTertiaire V3
 
+## [v1.6.1 - Fourchette capex +/- 15 %, fallback reseau de chaleur, garde CET > 2000 L] - 2026-04-15
+
+ENGINE_VERSION : 1.6.0 -> 1.6.1
+
+### Corrections consortium (BUG-001 a BUG-007)
+
+- **BUG-001** : `ENGINE_VERSION` passe de `'1.6.0'` a `'1.6.1'` (+ `ENGINE_LAST_UPDATED` 2026-04-15).
+- **BUG-002** : ACT18 (CET) reintroduit dans `top_actions`. Retrait de la ligne de filtre inconditionnelle (ACT20 reste exclu). Correction de la regle d'eligibilite qui excluait a tort les cas `ecsSameSystem && mainHeating !== 'pac'`. ACT20 est desormais retire AVANT la selection top 3 heavy pour preserver les slots.
+- **BUG-003 + exigence fourchette +/- 15 %** : refonte des tiers ACT13 et ACT18. Nouvelle structure `{ power_kw|volume_l, capex_low, capex_mid, capex_high, capex }` avec `capex_low = round(mid x 0.85)` et `capex_high = round(mid x 1.15)`. `capex = capex_mid` (retro-compat ROI). Nouveau champ action `capex_range: { low, mid, high, formatted }` pour l'UI (format FR espace insecable, tiret demi-cadratin U+2013 dans la string formatee uniquement).
+  - ACT13 PAC air/eau (mid) : 10 kW 15 000 EUR, 20 kW 28 000, 50 kW 62 000, 100 kW 120 000, 200 kW 230 000.
+  - ACT18 CET (mid) : 200 L 4 600 EUR, 300 L 5 800, 500 L 9 200, 1 000 L 17 500, 2 000 L 34 000.
+- **BUG-004** : suppression du tier 5 000 L / 84 000 EUR. Si le volume calcule depasse 2 000 L, `newDiagnosticComputeCetSizing` retourne desormais une sentinelle `{ needsStudy: true, reason: 'volume_exceeds_max_tier', V_L_raw }`. Le resolveur d'action ACT18 la transforme en action ACT18_STUDY (`capex: null`, `gainKwh: null`, `study_required: true`, `badge: 'Etude technique requise'`).
+- **BUG-005** : pour ACT13, si `puissanceKwRaw > 200`, conservation du tier 200 kW mais ajout de `oversized: true` et `badge: 'Hors grille tarifaire - etude dediee'` dans la sortie.
+- **BUG-006** : defense en profondeur dans `newDiagnosticComputeCetSizing` : retour `null` immediat si `ecsSource === 'pac'` (meme si `filterAndScoreActions` filtre deja l'action).
+- **BUG-007** : fallback reseau de chaleur dans `newDiagnosticResolveEcsSource` et `newDiagnosticResolveHeatSource`. Si `source === 'gas'` et `gasKwh === 0` alors que `networkUsed && mainHeating === 'network'`, lecture de `networkKwh` avec rendement 0.95 (table reseau de chaleur). Pour ECS, la meme logique s'applique a `ecsSystem === 'network_dedicated'`.
+
+### Fichiers modifies
+
+- `src/engine.js` : ENGINE_VERSION 1.6.1, tiers ACT13/ACT18 refondus, `newDiagnosticFormatCapexRange`, `newDiagnosticBuildCapexRange`, ajout `capex_range`/`oversized`/`study_required`/`badge` dans `top_actions[]`, fallback reseau dans les resolveurs, garde V > 2000 L.
+- `scripts/qa-runner.js` : baseline engine_version cible V1.6.1, grille capex mise a jour, suppression warning V1.6.1-GAP obsolete sur ACT18, prise en compte sentinelle needsStudy.
+- `CHANGELOG.md`, `AI-CONTEXT.md`, `.claude/context/architecture.md` : synchronises.
+
+### Tests
+
+- `node scripts/qa-runner.js` : 30/30 PASS, 0 erreur, 0 warning V1.6.1-GAP.
+- `node scripts/qa-network-probe.js` : N1 et N4 resolvent desormais l'ECS via le reseau (BUG-007 leve). N4 depasse 2 000 L et bascule en etude dediee (BUG-004).
+- 4 scenarios CLAUDE.md : intensite > 0, actions >= 3, breakdown = 100 %, aucun NaN, ACT18 visible sur Hotel 720 m2, `capex_range` present sur ACT13/ACT18.
+
+## [v1.6.0 - Chiffrage CET + PAC air/eau dynamique (facture-based)] - 2026-04-14
+
+ENGINE_VERSION : 1.5.3 -> 1.6.0
+
+### Refonte chiffrage
+
+**Capex CET (ACT18) et PAC air/eau (ACT13) entierement dynamiques** : les capex sont desormais derives de la facture energetique reelle et de tiers commerciaux, plus aucune valeur forfaitaire (fini les `capex_med: 4500` et les tranches de surface arbitraires).
+
+- **Resolveur central** dans `src/engine.js` : toutes les invocations capex CET / PAC air/eau passent par `newDiagnosticComputeCetSizing(data, breakdown)` et `newDiagnosticComputePacEauSizing(data, breakdown)`. Si la source energetique n'est pas declaree dans la facture, le resolveur retourne `null` et l'action est exclue de `topActions`.
+- **Methodologie** : conso facturee x part poste (camembert sectoriel reutilise du breakdown existant) x rendement source actuelle (gaz/fioul 0.85, elec Joule 0.95, PAC 2.5), puis ponderation climatique H1/H2/H3 deduit du code postal, enfin tier commercial immediat au-dessus.
+- **Tiers CET TTC installe** : 200L/4600 EUR, 300L/5800, 500L/9200, 1000L/17500, 2000L/34000, 5000L/84000.
+- **Tiers PAC air/eau TTC installe** : 10kW/17800, 20kW/29000, 50kW/64000, 100kW/122000, 200kW/232000.
+- **Pas de plancher/plafond de securite** : la facture est la source de verite.
+
+### Fichiers modifies
+
+- `src/engine.js` (ENGINE_VERSION 1.6.0)
+  - Nouvelles constantes : `NEW_DIAGNOSTIC_CET_TIERS`, `NEW_DIAGNOSTIC_PAC_EAU_TIERS`, `NEW_DIAGNOSTIC_RENDEMENT_SOURCE`, `NEW_DIAGNOSTIC_CLIMAT_ZONES_H1`, `NEW_DIAGNOSTIC_CLIMAT_ZONES_H3`
+  - Nouvelles fonctions : `newDiagnosticResolveEcsSource`, `newDiagnosticResolveHeatSource`, `newDiagnosticResolveClimatZone`, `newDiagnosticComputeCetSizing`, `newDiagnosticComputePacEauSizing`
+  - Suppressions : `newDiagnosticEstimateRooms`, `newDiagnosticComputeCetCapex` (remplacees par le resolveur central, aucun autre callsite)
+  - Fiche ACT18 : suppression `capex_low/med/high` hardcodes, conservation de `capex_method: 'cet_sized'`
+  - Bascules ACT13 (gaz/fioul -> elec, convecteurs -> PAC) : remplacement des formules de surface par le sizing PAC
+  - Bascules ACT18 (gaz -> CET, ballon elec -> CET) : remplacement du capex forfaitaire par le sizing CET
+  - Branche standard `capex_method === 'pac_tranches'` / `'cet_sized'` : routee vers le resolveur central
+  - Filtrage `newDiagnosticFilterAndScoreActions` : exclusion des actions dont `calculateActionGain` retourne `null`
+  - Payload `newDiagnosticBuildReportData` : ajout du champ `engine_version` pour invalidation cache
+- `diagnostic.html` : invalidation du cache `newDiagnosticLatestReport` si `engine_version` != `ENGINE_VERSION` courant
+
+### Bug corrige
+
+- Hotel 720 m² affichait un capex CET de 4500 EUR (fallback hardcode de la fiche ACT18). Avec le resolveur dynamique, le capex reflete desormais le volume de ballon reellement necessaire d'apres la facture et tombe sur le tier commercial approprie (typiquement 1000-2000L pour ce profil, soit 17500-34000 EUR).
+
 ## [v1.5.3 - Retrait inconditionnel ACT18 + ACT20] - 2026-04-14
 
 ENGINE_VERSION : 1.5.2 -> 1.5.3

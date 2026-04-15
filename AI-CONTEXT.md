@@ -27,7 +27,7 @@ C'est un outil d'ORIENTATION DECISIONNELLE, pas un audit energetique.
 
 | Fichier | Role | Attention |
 |---|---|---|
-| `src/engine.js` | Moteur de calcul public (source unique, 2 420 lignes) | ENGINE_VERSION 1.4.0 - toute modif = tester 3 scenarios |
+| `src/engine.js` | Moteur de calcul public (source unique) | ENGINE_VERSION 1.6.1 - toute modif = tester les 4 scenarios de CLAUDE.md |
 | `src/solar-icons.js` | Dictionnaire des 118 icones SVG Solar | Partage entre index.html et espace-professionnel.html |
 | `index.html` | Landing + composants React + rapport (~8 700 lignes) | Charge engine.js et solar-icons.js via script tags |
 | `espace-professionnel.html` | Espace professionnel (auth, workspace, branding) | Moteur Pro independant (ENGINE_PRO), pas encore migre sur engine.js. Divergence connue et acceptee a ce stade |
@@ -112,6 +112,21 @@ Le moteur est extrait dans `src/engine.js` (source unique). Charge via `<script 
 - **Pipeline principal** : `newDiagnosticBuildReportData(formData)` - retourne l'objet rapport complet
   - Inclut `envelope_opportunities` pour les batiments pre-2000 (travaux d'enveloppe hors seuil ROI)
   - Inclut `warnings` : NETWORK_HEAT_PARTIAL, NO_CONSUMPTION_DATA, PRICE_IMPLIED_OUT_OF_RANGE
+
+### V1.6.1 - Tiers capex ACT13/ACT18 et champ `capex_range`
+
+Depuis V1.6.1, chaque tier contient `{ power_kw|volume_l, capex_low, capex_mid, capex_high, capex }` ou `capex_low = round(capex_mid x 0.85)` et `capex_high = round(capex_mid x 1.15)`. `capex` est conserve (= `capex_mid`) pour retro-compatibilite des calculs ROI.
+
+Chaque action de `top_actions[]` expose desormais :
+- `capex_range: { low, mid, high, formatted }` - la chaine `formatted` est prete pour l'UI (format FR, espace insecable, tiret demi-cadratin U+2013 ex : "15 000 EUR - 17 250 EUR").
+- `oversized: bool` + `badge` - ACT13 PAC > 200 kW, hors grille tarifaire.
+- `study_required: bool` + `badge` - ACT18 > 2 000 L (volume CET depasse le dernier tier), action `ACT18_STUDY` dediee (capex null, gainKwh null).
+
+Garde volume CET : `newDiagnosticComputeCetSizing` retourne une sentinelle `{ needsStudy: true, reason: 'volume_exceeds_max_tier', V_L_raw }` si le volume calcule depasse 2 000 L. Le tier 5 000 L / 84 000 EUR a ete supprime.
+
+Defense en profondeur CET (BUG-006) : `newDiagnosticComputeCetSizing` retourne `null` si la source ECS resolue est deja thermodynamique (`ecsSource === 'pac'`).
+
+Fallback reseau de chaleur (BUG-007) : `newDiagnosticResolveEcsSource` et `newDiagnosticResolveHeatSource` lisent `networkKwh` avec rendement 0.95 lorsque `gasKwh === 0` mais `networkUsed && mainHeating === 'network'`. La variante ECS gere aussi `ecsSystem === 'network_dedicated'`.
 - **Projection** : `newDiagnosticBuildProjectionData({...})` - projection 10 ans avec inflation
 
 Note : `espace-professionnel.html` utilise son propre moteur (`ENGINE_PRO`, inline) qui diverge de engine.js. Migration future prevue mais pas prioritaire.

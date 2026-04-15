@@ -9,8 +9,8 @@
  *
  * Toute modification doit etre testee sur minimum 3 scenarios.
  */
-const ENGINE_VERSION = '1.5.3';
-const ENGINE_LAST_UPDATED = '2026-04-14';
+const ENGINE_VERSION = '1.6.1';
+const ENGINE_LAST_UPDATED = '2026-04-15';
 
 // ═══════════════════════════════════════════════════════════════
 // CONSTANTES PARTAGEES (utilisees par le moteur ET le formulaire)
@@ -697,9 +697,8 @@ const NEW_DIAGNOSTIC_ACTIONS_LIBRARY = {
             trigger_rules: ['ecsSystem === electric_boiler'],
             gain_scope: 'dhw_post',
             gain_pct_low: 0.50, gain_pct_med: 0.60, gain_pct_high: 0.75,
-            // Lot 1.2 : capex dimensionné par activité/surface (cf. newDiagnosticComputeCetCapex).
-            // Les valeurs ci-dessous ne servent que de fallback quand activity = défaut.
-            capex_low: 2500, capex_med: 4500, capex_high: 6000,
+            // V1.6.0 : capex entierement dynamique via newDiagnosticComputeCetSizing (facture + tiers commerciaux).
+            // Aucune valeur hardcodee ici : si le sizing retourne null, l'action est filtree en amont.
             capex_method: 'cet_sized',
             capex_unit: '€',
             roi_method: 'simple_payback',
@@ -1459,23 +1458,250 @@ const newDiagnosticBuildInstallationSummary = (formData) => {
     return `Votre bâtiment est chauffé par ${heatingLabel}, ${ecsClause}${coolingClause}.`;
 };
 
-// ── Helpers ECS dimensionnement (Lot 1.2) ──
-// (newDiagnosticClamp deja declare ligne 1265)
+// ══════════════════════════════════════════════════════════════════════
+// V1.6.0 : DIMENSIONNEMENT DYNAMIQUE CET + PAC AIR/EAU (resolveur central)
+// Source unique. Toute invocation de capex CET ou PAC doit passer par ici.
+// Pas de fallback hardcode : si la source ECS/chauffage n'existe pas dans
+// la facture, newDiagnosticComputeCetSizing / PacEauSizing retourne null
+// et l'action correspondante est filtree en amont par topActions.
+// ══════════════════════════════════════════════════════════════════════
 
-const newDiagnosticEstimateRooms = (activity, surface) => {
-    if (activity === 'hotel') return Math.max(5, Math.round(surface / 25));
-    if (activity === 'residence' || activity === 'ehpad') return Math.max(5, Math.round(surface / 30));
-    return null;
+// V1.6.1 : grille consortium artisan FR Q4 2025, fourchette +/- 15 % autour du mid.
+// capex_mid = valeur centrale, capex_low = mid x 0.85, capex_high = mid x 1.15 (arrondi entier EUR).
+// Le champ `capex` est conserve (= capex_mid) pour retro-compatibilite du reste du moteur.
+// Plafond CET : 2000 L (cf. BUG-004 - au-dela, action ACT18_STUDY dediee).
+const NEW_DIAGNOSTIC_CET_TIERS = [
+    { volumeL: 200,  capex_low: 3910,  capex_mid: 4600,  capex_high: 5290,  capex: 4600 },
+    { volumeL: 300,  capex_low: 4930,  capex_mid: 5800,  capex_high: 6670,  capex: 5800 },
+    { volumeL: 500,  capex_low: 7820,  capex_mid: 9200,  capex_high: 10580, capex: 9200 },
+    { volumeL: 1000, capex_low: 14875, capex_mid: 17500, capex_high: 20125, capex: 17500 },
+    { volumeL: 2000, capex_low: 28900, capex_mid: 34000, capex_high: 39100, capex: 34000 }
+];
+
+// V1.6.1 : grille consortium artisan FR Q4 2025 (PAC air/eau), fourchette +/- 15 %.
+const NEW_DIAGNOSTIC_PAC_EAU_TIERS = [
+    { puissanceKw: 10,  capex_low: 12750,  capex_mid: 15000,  capex_high: 17250,  capex: 15000 },
+    { puissanceKw: 20,  capex_low: 23800,  capex_mid: 28000,  capex_high: 32200,  capex: 28000 },
+    { puissanceKw: 50,  capex_low: 52700,  capex_mid: 62000,  capex_high: 71300,  capex: 62000 },
+    { puissanceKw: 100, capex_low: 102000, capex_mid: 120000, capex_high: 138000, capex: 120000 },
+    { puissanceKw: 200, capex_low: 195500, capex_mid: 230000, capex_high: 264500, capex: 230000 }
+];
+
+// Formate une fourchette capex "15 000 EUR - 17 250 EUR" (espace insecable milliers, tiret demi-cadratin U+2013).
+const newDiagnosticFormatCapexRange = (low, high) => {
+    const nf = new Intl.NumberFormat('fr-FR');
+    return `${nf.format(low)} € \u2013 ${nf.format(high)} €`;
 };
 
-const newDiagnosticComputeCetCapex = (activity, surface, numberOfRooms) => {
-    if (['hotel', 'residence', 'ehpad'].includes(activity)) {
-        const rooms = (numberOfRooms && numberOfRooms > 0) ? numberOfRooms : newDiagnosticEstimateRooms(activity, surface);
-        return newDiagnosticClamp(rooms * 700 + 8000, 8000, 45000);
+// Construit l'objet capex_range { low, mid, high, formatted } a partir d'un tier.
+const newDiagnosticBuildCapexRange = (tier) => {
+    if (!tier) return null;
+    return {
+        low: tier.capex_low,
+        mid: tier.capex_mid,
+        high: tier.capex_high,
+        formatted: newDiagnosticFormatCapexRange(tier.capex_low, tier.capex_high)
+    };
+};
+
+// Rendements des sources actuelles (kWh utile / kWh facture)
+const NEW_DIAGNOSTIC_RENDEMENT_SOURCE = {
+    gas: 0.85,
+    fuel: 0.85,
+    network: 0.95,
+    electric: 0.95,        // effet Joule
+    electric_convector: 0.95,
+    electric_boiler: 0.95, // ballon electrique classique
+    pac: 2.5,              // COP moyen existant (rapport utile / facture elec)
+    electric_pac: 2.5,
+    heat_pump: 2.5
+};
+
+// Zones climatiques H1/H3 par prefixe code postal (FR metropolitaine).
+// Tout le reste = H2.
+const NEW_DIAGNOSTIC_CLIMAT_ZONES_H1 = new Set([
+    '01','02','03','08','10','15','19','21','25','27','39','42','43','45',
+    '51','52','54','55','57','58','60','61','62','63','67','68','69','70',
+    '71','73','74','76','77','78','80','87','88','89','90','91','92','93',
+    '94','95'
+]);
+const NEW_DIAGNOSTIC_CLIMAT_ZONES_H3 = new Set([
+    '06','11','13','20','30','34','66','83','84'
+]);
+
+const newDiagnosticResolveClimatZone = (data) => {
+    const prefix = newDiagnosticExtractPostalPrefix(data && data.postalCode);
+    if (!prefix) return 'H2';
+    if (NEW_DIAGNOSTIC_CLIMAT_ZONES_H1.has(prefix)) return 'H1';
+    if (NEW_DIAGNOSTIC_CLIMAT_ZONES_H3.has(prefix)) return 'H3';
+    return 'H2';
+};
+
+// Resolveur source ECS
+// Retourne { source, consoKwh, rendement } ou null si aucune source ECS exploitable
+const newDiagnosticResolveEcsSource = (data) => {
+    if (!data) return null;
+    const mainHeatingNorm = HEATING_TYPE_NORMALIZE[data.mainHeating] || data.mainHeating || 'gas';
+    const ecsSame = data.ecsSameSystem !== false;
+    const elecKwh = (data.elecUsed && parseFloat(data.elecKwh)) || 0;
+    const gasKwh = (data.gasUsed && parseFloat(data.gasKwh)) || 0;
+    const isFuel = data.mainHeating === 'fuel' || data.mainHeating === 'fioul';
+    const ecsSystem = data.ecsSystem || '';
+
+    let source;
+    if (ecsSame) {
+        // ECS produite par le systeme de chauffage principal
+        if (mainHeatingNorm === 'gas' || mainHeatingNorm === 'network') source = 'gas';
+        else if (isFuel || mainHeatingNorm === 'fuel') source = 'fuel';
+        else if (mainHeatingNorm === 'pac') source = 'pac';
+        else source = 'electric';
+    } else {
+        // ecsSystem explicite
+        if (ecsSystem === 'gas_boiler' || ecsSystem === 'gas_instant') source = 'gas';
+        else if (ecsSystem === 'electric_boiler') source = 'electric';
+        else if (ecsSystem === 'heat_pump') source = 'pac';
+        else if (ecsSystem === 'solar') return null; // solaire thermique : pas de remplacement CET pertinent
+        else if (ecsSystem === 'network_dedicated') source = 'gas';
+        else source = 'electric';
     }
-    if (activity === 'restaurant') return newDiagnosticClamp(surface * 30, 6000, 22000);
-    if (['sport', 'piscine', 'spa'].includes(activity)) return newDiagnosticClamp(surface * 25, 8000, 30000);
-    return 4500;
+
+    // Conso source
+    let consoKwh = 0;
+    let rendement = NEW_DIAGNOSTIC_RENDEMENT_SOURCE[source] || 0.95;
+    if (source === 'gas' || source === 'fuel') consoKwh = gasKwh;
+    else consoKwh = elecKwh; // electric / pac
+
+    // BUG-007 : fallback reseau de chaleur. Le split sait allouer des kWh ECS au reseau,
+    // mais gasUsed peut etre false si seul networkKwh est rempli. On lit networkKwh et on
+    // bascule sur le rendement reseau (0.95).
+    if (source === 'gas' && consoKwh === 0 && data.networkUsed && (mainHeatingNorm === 'network' || ecsSystem === 'network_dedicated')) {
+        consoKwh = parseFloat(data.networkKwh) || 0;
+        rendement = NEW_DIAGNOSTIC_RENDEMENT_SOURCE.network;
+    }
+
+    if (!(consoKwh > 0)) return null;
+
+    return { source, consoKwh, rendement };
+};
+
+// Resolveur source chauffage
+const newDiagnosticResolveHeatSource = (data) => {
+    if (!data) return null;
+    const mainHeatingNorm = HEATING_TYPE_NORMALIZE[data.mainHeating] || data.mainHeating || 'gas';
+    const isFuel = data.mainHeating === 'fuel' || data.mainHeating === 'fioul';
+    const elecKwh = (data.elecUsed && parseFloat(data.elecKwh)) || 0;
+    const gasKwh = (data.gasUsed && parseFloat(data.gasKwh)) || 0;
+
+    let source;
+    if (mainHeatingNorm === 'gas' || mainHeatingNorm === 'network') source = 'gas';
+    else if (isFuel || mainHeatingNorm === 'fuel') source = 'fuel';
+    else if (mainHeatingNorm === 'pac') source = 'pac';
+    else source = 'electric';
+
+    let consoKwh = 0;
+    let rendement = NEW_DIAGNOSTIC_RENDEMENT_SOURCE[source] || 0.95;
+    if (source === 'gas' || source === 'fuel') consoKwh = gasKwh;
+    else consoKwh = elecKwh;
+
+    // BUG-007 : fallback reseau de chaleur (symmetrique ResolveEcsSource).
+    if (source === 'gas' && consoKwh === 0 && data.networkUsed && mainHeatingNorm === 'network') {
+        consoKwh = parseFloat(data.networkKwh) || 0;
+        rendement = NEW_DIAGNOSTIC_RENDEMENT_SOURCE.network;
+    }
+
+    if (!(consoKwh > 0)) return null;
+
+    return { source, consoKwh, rendement };
+};
+
+// Choisit le tier commercial juste au-dessus de la valeur demandee
+const newDiagnosticPickTierAbove = (tiers, key, value) => {
+    for (const tier of tiers) {
+        if (tier[key] >= value) return tier;
+    }
+    return tiers[tiers.length - 1];
+};
+
+// Dimensionnement CET : volume ballon + capex tier.
+// breakdown attendu : objet avec dhw_pct (venant de splitResult.breakdown_pct)
+const newDiagnosticComputeCetSizing = (data, breakdown) => {
+    const ecs = newDiagnosticResolveEcsSource(data);
+    if (!ecs) return null;
+    // BUG-006 : defense en profondeur. Si la source ECS actuelle est deja thermodynamique,
+    // le remplacement par un CET n'a pas de sens thermique (COP source ~ COP cible).
+    if (ecs.source === 'pac') return null;
+    const partEcs = ((breakdown && breakdown.dhw_pct) || 0) / 100;
+    if (!(partEcs > 0)) return null;
+
+    const besoinUtileKwh = ecs.consoKwh * partEcs * ecs.rendement;
+    if (!(besoinUtileKwh > 0)) return null;
+
+    const zone = newDiagnosticResolveClimatZone(data);
+    const coefZone = zone === 'H1' ? 1.03 : zone === 'H3' ? 0.97 : 1.00;
+    const besoinPondereKwh = besoinUtileKwh * coefZone;
+
+    // V (L) = besoin annuel kWh utile / 19.053
+    // 19.053 = 365 jours x 45 degres DT x 1.16 Wh/L/degres / 1000 (conversion Wh -> kWh)
+    const volumeLraw = besoinPondereKwh / 19.053;
+
+    // BUG-004 : au-dela du plafond 2000 L, aucun tier residentiel/petit tertiaire n'est pertinent.
+    // Signalement d'une etude technique dediee (multi-ballons) pour eviter une saturation trompeuse.
+    if (volumeLraw > 2000) {
+        return {
+            needsStudy: true,
+            reason: 'volume_exceeds_max_tier',
+            V_L_raw: Math.round(volumeLraw),
+            climat_zone: zone,
+            besoin_utile_kwh: Math.round(besoinPondereKwh),
+            source_ecs: ecs.source
+        };
+    }
+
+    const tier = newDiagnosticPickTierAbove(NEW_DIAGNOSTIC_CET_TIERS, 'volumeL', volumeLraw);
+    return {
+        volumeL: tier.volumeL,
+        volumeLraw: Math.round(volumeLraw),
+        tier,
+        capex: tier.capex,
+        capex_range: newDiagnosticBuildCapexRange(tier),
+        climat_zone: zone,
+        besoin_utile_kwh: Math.round(besoinPondereKwh),
+        source_ecs: ecs.source
+    };
+};
+
+// Dimensionnement PAC air/eau : puissance kW + capex tier.
+const newDiagnosticComputePacEauSizing = (data, breakdown) => {
+    const heat = newDiagnosticResolveHeatSource(data);
+    if (!heat) return null;
+    const partChauffage = ((breakdown && breakdown.heating_pct) || 0) / 100;
+    if (!(partChauffage > 0)) return null;
+
+    const besoinUtileKwh = heat.consoKwh * partChauffage * heat.rendement;
+    if (!(besoinUtileKwh > 0)) return null;
+
+    const zone = newDiagnosticResolveClimatZone(data);
+    const coefZone = zone === 'H1' ? 1.10 : zone === 'H3' ? 0.90 : 1.00;
+    const besoinPondereKwh = besoinUtileKwh * coefZone;
+
+    // Puissance = besoin / 1800 h (equivalent pleine puissance tertiaire)
+    const puissanceKwRaw = besoinPondereKwh / 1800;
+    const tier = newDiagnosticPickTierAbove(NEW_DIAGNOSTIC_PAC_EAU_TIERS, 'puissanceKw', puissanceKwRaw);
+    // BUG-005 : au-dela du plafond 200 kW, on conserve le tier pour l'ordre de grandeur
+    // mais on flag l'action pour que le rapport signale clairement l'etude dediee.
+    const oversized = puissanceKwRaw > 200;
+    return {
+        puissanceKw: tier.puissanceKw,
+        puissanceKwRaw: Math.round(puissanceKwRaw * 10) / 10,
+        tier,
+        capex: tier.capex,
+        capex_range: newDiagnosticBuildCapexRange(tier),
+        climat_zone: zone,
+        besoin_utile_kwh: Math.round(besoinPondereKwh),
+        source_chauffage: heat.source,
+        oversized,
+        badge: oversized ? 'Hors grille tarifaire - etude dediee' : null
+    };
 };
 
 const newDiagnosticCalculateActionGain = (action, splitResult, surface, formData, energyPrices) => {
@@ -1544,12 +1770,13 @@ const newDiagnosticCalculateActionGain = (action, splitResult, surface, formData
         const gainEuro = Math.max(0, economieAncienCombustible - surcoutElec);
         const gainKwh = Math.max(0, heatingGasKwh - newElecKwh);
 
-        let capex = 0;
-        if (safeSurface <= 200) capex = Math.max(10000, safeSurface * 95);
-        else if (safeSurface <= 500) capex = 200 * 95 + (safeSurface - 200) * 65;
-        else capex = 200 * 95 + 300 * 65 + (safeSurface - 500) * 45;
+        // V1.6.0 : capex PAC air/eau via resolveur dynamique (tiers commerciaux)
+        const pacSizing = newDiagnosticComputePacEauSizing(formData, splitResult.breakdown_pct);
+        if (!pacSizing) return null;
+        const capex = pacSizing.capex;
+        const capex_range = pacSizing.capex_range || null;
 
-        // Aides PAC dégressives selon surface (Fonds Chaleur inaccessible < 30 kW ≈ < 300 m²)
+        // Aides PAC degressives selon surface (Fonds Chaleur inaccessible < 30 kW ≈ < 300 m²)
         const aidPct = safeSurface <= 200 ? 0.18 : safeSurface <= 600 ? 0.25 : 0.30;
         const aidAmount = Math.round(capex * aidPct);
         const capexNet = Math.round(capex * (1 - aidPct));
@@ -1566,10 +1793,15 @@ const newDiagnosticCalculateActionGain = (action, splitResult, surface, formData
             gainKwh,
             gainEuro,
             capex,
+            capex_range,
+            capex_low: capex_range ? capex_range.low : null,
+            capex_high: capex_range ? capex_range.high : null,
             capexNet,
             aidAmount,
             aidPct,
             roi_years,
+            oversized: !!pacSizing.oversized,
+            badge: pacSizing.badge || null,
             displayName,
             gain_pct_total: totalKwh > 0 ? Math.round((gainKwh / totalKwh) * 1000) / 10 : 0,
             energy_switch: true,
@@ -1595,19 +1827,26 @@ const newDiagnosticCalculateActionGain = (action, splitResult, surface, formData
         const gainKwh = heatingElecKwh - newElecKwh;
         const gainEuro = Math.round(gainKwh * ePrices.elec);
 
-        let capex = 0;
-        if (safeSurface <= 200) capex = Math.max(10000, safeSurface * 95);
-        else if (safeSurface <= 500) capex = 200 * 95 + (safeSurface - 200) * 65;
-        else capex = 200 * 95 + 300 * 65 + (safeSurface - 500) * 45;
+        // V1.6.0 : capex PAC air/eau via resolveur dynamique (tiers commerciaux)
+        const pacSizing = newDiagnosticComputePacEauSizing(formData, splitResult.breakdown_pct);
+        if (!pacSizing) return null;
+        const capex = pacSizing.capex;
+        const capex_range = pacSizing.capex_range || null;
 
-        // Aides PAC dégressives selon surface (Fonds Chaleur inaccessible < 30 kW ≈ < 300 m²)
+        // Aides PAC degressives selon surface (Fonds Chaleur inaccessible < 30 kW ≈ < 300 m²)
         const aidPct = safeSurface <= 200 ? 0.18 : safeSurface <= 600 ? 0.25 : 0.30;
         const aidAmount = Math.round(capex * aidPct);
         const capexNet = Math.round(capex * (1 - aidPct));
         const roi_years = gainEuro > 0 ? Math.round((capexNet / gainEuro) * 10) / 10 : null;
 
         return {
-            gainKwh, gainEuro, capex, capexNet, aidAmount, aidPct, roi_years,
+            gainKwh, gainEuro, capex,
+            capex_range,
+            capex_low: capex_range ? capex_range.low : null,
+            capex_high: capex_range ? capex_range.high : null,
+            capexNet, aidAmount, aidPct, roi_years,
+            oversized: !!pacSizing.oversized,
+            badge: pacSizing.badge || null,
             displayName: 'Remplacer les radiateurs électriques par une pompe à chaleur',
             gain_pct_total: totalKwh > 0 ? Math.round((gainKwh / totalKwh) * 1000) / 10 : 0,
             energy_switch: true,
@@ -1632,20 +1871,36 @@ const newDiagnosticCalculateActionGain = (action, splitResult, surface, formData
         const gainEuro = Math.max(0, economieGaz - surcoutElec);
         const gainKwh = Math.max(0, ecsGasKwh - newElecKwh);
 
-        // Lot 1.2 : capex dimensionné par activité (CHR : par chambre, restauration : surface, sport : surface)
-        const numberOfRooms = (formData.numberOfRooms && Number(formData.numberOfRooms) > 0)
-            ? Number(formData.numberOfRooms)
-            : newDiagnosticEstimateRooms(formData.activity, safeSurface);
-        const capex = newDiagnosticComputeCetCapex(formData.activity, safeSurface, numberOfRooms);
-        const capex_low = Math.round(capex * 0.75);
-        const capex_high = Math.round(capex * 1.25);
+        // V1.6.0/V1.6.1 : capex CET via resolveur dynamique (+ sentinelle volume > 2000 L).
+        const cetSizing = newDiagnosticComputeCetSizing(formData, splitResult.breakdown_pct);
+        if (!cetSizing) return null;
+        if (cetSizing.needsStudy) {
+            return {
+                gainKwh: null, gainEuro: 0,
+                capex: null, capex_range: null, capex_low: null, capex_high: null,
+                capexNet: null, aidAmount: 0, aidPct: 0, roi_years: null,
+                study_required: true,
+                badge: 'Etude technique requise',
+                displayName: 'Etude ECS thermodynamique dediee - installation multi-ballons',
+                V_L_raw: cetSizing.V_L_raw,
+                gain_pct_total: 0,
+                energy_switch: false,
+                energy_switch_note: null
+            };
+        }
+        const capex = cetSizing.capex;
+        const capex_range = cetSizing.capex_range || null;
         const aidPct = action.aid_pct || 0;
         const aidAmount = Math.round(capex * aidPct);
         const capexNet = Math.round(capex * (1 - aidPct));
         const roi_years = gainEuro > 0 ? Math.round((capexNet / gainEuro) * 10) / 10 : null;
 
         return {
-            gainKwh, gainEuro, capex, capex_low, capex_high, capexNet, aidAmount, aidPct, roi_years,
+            gainKwh, gainEuro, capex,
+            capex_range,
+            capex_low: capex_range ? capex_range.low : null,
+            capex_high: capex_range ? capex_range.high : null,
+            capexNet, aidAmount, aidPct, roi_years,
             gain_pct_total: totalKwh > 0 ? Math.round((gainKwh / totalKwh) * 1000) / 10 : 0,
             energy_switch: true,
             energy_switch_detail: {
@@ -1665,19 +1920,36 @@ const newDiagnosticCalculateActionGain = (action, splitResult, surface, formData
         const gainKwh = ecsElecKwh - newElecKwh;
         const gainEuro = Math.round(gainKwh * ePrices.elec);
 
-        const numberOfRooms = (formData.numberOfRooms && Number(formData.numberOfRooms) > 0)
-            ? Number(formData.numberOfRooms)
-            : newDiagnosticEstimateRooms(formData.activity, safeSurface);
-        const capex = newDiagnosticComputeCetCapex(formData.activity, safeSurface, numberOfRooms);
-        const capex_low = Math.round(capex * 0.75);
-        const capex_high = Math.round(capex * 1.25);
+        // V1.6.0/V1.6.1 : capex CET via resolveur dynamique (+ sentinelle volume > 2000 L).
+        const cetSizing = newDiagnosticComputeCetSizing(formData, splitResult.breakdown_pct);
+        if (!cetSizing) return null;
+        if (cetSizing.needsStudy) {
+            return {
+                gainKwh: null, gainEuro: 0,
+                capex: null, capex_range: null, capex_low: null, capex_high: null,
+                capexNet: null, aidAmount: 0, aidPct: 0, roi_years: null,
+                study_required: true,
+                badge: 'Etude technique requise',
+                displayName: 'Etude ECS thermodynamique dediee - installation multi-ballons',
+                V_L_raw: cetSizing.V_L_raw,
+                gain_pct_total: 0,
+                energy_switch: false,
+                energy_switch_note: null
+            };
+        }
+        const capex = cetSizing.capex;
+        const capex_range = cetSizing.capex_range || null;
         const aidPct = action.aid_pct || 0;
         const aidAmount = Math.round(capex * aidPct);
         const capexNet = Math.round(capex * (1 - aidPct));
         const roi_years = gainEuro > 0 ? Math.round((capexNet / gainEuro) * 10) / 10 : null;
 
         return {
-            gainKwh, gainEuro, capex, capex_low, capex_high, capexNet, aidAmount, aidPct, roi_years,
+            gainKwh, gainEuro, capex,
+            capex_range,
+            capex_low: capex_range ? capex_range.low : null,
+            capex_high: capex_range ? capex_range.high : null,
+            capexNet, aidAmount, aidPct, roi_years,
             gain_pct_total: totalKwh > 0 ? Math.round((gainKwh / totalKwh) * 1000) / 10 : 0,
             energy_switch: true,
             energy_switch_detail: {
@@ -1697,10 +1969,37 @@ const newDiagnosticCalculateActionGain = (action, splitResult, surface, formData
     // ── CAPEX ──
     let capex = action.capex_med || 0;
 
+    // V1.6.1 : capex_range (fourchette +/- 15 %) + flags eventuels (oversized PAC, CET needsStudy).
+    let capexRange = null;
+    let oversizedFlag = false;
+    let studyFlag = null;
+
     if (action.capex_method === 'pac_tranches') {
-        if (safeSurface <= 200) capex = Math.max(10000, safeSurface * 95);
-        else if (safeSurface <= 500) capex = 200 * 95 + (safeSurface - 200) * 65;
-        else capex = 200 * 95 + 300 * 65 + (safeSurface - 500) * 45;
+        // V1.6.0 : capex PAC air/eau via resolveur central (facture-based)
+        const pacSizingStd = newDiagnosticComputePacEauSizing(formData, splitResult.breakdown_pct);
+        if (!pacSizingStd) return null;
+        capex = pacSizingStd.capex;
+        capexRange = pacSizingStd.capex_range || null;
+        oversizedFlag = !!pacSizingStd.oversized;
+    } else if (action.capex_method === 'cet_sized') {
+        // V1.6.0 : capex CET via resolveur central (facture-based)
+        const cetSizingStd = newDiagnosticComputeCetSizing(formData, splitResult.breakdown_pct);
+        if (!cetSizingStd) return null;
+        // V1.6.1 BUG-004 : sentinelle volume > 2000 L => action ACT18_STUDY dediee.
+        if (cetSizingStd.needsStudy) {
+            studyFlag = {
+                id: 'ACT18_STUDY',
+                badge: 'Etude technique requise',
+                label: 'Etude ECS thermodynamique dediee - installation multi-ballons',
+                reason: cetSizingStd.reason,
+                V_L_raw: cetSizingStd.V_L_raw
+            };
+            capex = null;
+            capexRange = null;
+        } else {
+            capex = cetSizingStd.capex;
+            capexRange = cetSizingStd.capex_range || null;
+        }
     } else if (action.capex_per_m2) {
         capex = Math.max(action.capex_min || action.capex_low, Math.round(safeSurface * action.capex_per_m2));
     } else if (action.capex_unit === '€/m²') {
@@ -1747,19 +2046,47 @@ const newDiagnosticCalculateActionGain = (action, splitResult, surface, formData
         else if (safeSurface <= 600) aidPct = 0.25;  // CEE + Fonds Chaleur partiel
         else aidPct = 0.30;                           // CEE + Fonds Chaleur plein
     }
-    const capexNet = Math.round(capex * (1 - aidPct));
-    const aidAmount = Math.round(capex * aidPct);
-    const roi_years = gainEuro > 0 ? Math.round((capexNet / gainEuro) * 10) / 10 : null;
+    // V1.6.1 : si CET sentinelle (V > 2000 L), retourner une fiche "etude dediee".
+    if (studyFlag) {
+        return {
+            gainKwh: null,
+            gainEuro: 0,
+            capex: null,
+            capex_range: null,
+            capex_low: null,
+            capex_high: null,
+            capexNet: null,
+            aidAmount: 0,
+            aidPct: 0,
+            roi_years: null,
+            study_required: true,
+            badge: studyFlag.badge,
+            displayName: studyFlag.label,
+            V_L_raw: studyFlag.V_L_raw,
+            gain_pct_total: 0,
+            energy_switch: false,
+            energy_switch_note: null
+        };
+    }
+
+    const capexNet = capex != null ? Math.round(capex * (1 - aidPct)) : null;
+    const aidAmount = capex != null ? Math.round(capex * aidPct) : 0;
+    const roi_years = gainEuro > 0 && capexNet != null ? Math.round((capexNet / gainEuro) * 10) / 10 : null;
 
     return {
         gainKwh,
         gainEuro,
         capex,
+        capex_range: capexRange,
+        capex_low: capexRange ? capexRange.low : null,
+        capex_high: capexRange ? capexRange.high : null,
         capexNet,
         aidAmount,
         aidPct,
         roi_years,
-        gain_pct_total: totalKwh > 0 ? Math.round((gainKwh / totalKwh) * 1000) / 10 : 0,
+        oversized: oversizedFlag,
+        badge: oversizedFlag ? 'Hors grille tarifaire - etude dediee' : null,
+        gain_pct_total: totalKwh > 0 && gainKwh ? Math.round((gainKwh / totalKwh) * 1000) / 10 : 0,
         energy_switch: false,
         energy_switch_note: null
     };
@@ -1827,13 +2154,14 @@ const newDiagnosticFilterAndScoreActions = (formData, splitResult) => {
                 || (activityNorm === 'offices' && surface >= 500);
             if (!highOccupancy) return false;
         }
-        // ACT18 (CET) : autorise pour ballon elec ou gaz, exclu si ECS deja thermodynamique
-        // W7-BIS M5 : exclure si ECS = CET deja installe ou PAC double service
+        // ACT18 (CET) : autorise pour ballon elec ou gaz (y compris couple au chauffage),
+        // exclu si ECS deja thermodynamique.
+        // V1.6.1 : regle 2163 supprimee (elle excluait a tort tous les cas ecsSameSystem+non-pac).
+        // W7-BIS M5 : exclure si ECS = PAC double service ou ballon thermodynamique deja installe.
         if (action.id === 'ACT18') {
             if (formData.ecsSystem === 'heat_pump') return false;
             if (formData.ecsSameSystem && mainHeatingNorm === 'pac') return false;
             if (!formData.ecsSameSystem && !['electric_boiler', 'gas_boiler', 'gas_instant'].includes(formData.ecsSystem)) return false;
-            if (formData.ecsSameSystem && mainHeatingNorm !== 'pac') return false;
         }
         // ACT22 conditions
         if (action.id === 'ACT22' && surface < 100) return false;
@@ -1852,6 +2180,10 @@ const newDiagnosticFilterAndScoreActions = (formData, splitResult) => {
     const energyPrices = { elec: NEW_DIAGNOSTIC_ENERGY_PRICES.electricity.price_default_eur_kwh, gas: gasOrFuelPrice };
     const scoredActions = eligibleActions.map(action => {
         const calc = newDiagnosticCalculateActionGain(action, splitResult, surface, formData, energyPrices);
+        // V1.6.0 : le resolveur central retourne null si la source energie est
+        // absente de la facture (ex : ACT18 sans source ECS declaree, ACT13 sans
+        // source chauffage declaree). On exclut ces actions du scoring.
+        if (!calc) return null;
 
         let feasibility = 1.0;
         if (action.category?.includes('envelope')) feasibility = 0.55;
@@ -1871,8 +2203,12 @@ const newDiagnosticFilterAndScoreActions = (formData, splitResult) => {
         return { ...action, ...calc, priorityScore };
     });
 
-    // Filtrer les actions non rentables
+    // Filtrer les actions non rentables (ou null venant du resolveur central)
+    // V1.6.1 : les actions "study_required" (ex ACT18 > 2000 L) sont conservees meme
+    // sans gain chiffrable : elles signalent une etude dediee au client.
     const filteredActions = scoredActions.filter(a => {
+        if (!a) return false;
+        if (a.study_required) return true;
         if (a.roi_years !== null && a.roi_years > 10) return false;
         if (a.gainEuro <= 0) return false;
         return true;
@@ -1880,16 +2216,17 @@ const newDiagnosticFilterAndScoreActions = (formData, splitResult) => {
 
     filteredActions.sort((a, b) => b.priorityScore - a.priorityScore);
 
+    // V1.6.1 : ACT20 (recup chaleur clim) exclu en amont de la shortlist
+    // (trop dependant de la configuration CVC reelle, le partenaire precise au cas par cas).
+    // Ce retrait avant slice preserve 3 slots heavy pour les actions consommables,
+    // notamment ACT18 (CET) reintroduit par BUG-002.
+    const selectable = filteredActions.filter(a => a.id !== 'ACT20');
+
     // Sélection max 3 light + 3 heavy
-    const lightActions = filteredActions.filter(a => a.tier === 'light').slice(0, 3);
-    const heavyActions = filteredActions.filter(a => a.tier === 'heavy').slice(0, 3);
+    const lightActions = selectable.filter(a => a.tier === 'light').slice(0, 3);
+    const heavyActions = selectable.filter(a => a.tier === 'heavy').slice(0, 3);
 
-    let topActions = [...lightActions, ...heavyActions];
-
-    // Retrait inconditionnel ACT18 (CET) et ACT20 (recup clim) :
-    // la PAC air/eau reste la seule solution proposee cote ECS, le partenaire
-    // precisera les alternatives pertinentes au cas par cas.
-    topActions = topActions.filter(a => a.id !== 'ACT18' && a.id !== 'ACT20');
+    const topActions = [...lightActions, ...heavyActions];
 
     return topActions;
 };
@@ -1922,15 +2259,15 @@ const newDiagnosticRunSplitUnitTests = () => {
         },
         {
             name: 'T3 - PAC gaz→élec : gain net = éco gaz - surcoût élec',
-            fd: { mainHeating: 'gas', ecsSameSystem: true },
+            fd: { mainHeating: 'gas', ecsSameSystem: true, elecUsed: true, elecKwh: 30000, gasUsed: true, gasKwh: 80000 },
             elec: 30000, gas: 80000, activity: 'hotel',
             check: (r) => {
                 const action = { id: 'ACT13', gain_scope: 'heating_post', gain_pct_med: 0.50,
-                    capex_method: 'pac_tranches', capex_med: 19000, aid_pct: 0.35 };
+                    capex_method: 'pac_tranches', aid_pct: 0.35 };
                 const result = newDiagnosticCalculateActionGain(action, r, 1000,
-                    { mainHeating: 'gas', ecsSameSystem: true, activity: 'hotel' },
+                    { mainHeating: 'gas', ecsSameSystem: true, activity: 'hotel', elecUsed: true, elecKwh: 30000, gasUsed: true, gasKwh: 80000, surface: 1000 },
                     { elec: 0.206, gas: 0.108 });
-                if (!result.energy_switch) throw new Error('PAC devrait avoir energy_switch=true');
+                if (!result || !result.energy_switch) throw new Error('PAC devrait avoir energy_switch=true');
                 if (result.gainEuro <= 0) throw new Error(`Gain PAC = ${result.gainEuro} (devrait être > 0)`);
                 const ecoGazBrute = Math.round(result.energy_switch_detail.old_kwh * 0.108);
                 if (result.gainEuro >= ecoGazBrute) throw new Error(`Gain PAC (${result.gainEuro}) >= éco gaz brute (${ecoGazBrute}). Le surcoût élec n'est pas déduit.`);
@@ -1938,15 +2275,15 @@ const newDiagnosticRunSplitUnitTests = () => {
         },
         {
             name: 'T4 - CET gaz→élec : gain net positif mais < éco gaz',
-            fd: { mainHeating: 'gas', ecsSameSystem: false, ecsSystem: 'gas_boiler' },
+            fd: { mainHeating: 'gas', ecsSameSystem: false, ecsSystem: 'gas_boiler', elecUsed: true, elecKwh: 20000, gasUsed: true, gasKwh: 50000 },
             elec: 20000, gas: 50000, activity: 'hotel',
             check: (r) => {
                 const action = { id: 'ACT18', gain_scope: 'dhw_post', gain_pct_med: 0.60,
-                    capex_med: 4500, aid_pct: 0.20 };
+                    capex_method: 'cet_sized', aid_pct: 0.20 };
                 const result = newDiagnosticCalculateActionGain(action, r, 1000,
-                    { mainHeating: 'gas', ecsSameSystem: false, ecsSystem: 'gas_boiler', activity: 'hotel' },
+                    { mainHeating: 'gas', ecsSameSystem: false, ecsSystem: 'gas_boiler', activity: 'hotel', elecUsed: true, elecKwh: 20000, gasUsed: true, gasKwh: 50000, surface: 1000 },
                     { elec: 0.206, gas: 0.108 });
-                if (!result.energy_switch) throw new Error('CET devrait avoir energy_switch=true');
+                if (!result || !result.energy_switch) throw new Error('CET devrait avoir energy_switch=true');
                 if (result.gainEuro <= 0) throw new Error(`Gain CET = ${result.gainEuro}`);
             }
         },
@@ -2424,6 +2761,7 @@ const newDiagnosticBuildReportData = (formData) => {
     return {
         report_id: reportId,
         version_tag: 'v2.0-2026-energy-split',
+        engine_version: ENGINE_VERSION,
         generated_at: generatedAt,
 
         // Source d'énergie (diagnostic)
@@ -2529,7 +2867,11 @@ const newDiagnosticBuildReportData = (formData) => {
             capex: { value: a.capex, unit: '€' },
             capex_low: { value: (typeof a.capex_low === 'number') ? a.capex_low : null, unit: '€' },
             capex_high: { value: (typeof a.capex_high === 'number') ? a.capex_high : null, unit: '€' },
+            capex_range: a.capex_range || null,
             capex_net: { value: a.capexNet || a.capex, unit: '€' },
+            oversized: !!a.oversized,
+            study_required: !!a.study_required,
+            badge: a.badge || null,
             aid_amount: { value: a.aidAmount || 0, unit: '€' },
             aid_pct: a.aidPct || 0,
             roi_years: { value: a.roi_years, unit: 'ans' },

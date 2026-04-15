@@ -680,6 +680,109 @@
             color: #475569;
         }
 
+        /* V1.6.1 - Estimation indicative (fourchette capex) */
+        .capex-estimate {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+            line-height: 1.25;
+            max-width: 100%;
+        }
+        .capex-estimate__range {
+            font-variant-numeric: tabular-nums;
+            font-weight: 800;
+            color: #0F172A;
+            font-size: 0.95rem;
+            letter-spacing: -0.01em;
+            white-space: nowrap;
+        }
+        .capex-estimate__pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 999px;
+            background: #F1F5F9;
+            color: #475569;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            border: 1px solid #E2E8F0;
+            white-space: nowrap;
+        }
+        .capex-estimate__pill::before {
+            content: "";
+            width: 5px;
+            height: 5px;
+            border-radius: 999px;
+            background: #64748B;
+            display: inline-block;
+        }
+        .capex-estimate__badge-warn {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 999px;
+            background: #FEF3C7;
+            color: #92400E;
+            font-size: 10px;
+            font-weight: 700;
+            border: 1px solid #FDE68A;
+            white-space: nowrap;
+        }
+        .capex-estimate__hint {
+            font-size: 11px;
+            color: #64748B;
+            line-height: 1.45;
+            font-weight: 400;
+            max-width: 280px;
+            text-align: right;
+        }
+        .capex-study-block {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+            padding: 8px 12px;
+            background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
+            border: 1px solid #FCD34D;
+            border-radius: 10px;
+            color: #78350F;
+        }
+        .capex-study-block__title {
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: #92400E;
+            white-space: nowrap;
+        }
+        .capex-study-block__sub {
+            font-size: 11px;
+            color: #78350F;
+            max-width: 240px;
+            text-align: right;
+            line-height: 1.35;
+        }
+        .report-v161-disclaimer {
+            margin-top: 12px;
+            padding: 10px 14px;
+            border-radius: 10px;
+            background: #F8FAFC;
+            border: 1px dashed #CBD5E1;
+            color: #475569;
+            font-size: 11px;
+            line-height: 1.5;
+        }
+        @media (max-width: 480px) {
+            .capex-estimate__range { font-size: 0.88rem; }
+            .capex-estimate__hint { max-width: 100%; text-align: left; }
+            .capex-estimate { align-items: stretch; }
+        }
+
         @media (max-width: 1023px) {
             .btn-primary {
                 padding: 0.95rem 1.5rem;
@@ -8984,9 +9087,13 @@
                             </div>
                             <div className="text-center p-2 bg-[#F8FAFC] rounded-lg">
                                 <div className="text-sm font-bold text-[#1D4ED8]">
-                                    {action.capex?.value ? Math.round(action.capex.value).toLocaleString('fr-FR') : '—'} €
+                                    {action.capex_range && action.capex_range.formatted
+                                        ? action.capex_range.formatted
+                                        : ((typeof action.capex === 'number' ? action.capex : (action.capex?.value || 0))
+                                            ? Math.round(typeof action.capex === 'number' ? action.capex : action.capex.value).toLocaleString('fr-FR') + ' €'
+                                            : '-')}
                                 </div>
-                                <div className="text-xs text-[#475569]">investissement</div>
+                                <div className="text-[10px] text-[#475569] font-semibold uppercase tracking-wide">Estimation indicative</div>
                             </div>
                             <div className="text-center p-2 bg-[#F8FAFC] rounded-lg">
                                 <div className="text-sm font-bold" style={{ color: roiColor }}>
@@ -9496,6 +9603,50 @@
             const formatKgCo2 = (value) => newDiagnosticFormatUnitValue(value, 'kgCO2e');
             const formatYears = (value) => newDiagnosticFormatYears(value, 1);
             const horizonLabel = 'Projection à 10 ans';
+
+            /* V1.6.1 - helpers capex fourchette (identiques a diagnostic.html) */
+            const getCapexNumeric = (action) => {
+                if (!action) return 0;
+                if (action.capex_range && typeof action.capex_range.mid === 'number') return action.capex_range.mid;
+                if (typeof action.capex === 'number') return action.capex;
+                if (action.capex && typeof action.capex.value === 'number') return action.capex.value;
+                return 0;
+            };
+            const renderCapexEstimate = (action, opts) => {
+                opts = opts || {};
+                const compact = !!opts.compact;
+                const range = action && action.capex_range;
+                const hasFormattedRange = range && typeof range.formatted === 'string' && range.formatted.length > 0;
+                const capexNum = getCapexNumeric(action);
+                const badge = action && action.badge;
+                const isStudy = (action && (action.id === 'ACT18_STUDY' || action.capex === null)) ||
+                                (badge && /étude technique requise/i.test(badge));
+                if (isStudy) {
+                    return (
+                        <div className="capex-study-block" role="note" aria-label="Étude technique requise">
+                            <span className="capex-study-block__title">Étude technique requise</span>
+                            {!compact && (
+                                <span className="capex-study-block__sub">
+                                    {action && action.label ? action.label : 'Installation hors grille standard, chiffrage sur devis dédié.'}
+                                </span>
+                            )}
+                        </div>
+                    );
+                }
+                const rangeText = hasFormattedRange ? range.formatted : formatMoney(capexNum);
+                return (
+                    <div className="capex-estimate" aria-label={'Estimation indicative ' + rangeText}>
+                        <span className="capex-estimate__range">{rangeText}</span>
+                        <span className="capex-estimate__pill" title="Chiffrage dire d'expert, panel devis V1.7 Q3 2026">Estimation indicative</span>
+                        {badge && !isStudy && (<span className="capex-estimate__badge-warn">{badge}</span>)}
+                        {!compact && (
+                            <span className="capex-estimate__hint">
+                                Basée sur pratiques artisans RGE France début 2026. Le devis réel peut varier de ±15% selon la configuration, l'accessibilité et les travaux connexes.
+                            </span>
+                        )}
+                    </div>
+                );
+            };
             const actionCopy = NEW_DIAGNOSTIC_REPORT_COPY.actions;
             const impactCopy = NEW_DIAGNOSTIC_REPORT_COPY.impact;
             const nextStepCopy = NEW_DIAGNOSTIC_REPORT_COPY.nextStep;
@@ -9635,7 +9786,7 @@
                                                 <p className="font-bold text-emerald-700">{formatMoney(action.gain_euro_an.value)}</p>
                                             </td>
                                             <td className="px-4 py-5 md:px-5 md:py-6 align-top text-right whitespace-nowrap font-semibold text-blue-700">{formatKwh(action.gain_kwh_an.value)}</td>
-                                            <td className="px-4 py-5 md:px-5 md:py-6 align-top text-right whitespace-nowrap font-semibold text-slate-800">{formatMoney(action.capex.value)}</td>
+                                            <td className="px-4 py-5 md:px-5 md:py-6 align-top text-right">{renderCapexEstimate(action, { compact: true })}</td>
                                             <td className="px-4 py-5 md:px-5 md:py-6 align-top text-right whitespace-nowrap font-bold text-amber-700">{roiValue}</td>
                                         </tr>
                                     );
@@ -10070,9 +10221,9 @@
                                                 <p className="font-bold text-emerald-700">{formatMoney(action.gain_euro_an?.value || 0)}</p>
                                                 <p className="text-xs text-slate-400 tabular-nums">{(action.gain_kwh_an?.value || 0).toLocaleString('fr-FR')} kWh</p>
                                             </td>
-                                            <td className="px-4 py-3.5 align-top text-right whitespace-nowrap">
-                                                <p className="font-semibold text-slate-900">{formatMoney(action.capex?.value || 0)}</p>
-                                                {aidAmt > 0 && <p className="text-xs text-blue-600">−{formatMoney(aidAmt)} aides</p>}
+                                            <td className="px-4 py-3.5 align-top text-right">
+                                                {renderCapexEstimate(action, { compact: true })}
+                                                {aidAmt > 0 && <p className="text-xs text-blue-600 mt-1">−{formatMoney(aidAmt)} aides</p>}
                                                 {aidAmt > 0 && <p className="text-xs font-bold text-indigo-700">{formatMoney(capexNet)} net</p>}
                                             </td>
                                             <td className="px-4 py-3.5 align-top text-right whitespace-nowrap">
@@ -10113,6 +10264,9 @@
                                                 <div className="bg-slate-50 rounded-lg p-2">
                                                     <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wide mb-0.5">Budget net</p>
                                                     <p className="text-sm font-black text-slate-900 leading-none">{formatMoney(capexNet)}</p>
+                                                    {action.capex_range && action.capex_range.formatted && (
+                                                        <p className="text-[9px] text-slate-400 mt-1 font-medium leading-tight">fourchette {action.capex_range.formatted}</p>
+                                                    )}
                                                 </div>
                                                 <div className="bg-amber-50 rounded-lg p-2">
                                                     <p className="text-[9px] text-amber-700 font-bold uppercase tracking-wide mb-0.5">ROI</p>
@@ -10510,6 +10664,9 @@
                             <p className="text-[11px] text-slate-500 text-center sm:text-right leading-relaxed max-w-xs">
                                 Estimations fondées sur données déclaratives et références sectorielles. Non substitutif à un audit réglementaire.
                             </p>
+                        </div>
+                        <div className="report-v161-disclaimer" role="note">
+                            <strong style={{ color: '#334155', fontWeight: 700 }}>Version 1.6.1</strong> · Chiffrages établis à partir d'un dire d'expert consolidé. Grille mise à jour avec panel devis documenté à la version 1.7 (prévue Q3 2026).
                         </div>
 
                         {isCoverModalOpen && coverDraft && typeof document !== 'undefined' && ReactDOM.createPortal(

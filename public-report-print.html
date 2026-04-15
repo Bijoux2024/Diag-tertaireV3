@@ -143,6 +143,28 @@
       return isNaN(d.getTime()) ? '' : d.toLocaleDateString('fr-FR');
     };
 
+    /* V1.6.1 - helpers pour capex indicatif (fourchette) */
+    const getCapexMid = (a) => {
+      if (!a) return 0;
+      if (a.capex_range && typeof a.capex_range.mid === 'number') return a.capex_range.mid;
+      if (typeof a.capex === 'number') return a.capex;
+      if (a.capex && typeof a.capex.value === 'number') return a.capex.value;
+      return 0;
+    };
+    const getCapexRangeText = (a) => {
+      if (a && a.capex_range && typeof a.capex_range.formatted === 'string' && a.capex_range.formatted.length > 0) {
+        return a.capex_range.formatted;
+      }
+      return fmtEur(getCapexMid(a));
+    };
+    const isStudyAction = (a) => {
+      if (!a) return false;
+      if (a.id === 'ACT18_STUDY') return true;
+      if (a.capex === null) return true;
+      if (a.badge && /étude technique requise/i.test(a.badge)) return true;
+      return false;
+    };
+
     // @sync — score thresholds
     const SCORE_MAP = {
       A: { color: '#15803D', bg: '#DCFCE7', border: '#86EFAC', label: 'Très performant' },
@@ -598,15 +620,37 @@
                 Gain&nbsp;
                 <strong style={{ color: '#15803D', fontWeight: 800 }}>{fmtEur(gainEuro)}/an</strong>
               </span>
-              <span>
-                Budget&nbsp;
-                <strong style={{ color: T.navy }}>{fmtEur(capex)}</strong>
-                {aidAmt > 0 && (
-                  <span style={{ color: T.blue, marginLeft: 4 }}>
-                    (−{fmtEur(aidAmt)}&nbsp;aides → <strong style={{ color: '#4338CA' }}>{fmtEur(capexNet)}&nbsp;net</strong>)
-                  </span>
-                )}
-              </span>
+              {isStudyAction(action) ? (
+                <span style={{
+                  padding: '2px 8px', borderRadius: 6,
+                  background: '#FEF3C7', border: '1px solid #FCD34D',
+                  color: '#92400E', fontSize: 9, fontWeight: 800,
+                  textTransform: 'uppercase', letterSpacing: '0.04em'
+                }}>Étude technique requise</span>
+              ) : (
+                <span>
+                  Budget&nbsp;
+                  <strong style={{ color: T.navy }}>{getCapexRangeText(action)}</strong>
+                  <span style={{
+                    marginLeft: 6, padding: '1px 6px', borderRadius: 999,
+                    background: '#F1F5F9', border: '1px solid #E2E8F0',
+                    color: '#475569', fontSize: 8, fontWeight: 700,
+                    textTransform: 'uppercase', letterSpacing: '0.04em'
+                  }}>Estimation indicative</span>
+                  {aidAmt > 0 && (
+                    <span style={{ color: T.blue, marginLeft: 4, display: 'inline-block' }}>
+                      (−{fmtEur(aidAmt)}&nbsp;aides → <strong style={{ color: '#4338CA' }}>{fmtEur(capexNet)}&nbsp;net</strong>)
+                    </span>
+                  )}
+                  {action.badge && !isStudyAction(action) && (
+                    <span style={{
+                      marginLeft: 4, padding: '1px 6px', borderRadius: 4,
+                      background: '#FEF3C7', border: '1px solid #FDE68A',
+                      color: '#92400E', fontSize: 8, fontWeight: 700
+                    }}>{action.badge}</span>
+                  )}
+                </span>
+              )}
               <span>
                 Retour&nbsp;<strong style={{ color: T.navy }}>{roi}</strong>
               </span>
@@ -1849,6 +1893,16 @@
             {' '}· Pré-diagnostic énergétique indicatif · Lecture selon activité déclarée
             {rp.report_id ? ` · Rapport ${rp.report_id}` : ''} · {fmtDate(rp.generated_at)}<br />
             Pour un audit certifié, contactez un bureau d'études RGE agréé. Ce document est à usage informatif.
+          </div>
+          <div className="pba" style={{
+            marginTop: 10, padding: '8px 12px',
+            background: '#F8FAFC', border: '1px dashed #CBD5E1',
+            borderRadius: 8, fontSize: 9, color: '#475569',
+            textAlign: 'center', lineHeight: 1.5,
+          }}>
+            <strong style={{ color: '#334155' }}>Version 1.6.1</strong> · Chiffrages établis à partir d'un dire d'expert consolidé.
+            Les fourchettes capex reflètent les pratiques artisans RGE France début 2026 ; le devis réel peut varier de ±15% selon la configuration du site,
+            l'accessibilité et les travaux connexes. Grille mise à jour avec panel devis documenté à la version 1.7 (prévue Q3 2026).
           </div>
 
         </div>

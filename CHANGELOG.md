@@ -20,6 +20,7 @@ ENGINE_VERSION : 1.6.0 -> 1.6.1
 
 - `src/engine.js` : ENGINE_VERSION 1.6.1, tiers ACT13/ACT18 refondus, `newDiagnosticFormatCapexRange`, `newDiagnosticBuildCapexRange`, ajout `capex_range`/`oversized`/`study_required`/`badge` dans `top_actions[]`, fallback reseau dans les resolveurs, garde V > 2000 L.
 - `scripts/qa-runner.js` : baseline engine_version cible V1.6.1, grille capex mise a jour, suppression warning V1.6.1-GAP obsolete sur ACT18, prise en compte sentinelle needsStudy.
+- `diagnostic.html`, `public-report-print.html`, `exemple-rapport.html` : composant UI "Estimation indicative" (classe `.capex-estimate` + pill + hint) affiche la fourchette `capex_range.formatted` avec fallback retro-compat. Bloc `.capex-study-block` pour ACT18_STUDY / oversized. Badge warning pour `action.badge`. Disclaimer V1.6.1 en pied de rapport (`.report-v161-disclaimer`).
 - `CHANGELOG.md`, `AI-CONTEXT.md`, `.claude/context/architecture.md` : synchronises.
 
 ### Tests

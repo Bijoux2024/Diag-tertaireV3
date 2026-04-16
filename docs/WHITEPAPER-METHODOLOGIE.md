@@ -16,7 +16,7 @@
 2. Convertit les consommations déclarées en kWh d'énergie finale annuelle.
 3. Calcule l'intensité énergétique kWh/m²/an et la compare à une médiane sectorielle.
 4. Répartit l'énergie par poste (chauffage, ECS, éclairage, ventilation, froid, cuisson, autre).
-5. Filtre 22 actions de travaux selon l'éligibilité contextuelle.
+5. Filtre 20 actions de travaux selon l'éligibilité contextuelle.
 6. Calcule pour chaque action : gain kWh, gain €, CAPEX, aide, CAPEX net, ROI simple.
 7. Compose un top 3 light (quick wins < 3 000 €) + top 3 heavy (structurel).
 8. Projette les économies cumulées sur 10 ans avec inflation énergie différenciée.
@@ -139,7 +139,7 @@ Intensités `kWh EF/m²/an` (énergie finale, statistique médiane + quartiles Q
 |---|---:|---:|---:|---|
 | Bureaux (`offices`) | 135 | 85 | 195 | ADEME ECNA 2022 |
 | Commerce non-alim (`retail`) | 210 | 140 | 300 | CEREN 2019 révisé |
-| Commerce alim (`retail_food`) | 360 | 250 | 500 | ADEME froid alimentaire |
+| Commerce alim (`retail_food`) | 510 | 355 | 710 | CEREN 2023 Fiche 7 (révision V1.7.0) |
 | Hôtel (`hotel`) | 230 | 140 | 380 | ADEME Hôtellerie 2024 |
 | Restaurant (`restaurant`) | 270 | 190 | 400 | ADEME HORECA |
 | Enseignement (`education`) | 110 | 75 | 165 | ADEME / OPERAT |
@@ -215,7 +215,7 @@ Source principale : chauffage + ECS uniquement.
 
 ---
 
-## 6. Bibliothèque d'actions (22 actions)
+## 6. Bibliothèque d'actions (20 actions)
 
 Chaque action porte : `gain_pct_low|med|high`, `capex_low|med|high`, `aid_pct`, `aid_tags`, `gain_scope`, `tier` (`light` ≤ 3 000 € / `heavy`), `trigger_rules`. Le moteur utilise `gain_pct_med` et `capex_med` pour le calcul principal ; la fourchette est affichée au client via `capex_range` (±15 %).
 
@@ -230,21 +230,23 @@ Chaque action porte : `gain_pct_low|med|high`, `capex_low|med|high`, `aid_pct`, 
 | ACT05 | Arrêt ventilation hors ouverture | light | vent_aux_post | 25 % | 1 500 € | 15 % | CEE |
 | ACT06 | VMC présence (bureaux/école/santé) | light | vent_aux_post | 30 % | 5 000 € | 15 % | CEE |
 | ACT07 | VMC CO₂ (haute occupation) | heavy | vent_aux_post | 25 % | 7 000 € | 15 % | CEE |
-| ACT08 | Passage LED | light | lighting_post | 60 % | 30 €/m² | 15 % | CEE BAT-EQ-162 |
+| ACT08 | Passage LED | light | lighting_post | `gain_by_age` (cf. §7bis.3) | 30 €/m² | 15 % | CEE BAT-EQ-162 |
 | ACT09 | Éclairage détection présence | light | lighting_post | 25 % | 20 €/m² | 15 % | CEE |
 | ACT10 | Isolation tuyaux ECS | light | dhw_post | 15 % | 1 500 € | 15 % | CEE |
 | ACT11 | Isolation ballon ECS | light | dhw_post | 12 % | 500 € | 5 % | — |
 | ACT13 | PAC air/eau (chauffage + ECS si couplé) | heavy | heating_post | 50 % | dynamique tiers | 18–30 % | CEE BAT-TH-113 + Fonds Chaleur |
-| ACT14 | Gestion automatisée / supervision | heavy | total | 18 % | 25 €/m² min 8 000 € | 18 % | CEE BAT-TH-116 |
+| ACT14 | Gestion automatisée / supervision | heavy | total | 13 % | 25 €/m² min 8 000 € | 18 % | CEE BAT-TH-116 |
 | ACT15 | Isolation toiture | heavy | heating_post | 20 % | 80 €/m² | 15 % | CEE BAT-EN-101 |
 | ACT16 | Isolation murs extérieurs (ITE) | heavy | heating_post | 18 % | 190 €/m² × 0,6 | 15 % | CEE BAT-EN-102 |
 | ACT17 | Remplacement fenêtres | heavy | heating_post | 12 % | 550 €/m² vitré | 8 % | CEE BAT-EN-104 |
-| ACT18 | Chauffe-eau thermodynamique | heavy | dhw_post | 60 % | dynamique tiers | 12 % | CEE BAT-TH-116 |
+| ACT18 | Chauffe-eau thermodynamique | heavy | dhw_post | `gain_by_activity` (cf. §7bis.3) | dynamique tiers | 12 % | CEE BAT-TH-116 |
 | ACT19 | Rafraîchissement nocturne | light | cooling_post | 25 % | 2 000 € | 0 % | — |
 | ACT21 | Sous-comptage | light | total | 5 % | 3 000 € | 0 % | — |
 | ACT22 | PV autoconsommation | heavy | elec_post | modèle dédié | 1 050-1 400 €/kWc | 6-10 % | Prime CRE S21 |
 
 > Hygiène V1.6.2 : **aucun ACT20** (récupération chaleur clim) n'est généré — retrait définitif après consortium. Tous les `aid_pct` ont été ramenés à la fourchette basse plausible pour que le client soit **positivement surpris** par le retour terrain, jamais déçu.
+
+> **IDs réservés non utilisés** : `ACT12` n'a jamais été émis, `ACT20` a été supprimé en V1.6.2. Ces identifiants restent réservés — aucun nouveau chantier ne doit les réattribuer, au risque de casser les dossiers archivés qui contiennent peut-être encore des références historiques.
 
 ### 6.2 Formule du gain standard
 
@@ -258,6 +260,8 @@ priorityScore = (gainEuro × feasibility) / max(1, capexNet)
 ```
 
 Où `baseKwh` est le kWh du poste cible (`heating_post`, `dhw_post`, `lighting_post`, `cooling_post`, `vent_aux_post`, `elec_post`, ou `total`) issu de `splitResult.posts`.
+
+> **Résolution du gain unitaire (V1.7.0)** : pour les actions marquées `gain_by_age` (ACT08) ou `gain_by_activity` (ACT18), le gain unitaire n'est pas `gain_pct_med` mais le résultat de `newDiagnosticResolveActionGain(action, formData)`, qui consulte les tables conditionnelles décrites en §7bis.3. Pour toutes les autres actions, le gain reste `gain_pct_med`.
 
 ### 6.3 Feasibility (feasibility coefficient)
 
@@ -296,7 +300,10 @@ Tri par `priorityScore` décroissant, puis **3 light + 3 heavy** maximum. Le PV 
 **Cas gaz/fioul → élec**
 ```
 COP = COP_PAC_BY_BUILDING_AGE[buildingAge]
-      # 2,8 (pré-75) / 3,0 (1975-2000) / 3,5 (2001-2012) / 4,0 (post-2012)
+      # V1.7.0 : 2,4 (pré-1975) / 2,8 (1975-2000) / 3,2 (post-2000)
+      # Source : Fiche 1 Conception — consortium énergie ADEME 2024.
+      # Dégradation volontaire vs V1.6.x pour intégrer réalité terrain
+      # (émetteurs inadaptés, pertes de distribution, cycles de givrage).
 heatingKwh_couvert = posts.heating.kwh + (ECS couplée ? posts.ecs.kwh : 0)
 newElecKwh = round(heatingKwh_couvert / COP)
 gainEuro = heatingKwh_couvert × prix_ancien_vecteur − newElecKwh × prix_élec
@@ -593,84 +600,16 @@ Hypothèse structurante : **en tertiaire non résidentiel, MaPrimeRénov' ne s'a
 
 ---
 
-## 14. Simulations témoins (V1.6.2)
+## 14. Simulations témoins — À RÉGÉNÉRER EN PHASE 6
 
-Les 8 simulations ci-dessous ont été générées par `scripts/whitepaper-sims.js` en exécutant `newDiagnosticBuildReportData` avec le moteur v1.6.2. Elles illustrent le comportement nominal pour chaque typologie.
-
-### 14.1 Bureau 500 m², tout électrique, post-2012 (Paris)
-
-- Intensité : 200 kWh/m²/an vs médiane 135 → `above_range`
-- Facture : 19 600 €/an (100 000 kWh élec)
-- Répartition : 43 % chauffage, 20 % éclairage, 10 % froid, 8 % ventilation, 14 % autre
-- Économies composites : **60 %** soit **12 740 €/an**
-- Top actions : ACT01 (réglage, ROI 0,5 an) · ACT03 (thermostats, 1,7 an) · ACT02 (pilotage, 2,7 an) · ACT14 (GTB 12 500 €, 2,9 an) · ACT22 (PV 30 kWc, ROI 6,6 an) · ACT18 (CET, 7,8 an)
-
-### 14.2 Restaurant 200 m², gaz+élec, 1975-2000 (Lyon)
-
-- Intensité : 350 kWh/m²/an vs médiane 270 → `in_range`
-- Facture : 11 080 €/an
-- Répartition : 25 % chauff / 20 % cuisson / 18 % éclair / 12 % vent / 10 % ECS
-- Économies composites : **50 %** soit **6 428 €/an**
-- Top actions : ACT11 (isolation ballon, 1,9 an) · ACT01 · ACT03 · ACT14 (GTB, 3,3 an) · ACT18 (CET, 3,7 an) · ACT22 (PV, 5,4 an)
-
-### 14.3 Commerce alimentaire 1000 m², gaz, pré-1975 (Bordeaux)
-
-- Intensité : 250 kWh/m²/an vs médiane 360 → `in_range` (bas)
-- Facture : 44 600 €/an (250 000 kWh total)
-- Répartition : 35 % froid commercial / 24 % éclairage / 14 % autre / 12 % chauffage
-- Économies composites : **59 %** soit **27 146 €/an**
-- Top actions : ACT01 (0,9 an) · ACT21 (sous-comptage, 1,3 an) · ACT05 (vent, 1,6 an) · ACT14 (GTB 25 000 €, 2,6 an) · ACT22 (PV 87 kWc, 5,2 an) · ACT13 (PAC gaz→élec 100 000 kWh, 5,5 an)
-- Envelope : ACT15 (80 000 €) + ACT16 (114 000 €) signalées pré-1975.
-
-### 14.4 Hôtel 720 m², convecteurs, 1975-2000 (Nice — zone H3)
-
-- Intensité : 250 kWh/m²/an vs médiane 230 → `in_range` (haut)
-- Facture : 35 280 €/an (180 000 kWh élec)
-- Répartition : 38 % chauffage / 22 % ECS / 15 % éclairage
-- Économies composites : **62 %** soit **22 932 €/an**
-- Top actions : ACT01 (0,3 an) · ACT11 (0,5 an) · ACT10 (1,1 an) · ACT14 (GTB 18 000 €, 2,3 an) · ACT22 (PV 47 kWc, 4,5 an) · ACT18 (CET 1000 L 34 000 €, 5,8 an)
-
-### 14.5 École 800 m², gaz, pré-1975 (Lille — zone H1)
-
-- Intensité : 175 kWh/m²/an vs médiane 110 → `above_range`
-- Facture : 18 640 €/an
-- Répartition : 52 % chauffage / 20 % éclair / 8 % vent
-- Économies composites : **47 %** soit **10 174 €/an**
-- Top actions : ACT01 (0,4 an) · ACT03 (2,3 an) · ACT02 (2,3 an) · ACT14 (4,9 an) · ACT22 (PV 27 kWc, 6,8 an)
-- Envelope : ACT15 (64 000 €) + ACT16 (91 200 €)
-
-### 14.6 Cabinet médical 350 m², PAC existante (5-15 ans), post-2012 (Nantes)
-
-- Intensité : 157 kWh/m²/an vs médiane 195 → `in_range` (bas)
-- Facture : 10 780 €/an
-- Répartition : 35 % chauff / 18 % vent / 15 % éclair / 12 % ECS
-- Économies composites : **65 %** (plafond) soit **7 007 €/an**
-- Top actions : ACT01 · ACT03 · ACT05 (vent, 3 an) · ACT14 (3,7 an) · ACT22 (PV 29 kWc, 5,9 an) · ACT18 (9,4 an)
-- Note : ACT13 exclue car PAC en service < 15 ans. LED exclue (`led_done`).
-
-### 14.7 Entrepôt léger 2000 m², convecteurs, 2001-2012 (Marseille — H3)
-
-- Intensité : 45 kWh/m²/an = médiane → `in_range`
-- Facture : 17 640 €/an
-- Répartition : 40 % éclairage / 35 % chauffage / 18 % autre
-- Économies composites : **59 %** soit **11 466 €/an**
-- Top actions : ACT01 (0,7 an) · ACT21 (3,4 an) · ACT02 (3,7 an) · ACT13 (convecteurs → PAC, 4,4 an, aide 30 %) · ACT22 (PV 37 kWc toiture sud, 6,0 an)
-
-### 14.8 Commerce non-alim 400 m², réseau de chaleur, 1975-2000 (Paris)
-
-- Intensité : 263 kWh/m²/an vs médiane 210 → `in_range`
-- Facture : 14 520 €/an (warning `NETWORK_HEAT_PARTIAL`)
-- Répartition : 32 % éclair / 30 % chauff / 16 % autre / 12 % froid
-- Économies composites : **53 %** soit **9 438 €/an**
-- Top actions : ACT01 (0,8 an) · ACT03 (2,2 an) · ACT08 (LED, 4 an) · ACT14 (3 an) · ACT22 (PV 28 kWc, 6 an)
-- Envelope : ACT15 (32 000 €) + ACT16 (45 600 €)
+> **Placeholder V1.7.0.** La dernière exécution de `scripts/whitepaper-sims.js` date de V1.6.2 (médiane composite observée 53,5 %, hors du gabarit cible 25-45 % fixé par le comité d'experts). Ces résultats sont obsolètes depuis la refonte structurelle de la composition en V1.7.0 (cap par segment ADEME, cf. §7bis). Cette section sera régénérée automatiquement à partir de `scripts/qa-results-1.7.0.json` en Phase 6 du plan de release. **Aucune valeur chiffrée ne doit être citée tant que cette section n'est pas régénérée** — toute référence externe à ces simulations doit attendre la publication de la V1.7.0 finale.
 
 ---
 
 ## 15. Garde-fous et tests automatisés
 
 - **Anti-NaN / anti-division zéro** : contrôle explicite `surface > 0`, `totalKwh finite`, tous les ROI protégés par `gainEuro > 0`.
-- **Cap absolu** : `NEW_DIAGNOSTIC_MAX_TOTAL_SAVINGS_PCT = 0,65` sur gains composés kWh et €.
+- **Cap absolu (V1.7.0)** : `NEW_DIAGNOSTIC_MAX_TOTAL_SAVINGS_PCT = 0,45` sur gains composés kWh et €, aligné sur le plafond Décret Tertiaire −40 % horizon 2030 (cf. §7bis.2). Cap d'affichage `NEW_DIAGNOSTIC_DISPLAYED_MAX_SAVINGS_PCT = 0,45` également.
 - **Conservation** : Σ kWh postes = totalKwh (résidu absorbé par `other`).
 - **Garde-fou breakdowns** : IIFE de chargement vérifie Σ = 100 % pour chaque secteur.
 - **Invalidation cache** : `ENGINE_VERSION` incrémenté à chaque modification moteur ; le front écarte toute donnée `localStorage` produite par une version antérieure.
@@ -701,7 +640,7 @@ Les 8 simulations ci-dessous ont été générées par `scripts/whitepaper-sims.
 | `NEW_DIAGNOSTIC_BENCHMARKS_INTENSITY` | Médianes sectorielles | 153 |
 | `DECRET_TERTIAIRE_CABS_2030` | Cibles Cabs | 224 |
 | `NEW_DIAGNOSTIC_USAGE_BREAKDOWNS` | Répartitions % globales | 254 |
-| `NEW_DIAGNOSTIC_ACTIONS_LIBRARY` | 22 actions | 406 |
+| `NEW_DIAGNOSTIC_ACTIONS_LIBRARY` | 20 actions (ACT12 et ACT20 : IDs réservés non utilisés) | 406 |
 | `NEW_DIAGNOSTIC_PV_*` | Constantes PV | 954 |
 | `NEW_DIAGNOSTIC_GAS_SPLIT_BY_ACTIVITY` | Répartition gaz | 986 |
 | `NEW_DIAGNOSTIC_ELEC_SPLIT_BY_ACTIVITY` | Répartition élec non thermique | 1012 |
@@ -717,9 +656,9 @@ Les 8 simulations ci-dessous ont été générées par `scripts/whitepaper-sims.
 - **CEE** : Certificats d'Économies d'Énergie (obligation B2B, prime versée par les obligés).
 - **Fonds Chaleur** : aide ADEME dédiée aux installations ENR&R > 30 kW.
 - **Cabs** : valeur absolue cible du Décret Tertiaire (consommation maximale /m²/an).
-- **Composite savings** : gains non additifs cumulés séquentiellement (1 − Π(1 − gᵢ)).
+- **Composite savings (V1.7.0)** : gains agrégés additivement après application d'un cap ADEME par segment (`heating_post`, `dhw_post`, `lighting_post`, `cooling_post`, `vent_aux_post`, `elec_post`, `total`), puis cap réglementaire global à 45 % (Décret Tertiaire −40 % 2030). Cf. §7bis. La formule multiplicative historique `1 − Π(1 − gᵢ)` est abrogée (cf. §8).
 - **Zone climatique** : zonage H1/H2/H3 (code postal) ajustant les besoins de chauffage et ECS.
 
 ---
 
-*Document généré à partir du moteur `src/engine.js` v1.6.2 (2026-04-15). Toute évolution ultérieure du moteur impose la mise à jour de ce document dans le même commit.*
+*Document aligné sur le plan de refonte `src/engine.js` v1.7.0 (2026-04-16, Phase 1/6 doc). Le code moteur reste en v1.6.3 jusqu'à Phase 2. Toute évolution ultérieure du moteur impose la mise à jour de ce document dans le même commit.*

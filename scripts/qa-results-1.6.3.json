@@ -1,0 +1,816 @@
+[
+  {
+    "label": "Bureau 500 m² tout élec post-2012",
+    "activity": "offices",
+    "surface": "500",
+    "intensity": 200,
+    "median": 135,
+    "position": "above_range",
+    "total_kwh": 100000,
+    "total_cost_eur": 19600,
+    "composite_pct": 50,
+    "composite_eur": 11760,
+    "heating_src": "elec",
+    "ecs_src": "elec",
+    "top_actions": [
+      {
+        "id": "ACT01",
+        "name": "Réglage horaires et abaissement chauffage",
+        "gain_kwh": 2580,
+        "gain_eur": 506,
+        "capex": 500,
+        "aid_pct": 0,
+        "aid_eur": 0,
+        "capex_net": 500,
+        "roi": 1,
+        "tier": "light"
+      },
+      {
+        "id": "ACT03",
+        "name": "Robinets thermostatiques (zonage)",
+        "gain_kwh": 3010,
+        "gain_eur": 590,
+        "capex": 3300,
+        "aid_pct": 15,
+        "aid_eur": 495,
+        "capex_net": 2805,
+        "roi": 4.8,
+        "tier": "light"
+      },
+      {
+        "id": "ACT05",
+        "name": "Arrêt automatique de la ventilation en dehors des horaires d'ouverture",
+        "gain_kwh": 1170,
+        "gain_eur": 229,
+        "capex": 1500,
+        "aid_pct": 15,
+        "aid_eur": 225,
+        "capex_net": 1275,
+        "roi": 5.6,
+        "tier": "light"
+      },
+      {
+        "id": "ACT14",
+        "name": "Gestion automatisée / Supervision centralisée",
+        "gain_kwh": 13000,
+        "gain_eur": 2548,
+        "capex": 12500,
+        "aid_pct": 18,
+        "aid_eur": 2250,
+        "capex_net": 10250,
+        "roi": 4,
+        "tier": "heavy"
+      },
+      {
+        "id": "ACT22",
+        "name": "Panneaux solaires pour produire votre propre électricité",
+        "gain_kwh": 40443,
+        "gain_eur": 8957,
+        "capex": 63000,
+        "aid_pct": 6,
+        "aid_eur": 3600,
+        "capex_net": 59400,
+        "roi": 6.6,
+        "tier": "heavy"
+      },
+      {
+        "id": "ACT18",
+        "name": "Chauffe-eau thermodynamique (eau chaude haute performance)",
+        "gain_kwh": 3333,
+        "gain_eur": 653,
+        "capex": 6960,
+        "aid_pct": 12,
+        "aid_eur": 835,
+        "capex_net": 6125,
+        "roi": 9.4,
+        "tier": "heavy"
+      }
+    ],
+    "breakdown_pct": {
+      "heating_pct": 43,
+      "dhw_pct": 5,
+      "lighting_pct": 20,
+      "cooling_pct": 10,
+      "vent_aux_pct": 8,
+      "cooking_pct": 0,
+      "other_specific_pct": 14
+    },
+    "envelope_opps": null,
+    "warnings": []
+  },
+  {
+    "label": "Restaurant 200 m² gaz+élec 1975-2000",
+    "activity": "restaurant",
+    "surface": "200",
+    "intensity": 350,
+    "median": 270,
+    "position": "in_range",
+    "total_kwh": 70000,
+    "total_cost_eur": 11080,
+    "composite_pct": 46,
+    "composite_eur": 6122,
+    "heating_src": "gas",
+    "ecs_src": "elec",
+    "top_actions": [
+      {
+        "id": "ACT01",
+        "name": "Réglage horaires et abaissement chauffage",
+        "gain_kwh": 1170,
+        "gain_eur": 126,
+        "capex": 500,
+        "aid_pct": 0,
+        "aid_eur": 0,
+        "capex_net": 500,
+        "roi": 4,
+        "tier": "light"
+      },
+      {
+        "id": "ACT10",
+        "name": "Isolation des tuyaux d'eau chaude",
+        "gain_kwh": 1575,
+        "gain_eur": 309,
+        "capex": 1500,
+        "aid_pct": 15,
+        "aid_eur": 225,
+        "capex_net": 1275,
+        "roi": 4.1,
+        "tier": "light"
+      },
+      {
+        "id": "ACT05",
+        "name": "Arrêt automatique de la ventilation en dehors des horaires d'ouverture",
+        "gain_kwh": 1320,
+        "gain_eur": 259,
+        "capex": 1500,
+        "aid_pct": 15,
+        "aid_eur": 225,
+        "capex_net": 1275,
+        "roi": 4.9,
+        "tier": "light"
+      },
+      {
+        "id": "ACT18",
+        "name": "Chauffe-eau thermodynamique (eau chaude haute performance)",
+        "gain_kwh": 7000,
+        "gain_eur": 1372,
+        "capex": 6960,
+        "aid_pct": 12,
+        "aid_eur": 835,
+        "capex_net": 6125,
+        "roi": 4.5,
+        "tier": "heavy"
+      },
+      {
+        "id": "ACT14",
+        "name": "Gestion automatisée / Supervision centralisée",
+        "gain_kwh": 9100,
+        "gain_eur": 1440,
+        "capex": 8000,
+        "aid_pct": 18,
+        "aid_eur": 1440,
+        "capex_net": 6560,
+        "roi": 4.6,
+        "tier": "heavy"
+      },
+      {
+        "id": "ACT22",
+        "name": "Panneaux solaires pour produire votre propre électricité",
+        "gain_kwh": 18353,
+        "gain_eur": 3828,
+        "capex": 23040,
+        "aid_pct": 10,
+        "aid_eur": 2304,
+        "capex_net": 20736,
+        "roi": 5.4,
+        "tier": "heavy"
+      }
+    ],
+    "breakdown_pct": {
+      "heating_pct": 25,
+      "dhw_pct": 10,
+      "lighting_pct": 18,
+      "cooling_pct": 5,
+      "vent_aux_pct": 12,
+      "cooking_pct": 20,
+      "other_specific_pct": 10
+    },
+    "envelope_opps": [
+      {
+        "id": "ACT15",
+        "name": "Isolation thermique de la toiture",
+        "capex": 30000,
+        "gain": 0,
+        "roi": null
+      }
+    ],
+    "warnings": []
+  },
+  {
+    "label": "Commerce alim 1000 m² pre-1975",
+    "activity": "commerce_alim",
+    "surface": "1000",
+    "intensity": 250,
+    "median": 360,
+    "position": "in_range",
+    "total_kwh": 250000,
+    "total_cost_eur": 44600,
+    "composite_pct": 50,
+    "composite_eur": 25128,
+    "heating_src": "gas",
+    "ecs_src": "gas",
+    "top_actions": [
+      {
+        "id": "ACT01",
+        "name": "Réglage horaires et abaissement chauffage",
+        "gain_kwh": 2700,
+        "gain_eur": 292,
+        "capex": 500,
+        "aid_pct": 0,
+        "aid_eur": 0,
+        "capex_net": 500,
+        "roi": 1.7,
+        "tier": "light"
+      },
+      {
+        "id": "ACT05",
+        "name": "Arrêt automatique de la ventilation en dehors des horaires d'ouverture",
+        "gain_kwh": 2400,
+        "gain_eur": 470,
+        "capex": 1500,
+        "aid_pct": 15,
+        "aid_eur": 225,
+        "capex_net": 1275,
+        "roi": 2.7,
+        "tier": "light"
+      },
+      {
+        "id": "ACT21",
+        "name": "Suivi détaillé de ce qui consomme quoi dans votre local",
+        "gain_kwh": 5000,
+        "gain_eur": 892,
+        "capex": 3000,
+        "aid_pct": 0,
+        "aid_eur": 0,
+        "capex_net": 3000,
+        "roi": 3.4,
+        "tier": "light"
+      },
+      {
+        "id": "ACT14",
+        "name": "Gestion automatisée / Supervision centralisée",
+        "gain_kwh": 32500,
+        "gain_eur": 5798,
+        "capex": 25000,
+        "aid_pct": 18,
+        "aid_eur": 4500,
+        "capex_net": 20500,
+        "roi": 3.5,
+        "tier": "heavy"
+      },
+      {
+        "id": "ACT22",
+        "name": "Panneaux solaires pour produire votre propre électricité",
+        "gain_kwh": 92701,
+        "gain_eur": 19132,
+        "capex": 105000,
+        "aid_pct": 6,
+        "aid_eur": 6000,
+        "capex_net": 99000,
+        "roi": 5.2,
+        "tier": "heavy"
+      },
+      {
+        "id": "ACT13",
+        "name": "Remplacer la chaudière gaz par une pompe à chaleur air/eau (chauffage et eau chaude)",
+        "gain_kwh": 32143,
+        "gain_eur": 1900,
+        "capex": 15000,
+        "aid_pct": 30,
+        "aid_eur": 4500,
+        "capex_net": 10500,
+        "roi": 5.5,
+        "tier": "heavy"
+      }
+    ],
+    "breakdown_pct": {
+      "heating_pct": 12,
+      "dhw_pct": 3,
+      "lighting_pct": 24,
+      "cooling_pct": 35,
+      "vent_aux_pct": 7,
+      "cooking_pct": 5,
+      "other_specific_pct": 14
+    },
+    "envelope_opps": [
+      {
+        "id": "ACT15",
+        "name": "Isolation thermique de la toiture",
+        "capex": 150000,
+        "gain": 0,
+        "roi": null
+      },
+      {
+        "id": "ACT16",
+        "name": "Isolation thermique des murs par l'extérieur",
+        "capex": 144000,
+        "gain": 0,
+        "roi": null
+      }
+    ],
+    "warnings": []
+  },
+  {
+    "label": "Hôtel 720 m² convecteurs 1975-2000",
+    "activity": "hotel",
+    "surface": "720",
+    "intensity": 250,
+    "median": 230,
+    "position": "in_range",
+    "total_kwh": 180000,
+    "total_cost_eur": 35280,
+    "composite_pct": 50,
+    "composite_eur": 21168,
+    "heating_src": "elec",
+    "ecs_src": "elec",
+    "top_actions": [
+      {
+        "id": "ACT01",
+        "name": "Réglage horaires et abaissement chauffage",
+        "gain_kwh": 4104,
+        "gain_eur": 804,
+        "capex": 500,
+        "aid_pct": 0,
+        "aid_eur": 0,
+        "capex_net": 500,
+        "roi": 0.6,
+        "tier": "light"
+      },
+      {
+        "id": "ACT10",
+        "name": "Isolation des tuyaux d'eau chaude",
+        "gain_kwh": 5940,
+        "gain_eur": 1164,
+        "capex": 1500,
+        "aid_pct": 15,
+        "aid_eur": 225,
+        "capex_net": 1275,
+        "roi": 1.1,
+        "tier": "light"
+      },
+      {
+        "id": "ACT11",
+        "name": "Isolation du ballon d'eau chaude",
+        "gain_kwh": 1188,
+        "gain_eur": 233,
+        "capex": 500,
+        "aid_pct": 5,
+        "aid_eur": 25,
+        "capex_net": 475,
+        "roi": 2,
+        "tier": "light"
+      },
+      {
+        "id": "ACT14",
+        "name": "Gestion automatisée / Supervision centralisée",
+        "gain_kwh": 23400,
+        "gain_eur": 4586,
+        "capex": 18000,
+        "aid_pct": 18,
+        "aid_eur": 3240,
+        "capex_net": 14760,
+        "roi": 3.2,
+        "tier": "heavy"
+      },
+      {
+        "id": "ACT22",
+        "name": "Panneaux solaires pour produire votre propre électricité",
+        "gain_kwh": 72472,
+        "gain_eur": 15287,
+        "capex": 72555,
+        "aid_pct": 6,
+        "aid_eur": 4146,
+        "capex_net": 68409,
+        "roi": 4.5,
+        "tier": "heavy"
+      },
+      {
+        "id": "ACT18",
+        "name": "Chauffe-eau thermodynamique (eau chaude haute performance)",
+        "gain_kwh": 26400,
+        "gain_eur": 5174,
+        "capex": 40800,
+        "aid_pct": 12,
+        "aid_eur": 4896,
+        "capex_net": 35904,
+        "roi": 6.9,
+        "tier": "heavy"
+      }
+    ],
+    "breakdown_pct": {
+      "heating_pct": 38,
+      "dhw_pct": 22,
+      "lighting_pct": 15,
+      "cooling_pct": 8,
+      "vent_aux_pct": 8,
+      "cooking_pct": 5,
+      "other_specific_pct": 4
+    },
+    "envelope_opps": [
+      {
+        "id": "ACT15",
+        "name": "Isolation thermique de la toiture",
+        "capex": 108000,
+        "gain": 0,
+        "roi": null
+      },
+      {
+        "id": "ACT16",
+        "name": "Isolation thermique des murs par l'extérieur",
+        "capex": 103680,
+        "gain": 0,
+        "roi": null
+      }
+    ],
+    "warnings": []
+  },
+  {
+    "label": "École 800 m² gaz pre-1975",
+    "activity": "education",
+    "surface": "800",
+    "intensity": 175,
+    "median": 110,
+    "position": "above_range",
+    "total_kwh": 140000,
+    "total_cost_eur": 18640,
+    "composite_pct": 38,
+    "composite_eur": 8905,
+    "heating_src": "gas",
+    "ecs_src": "gas",
+    "top_actions": [
+      {
+        "id": "ACT01",
+        "name": "Réglage horaires et abaissement chauffage",
+        "gain_kwh": 5400,
+        "gain_eur": 583,
+        "capex": 500,
+        "aid_pct": 0,
+        "aid_eur": 0,
+        "capex_net": 500,
+        "roi": 0.9,
+        "tier": "light"
+      },
+      {
+        "id": "ACT04",
+        "name": "Entretien du chauffage pour qu'il consomme moins",
+        "gain_kwh": 7200,
+        "gain_eur": 778,
+        "capex": 2500,
+        "aid_pct": 0,
+        "aid_eur": 0,
+        "capex_net": 2500,
+        "roi": 3.2,
+        "tier": "light"
+      },
+      {
+        "id": "ACT02",
+        "name": "Pilotage automatique du chauffage",
+        "gain_kwh": 9000,
+        "gain_eur": 972,
+        "capex": 7000,
+        "aid_pct": 15,
+        "aid_eur": 1050,
+        "capex_net": 5950,
+        "roi": 6.1,
+        "tier": "light"
+      },
+      {
+        "id": "ACT14",
+        "name": "Gestion automatisée / Supervision centralisée",
+        "gain_kwh": 18200,
+        "gain_eur": 2423,
+        "capex": 20000,
+        "aid_pct": 18,
+        "aid_eur": 3600,
+        "capex_net": 16400,
+        "roi": 6.8,
+        "tier": "heavy"
+      },
+      {
+        "id": "ACT22",
+        "name": "Panneaux solaires pour produire votre propre électricité",
+        "gain_kwh": 23017,
+        "gain_eur": 5124,
+        "capex": 38880,
+        "aid_pct": 10,
+        "aid_eur": 3888,
+        "capex_net": 34992,
+        "roi": 6.8,
+        "tier": "heavy"
+      }
+    ],
+    "breakdown_pct": {
+      "heating_pct": 52,
+      "dhw_pct": 7,
+      "lighting_pct": 20,
+      "cooling_pct": 3,
+      "vent_aux_pct": 8,
+      "cooking_pct": 2,
+      "other_specific_pct": 8
+    },
+    "envelope_opps": [
+      {
+        "id": "ACT15",
+        "name": "Isolation thermique de la toiture",
+        "capex": 120000,
+        "gain": 0,
+        "roi": null
+      },
+      {
+        "id": "ACT16",
+        "name": "Isolation thermique des murs par l'extérieur",
+        "capex": 115200,
+        "gain": 0,
+        "roi": null
+      }
+    ],
+    "warnings": []
+  },
+  {
+    "label": "Cabinet médical 350 m² PAC post-2012",
+    "activity": "health_local",
+    "surface": "350",
+    "intensity": 157,
+    "median": 195,
+    "position": "in_range",
+    "total_kwh": 55000,
+    "total_cost_eur": 10780,
+    "composite_pct": 50,
+    "composite_eur": 6468,
+    "heating_src": "elec",
+    "ecs_src": "elec",
+    "top_actions": [
+      {
+        "id": "ACT01",
+        "name": "Réglage horaires et abaissement chauffage",
+        "gain_kwh": 1155,
+        "gain_eur": 226,
+        "capex": 500,
+        "aid_pct": 0,
+        "aid_eur": 0,
+        "capex_net": 500,
+        "roi": 2.2,
+        "tier": "light"
+      },
+      {
+        "id": "ACT05",
+        "name": "Arrêt automatique de la ventilation en dehors des horaires d'ouverture",
+        "gain_kwh": 1312,
+        "gain_eur": 257,
+        "capex": 1500,
+        "aid_pct": 15,
+        "aid_eur": 225,
+        "capex_net": 1275,
+        "roi": 5,
+        "tier": "light"
+      },
+      {
+        "id": "ACT10",
+        "name": "Isolation des tuyaux d'eau chaude",
+        "gain_kwh": 990,
+        "gain_eur": 194,
+        "capex": 1500,
+        "aid_pct": 15,
+        "aid_eur": 225,
+        "capex_net": 1275,
+        "roi": 6.6,
+        "tier": "light"
+      },
+      {
+        "id": "ACT14",
+        "name": "Gestion automatisée / Supervision centralisée",
+        "gain_kwh": 7150,
+        "gain_eur": 1401,
+        "capex": 8750,
+        "aid_pct": 18,
+        "aid_eur": 1575,
+        "capex_net": 7175,
+        "roi": 5.1,
+        "tier": "heavy"
+      },
+      {
+        "id": "ACT22",
+        "name": "Panneaux solaires pour produire votre propre électricité",
+        "gain_kwh": 29232,
+        "gain_eur": 6190,
+        "capex": 40320,
+        "aid_pct": 10,
+        "aid_eur": 4032,
+        "capex_net": 36288,
+        "roi": 5.9,
+        "tier": "heavy"
+      }
+    ],
+    "breakdown_pct": {
+      "heating_pct": 35,
+      "dhw_pct": 12,
+      "lighting_pct": 15,
+      "cooling_pct": 8,
+      "vent_aux_pct": 18,
+      "cooking_pct": 0,
+      "other_specific_pct": 12
+    },
+    "envelope_opps": null,
+    "warnings": []
+  },
+  {
+    "label": "Entrepôt léger 2000 m² 2001-2012",
+    "activity": "light_warehouse",
+    "surface": "2000",
+    "intensity": 45,
+    "median": 45,
+    "position": "in_range",
+    "total_kwh": 90000,
+    "total_cost_eur": 17640,
+    "composite_pct": 50,
+    "composite_eur": 10584,
+    "heating_src": "elec",
+    "ecs_src": "elec",
+    "top_actions": [
+      {
+        "id": "ACT01",
+        "name": "Réglage horaires et abaissement chauffage",
+        "gain_kwh": 1890,
+        "gain_eur": 370,
+        "capex": 500,
+        "aid_pct": 0,
+        "aid_eur": 0,
+        "capex_net": 500,
+        "roi": 1.4,
+        "tier": "light"
+      },
+      {
+        "id": "ACT21",
+        "name": "Suivi détaillé de ce qui consomme quoi dans votre local",
+        "gain_kwh": 1800,
+        "gain_eur": 353,
+        "capex": 3000,
+        "aid_pct": 0,
+        "aid_eur": 0,
+        "capex_net": 3000,
+        "roi": 8.5,
+        "tier": "light"
+      },
+      {
+        "id": "ACT05",
+        "name": "Arrêt automatique de la ventilation en dehors des horaires d'ouverture",
+        "gain_kwh": 680,
+        "gain_eur": 133,
+        "capex": 1500,
+        "aid_pct": 15,
+        "aid_eur": 225,
+        "capex_net": 1275,
+        "roi": 9.6,
+        "tier": "light"
+      },
+      {
+        "id": "ACT22",
+        "name": "Panneaux solaires pour produire votre propre électricité",
+        "gain_kwh": 32391,
+        "gain_eur": 8008,
+        "capex": 51345,
+        "aid_pct": 6,
+        "aid_eur": 2934,
+        "capex_net": 48411,
+        "roi": 6,
+        "tier": "heavy"
+      },
+      {
+        "id": "ACT13",
+        "name": "Remplacer les radiateurs électriques par une pompe à chaleur",
+        "gain_kwh": 22500,
+        "gain_eur": 4410,
+        "capex": 28000,
+        "aid_pct": 30,
+        "aid_eur": 8400,
+        "capex_net": 19600,
+        "roi": 4.4,
+        "tier": "heavy"
+      }
+    ],
+    "breakdown_pct": {
+      "heating_pct": 35,
+      "dhw_pct": 2,
+      "lighting_pct": 40,
+      "cooling_pct": 0,
+      "vent_aux_pct": 5,
+      "cooking_pct": 0,
+      "other_specific_pct": 18
+    },
+    "envelope_opps": null,
+    "warnings": []
+  },
+  {
+    "label": "Commerce non-alim 400 m² réseau chaleur",
+    "activity": "retail",
+    "surface": "400",
+    "intensity": 263,
+    "median": 210,
+    "position": "in_range",
+    "total_kwh": 105000,
+    "total_cost_eur": 14520,
+    "composite_pct": 46,
+    "composite_eur": 8712,
+    "heating_src": "network",
+    "ecs_src": "network",
+    "top_actions": [
+      {
+        "id": "ACT01",
+        "name": "Réglage horaires et abaissement chauffage",
+        "gain_kwh": 3312,
+        "gain_eur": 315,
+        "capex": 500,
+        "aid_pct": 0,
+        "aid_eur": 0,
+        "capex_net": 500,
+        "roi": 1.6,
+        "tier": "light"
+      },
+      {
+        "id": "ACT08",
+        "name": "Passage à l'éclairage LED dans tous les locaux",
+        "gain_kwh": 8640,
+        "gain_eur": 1693,
+        "capex": 12000,
+        "aid_pct": 15,
+        "aid_eur": 1800,
+        "capex_net": 10200,
+        "roi": 6,
+        "tier": "light"
+      },
+      {
+        "id": "ACT09",
+        "name": "Éclairage automatique par détection de présence",
+        "gain_kwh": 5400,
+        "gain_eur": 1058,
+        "capex": 8000,
+        "aid_pct": 15,
+        "aid_eur": 1200,
+        "capex_net": 6800,
+        "roi": 6.4,
+        "tier": "light"
+      },
+      {
+        "id": "ACT14",
+        "name": "Gestion automatisée / Supervision centralisée",
+        "gain_kwh": 13650,
+        "gain_eur": 1989,
+        "capex": 10000,
+        "aid_pct": 18,
+        "aid_eur": 1800,
+        "capex_net": 8200,
+        "roi": 4.1,
+        "tier": "heavy"
+      },
+      {
+        "id": "ACT22",
+        "name": "Panneaux solaires pour produire votre propre électricité",
+        "gain_kwh": 27543,
+        "gain_eur": 6011,
+        "capex": 39840,
+        "aid_pct": 10,
+        "aid_eur": 3984,
+        "capex_net": 35856,
+        "roi": 6,
+        "tier": "heavy"
+      }
+    ],
+    "breakdown_pct": {
+      "heating_pct": 30,
+      "dhw_pct": 3,
+      "lighting_pct": 32,
+      "cooling_pct": 12,
+      "vent_aux_pct": 7,
+      "cooking_pct": 0,
+      "other_specific_pct": 16
+    },
+    "envelope_opps": [
+      {
+        "id": "ACT15",
+        "name": "Isolation thermique de la toiture",
+        "capex": 60000,
+        "gain": 0,
+        "roi": null
+      },
+      {
+        "id": "ACT16",
+        "name": "Isolation thermique des murs par l'extérieur",
+        "capex": 57600,
+        "gain": 0,
+        "roi": null
+      }
+    ],
+    "warnings": [
+      "NETWORK_HEAT_PARTIAL"
+    ]
+  }
+]

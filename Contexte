@@ -1,0 +1,48 @@
+USER PROMPT — La commande
+──────────────────────────
+
+Contexte : je prépare une vidéo de démonstration pour montrer comment 
+fonctionne un outil de pré-diagnostic énergétique gratuit pour bâtiments 
+tertiaires. Je dois remplir un formulaire en ligne avec des valeurs 
+fictives mais parfaitement réalistes.
+
+Scénario fictif : Hôtel Beau Soleil, Montpellier (34000), 
+zone climatique H3, bâtiment construit en 1988, jamais rénové 
+thermiquement, gérant propriétaire depuis 15 ans.
+
+Donne-moi les valeurs exactes à saisir pour chacun de ces champs 
+du formulaire, dans l'ordre :
+
+1. NOM DU SITE / BÂTIMENT
+2. ADRESSE (rue + code postal + ville)
+3. ACTIVITÉ (type de bâtiment)
+4. SURFACE (m²)
+5. ANNÉE DE CONSTRUCTION (ou période)
+6. ÉNERGIE PRINCIPALE (gaz / fioul / électricité / autre)
+7. ÉNERGIES SECONDAIRES (si plusieurs)
+8. CONSOMMATION ANNUELLE ÉNERGIE PRINCIPALE (kWh ou €)
+9. CONSOMMATION ANNUELLE ÉNERGIE SECONDAIRE (kWh ou €)
+10. FACTURE ÉNERGIE TOTALE ANNUELLE (€)
+11. POSTES D'USAGE COCHÉS (chauffage / clim / ECS / éclairage / cuisine / autre)
+12. TRAVAUX DÉJÀ RÉALISÉS (isolation / LED / PAC / VMC / aucun)
+13. OBJECTIF PRINCIPAL (réduire les charges / confort / valorisation / réglementation)
+14. HORIZON DE PROJET (< 1 an / 1-3 ans / 3-5 ans / > 5 ans)
+15. RÔLE DANS LA DÉCISION (propriétaire / locataire / gestionnaire)
+16. EMAIL (fictif mais format valide)
+17. TÉLÉPHONE (fictif mais format valide)
+
+Pour chaque valeur, indique :
+- La valeur exacte à saisir
+- La justification technique en 1 phrase
+- La note "impact vidéo" : est-ce que ce champ va contribuer à 
+  un résultat dramatique ? (oui / non / neutre)
+
+À la fin, donne-moi une estimation de ce que le rapport devrait 
+afficher comme :
+- Score énergétique attendu (A à G)
+- Écart par rapport à la médiane sectorielle (%)
+- Fourchette d'économies potentielles (€/an)
+- ROI moyen des actions prioritaires (années)
+
+Sois précis. Pas d'approximations. Les chiffres doivent tenir 
+la route face à un hôtelier qui connaît ses factures.

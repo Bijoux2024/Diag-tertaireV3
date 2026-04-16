@@ -1,5 +1,54 @@
 # Changelog - DiagTertiaire V3
 
+## [style - Animations subtiles page Pro (stagger, count-up, progress bar)] - 2026-04-16
+
+### Style
+
+- **Barre de progression de scroll** (`espace-professionnel.html`) : barre 2px fixe en haut de page, degrade blue-600/700/400, mise a jour via `requestAnimationFrame` (passive scroll listener).
+- **Stagger reveal** : les enfants `[data-stagger-item]` des sections `.reveal` apparaissent en cascade (80ms decalage, fade-up easing `cubic-bezier(0.22, 1, 0.36, 1)`). Applique sur Benefits KPI, Audience cards, Proof cards.
+- **Count-up KPI** : les chiffres des cartes Benefits s'incrementent (cubic ease-out, 1.1s) quand la section entre dans le viewport. Conserve signe, decimales et suffixe (%, min, etc.). Idempotent via `data-countup-done`.
+- **Steps badges pop** : entree `scale(0.7)->1` avec overshoot (`cubic-bezier(0.34, 1.56, 0.64, 1)`), 150ms decalage entre cartes. Filet horizontal central qui se dessine de gauche a droite (1s ease).
+- **Card lift** : Audience et Steps cards passent en `translateY(-4px) scale(1.012)` au hover (transition 0.35s smooth). Proof cards : barre coloree gauche s'epaissit 4->6px au hover.
+- **Bouton submit shimmer** : passage de lumiere au hover (translation skewed, 0.9s, une passe).
+- **Focus inputs** : pulse-ring bleu sur focus (0.7s, animation unique).
+- **Accessibilite** : tout respecte `prefers-reduced-motion: reduce` (animations/transitions desactivees, opacite/transform forces a 1/none).
+
+### Implementation
+
+- Pas de framework ajoute (Framer Motion / GSAP / Lenis ecartes : page buildless React+Babel CDN, le cout d'integration depasse le benefice). 100% CSS @keyframes + extension de l'`IntersectionObserver` deja present.
+
+### Fichiers modifies
+
+- `espace-professionnel.html` : bloc CSS `/* PRO LANDING ANIMATIONS */` ajoute, observer etendu pour stagger + count-up, listener scroll progress, attributs `data-*` et classes ajoutes sur JSX (Benefits/Steps/Audience/Proof/Form CTA).
+- `CHANGELOG.md` : cette entree.
+
+## [style - Lisibilite etapes + alternance tonale sections Pro] - 2026-04-16
+
+### Style
+
+- **Typographie des etapes** (`espace-professionnel.html`) : remplacement du chiffre display Syne (`pro-v2-step-num`) par un badge circulaire Inter 900 (`pro-v2-step-badge`) 52px, fond degrade blue-600->blue-700, chiffre blanc. Coherent avec les KPI Benefits, meilleure lisibilite a toutes les tailles.
+- **Alternance tonale des sections** : introduction de 3 bandes de couleur douce (`pro-v2-band-warm` ivoire/amber sur Steps, `pro-v2-band-sage` vert pale sur Audience, `pro-v2-band-peach` peche sur Proof). Benefits et Form conservent la bande bleue (`pro-v2-section-band`) renforcee (#EEF4FF au lieu de #F8FBFF). Chaque bande a son radial pattern teinte et ses bordures assorties.
+- **Details** : icones Audience passees en emerald-50/700 (au lieu de blue), guillemet Syne des temoignages en amber-400 (harmonie peche), filet central Steps repasse en amber-300/50.
+
+### Fichiers modifies
+
+- `espace-professionnel.html` : CSS `.pro-v2-step-badge` + variantes `.pro-v2-band-warm/sage/peach` + `.pro-v2-role-icon-sage`, JSX Steps/Audience/Proof mis a jour.
+- `CHANGELOG.md` : cette entree.
+
+## [style - Refonte UI page Pro landing (ProLanding)] - 2026-04-16
+
+### Style
+
+- **Refonte visuelle `ProLanding`** (`espace-professionnel.html`) : direction hybride editoriale, coherente avec index.html. Hero (mockup portfolio) preserve a l'identique. Aucun texte modifie (tous les libelles viennent de `copy.*`).
+- **Reordonnancement des sections** via wrapper `.pro-v2-stack` (flex-column + order-*) : Hero -> Benefits (KPI) -> Steps -> Audience -> Proof -> Form -> Footer. Le funnel construit la valeur avant le formulaire.
+- **Nouveau bloc CSS `.pro-v2-*`** (prefixe dedie, zero collision) : typographie editoriale (`pro-v2-display`, `pro-v2-step-num`, `pro-v2-quote`), bande sectionnee avec grid pattern radial (`pro-v2-section-band`), carte formulaire premium (`pro-v2-form-card`), colonnes KPI avec separateurs (`pro-v2-kpi-col`), role-icons (`pro-v2-role-icon`).
+- **Responsive** : grilles 1/2/3/4/5 colonnes selon breakpoints, display KPI en `clamp()`, form en colonne unique < xl, filets verticaux KPI devenus horizontaux < md.
+
+### Fichiers modifies
+
+- `espace-professionnel.html` : bloc CSS `.pro-v2-*` ajoute, JSX `ProLanding` sections Benefits/Steps/Audience/Proof/Form restylees et reordonnees.
+- `CHANGELOG.md` : cette entree.
+
 ## [v1.6.2 - Hotfix suppression ACT20, audit aid_pct conservateur, bascule engine.js] - 2026-04-15
 
 ENGINE_VERSION : 1.6.1 -> 1.6.2

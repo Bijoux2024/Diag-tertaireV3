@@ -9,7 +9,7 @@
  *
  * Toute modification doit etre testee sur minimum 3 scenarios.
  */
-const ENGINE_VERSION = '1.6.2';
+const ENGINE_VERSION = '1.6.3';
 const ENGINE_LAST_UPDATED = '2026-04-15';
 
 // ═══════════════════════════════════════════════════════════════
@@ -30,7 +30,14 @@ const NEW_DIAGNOSTIC_BOILER_AGES = [
     { id: 'over20', label: 'Plus de 20 ans', pacPriority: 3 }
 ];
 
-const NEW_DIAGNOSTIC_MAX_TOTAL_SAVINGS_PCT = 0.65;
+// V1.6.3 : garde-fou technique interne (anti-dérive composition) abaissé 0.65 → 0.60.
+// Si un scénario touche ce cap, c'est un signal que le calibrage amont (gain_pct_med)
+// est encore trop généreux, pas un comportement attendu.
+const NEW_DIAGNOSTIC_MAX_TOTAL_SAVINGS_PCT = 0.60;
+// V1.6.3 : plafond d'affichage exposé au rapport (potentiel maximum cumulé plausible).
+// Appliqué en sortie sur composite_savings.total_pct uniquement, pour éviter
+// les annonces > 50 % perçues comme non crédibles par l'exploitant.
+const NEW_DIAGNOSTIC_DISPLAYED_MAX_SAVINGS_PCT = 0.50;
 
 // Normalisation mainHeating : mappe les nouvelles valeurs detaillees vers les valeurs internes
 // electric_convector → electric | electric_pac → pac | backward compat: electric/pac inchanges
@@ -416,7 +423,7 @@ const NEW_DIAGNOSTIC_ACTIONS_LIBRARY = {
             aid_pct: 0.00,
             trigger_rules: ['heating_post > 30%', 'no_regulation_done'],
             gain_scope: 'heating_post',
-            gain_pct_low: 0.08, gain_pct_med: 0.12, gain_pct_high: 0.18,
+            gain_pct_low: 0.04, gain_pct_med: 0.06, gain_pct_high: 0.09,
             capex_low: 0, capex_med: 500, capex_high: 1500,
             capex_unit: '€',
             roi_method: 'simple_payback',
@@ -433,8 +440,8 @@ const NEW_DIAGNOSTIC_ACTIONS_LIBRARY = {
             aid_pct: 0.15,
             trigger_rules: ['heating_post > 30%', 'no_regulation_done'],
             gain_scope: 'heating_post',
-            gain_pct_low: 0.10, gain_pct_med: 0.15, gain_pct_high: 0.25,
-            capex_low: 1500, capex_med: 4000, capex_high: 8000,
+            gain_pct_low: 0.07, gain_pct_med: 0.10, gain_pct_high: 0.15,
+            capex_low: 3000, capex_med: 7000, capex_high: 14000,
             capex_unit: '€',
             roi_method: 'simple_payback',
             aid_tags: ['CEE'],
@@ -450,8 +457,8 @@ const NEW_DIAGNOSTIC_ACTIONS_LIBRARY = {
             aid_pct: 0.15,
             trigger_rules: ['heating_post > 25%', 'surface > 200'],
             gain_scope: 'heating_post',
-            gain_pct_low: 0.05, gain_pct_med: 0.10, gain_pct_high: 0.15,
-            capex_low: 30, capex_med: 50, capex_high: 80,
+            gain_pct_low: 0.04, gain_pct_med: 0.07, gain_pct_high: 0.10,
+            capex_low: 70, capex_med: 100, capex_high: 150,
             capex_unit: '€/radiateur',
             roi_method: 'simple_payback',
             aid_tags: ['CEE'],
@@ -484,7 +491,7 @@ const NEW_DIAGNOSTIC_ACTIONS_LIBRARY = {
             aid_pct: 0.15,
             trigger_rules: ['vent_aux_post > 8%', 'no_regulation_done'],
             gain_scope: 'vent_aux_post',
-            gain_pct_low: 0.15, gain_pct_med: 0.25, gain_pct_high: 0.40,
+            gain_pct_low: 0.08, gain_pct_med: 0.15, gain_pct_high: 0.25,
             capex_low: 500, capex_med: 1500, capex_high: 3000,
             capex_unit: '€',
             roi_method: 'simple_payback',
@@ -502,7 +509,7 @@ const NEW_DIAGNOSTIC_ACTIONS_LIBRARY = {
             trigger_rules: ['vent_aux_post > 8%', 'offices or education'],
             gain_scope: 'vent_aux_post',
             gain_pct_low: 0.20, gain_pct_med: 0.30, gain_pct_high: 0.45,
-            capex_low: 2000, capex_med: 5000, capex_high: 10000,
+            capex_low: 12000, capex_med: 20000, capex_high: 40000,
             capex_unit: '€',
             roi_method: 'simple_payback',
             aid_tags: ['CEE'],
@@ -519,7 +526,7 @@ const NEW_DIAGNOSTIC_ACTIONS_LIBRARY = {
             trigger_rules: ['vent_aux_post > 10%', 'high_occupancy'],
             gain_scope: 'vent_aux_post',
             gain_pct_low: 0.15, gain_pct_med: 0.25, gain_pct_high: 0.35,
-            capex_low: 3000, capex_med: 7000, capex_high: 15000,
+            capex_low: 10000, capex_med: 18000, capex_high: 35000,
             capex_unit: '€',
             roi_method: 'simple_payback',
             aid_tags: ['CEE'],
@@ -535,7 +542,7 @@ const NEW_DIAGNOSTIC_ACTIONS_LIBRARY = {
             aid_pct: 0.15,
             trigger_rules: ['lighting_post > 15%', 'no_led_done'],
             gain_scope: 'lighting_post',
-            gain_pct_low: 0.45, gain_pct_med: 0.60, gain_pct_high: 0.75,
+            gain_pct_low: 0.30, gain_pct_med: 0.40, gain_pct_high: 0.55,
             capex_low: 15, capex_med: 30, capex_high: 45,
             capex_unit: '€/m²',
             roi_method: 'simple_payback',
@@ -587,7 +594,7 @@ const NEW_DIAGNOSTIC_ACTIONS_LIBRARY = {
             aid_pct: 0.05,
             trigger_rules: ['dhw_post > 8%', 'no_dhw_done'],
             gain_scope: 'dhw_post',
-            gain_pct_low: 0.08, gain_pct_med: 0.12, gain_pct_high: 0.20,
+            gain_pct_low: 0.02, gain_pct_med: 0.03, gain_pct_high: 0.05,
             capex_low: 200, capex_med: 500, capex_high: 1000,
             capex_unit: '€',
             roi_method: 'simple_payback',
@@ -623,7 +630,7 @@ const NEW_DIAGNOSTIC_ACTIONS_LIBRARY = {
             aid_pct: 0.18,
             trigger_rules: ['surface > 500'],
             gain_scope: 'total',
-            gain_pct_low: 0.12, gain_pct_med: 0.18, gain_pct_high: 0.22,
+            gain_pct_low: 0.08, gain_pct_med: 0.13, gain_pct_high: 0.18,
             capex_low: 8000, capex_med: 20000, capex_high: 45000,
             capex_unit: '€',
             capex_per_m2: 25,
@@ -643,7 +650,7 @@ const NEW_DIAGNOSTIC_ACTIONS_LIBRARY = {
             trigger_rules: ['roofInsulation !== yes'],
             gain_scope: 'heating_post',
             gain_pct_low: 0.15, gain_pct_med: 0.20, gain_pct_high: 0.25,
-            capex_low: 40, capex_med: 80, capex_high: 120,
+            capex_low: 110, capex_med: 150, capex_high: 180,
             capex_unit: '€/m²',
             roi_method: 'simple_payback',
             aid_tags: ['CEE'],
@@ -661,7 +668,7 @@ const NEW_DIAGNOSTIC_ACTIONS_LIBRARY = {
             trigger_rules: ['wallInsulation !== yes'],
             gain_scope: 'heating_post',
             gain_pct_low: 0.12, gain_pct_med: 0.18, gain_pct_high: 0.25,
-            capex_low: 120, capex_med: 190, capex_high: 280,
+            capex_low: 180, capex_med: 240, capex_high: 300,
             capex_unit: '€/m²',
             roi_method: 'simple_payback',
             aid_tags: ['CEE'],
@@ -696,7 +703,7 @@ const NEW_DIAGNOSTIC_ACTIONS_LIBRARY = {
             aid_pct: 0.12,
             trigger_rules: ['ecsSystem === electric_boiler'],
             gain_scope: 'dhw_post',
-            gain_pct_low: 0.50, gain_pct_med: 0.60, gain_pct_high: 0.75,
+            gain_pct_low: 0.20, gain_pct_med: 0.30, gain_pct_high: 0.45,
             // V1.6.0 : capex entierement dynamique via newDiagnosticComputeCetSizing (facture + tiers commerciaux).
             // Aucune valeur hardcodee ici : si le sizing retourne null, l'action est filtree en amont.
             capex_method: 'cet_sized',
@@ -716,7 +723,7 @@ const NEW_DIAGNOSTIC_ACTIONS_LIBRARY = {
             aid_pct: 0.00,
             trigger_rules: ['hasCooling === true'],
             gain_scope: 'cooling_post',
-            gain_pct_low: 0.15, gain_pct_med: 0.25, gain_pct_high: 0.40,
+            gain_pct_low: 0.03, gain_pct_med: 0.06, gain_pct_high: 0.10,
             capex_low: 500, capex_med: 2000, capex_high: 5000,
             capex_unit: '€',
             roi_method: 'simple_payback',
@@ -733,7 +740,7 @@ const NEW_DIAGNOSTIC_ACTIONS_LIBRARY = {
             aid_pct: 0.00,
             trigger_rules: ['surface > 300'],
             gain_scope: 'total',
-            gain_pct_low: 0.03, gain_pct_med: 0.05, gain_pct_high: 0.08,
+            gain_pct_low: 0.01, gain_pct_med: 0.02, gain_pct_high: 0.04,
             capex_low: 1000, capex_med: 3000, capex_high: 8000,
             capex_unit: '€',
             roi_method: 'simple_payback',
@@ -750,7 +757,7 @@ const NEW_DIAGNOSTIC_ACTIONS_LIBRARY = {
             aid_pct: 0.10,
             trigger_rules: ['surface > 100', 'roofType !== none'],
             gain_scope: 'elec_post',
-            gain_pct_low: 0.10, gain_pct_med: 0.20, gain_pct_high: 0.30,
+            gain_pct_low: 0.05, gain_pct_med: 0.10, gain_pct_high: 0.15,
             capex_low: 8000, capex_med: 15000, capex_high: 30000,
             capex_unit: '€',
             capex_per_kwc: 1200,
@@ -1454,11 +1461,11 @@ const newDiagnosticBuildInstallationSummary = (formData) => {
 // Le champ `capex` est conserve (= capex_mid) pour retro-compatibilite du reste du moteur.
 // Plafond CET : 2000 L (cf. BUG-004 - au-dela, action ACT18_STUDY dediee).
 const NEW_DIAGNOSTIC_CET_TIERS = [
-    { volumeL: 200,  capex_low: 3910,  capex_mid: 4600,  capex_high: 5290,  capex: 4600 },
-    { volumeL: 300,  capex_low: 4930,  capex_mid: 5800,  capex_high: 6670,  capex: 5800 },
-    { volumeL: 500,  capex_low: 7820,  capex_mid: 9200,  capex_high: 10580, capex: 9200 },
-    { volumeL: 1000, capex_low: 14875, capex_mid: 17500, capex_high: 20125, capex: 17500 },
-    { volumeL: 2000, capex_low: 28900, capex_mid: 34000, capex_high: 39100, capex: 34000 }
+    { volumeL: 200,  capex_low: 4692,  capex_mid: 5520,  capex_high: 6348,  capex: 5520 },
+    { volumeL: 300,  capex_low: 5916,  capex_mid: 6960,  capex_high: 8004,  capex: 6960 },
+    { volumeL: 500,  capex_low: 9384,  capex_mid: 11040, capex_high: 12696, capex: 11040 },
+    { volumeL: 1000, capex_low: 17850, capex_mid: 21000, capex_high: 24150, capex: 21000 },
+    { volumeL: 2000, capex_low: 34680, capex_mid: 40800, capex_high: 46920, capex: 40800 }
 ];
 
 // V1.6.1 : grille consortium artisan FR Q4 2025 (PAC air/eau), fourchette +/- 15 %.
@@ -2357,6 +2364,14 @@ const newDiagnosticGetComplementaryPhotovoltaicOpportunity = (formData, splitRes
     };
 };
 
+// V1.6.3 : mode d'affichage ROI (plancher 1 an - évite la fausse précision 0,X an).
+const newDiagnosticComputeRoiDisplayMode = (roiYears) => {
+    if (roiYears == null || !(roiYears > 0)) return { mode: 'standard', label: null };
+    if (roiYears < 1.0) return { mode: 'immediate', label: 'Retour immédiat (< 1 an)' };
+    if (roiYears < 2.0) return { mode: 'short', label: `≈ ${Math.round(roiYears)} an` };
+    return { mode: 'standard', label: null };
+};
+
 const newDiagnosticCalculateCompositeSavings = (actions, totalKwh) => {
     // Gains composés : 1 - Π(1 - g_i)
     // gainPct = gainKwh / totalKwh (toutes sources confondues pour l'intensité)
@@ -2690,7 +2705,7 @@ const newDiagnosticBuildReportData = (formData) => {
         const opps = [];
 
         if (!worksDone.includes('roof_done') && formData.roofInsulation !== 'yes') {
-            const capexEst = Math.round(safeSurf * 80);  // 80 EUR/m² médian
+            const capexEst = Math.round(safeSurf * 150);  // 150 EUR/m² médian (tertiaire posé 2026)
             const gainEst = Math.round(heatingCostEuro * 0.20);
             opps.push({
                 id: 'ACT15',
@@ -2704,7 +2719,7 @@ const newDiagnosticBuildReportData = (formData) => {
         }
 
         if (!worksDone.includes('walls_done') && formData.wallInsulation !== 'yes' && safeSurf >= 300) {
-            const capexEst = Math.round(safeSurf * 190 * 0.6);  // 190 EUR/m² × ratio façade/surface
+            const capexEst = Math.round(safeSurf * 240 * 0.6);  // 240 EUR/m² × ratio façade/surface
             const gainEst = Math.round(heatingCostEuro * 0.18);
             opps.push({
                 id: 'ACT16',
@@ -2852,6 +2867,8 @@ const newDiagnosticBuildReportData = (formData) => {
             aid_amount: { value: a.aidAmount || 0, unit: '€' },
             aid_pct: a.aidPct || 0,
             roi_years: { value: a.roi_years, unit: 'ans' },
+            roi_display_mode: newDiagnosticComputeRoiDisplayMode(a.roi_years).mode,
+            roi_display_label: newDiagnosticComputeRoiDisplayMode(a.roi_years).label,
             source_level_gain: a.source_level_gain,
             source_level_capex: a.source_level_capex,
             aid_tags: a.aid_tags || [],
@@ -2893,10 +2910,19 @@ const newDiagnosticBuildReportData = (formData) => {
         projection_3y: projection3y,
 
         // Composite savings
+        // V1.6.3 : total_pct affiché plafonné à NEW_DIAGNOSTIC_DISPLAYED_MAX_SAVINGS_PCT (50 %).
+        // total_pct_raw conserve la valeur interne (cap technique 60 %) pour audit.
         composite_savings: {
-            total_pct: { value: Math.round(compositeSavingsPct * 100), unit: '%' },
+            total_pct: { value: Math.round(Math.min(compositeSavingsPct, NEW_DIAGNOSTIC_DISPLAYED_MAX_SAVINGS_PCT) * 100), unit: '%' },
+            total_pct_raw: { value: Math.round(compositeSavingsPct * 100), unit: '%' },
+            displayed_cap_pct: { value: Math.round(NEW_DIAGNOSTIC_DISPLAYED_MAX_SAVINGS_PCT * 100), unit: '%' },
             annual_kwh: { value: annualSavingsKwh, unit: 'kWh/an' },
-            annual_euro: { value: annualSavingsEuro, unit: '€/an' }
+            annual_euro: { value: annualSavingsEuro, unit: '€/an' },
+            phrasing: {
+                headline: `Potentiel maximum cumulé ${Math.round(Math.min(compositeSavingsPct, NEW_DIAGNOSTIC_DISPLAYED_MAX_SAVINGS_PCT) * 100)} %`,
+                hypothesis: 'Suppose que toutes les actions sont engagées et exploitées correctement.',
+                realistic_plan: 'Un plan court terme réaliste capture typiquement 20-30 % d\'économies.'
+            }
         },
 
         // Qualification prospect

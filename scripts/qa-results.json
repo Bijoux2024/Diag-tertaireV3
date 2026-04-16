@@ -1,0 +1,1641 @@
+[
+  {
+    "i": 1,
+    "name": "Bureau 100m² gaz H2",
+    "fd": {
+      "activity": "offices",
+      "surface": "100",
+      "postalCode": "75008",
+      "elecUsed": true,
+      "elecKwh": "12000",
+      "gasUsed": true,
+      "gasKwh": "15000",
+      "mainHeating": "gas",
+      "ecsSameSystem": true,
+      "hasCooling": false,
+      "worksDone": [],
+      "buildingAge": "1975_2000"
+    },
+    "errors": [],
+    "warnings": [],
+    "engine_version": "1.6.2",
+    "intensity": 270,
+    "total_kwh": 27000,
+    "totalEuro": 3972,
+    "actions_count": 5,
+    "actionIds": [
+      "ACT03",
+      "ACT01",
+      "ACT08",
+      "ACT22",
+      "ACT14"
+    ],
+    "breakdown_total": 100,
+    "act18_internal": {
+      "volumeL": 200,
+      "volumeLraw": 33,
+      "capex": 4600,
+      "capex_range": {
+        "low": 3910,
+        "mid": 4600,
+        "high": 5290,
+        "formatted": "3 910 € – 5 290 €"
+      },
+      "climat_zone": "H2",
+      "besoin_kwh": 638,
+      "source_ecs": "gas"
+    },
+    "pac_sizing": {
+      "kW": 10,
+      "kWraw": 3,
+      "capex": 15000,
+      "climat_zone": "H2",
+      "besoin_kwh": 5483,
+      "source_chauffage": "gas"
+    }
+  },
+  {
+    "i": 2,
+    "name": "Bureau 500m² élec-convecteurs H1",
+    "fd": {
+      "activity": "offices",
+      "surface": "500",
+      "postalCode": "67000",
+      "elecUsed": true,
+      "elecKwh": "100000",
+      "gasUsed": false,
+      "mainHeating": "electric_convector",
+      "ecsSameSystem": true,
+      "hasCooling": true,
+      "worksDone": [],
+      "buildingAge": "post2012"
+    },
+    "errors": [],
+    "warnings": [],
+    "engine_version": "1.6.2",
+    "intensity": 200,
+    "total_kwh": 100000,
+    "totalEuro": 19600,
+    "actions_count": 6,
+    "actionIds": [
+      "ACT01",
+      "ACT03",
+      "ACT02",
+      "ACT14",
+      "ACT22",
+      "ACT18"
+    ],
+    "breakdown_total": 100,
+    "act18_internal": {
+      "volumeL": 300,
+      "volumeLraw": 257,
+      "capex": 5800,
+      "capex_range": {
+        "low": 4930,
+        "mid": 5800,
+        "high": 6670,
+        "formatted": "4 930 € – 6 670 €"
+      },
+      "climat_zone": "H1",
+      "besoin_kwh": 4893,
+      "source_ecs": "electric"
+    },
+    "pac_sizing": {
+      "kW": 50,
+      "kWraw": 25,
+      "capex": 62000,
+      "climat_zone": "H1",
+      "besoin_kwh": 44935,
+      "source_chauffage": "electric"
+    }
+  },
+  {
+    "i": 3,
+    "name": "Bureau 1000m² fioul H1",
+    "fd": {
+      "activity": "offices",
+      "surface": "1000",
+      "postalCode": "21000",
+      "elecUsed": true,
+      "elecKwh": "40000",
+      "gasUsed": true,
+      "gasKwh": "120000",
+      "mainHeating": "fuel",
+      "ecsSameSystem": false,
+      "ecsSystem": "electric_boiler",
+      "hasCooling": false,
+      "worksDone": [],
+      "buildingAge": "pre1975"
+    },
+    "errors": [],
+    "warnings": [],
+    "engine_version": "1.6.2",
+    "intensity": 160,
+    "total_kwh": 160000,
+    "totalEuro": 20800,
+    "actions_count": 6,
+    "actionIds": [
+      "ACT01",
+      "ACT11",
+      "ACT02",
+      "ACT18",
+      "ACT14",
+      "ACT22"
+    ],
+    "breakdown_total": 100,
+    "act18_internal": {
+      "volumeL": 200,
+      "volumeLraw": 103,
+      "capex": 4600,
+      "capex_range": {
+        "low": 3910,
+        "mid": 4600,
+        "high": 5290,
+        "formatted": "3 910 € – 5 290 €"
+      },
+      "climat_zone": "H1",
+      "besoin_kwh": 1957,
+      "source_ecs": "electric"
+    },
+    "pac_sizing": {
+      "kW": 50,
+      "kWraw": 26.8,
+      "capex": 62000,
+      "climat_zone": "H1",
+      "besoin_kwh": 48246,
+      "source_chauffage": "fuel"
+    }
+  },
+  {
+    "i": 4,
+    "name": "Bureau 5000m² réseau chaleur H2",
+    "fd": {
+      "activity": "offices",
+      "surface": "5000",
+      "postalCode": "75012",
+      "elecUsed": true,
+      "elecKwh": "250000",
+      "gasUsed": false,
+      "networkUsed": true,
+      "networkKwh": "400000",
+      "mainHeating": "network",
+      "ecsSameSystem": true,
+      "hasCooling": true,
+      "worksDone": [],
+      "buildingAge": "2001_2012"
+    },
+    "errors": [],
+    "warnings": [],
+    "engine_version": "1.6.2",
+    "intensity": 130,
+    "total_kwh": 650000,
+    "totalEuro": 87000,
+    "actions_count": 6,
+    "actionIds": [
+      "ACT01",
+      "ACT21",
+      "ACT02",
+      "ACT07",
+      "ACT18",
+      "ACT22"
+    ],
+    "breakdown_total": 100,
+    "act18_internal": {
+      "volumeL": 1000,
+      "volumeLraw": 997,
+      "capex": 17500,
+      "capex_range": {
+        "low": 14875,
+        "mid": 17500,
+        "high": 20125,
+        "formatted": "14 875 € – 20 125 €"
+      },
+      "climat_zone": "H2",
+      "besoin_kwh": 19000,
+      "source_ecs": "gas"
+    },
+    "pac_sizing": {
+      "kW": 100,
+      "kWraw": 90.8,
+      "capex": 120000,
+      "climat_zone": "H2",
+      "besoin_kwh": 163400,
+      "source_chauffage": "gas"
+    }
+  },
+  {
+    "i": 5,
+    "name": "Bureau 20000m² PAC existante H3",
+    "fd": {
+      "activity": "offices",
+      "surface": "20000",
+      "postalCode": "06000",
+      "elecUsed": true,
+      "elecKwh": "600000",
+      "gasUsed": false,
+      "mainHeating": "pac",
+      "ecsSameSystem": false,
+      "ecsSystem": "heat_pump",
+      "hasCooling": true,
+      "worksDone": [
+        "pac_done"
+      ],
+      "buildingAge": "post2012"
+    },
+    "errors": [],
+    "warnings": [],
+    "engine_version": "1.6.2",
+    "intensity": 30,
+    "total_kwh": 600000,
+    "totalEuro": 117600,
+    "actions_count": 5,
+    "actionIds": [
+      "ACT01",
+      "ACT02",
+      "ACT21",
+      "ACT07",
+      "ACT22"
+    ],
+    "breakdown_total": 100,
+    "act18_internal": null,
+    "pac_sizing": {
+      "kW": 200,
+      "kWraw": 322.5,
+      "capex": 230000,
+      "climat_zone": "H3",
+      "besoin_kwh": 580500,
+      "source_chauffage": "pac"
+    }
+  },
+  {
+    "i": 6,
+    "name": "Resto 100m² gaz H2",
+    "fd": {
+      "activity": "restaurant",
+      "surface": "100",
+      "postalCode": "75001",
+      "elecUsed": true,
+      "elecKwh": "30000",
+      "gasUsed": true,
+      "gasKwh": "35000",
+      "mainHeating": "gas",
+      "ecsSameSystem": true,
+      "hasCooling": true,
+      "worksDone": [],
+      "buildingAge": "1975_2000"
+    },
+    "errors": [],
+    "warnings": [],
+    "engine_version": "1.6.2",
+    "intensity": 650,
+    "total_kwh": 65000,
+    "totalEuro": 9660,
+    "actions_count": 6,
+    "actionIds": [
+      "ACT03",
+      "ACT01",
+      "ACT08",
+      "ACT14",
+      "ACT22",
+      "ACT18"
+    ],
+    "breakdown_total": 100,
+    "act18_internal": {
+      "volumeL": 200,
+      "volumeLraw": 156,
+      "capex": 4600,
+      "capex_range": {
+        "low": 3910,
+        "mid": 4600,
+        "high": 5290,
+        "formatted": "3 910 € – 5 290 €"
+      },
+      "climat_zone": "H2",
+      "besoin_kwh": 2975,
+      "source_ecs": "gas"
+    },
+    "pac_sizing": {
+      "kW": 10,
+      "kWraw": 4.1,
+      "capex": 15000,
+      "climat_zone": "H2",
+      "besoin_kwh": 7438,
+      "source_chauffage": "gas"
+    }
+  },
+  {
+    "i": 7,
+    "name": "Resto 200m² gaz+ECS elec H1",
+    "fd": {
+      "activity": "restaurant",
+      "surface": "200",
+      "postalCode": "69000",
+      "elecUsed": true,
+      "elecKwh": "40000",
+      "gasUsed": true,
+      "gasKwh": "30000",
+      "mainHeating": "gas",
+      "hasCooling": true,
+      "ecsSameSystem": false,
+      "ecsSystem": "electric_boiler",
+      "worksDone": [],
+      "buildingAge": "1975_2000"
+    },
+    "errors": [],
+    "warnings": [],
+    "engine_version": "1.6.2",
+    "intensity": 350,
+    "total_kwh": 70000,
+    "totalEuro": 11080,
+    "actions_count": 6,
+    "actionIds": [
+      "ACT11",
+      "ACT01",
+      "ACT03",
+      "ACT14",
+      "ACT18",
+      "ACT22"
+    ],
+    "breakdown_total": 100,
+    "act18_internal": {
+      "volumeL": 300,
+      "volumeLraw": 205,
+      "capex": 5800,
+      "capex_range": {
+        "low": 4930,
+        "mid": 5800,
+        "high": 6670,
+        "formatted": "4 930 € – 6 670 €"
+      },
+      "climat_zone": "H1",
+      "besoin_kwh": 3914,
+      "source_ecs": "electric"
+    },
+    "pac_sizing": {
+      "kW": 10,
+      "kWraw": 3.9,
+      "capex": 15000,
+      "climat_zone": "H1",
+      "besoin_kwh": 7013,
+      "source_chauffage": "gas"
+    }
+  },
+  {
+    "i": 8,
+    "name": "Resto 500m² fioul H3",
+    "fd": {
+      "activity": "restaurant",
+      "surface": "500",
+      "postalCode": "13000",
+      "elecUsed": true,
+      "elecKwh": "80000",
+      "gasUsed": true,
+      "gasKwh": "100000",
+      "mainHeating": "fuel",
+      "ecsSameSystem": true,
+      "hasCooling": true,
+      "worksDone": [],
+      "buildingAge": "pre1975"
+    },
+    "errors": [],
+    "warnings": [],
+    "engine_version": "1.6.2",
+    "intensity": 360,
+    "total_kwh": 180000,
+    "totalEuro": 26480,
+    "actions_count": 6,
+    "actionIds": [
+      "ACT01",
+      "ACT11",
+      "ACT05",
+      "ACT14",
+      "ACT18",
+      "ACT22"
+    ],
+    "breakdown_total": 100,
+    "act18_internal": {
+      "volumeL": 500,
+      "volumeLraw": 433,
+      "capex": 9200,
+      "capex_range": {
+        "low": 7820,
+        "mid": 9200,
+        "high": 10580,
+        "formatted": "7 820 € – 10 580 €"
+      },
+      "climat_zone": "H3",
+      "besoin_kwh": 8245,
+      "source_ecs": "fuel"
+    },
+    "pac_sizing": {
+      "kW": 20,
+      "kWraw": 10.6,
+      "capex": 28000,
+      "climat_zone": "H3",
+      "besoin_kwh": 19125,
+      "source_chauffage": "fuel"
+    }
+  },
+  {
+    "i": 9,
+    "name": "Resto 1000m² élec convecteurs H2",
+    "fd": {
+      "activity": "restaurant",
+      "surface": "1000",
+      "postalCode": "44000",
+      "elecUsed": true,
+      "elecKwh": "250000",
+      "gasUsed": false,
+      "mainHeating": "electric_convector",
+      "ecsSameSystem": false,
+      "ecsSystem": "electric_boiler",
+      "hasCooling": true,
+      "worksDone": [],
+      "buildingAge": "2001_2012"
+    },
+    "errors": [],
+    "warnings": [],
+    "engine_version": "1.6.2",
+    "intensity": 250,
+    "total_kwh": 250000,
+    "totalEuro": 49000,
+    "actions_count": 6,
+    "actionIds": [
+      "ACT01",
+      "ACT05",
+      "ACT11",
+      "ACT14",
+      "ACT07",
+      "ACT22"
+    ],
+    "breakdown_total": 100,
+    "act18_internal": {
+      "volumeL": 2000,
+      "volumeLraw": 1247,
+      "capex": 34000,
+      "capex_range": {
+        "low": 28900,
+        "mid": 34000,
+        "high": 39100,
+        "formatted": "28 900 € – 39 100 €"
+      },
+      "climat_zone": "H2",
+      "besoin_kwh": 23750,
+      "source_ecs": "electric"
+    },
+    "pac_sizing": {
+      "kW": 50,
+      "kWraw": 33,
+      "capex": 62000,
+      "climat_zone": "H2",
+      "besoin_kwh": 59375,
+      "source_chauffage": "electric"
+    }
+  },
+  {
+    "i": 10,
+    "name": "Resto 5000m² gaz H1 grand volume",
+    "fd": {
+      "activity": "restaurant",
+      "surface": "5000",
+      "postalCode": "88000",
+      "elecUsed": true,
+      "elecKwh": "400000",
+      "gasUsed": true,
+      "gasKwh": "900000",
+      "mainHeating": "gas",
+      "ecsSameSystem": true,
+      "hasCooling": true,
+      "worksDone": [],
+      "buildingAge": "pre1975"
+    },
+    "errors": [],
+    "warnings": [],
+    "engine_version": "1.6.2",
+    "intensity": 260,
+    "total_kwh": 1300000,
+    "totalEuro": 175600,
+    "actions_count": 6,
+    "actionIds": [
+      "ACT01",
+      "ACT11",
+      "ACT10",
+      "ACT07",
+      "ACT14",
+      "ACT22"
+    ],
+    "breakdown_total": 100,
+    "act18_internal": {
+      "needsStudy": true,
+      "V_L_raw": 4136,
+      "climat_zone": "H1",
+      "besoin_kwh": 78795,
+      "source_ecs": "gas"
+    },
+    "pac_sizing": {
+      "kW": 200,
+      "kWraw": 116.9,
+      "capex": 230000,
+      "climat_zone": "H1",
+      "besoin_kwh": 210375,
+      "source_chauffage": "gas"
+    }
+  },
+  {
+    "i": 11,
+    "name": "Commerce alim 1000m² gaz H2",
+    "fd": {
+      "activity": "commerce_alim",
+      "surface": "1000",
+      "postalCode": "33000",
+      "elecUsed": true,
+      "elecKwh": "200000",
+      "gasUsed": true,
+      "gasKwh": "50000",
+      "mainHeating": "gas",
+      "ecsSameSystem": true,
+      "hasCooling": true,
+      "worksDone": [],
+      "buildingAge": "pre1975"
+    },
+    "errors": [],
+    "warnings": [],
+    "engine_version": "1.6.2",
+    "intensity": 250,
+    "total_kwh": 250000,
+    "totalEuro": 44600,
+    "actions_count": 6,
+    "actionIds": [
+      "ACT01",
+      "ACT21",
+      "ACT05",
+      "ACT14",
+      "ACT22",
+      "ACT13"
+    ],
+    "breakdown_total": 100,
+    "act13": {
+      "capex": 15000,
+      "gainKwh": 32143,
+      "gainEuro": 1900
+    },
+    "act18_internal": {
+      "volumeL": 200,
+      "volumeLraw": 67,
+      "capex": 4600,
+      "capex_range": {
+        "low": 3910,
+        "mid": 4600,
+        "high": 5290,
+        "formatted": "3 910 € – 5 290 €"
+      },
+      "climat_zone": "H2",
+      "besoin_kwh": 1275,
+      "source_ecs": "gas"
+    },
+    "pac_sizing": {
+      "kW": 10,
+      "kWraw": 2.8,
+      "capex": 15000,
+      "climat_zone": "H2",
+      "besoin_kwh": 5100,
+      "source_chauffage": "gas"
+    }
+  },
+  {
+    "i": 12,
+    "name": "Commerce alim 5000m² réseau H1",
+    "fd": {
+      "activity": "commerce_alim",
+      "surface": "5000",
+      "postalCode": "57000",
+      "elecUsed": true,
+      "elecKwh": "900000",
+      "networkUsed": true,
+      "networkKwh": "250000",
+      "mainHeating": "network",
+      "ecsSameSystem": true,
+      "hasCooling": true,
+      "worksDone": [],
+      "buildingAge": "1975_2000"
+    },
+    "errors": [],
+    "warnings": [],
+    "engine_version": "1.6.2",
+    "intensity": 230,
+    "total_kwh": 1150000,
+    "totalEuro": 200150,
+    "actions_count": 6,
+    "actionIds": [
+      "ACT01",
+      "ACT21",
+      "ACT05",
+      "ACT14",
+      "ACT22",
+      "ACT18"
+    ],
+    "breakdown_total": 100,
+    "act18_internal": {
+      "volumeL": 500,
+      "volumeLraw": 385,
+      "capex": 9200,
+      "capex_range": {
+        "low": 7820,
+        "mid": 9200,
+        "high": 10580,
+        "formatted": "7 820 € – 10 580 €"
+      },
+      "climat_zone": "H1",
+      "besoin_kwh": 7339,
+      "source_ecs": "gas"
+    },
+    "pac_sizing": {
+      "kW": 20,
+      "kWraw": 17.4,
+      "capex": 28000,
+      "climat_zone": "H1",
+      "besoin_kwh": 31350,
+      "source_chauffage": "gas"
+    }
+  },
+  {
+    "i": 13,
+    "name": "Commerce nonalim 500m² convecteurs H3",
+    "fd": {
+      "activity": "commerce_nonalim",
+      "surface": "500",
+      "postalCode": "34000",
+      "elecUsed": true,
+      "elecKwh": "80000",
+      "gasUsed": false,
+      "mainHeating": "electric_convector",
+      "ecsSameSystem": true,
+      "hasCooling": true,
+      "worksDone": [],
+      "buildingAge": "2001_2012"
+    },
+    "errors": [],
+    "warnings": [],
+    "engine_version": "1.6.2",
+    "intensity": 160,
+    "total_kwh": 80000,
+    "totalEuro": 15680,
+    "actions_count": 6,
+    "actionIds": [
+      "ACT01",
+      "ACT03",
+      "ACT02",
+      "ACT14",
+      "ACT22",
+      "ACT13"
+    ],
+    "breakdown_total": 100,
+    "act13": {
+      "capex": 28000,
+      "gainKwh": 25714,
+      "gainEuro": 5040
+    },
+    "act18_internal": {
+      "volumeL": 200,
+      "volumeLraw": 193,
+      "capex": 4600,
+      "capex_range": {
+        "low": 3910,
+        "mid": 4600,
+        "high": 5290,
+        "formatted": "3 910 € – 5 290 €"
+      },
+      "climat_zone": "H3",
+      "besoin_kwh": 3686,
+      "source_ecs": "electric"
+    },
+    "pac_sizing": {
+      "kW": 20,
+      "kWraw": 17.1,
+      "capex": 28000,
+      "climat_zone": "H3",
+      "besoin_kwh": 30780,
+      "source_chauffage": "electric"
+    }
+  },
+  {
+    "i": 14,
+    "name": "Commerce nonalim 100m² gaz H1",
+    "fd": {
+      "activity": "commerce_nonalim",
+      "surface": "100",
+      "postalCode": "54000",
+      "elecUsed": true,
+      "elecKwh": "8000",
+      "gasUsed": true,
+      "gasKwh": "12000",
+      "mainHeating": "gas",
+      "ecsSameSystem": true,
+      "hasCooling": false,
+      "worksDone": [],
+      "buildingAge": "1975_2000"
+    },
+    "errors": [],
+    "warnings": [],
+    "engine_version": "1.6.2",
+    "intensity": 200,
+    "total_kwh": 20000,
+    "totalEuro": 2864,
+    "actions_count": 4,
+    "actionIds": [
+      "ACT03",
+      "ACT01",
+      "ACT08",
+      "ACT22"
+    ],
+    "breakdown_total": 100,
+    "act18_internal": {
+      "volumeL": 200,
+      "volumeLraw": 28,
+      "capex": 4600,
+      "capex_range": {
+        "low": 3910,
+        "mid": 4600,
+        "high": 5290,
+        "formatted": "3 910 € – 5 290 €"
+      },
+      "climat_zone": "H1",
+      "besoin_kwh": 525,
+      "source_ecs": "gas"
+    },
+    "pac_sizing": {
+      "kW": 10,
+      "kWraw": 2.8,
+      "capex": 15000,
+      "climat_zone": "H1",
+      "besoin_kwh": 5049,
+      "source_chauffage": "gas"
+    }
+  },
+  {
+    "i": 15,
+    "name": "Hôtel 200m² gaz H2",
+    "fd": {
+      "activity": "hotel",
+      "surface": "200",
+      "postalCode": "44000",
+      "elecUsed": true,
+      "elecKwh": "35000",
+      "gasUsed": true,
+      "gasKwh": "70000",
+      "mainHeating": "gas",
+      "ecsSameSystem": true,
+      "hasCooling": true,
+      "worksDone": [],
+      "buildingAge": "1975_2000"
+    },
+    "errors": [],
+    "warnings": [],
+    "engine_version": "1.6.2",
+    "intensity": 525,
+    "total_kwh": 105000,
+    "totalEuro": 14420,
+    "actions_count": 6,
+    "actionIds": [
+      "ACT01",
+      "ACT03",
+      "ACT11",
+      "ACT14",
+      "ACT22",
+      "ACT13"
+    ],
+    "breakdown_total": 100,
+    "act13": {
+      "capex": 28000,
+      "gainKwh": 46667,
+      "gainEuro": 2987
+    },
+    "act18_internal": {
+      "volumeL": 1000,
+      "volumeLraw": 687,
+      "capex": 17500,
+      "capex_range": {
+        "low": 14875,
+        "mid": 17500,
+        "high": 20125,
+        "formatted": "14 875 € – 20 125 €"
+      },
+      "climat_zone": "H2",
+      "besoin_kwh": 13090,
+      "source_ecs": "gas"
+    },
+    "pac_sizing": {
+      "kW": 20,
+      "kWraw": 12.6,
+      "capex": 28000,
+      "climat_zone": "H2",
+      "besoin_kwh": 22610,
+      "source_chauffage": "gas"
+    }
+  },
+  {
+    "i": 16,
+    "name": "Hôtel 720m² convecteurs + ECS élec H1",
+    "fd": {
+      "activity": "hotel",
+      "surface": "720",
+      "postalCode": "67000",
+      "elecUsed": true,
+      "elecKwh": "180000",
+      "gasUsed": false,
+      "mainHeating": "electric_convector",
+      "ecsSameSystem": false,
+      "ecsSystem": "electric_boiler",
+      "hasCooling": true,
+      "worksDone": [],
+      "buildingAge": "1975_2000"
+    },
+    "errors": [],
+    "warnings": [],
+    "engine_version": "1.6.2",
+    "intensity": 250,
+    "total_kwh": 180000,
+    "totalEuro": 35280,
+    "actions_count": 6,
+    "actionIds": [
+      "ACT01",
+      "ACT11",
+      "ACT10",
+      "ACT14",
+      "ACT22",
+      "ACT13"
+    ],
+    "breakdown_total": 100,
+    "act13": {
+      "capex": 62000,
+      "gainKwh": 45600,
+      "gainEuro": 8938
+    },
+    "act18_internal": {
+      "needsStudy": true,
+      "V_L_raw": 2034,
+      "climat_zone": "H1",
+      "besoin_kwh": 38749,
+      "source_ecs": "electric"
+    },
+    "pac_sizing": {
+      "kW": 50,
+      "kWraw": 39.7,
+      "capex": 62000,
+      "climat_zone": "H1",
+      "besoin_kwh": 71478,
+      "source_chauffage": "electric"
+    }
+  },
+  {
+    "i": 17,
+    "name": "Hôtel 1000m² fioul H1 ancien",
+    "fd": {
+      "activity": "hotel",
+      "surface": "1000",
+      "postalCode": "25000",
+      "elecUsed": true,
+      "elecKwh": "120000",
+      "gasUsed": true,
+      "gasKwh": "280000",
+      "mainHeating": "fuel",
+      "ecsSameSystem": true,
+      "hasCooling": true,
+      "worksDone": [],
+      "buildingAge": "pre1975"
+    },
+    "errors": [],
+    "warnings": [],
+    "engine_version": "1.6.2",
+    "intensity": 400,
+    "total_kwh": 400000,
+    "totalEuro": 53760,
+    "actions_count": 6,
+    "actionIds": [
+      "ACT01",
+      "ACT11",
+      "ACT10",
+      "ACT14",
+      "ACT22",
+      "ACT07"
+    ],
+    "breakdown_total": 100,
+    "act18_internal": {
+      "needsStudy": true,
+      "V_L_raw": 2831,
+      "climat_zone": "H1",
+      "besoin_kwh": 53931,
+      "source_ecs": "fuel"
+    },
+    "pac_sizing": {
+      "kW": 100,
+      "kWraw": 55.3,
+      "capex": 120000,
+      "climat_zone": "H1",
+      "besoin_kwh": 99484,
+      "source_chauffage": "fuel"
+    }
+  },
+  {
+    "i": 18,
+    "name": "Hôtel 5000m² gaz H3 plafond CET",
+    "fd": {
+      "activity": "hotel",
+      "surface": "5000",
+      "postalCode": "06000",
+      "elecUsed": true,
+      "elecKwh": "400000",
+      "gasUsed": true,
+      "gasKwh": "2000000",
+      "mainHeating": "gas",
+      "ecsSameSystem": true,
+      "hasCooling": true,
+      "worksDone": [],
+      "buildingAge": "1975_2000"
+    },
+    "errors": [],
+    "warnings": [],
+    "engine_version": "1.6.2",
+    "intensity": 480,
+    "total_kwh": 2400000,
+    "totalEuro": 294400,
+    "actions_count": 6,
+    "actionIds": [
+      "ACT01",
+      "ACT11",
+      "ACT10",
+      "ACT07",
+      "ACT14",
+      "ACT13"
+    ],
+    "breakdown_total": 100,
+    "act13": {
+      "capex": 230000,
+      "gainKwh": 1333333,
+      "gainEuro": 85333
+    },
+    "act18_internal": {
+      "needsStudy": true,
+      "V_L_raw": 19041,
+      "climat_zone": "H3",
+      "besoin_kwh": 362780,
+      "source_ecs": "gas"
+    },
+    "pac_sizing": {
+      "kW": 200,
+      "kWraw": 323,
+      "capex": 230000,
+      "climat_zone": "H3",
+      "besoin_kwh": 581400,
+      "source_chauffage": "gas"
+    }
+  },
+  {
+    "i": 19,
+    "name": "Sport 1000m² gaz H2 (piscine-like ECS forte)",
+    "fd": {
+      "activity": "sport",
+      "surface": "1000",
+      "postalCode": "75014",
+      "elecUsed": true,
+      "elecKwh": "150000",
+      "gasUsed": true,
+      "gasKwh": "350000",
+      "mainHeating": "gas",
+      "ecsSameSystem": true,
+      "hasCooling": false,
+      "worksDone": [],
+      "buildingAge": "1975_2000"
+    },
+    "errors": [],
+    "warnings": [],
+    "engine_version": "1.6.2",
+    "intensity": 500,
+    "total_kwh": 500000,
+    "totalEuro": 67200,
+    "actions_count": 6,
+    "actionIds": [
+      "ACT01",
+      "ACT02",
+      "ACT03",
+      "ACT14",
+      "ACT22",
+      "ACT18"
+    ],
+    "breakdown_total": 100,
+    "act18_internal": {
+      "volumeL": 1000,
+      "volumeLraw": 781,
+      "capex": 17500,
+      "capex_range": {
+        "low": 14875,
+        "mid": 17500,
+        "high": 20125,
+        "formatted": "14 875 € – 20 125 €"
+      },
+      "climat_zone": "H2",
+      "besoin_kwh": 14875,
+      "source_ecs": "gas"
+    },
+    "pac_sizing": {
+      "kW": 100,
+      "kWraw": 74.4,
+      "capex": 120000,
+      "climat_zone": "H2",
+      "besoin_kwh": 133875,
+      "source_chauffage": "gas"
+    }
+  },
+  {
+    "i": 20,
+    "name": "Santé 5000m² réseau H1",
+    "fd": {
+      "activity": "health",
+      "surface": "5000",
+      "postalCode": "68000",
+      "elecUsed": true,
+      "elecKwh": "500000",
+      "networkUsed": true,
+      "networkKwh": "800000",
+      "mainHeating": "network",
+      "ecsSameSystem": true,
+      "hasCooling": true,
+      "worksDone": [],
+      "buildingAge": "2001_2012"
+    },
+    "errors": [],
+    "warnings": [],
+    "engine_version": "1.6.2",
+    "intensity": 260,
+    "total_kwh": 1300000,
+    "totalEuro": 174000,
+    "actions_count": 6,
+    "actionIds": [
+      "ACT01",
+      "ACT21",
+      "ACT02",
+      "ACT07",
+      "ACT14",
+      "ACT22"
+    ],
+    "breakdown_total": 100,
+    "act18_internal": {
+      "needsStudy": true,
+      "V_L_raw": 2054,
+      "climat_zone": "H1",
+      "besoin_kwh": 39140,
+      "source_ecs": "gas"
+    },
+    "pac_sizing": {
+      "kW": 200,
+      "kWraw": 209,
+      "capex": 230000,
+      "climat_zone": "H1",
+      "besoin_kwh": 376200,
+      "source_chauffage": "gas"
+    }
+  },
+  {
+    "i": 21,
+    "name": "École 500m² fioul H1",
+    "fd": {
+      "activity": "school",
+      "surface": "500",
+      "postalCode": "90000",
+      "elecUsed": true,
+      "elecKwh": "25000",
+      "gasUsed": true,
+      "gasKwh": "90000",
+      "mainHeating": "fuel",
+      "ecsSameSystem": false,
+      "ecsSystem": "electric_boiler",
+      "hasCooling": false,
+      "worksDone": [],
+      "buildingAge": "pre1975"
+    },
+    "errors": [],
+    "warnings": [],
+    "engine_version": "1.6.2",
+    "intensity": 230,
+    "total_kwh": 115000,
+    "totalEuro": 14620,
+    "actions_count": 6,
+    "actionIds": [
+      "ACT01",
+      "ACT03",
+      "ACT11",
+      "ACT18",
+      "ACT14",
+      "ACT22"
+    ],
+    "breakdown_total": 100,
+    "act18_internal": {
+      "volumeL": 200,
+      "volumeLraw": 64,
+      "capex": 4600,
+      "capex_range": {
+        "low": 3910,
+        "mid": 4600,
+        "high": 5290,
+        "formatted": "3 910 € – 5 290 €"
+      },
+      "climat_zone": "H1",
+      "besoin_kwh": 1223,
+      "source_ecs": "electric"
+    },
+    "pac_sizing": {
+      "kW": 50,
+      "kWraw": 21,
+      "capex": 62000,
+      "climat_zone": "H1",
+      "besoin_kwh": 37868,
+      "source_chauffage": "fuel"
+    }
+  },
+  {
+    "i": 22,
+    "name": "Logistique 20000m² gaz H2 (fallback commerce_nonalim)",
+    "fd": {
+      "activity": "commerce_nonalim",
+      "surface": "20000",
+      "postalCode": "45000",
+      "elecUsed": true,
+      "elecKwh": "1200000",
+      "gasUsed": true,
+      "gasKwh": "2000000",
+      "mainHeating": "gas",
+      "ecsSameSystem": true,
+      "hasCooling": false,
+      "worksDone": [],
+      "buildingAge": "1975_2000"
+    },
+    "errors": [],
+    "warnings": [],
+    "engine_version": "1.6.2",
+    "intensity": 160,
+    "total_kwh": 3200000,
+    "totalEuro": 451200,
+    "actions_count": 6,
+    "actionIds": [
+      "ACT01",
+      "ACT02",
+      "ACT21",
+      "ACT13",
+      "ACT14",
+      "ACT22"
+    ],
+    "breakdown_total": 100,
+    "act13": {
+      "capex": 230000,
+      "gainKwh": 1333333,
+      "gainEuro": 85333
+    },
+    "act18_internal": {
+      "needsStudy": true,
+      "V_L_raw": 4595,
+      "climat_zone": "H1",
+      "besoin_kwh": 87550,
+      "source_ecs": "gas"
+    },
+    "pac_sizing": {
+      "kW": 200,
+      "kWraw": 467.5,
+      "capex": 230000,
+      "climat_zone": "H1",
+      "besoin_kwh": 841500,
+      "source_chauffage": "gas"
+    }
+  },
+  {
+    "i": 23,
+    "name": "Limite très petit bureau 100m² seul élec H2",
+    "fd": {
+      "activity": "offices",
+      "surface": "100",
+      "postalCode": "44000",
+      "elecUsed": true,
+      "elecKwh": "4000",
+      "gasUsed": false,
+      "mainHeating": "electric_convector",
+      "ecsSameSystem": true,
+      "hasCooling": false,
+      "worksDone": [],
+      "buildingAge": "post2012"
+    },
+    "errors": [],
+    "warnings": [],
+    "engine_version": "1.6.2",
+    "intensity": 40,
+    "total_kwh": 4000,
+    "totalEuro": 784,
+    "actions_count": 2,
+    "actionIds": [
+      "ACT03",
+      "ACT22"
+    ],
+    "breakdown_total": 100,
+    "act18_internal": {
+      "volumeL": 200,
+      "volumeLraw": 10,
+      "capex": 4600,
+      "capex_range": {
+        "low": 3910,
+        "mid": 4600,
+        "high": 5290,
+        "formatted": "3 910 € – 5 290 €"
+      },
+      "climat_zone": "H2",
+      "besoin_kwh": 190,
+      "source_ecs": "electric"
+    },
+    "pac_sizing": {
+      "kW": 10,
+      "kWraw": 0.9,
+      "capex": 15000,
+      "climat_zone": "H2",
+      "besoin_kwh": 1634,
+      "source_chauffage": "electric"
+    }
+  },
+  {
+    "i": 24,
+    "name": "Limite plafond : Hôtel 20000m² gaz H1 (>2000L / >200kW)",
+    "fd": {
+      "activity": "hotel",
+      "surface": "20000",
+      "postalCode": "67000",
+      "elecUsed": true,
+      "elecKwh": "800000",
+      "gasUsed": true,
+      "gasKwh": "8000000",
+      "mainHeating": "gas",
+      "ecsSameSystem": true,
+      "hasCooling": true,
+      "worksDone": [],
+      "buildingAge": "pre1975"
+    },
+    "errors": [],
+    "warnings": [],
+    "engine_version": "1.6.2",
+    "intensity": 440,
+    "total_kwh": 8800000,
+    "totalEuro": 1020800,
+    "actions_count": 6,
+    "actionIds": [
+      "ACT01",
+      "ACT11",
+      "ACT10",
+      "ACT13",
+      "ACT07",
+      "ACT14"
+    ],
+    "breakdown_total": 100,
+    "act13": {
+      "capex": 230000,
+      "gainKwh": 5142857,
+      "gainEuro": 304000
+    },
+    "act18_internal": {
+      "needsStudy": true,
+      "V_L_raw": 80873,
+      "climat_zone": "H1",
+      "besoin_kwh": 1540880,
+      "source_ecs": "gas"
+    },
+    "pac_sizing": {
+      "kW": 200,
+      "kWraw": 1579.1,
+      "capex": 230000,
+      "climat_zone": "H1",
+      "besoin_kwh": 2842400,
+      "source_chauffage": "gas"
+    }
+  },
+  {
+    "i": 25,
+    "name": "Limite ECS absente : bureau 1000m² PAC solaire ECS",
+    "fd": {
+      "activity": "offices",
+      "surface": "1000",
+      "postalCode": "75008",
+      "elecUsed": true,
+      "elecKwh": "60000",
+      "gasUsed": false,
+      "mainHeating": "pac",
+      "ecsSameSystem": false,
+      "ecsSystem": "solar",
+      "hasCooling": true,
+      "worksDone": [],
+      "buildingAge": "post2012"
+    },
+    "errors": [],
+    "warnings": [],
+    "engine_version": "1.6.2",
+    "intensity": 60,
+    "total_kwh": 60000,
+    "totalEuro": 11760,
+    "actions_count": 5,
+    "actionIds": [
+      "ACT01",
+      "ACT02",
+      "ACT21",
+      "ACT22",
+      "ACT14"
+    ],
+    "breakdown_total": 100,
+    "act18_internal": null,
+    "pac_sizing": {
+      "kW": 50,
+      "kWraw": 35.8,
+      "capex": 62000,
+      "climat_zone": "H2",
+      "besoin_kwh": 64500,
+      "source_chauffage": "pac"
+    }
+  },
+  {
+    "i": 26,
+    "name": "H3 Bureau 1000m² gaz Marseille",
+    "fd": {
+      "activity": "offices",
+      "surface": "1000",
+      "postalCode": "13008",
+      "elecUsed": true,
+      "elecKwh": "70000",
+      "gasUsed": true,
+      "gasKwh": "80000",
+      "mainHeating": "gas",
+      "ecsSameSystem": true,
+      "hasCooling": true,
+      "worksDone": [],
+      "buildingAge": "1975_2000"
+    },
+    "errors": [],
+    "warnings": [],
+    "engine_version": "1.6.2",
+    "intensity": 150,
+    "total_kwh": 150000,
+    "totalEuro": 22360,
+    "actions_count": 6,
+    "actionIds": [
+      "ACT01",
+      "ACT05",
+      "ACT21",
+      "ACT22",
+      "ACT14",
+      "ACT13"
+    ],
+    "breakdown_total": 100,
+    "act13": {
+      "capex": 28000,
+      "gainKwh": 53333,
+      "gainEuro": 3413
+    },
+    "act18_internal": {
+      "volumeL": 200,
+      "volumeLraw": 173,
+      "capex": 4600,
+      "capex_range": {
+        "low": 3910,
+        "mid": 4600,
+        "high": 5290,
+        "formatted": "3 910 € – 5 290 €"
+      },
+      "climat_zone": "H3",
+      "besoin_kwh": 3298,
+      "source_ecs": "gas"
+    },
+    "pac_sizing": {
+      "kW": 20,
+      "kWraw": 14.6,
+      "capex": 28000,
+      "climat_zone": "H3",
+      "besoin_kwh": 26316,
+      "source_chauffage": "gas"
+    }
+  },
+  {
+    "i": 27,
+    "name": "H3 Commerce alim 500m² fioul Nîmes",
+    "fd": {
+      "activity": "commerce_alim",
+      "surface": "500",
+      "postalCode": "30000",
+      "elecUsed": true,
+      "elecKwh": "90000",
+      "gasUsed": true,
+      "gasKwh": "40000",
+      "mainHeating": "fuel",
+      "ecsSameSystem": true,
+      "hasCooling": true,
+      "worksDone": [],
+      "buildingAge": "1975_2000"
+    },
+    "errors": [],
+    "warnings": [],
+    "engine_version": "1.6.2",
+    "intensity": 260,
+    "total_kwh": 130000,
+    "totalEuro": 21960,
+    "actions_count": 6,
+    "actionIds": [
+      "ACT01",
+      "ACT21",
+      "ACT03",
+      "ACT14",
+      "ACT22",
+      "ACT13"
+    ],
+    "breakdown_total": 100,
+    "act13": {
+      "capex": 15000,
+      "gainKwh": 26667,
+      "gainEuro": 2387
+    },
+    "act18_internal": {
+      "volumeL": 200,
+      "volumeLraw": 52,
+      "capex": 4600,
+      "capex_range": {
+        "low": 3910,
+        "mid": 4600,
+        "high": 5290,
+        "formatted": "3 910 € – 5 290 €"
+      },
+      "climat_zone": "H3",
+      "besoin_kwh": 989,
+      "source_ecs": "fuel"
+    },
+    "pac_sizing": {
+      "kW": 10,
+      "kWraw": 2,
+      "capex": 15000,
+      "climat_zone": "H3",
+      "besoin_kwh": 3672,
+      "source_chauffage": "fuel"
+    }
+  },
+  {
+    "i": 28,
+    "name": "H3 Hôtel 200m² élec Corse",
+    "fd": {
+      "activity": "hotel",
+      "surface": "200",
+      "postalCode": "20000",
+      "elecUsed": true,
+      "elecKwh": "50000",
+      "gasUsed": false,
+      "mainHeating": "electric_convector",
+      "ecsSameSystem": false,
+      "ecsSystem": "electric_boiler",
+      "hasCooling": true,
+      "worksDone": [],
+      "buildingAge": "2001_2012"
+    },
+    "errors": [],
+    "warnings": [],
+    "engine_version": "1.6.2",
+    "intensity": 250,
+    "total_kwh": 50000,
+    "totalEuro": 9800,
+    "actions_count": 6,
+    "actionIds": [
+      "ACT01",
+      "ACT03",
+      "ACT11",
+      "ACT14",
+      "ACT22",
+      "ACT13"
+    ],
+    "breakdown_total": 100,
+    "act13": {
+      "capex": 15000,
+      "gainKwh": 13571,
+      "gainEuro": 2660
+    },
+    "act18_internal": {
+      "volumeL": 1000,
+      "volumeLraw": 532,
+      "capex": 17500,
+      "capex_range": {
+        "low": 14875,
+        "mid": 17500,
+        "high": 20125,
+        "formatted": "14 875 € – 20 125 €"
+      },
+      "climat_zone": "H3",
+      "besoin_kwh": 10137,
+      "source_ecs": "electric"
+    },
+    "pac_sizing": {
+      "kW": 10,
+      "kWraw": 9,
+      "capex": 15000,
+      "climat_zone": "H3",
+      "besoin_kwh": 16245,
+      "source_chauffage": "electric"
+    }
+  },
+  {
+    "i": 29,
+    "name": "Chaudière récente → ACT13 doit être exclu",
+    "fd": {
+      "activity": "offices",
+      "surface": "500",
+      "postalCode": "44000",
+      "elecUsed": true,
+      "elecKwh": "30000",
+      "gasUsed": true,
+      "gasKwh": "50000",
+      "mainHeating": "gas",
+      "ecsSameSystem": true,
+      "hasCooling": false,
+      "worksDone": [
+        "boiler_recent"
+      ],
+      "buildingAge": "2001_2012"
+    },
+    "errors": [],
+    "warnings": [],
+    "engine_version": "1.6.2",
+    "intensity": 160,
+    "total_kwh": 80000,
+    "totalEuro": 11280,
+    "actions_count": 5,
+    "actionIds": [
+      "ACT01",
+      "ACT03",
+      "ACT02",
+      "ACT14",
+      "ACT22"
+    ],
+    "breakdown_total": 100,
+    "act18_internal": {
+      "volumeL": 200,
+      "volumeLraw": 112,
+      "capex": 4600,
+      "capex_range": {
+        "low": 3910,
+        "mid": 4600,
+        "high": 5290,
+        "formatted": "3 910 € – 5 290 €"
+      },
+      "climat_zone": "H2",
+      "besoin_kwh": 2125,
+      "source_ecs": "gas"
+    },
+    "pac_sizing": {
+      "kW": 20,
+      "kWraw": 10.2,
+      "capex": 28000,
+      "climat_zone": "H2",
+      "besoin_kwh": 18275,
+      "source_chauffage": "gas"
+    }
+  },
+  {
+    "i": 30,
+    "name": "PAC déjà installée → ACT13 exclu",
+    "fd": {
+      "activity": "hotel",
+      "surface": "1000",
+      "postalCode": "75000",
+      "elecUsed": true,
+      "elecKwh": "200000",
+      "gasUsed": false,
+      "mainHeating": "pac",
+      "ecsSameSystem": false,
+      "ecsSystem": "heat_pump",
+      "hasCooling": true,
+      "worksDone": [
+        "pac_done"
+      ],
+      "buildingAge": "post2012"
+    },
+    "errors": [],
+    "warnings": [],
+    "engine_version": "1.6.2",
+    "intensity": 200,
+    "total_kwh": 200000,
+    "totalEuro": 39200,
+    "actions_count": 6,
+    "actionIds": [
+      "ACT01",
+      "ACT11",
+      "ACT10",
+      "ACT14",
+      "ACT22",
+      "ACT07"
+    ],
+    "breakdown_total": 100,
+    "act18_internal": null,
+    "pac_sizing": {
+      "kW": 200,
+      "kWraw": 105.6,
+      "capex": 230000,
+      "climat_zone": "H2",
+      "besoin_kwh": 190000,
+      "source_chauffage": "pac"
+    }
+  }
+]

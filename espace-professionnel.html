@@ -896,6 +896,121 @@
             }
         }
 
+        /* ===== HERO MOCKUP LIVE ANIMATION ===== */
+        .pro-hero-mock-card {
+            position: relative;
+            overflow: hidden;
+            animation: pro-mock-appear 0.95s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+
+        .pro-hero-mock-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(115deg,
+                transparent 30%,
+                rgba(59, 130, 246, 0.07) 45%,
+                rgba(59, 130, 246, 0.14) 50%,
+                rgba(59, 130, 246, 0.07) 55%,
+                transparent 70%);
+            background-size: 250% 100%;
+            background-position: 250% 0;
+            animation: pro-mock-sweep 7s ease-in-out 1.8s infinite;
+            pointer-events: none;
+            z-index: 3;
+            border-radius: inherit;
+        }
+
+        .pro-hero-mock-card::after {
+            content: '';
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.55);
+            animation: pro-mock-live 2.2s cubic-bezier(0.4, 0, 0.6, 1) 0.9s infinite;
+            z-index: 4;
+        }
+
+        .pro-hero-mock-card .divide-y > div {
+            position: relative;
+            animation: pro-mock-row-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+
+        .pro-hero-mock-card .divide-y > div:nth-child(1) { animation-delay: 0.35s; }
+        .pro-hero-mock-card .divide-y > div:nth-child(2) { animation-delay: 0.5s; }
+        .pro-hero-mock-card .divide-y > div:nth-child(3) { animation-delay: 0.65s; }
+
+        .pro-hero-mock-card .score-badge {
+            animation: pro-mock-score-pop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+        }
+
+        .pro-hero-mock-card .divide-y > div:nth-child(1) .score-badge { animation-delay: 0.55s; }
+        .pro-hero-mock-card .divide-y > div:nth-child(2) .score-badge { animation-delay: 0.7s; }
+        .pro-hero-mock-card .divide-y > div:nth-child(3) .score-badge { animation-delay: 0.85s; }
+
+        .pro-hero-mock-card .divide-y > div::before {
+            content: '';
+            position: absolute;
+            inset: 2px -8px;
+            border-radius: 10px;
+            background: linear-gradient(90deg, rgba(59, 130, 246, 0.09), rgba(59, 130, 246, 0.02));
+            opacity: 0;
+            pointer-events: none;
+            z-index: -1;
+            animation: pro-mock-row-glow 6s ease-in-out 1.8s infinite;
+        }
+
+        .pro-hero-mock-card .divide-y > div:nth-child(1)::before { animation-delay: 1.8s; }
+        .pro-hero-mock-card .divide-y > div:nth-child(2)::before { animation-delay: 3.8s; }
+        .pro-hero-mock-card .divide-y > div:nth-child(3)::before { animation-delay: 5.8s; }
+
+        @keyframes pro-mock-appear {
+            0%   { opacity: 0; transform: translateY(20px) scale(0.97); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        @keyframes pro-mock-sweep {
+            0%        { background-position: 250% 0; }
+            55%, 100% { background-position: -150% 0; }
+        }
+
+        @keyframes pro-mock-live {
+            0%   { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.55); transform: scale(1); }
+            70%  { box-shadow: 0 0 0 9px rgba(16, 185, 129, 0); transform: scale(1.15); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); transform: scale(1); }
+        }
+
+        @keyframes pro-mock-row-in {
+            0%   { opacity: 0; transform: translateX(12px); }
+            100% { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes pro-mock-score-pop {
+            0%   { opacity: 0; transform: scale(0.5); }
+            60%  { opacity: 1; transform: scale(1.12); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes pro-mock-row-glow {
+            0%, 40%, 100% { opacity: 0; }
+            15%, 25%      { opacity: 1; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .pro-hero-mock-card,
+            .pro-hero-mock-card::before,
+            .pro-hero-mock-card::after,
+            .pro-hero-mock-card .divide-y > div,
+            .pro-hero-mock-card .divide-y > div::before,
+            .pro-hero-mock-card .score-badge {
+                animation: none !important;
+            }
+        }
+
         /* === PROLANDING FONTS === */
         .pro-landing-typo {
             font-family: 'Inter', sans-serif;
@@ -910,6 +1025,373 @@
 
         .font-display {
             font-family: 'Inter', sans-serif;
+        }
+
+        /* ===== PRO LANDING V2 ===== */
+        .pro-v2-eyebrow {
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            font-size: 11px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: #64748B;
+        }
+
+        .pro-v2-display {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: clamp(2.75rem, 5.5vw, 4rem);
+            line-height: 0.95;
+            color: #1D4ED8;
+            letter-spacing: -0.04em;
+        }
+
+        .pro-v2-rule {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #CBD5E1, transparent);
+        }
+
+        .pro-v2-section-band {
+            background: linear-gradient(180deg, #EEF4FF 0%, #F6FAFF 100%);
+            border-top: 1px solid #D8E4F5;
+            border-bottom: 1px solid #D8E4F5;
+            position: relative;
+        }
+
+        .pro-v2-section-band::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image: radial-gradient(circle at 1px 1px, rgba(29, 78, 216, 0.06) 1px, transparent 0);
+            background-size: 28px 28px;
+            mask-image: linear-gradient(180deg, transparent, #000 30%, #000 70%, transparent);
+            -webkit-mask-image: linear-gradient(180deg, transparent, #000 30%, #000 70%, transparent);
+            pointer-events: none;
+            opacity: 0.55;
+        }
+
+        .pro-v2-section-band > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .pro-v2-kpi-col {
+            position: relative;
+            padding: 1.25rem 1.5rem;
+        }
+
+        @media (min-width: 768px) {
+            .pro-v2-kpi-col + .pro-v2-kpi-col::before {
+                content: "";
+                position: absolute;
+                left: 0;
+                top: 20%;
+                bottom: 20%;
+                width: 1px;
+                background: #E2E8F0;
+            }
+        }
+
+        .pro-v2-kpi-value {
+            font-family: 'Inter', sans-serif;
+            font-weight: 900;
+            font-size: clamp(2.25rem, 4.5vw, 3rem);
+            letter-spacing: -0.045em;
+            line-height: 1;
+        }
+
+        .pro-v2-step-num {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: clamp(2.75rem, 5vw, 3.75rem);
+            line-height: 0.9;
+            color: #1D4ED8;
+            letter-spacing: -0.04em;
+            display: inline-block;
+        }
+
+        .pro-v2-step-badge {
+            width: 52px;
+            height: 52px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+            color: #FFFFFF;
+            font-family: 'Inter', sans-serif;
+            font-weight: 900;
+            font-size: 20px;
+            letter-spacing: -0.02em;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow:
+                0 1px 0 rgba(255, 255, 255, 0.25) inset,
+                0 8px 18px -6px rgba(29, 78, 216, 0.45),
+                0 2px 6px -2px rgba(15, 23, 42, 0.12);
+        }
+
+        .pro-v2-band-warm {
+            background: linear-gradient(180deg, #FAFAF5 0%, #FFFDF7 100%);
+            border-top: 1px solid #EAE7D9;
+            border-bottom: 1px solid #EAE7D9;
+            position: relative;
+        }
+        .pro-v2-band-warm::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image: radial-gradient(circle at 1px 1px, rgba(245, 158, 11, 0.08) 1px, transparent 0);
+            background-size: 28px 28px;
+            mask-image: linear-gradient(180deg, transparent, #000 30%, #000 70%, transparent);
+            -webkit-mask-image: linear-gradient(180deg, transparent, #000 30%, #000 70%, transparent);
+            pointer-events: none;
+            opacity: 0.6;
+        }
+        .pro-v2-band-warm > * { position: relative; z-index: 1; }
+
+        .pro-v2-band-sage {
+            background: linear-gradient(180deg, #F4F8F2 0%, #FAFDF8 100%);
+            border-top: 1px solid #DDE7D6;
+            border-bottom: 1px solid #DDE7D6;
+            position: relative;
+        }
+        .pro-v2-band-sage::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image: radial-gradient(circle at 1px 1px, rgba(16, 185, 129, 0.07) 1px, transparent 0);
+            background-size: 28px 28px;
+            mask-image: linear-gradient(180deg, transparent, #000 30%, #000 70%, transparent);
+            -webkit-mask-image: linear-gradient(180deg, transparent, #000 30%, #000 70%, transparent);
+            pointer-events: none;
+            opacity: 0.6;
+        }
+        .pro-v2-band-sage > * { position: relative; z-index: 1; }
+
+        .pro-v2-band-peach {
+            background: linear-gradient(180deg, #FDF7F1 0%, #FFFBF5 100%);
+            border-top: 1px solid #EDE0CF;
+            border-bottom: 1px solid #EDE0CF;
+            position: relative;
+        }
+        .pro-v2-band-peach::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image: radial-gradient(circle at 1px 1px, rgba(234, 88, 12, 0.07) 1px, transparent 0);
+            background-size: 28px 28px;
+            mask-image: linear-gradient(180deg, transparent, #000 30%, #000 70%, transparent);
+            -webkit-mask-image: linear-gradient(180deg, transparent, #000 30%, #000 70%, transparent);
+            pointer-events: none;
+            opacity: 0.55;
+        }
+        .pro-v2-band-peach > * { position: relative; z-index: 1; }
+
+        .pro-v2-role-icon-sage {
+            background: #ECFDF5;
+            border-color: #D1FAE5;
+        }
+
+        .pro-v2-quote {
+            font-family: 'Inter', sans-serif;
+            font-weight: 300;
+            font-style: italic;
+            font-size: 17px;
+            line-height: 1.65;
+            color: #334155;
+            letter-spacing: -0.005em;
+        }
+
+        .pro-v2-quote::before {
+            content: "\201C";
+            font-family: 'Syne', sans-serif;
+            font-size: 2.75rem;
+            line-height: 0;
+            color: #F59E0B;
+            vertical-align: -0.35em;
+            margin-right: 0.15em;
+            font-style: normal;
+        }
+
+        .pro-v2-role-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            background: #EFF6FF;
+            border: 1px solid #DBEAFE;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pro-v2-form-card {
+            background: #FFFFFF;
+            border-radius: 28px;
+            border: 1px solid #E2E8F0;
+            box-shadow:
+                0 1px 0 rgba(255, 255, 255, 0.8) inset,
+                0 24px 48px -24px rgba(29, 78, 216, 0.18),
+                0 8px 20px -8px rgba(15, 23, 42, 0.06);
+        }
+
+        .pro-v2-pillar {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: 14px;
+            background: #FFFFFF;
+            border: 1px solid #E2E8F0;
+            transition: border-color 0.2s ease;
+        }
+
+        .pro-v2-pillar:hover {
+            border-color: #BFDBFE;
+        }
+
+        .pro-v2-pillar-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 10px;
+            background: #EFF6FF;
+            color: #1D4ED8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        @media (max-width: 639px) {
+            .pro-v2-display {
+                font-size: 2.5rem;
+            }
+        }
+
+        .pro-v2-stack {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ===== PRO LANDING ANIMATIONS ===== */
+        .pro-v2-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 2px;
+            width: 0%;
+            background: linear-gradient(90deg, #2563EB 0%, #1D4ED8 60%, #60A5FA 100%);
+            z-index: 90;
+            transition: width 0.08s linear;
+            pointer-events: none;
+            box-shadow: 0 0 8px rgba(37, 99, 235, 0.4);
+        }
+
+        @keyframes pro-v2-fade-up {
+            from { opacity: 0; transform: translateY(14px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pro-v2-pop {
+            0% { opacity: 0; transform: scale(0.7); }
+            70% { opacity: 1; transform: scale(1.06); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes pro-v2-line-draw {
+            from { transform: scaleX(0); }
+            to { transform: scaleX(1); }
+        }
+
+        @keyframes pro-v2-pulse-ring {
+            0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.35); }
+            100% { box-shadow: 0 0 0 8px rgba(37, 99, 235, 0); }
+        }
+
+        @keyframes pro-v2-shimmer {
+            0% { transform: translateX(-120%) skewX(-18deg); }
+            100% { transform: translateX(220%) skewX(-18deg); }
+        }
+
+        [data-stagger-item] {
+            opacity: 0;
+            transform: translateY(14px);
+        }
+        .reveal.visible [data-stagger-item] {
+            animation: pro-v2-fade-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+        .reveal.visible [data-stagger-item]:nth-child(1) { animation-delay: 0ms; }
+        .reveal.visible [data-stagger-item]:nth-child(2) { animation-delay: 80ms; }
+        .reveal.visible [data-stagger-item]:nth-child(3) { animation-delay: 160ms; }
+        .reveal.visible [data-stagger-item]:nth-child(4) { animation-delay: 240ms; }
+        .reveal.visible [data-stagger-item]:nth-child(5) { animation-delay: 320ms; }
+        .reveal.visible [data-stagger-item]:nth-child(6) { animation-delay: 400ms; }
+
+        .reveal.visible [data-pop] {
+            animation: pro-v2-pop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+        }
+        .reveal.visible [data-pop]:nth-child(1) { animation-delay: 0ms; }
+        .reveal.visible [data-pop]:nth-child(2) { animation-delay: 150ms; }
+        .reveal.visible [data-pop]:nth-child(3) { animation-delay: 300ms; }
+
+        .pro-v2-step-line {
+            transform-origin: left center;
+            transform: scaleX(0);
+        }
+        .reveal.visible .pro-v2-step-line {
+            animation: pro-v2-line-draw 1s cubic-bezier(0.65, 0, 0.35, 1) 0.2s forwards;
+        }
+
+        .pro-v2-card-lift {
+            transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+                        box-shadow 0.35s ease,
+                        border-color 0.25s ease;
+        }
+        .pro-v2-card-lift:hover {
+            transform: translateY(-4px) scale(1.012);
+        }
+
+        .pro-v2-quote-card { transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease; }
+        .pro-v2-quote-card:hover { transform: translateY(-3px); }
+        .pro-v2-quote-card:hover .pro-v2-quote-bar { width: 6px; }
+        .pro-v2-quote-bar { transition: width 0.25s ease; }
+
+        .pro-input:focus {
+            animation: pro-v2-pulse-ring 0.7s ease-out;
+        }
+
+        .pro-v2-shimmer-btn { position: relative; overflow: hidden; }
+        .pro-v2-shimmer-btn::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 40%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+            transform: translateX(-120%) skewX(-18deg);
+            pointer-events: none;
+        }
+        .pro-v2-shimmer-btn:hover::after {
+            animation: pro-v2-shimmer 0.9s ease-out;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .pro-v2-progress,
+            .reveal.visible [data-stagger-item],
+            .reveal.visible [data-pop],
+            .reveal.visible .pro-v2-step-line,
+            .pro-v2-card-lift,
+            .pro-v2-quote-card,
+            .pro-v2-shimmer-btn::after,
+            .pro-input {
+                animation: none !important;
+                transition: none !important;
+            }
+            [data-stagger-item],
+            [data-pop],
+            .pro-v2-step-line {
+                opacity: 1 !important;
+                transform: none !important;
+            }
         }
     </style>
     <script src="./cookie-consent.js"></script>
@@ -9714,11 +10196,66 @@
 
             React.useEffect(() => {
                 markProFormRendered(landingFormKey);
+                const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+                const animateCountUp = (el) => {
+                    if (el.dataset.countupDone === '1') return;
+                    el.dataset.countupDone = '1';
+                    const raw = (el.dataset.countup || '').trim();
+                    const m = raw.match(/^(-?)(\d+(?:[.,]\d+)?)(.*)$/);
+                    if (!m) { el.textContent = raw; return; }
+                    const sign = m[1] || '';
+                    const target = parseFloat(m[2].replace(',', '.'));
+                    const suffix = m[3] || '';
+                    const decimals = (m[2].split(/[.,]/)[1] || '').length;
+                    if (prefersReduced || !isFinite(target)) {
+                        el.textContent = sign + m[2] + suffix;
+                        return;
+                    }
+                    const duration = 1100;
+                    const start = performance.now();
+                    const tick = (now) => {
+                        const t = Math.min(1, (now - start) / duration);
+                        const eased = 1 - Math.pow(1 - t, 3);
+                        const value = (target * eased).toFixed(decimals).replace('.', ',');
+                        el.textContent = sign + value + suffix;
+                        if (t < 1) requestAnimationFrame(tick);
+                    };
+                    requestAnimationFrame(tick);
+                };
+
                 const obs = new IntersectionObserver(
-                    entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }),
+                    entries => entries.forEach(e => {
+                        if (!e.isIntersecting) return;
+                        e.target.classList.add('visible');
+                        e.target.querySelectorAll('[data-countup]').forEach(animateCountUp);
+                    }),
                     { threshold: 0.1 }
                 );
                 document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
+                let progressEl = document.getElementById('pro-v2-progress');
+                if (!progressEl) {
+                    progressEl = document.createElement('div');
+                    progressEl.id = 'pro-v2-progress';
+                    progressEl.className = 'pro-v2-progress';
+                    document.body.appendChild(progressEl);
+                }
+                let progressTicking = false;
+                const updateProgress = () => {
+                    const h = document.documentElement;
+                    const max = (h.scrollHeight - h.clientHeight) || 1;
+                    const pct = Math.min(100, Math.max(0, (window.scrollY / max) * 100));
+                    progressEl.style.width = pct + '%';
+                    progressTicking = false;
+                };
+                const onScroll = () => {
+                    if (progressTicking) return;
+                    progressTicking = true;
+                    requestAnimationFrame(updateProgress);
+                };
+                window.addEventListener('scroll', onScroll, { passive: true });
+                updateProgress();
 
                 // Retour depuis l'email de confirmation de compte
                 // Supabase ajoute ?type=signup ou #type=signup selon le flow
@@ -9737,6 +10274,8 @@
 
                 return () => {
                     obs.disconnect();
+                    window.removeEventListener('scroll', onScroll);
+                    if (progressEl && progressEl.parentNode) progressEl.parentNode.removeChild(progressEl);
                     if (magicLinkCooldownTimerRef.current) clearInterval(magicLinkCooldownTimerRef.current);
                     if (passwordResetCooldownTimerRef.current) clearInterval(passwordResetCooldownTimerRef.current);
                 };
@@ -10119,7 +10658,7 @@
                             {/* Mockup — sur mobile : juste après le titre, largeur adaptée. Sur desktop : colonne droite (row-span-2) */}
                             <div className="hero-mockup-float lg:row-span-2 relative w-full max-w-[330px] sm:max-w-[400px] mx-auto lg:max-w-[440px] lg:ml-auto lg:mx-0 mb-4 sm:mb-6 lg:mb-0">
                                 <div className="relative space-y-2.5">
-                                    <div className="rounded-[20px] border border-slate-200 bg-white p-4 sm:p-5 shadow-sm shadow-slate-200/30">
+                                    <div className="pro-hero-mock-card rounded-[20px] border border-slate-200 bg-white p-4 sm:p-5 shadow-sm shadow-slate-200/30">
                                         <div className="flex items-start justify-between gap-4">
                                             <div>
                                                 <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">{copy.hero.mockup.portfolioLabel}</div>
@@ -10198,41 +10737,64 @@
                         </div>
                     </section>
 
+                    <div className="pro-v2-stack">
 
-
-                    {/* ===== STEPS ===== */}
-                    <section id="pro-how-it-works" className="reveal max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14" style={{ scrollMarginTop: '80px' }}>
-                        <SectionHeader eyebrow={copy.meta.stepsEyebrow} title={copy.steps.title} text={copy.steps.intro} centered={true} />
-                        <div className="relative mt-7 sm:mt-10 rounded-[28px] border border-slate-200 bg-[#F8FBFF] px-4 py-6 sm:px-6 sm:py-8">
-                            <div className="hidden lg:block absolute top-7 left-[calc(16.7%)] right-[calc(16.7%)] h-px bg-slate-200 z-0"></div>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 relative z-10">
-                                {copy.steps.items.map((item, i) => (
-                                    <div key={item.title} className="flex items-start gap-4 rounded-2xl border border-slate-200 bg-white px-4 py-4 text-left shadow-sm shadow-slate-200/30 sm:flex-col sm:items-center sm:border-none sm:bg-transparent sm:px-0 sm:py-0 sm:text-center sm:shadow-none">
-                                        <div className="w-12 h-12 shrink-0 rounded-full bg-white border-4 border-white ring-1 ring-blue-600 flex items-center justify-center shadow-md shadow-blue-600/10 sm:w-14 sm:h-14">
-                                            <span style={{ fontFamily: "'Inter', sans-serif", color: '#1D4ED8' }}>{i + 1}</span>
-                                        </div>
-                                        <div className="min-w-0">
-                                            <h3 className="text-base font-black text-slate-900 tracking-tight sm:mt-4">{item.title}</h3>
-                                            <p className="text-sm text-slate-600 mt-1.5 sm:mt-2 leading-6">{item.text}</p>
-                                            <span className="mt-2.5 inline-flex text-xs font-semibold text-slate-600 bg-slate-50 border border-slate-200 rounded-full px-3 py-1 sm:mt-3">{item.duration}</span>
-                                        </div>
+                    {/* ===== BENEFITS (réordonné en #2) ===== */}
+                    <section className="reveal order-1 pro-v2-section-band py-12 sm:py-16">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                            <div className="max-w-2xl mx-auto text-center mb-10">
+                                <div className="pro-v2-eyebrow mb-3">{copy.meta.benefitsEyebrow}</div>
+                                <h2 className="text-[1.9rem] sm:text-[2.25rem] font-black tracking-[-0.035em] text-slate-950 leading-[1.05]" style={{ fontFamily: "'Inter', sans-serif" }}>
+                                    {copy.benefits.title}
+                                </h2>
+                                <div className="pro-v2-rule mt-6 mx-auto max-w-[120px]"></div>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-0 sm:gap-0 rounded-[24px] border border-slate-200 bg-white/80 backdrop-blur-sm shadow-sm shadow-slate-200/30 overflow-hidden">
+                                {copy.benefits.items.map((item, i) => (
+                                    <div key={item.kpi} className="pro-v2-kpi-col" data-stagger-item>
+                                        <div className="pro-v2-kpi-value" style={{ color: item.kpiColor, fontFamily: "'Inter', sans-serif" }} data-countup={item.kpi}>{item.kpi}</div>
+                                        <h3 className="text-[15px] font-black text-slate-900 mt-3 tracking-tight leading-6">{item.title}</h3>
+                                        <p className="text-sm text-slate-600 mt-2 leading-6">{item.text}</p>
                                     </div>
                                 ))}
-                            </div>
-                            <div className="mt-6 sm:mt-10 text-center">
-                                <div className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-6 py-3 text-sm font-semibold text-slate-700">
-                                    {copy.steps.cta}
-                                </div>
                             </div>
                         </div>
                     </section>
 
-                    {/* ===== FORMULAIRE ===== */}
-                    <section id="pro-access-form" className="reveal max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14" style={{ scrollMarginTop: '80px' }}>
-                        <div className="grid xl:grid-cols-[1fr_1.15fr] gap-8 md:gap-10 items-center">
-                            <div>
+                    {/* ===== STEPS (réordonné en #3) ===== */}
+                    <section id="pro-how-it-works" className="reveal order-2 pro-v2-band-warm py-12 sm:py-16" style={{ scrollMarginTop: '80px' }}>
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <SectionHeader eyebrow={copy.meta.stepsEyebrow} title={copy.steps.title} text={copy.steps.intro} centered={true} />
+                        <div className="pro-v2-rule mt-6 mx-auto max-w-[120px]"></div>
+                        <div className="relative mt-8 sm:mt-12 grid grid-cols-1 sm:grid-cols-3 gap-5 sm:gap-8">
+                            <div className="pro-v2-step-line hidden sm:block absolute top-[3.5rem] left-[16%] right-[16%] h-px bg-gradient-to-r from-transparent via-amber-300/50 to-transparent pointer-events-none"></div>
+                            {copy.steps.items.map((item, i) => (
+                                <div key={item.title} data-pop className="pro-v2-card-lift relative rounded-2xl border border-slate-200 bg-white px-5 py-6 sm:px-6 sm:py-7 shadow-sm shadow-slate-200/30 hover:border-blue-200 transition-colors">
+                                    <div className="flex items-start justify-between gap-3">
+                                        <span className="pro-v2-step-badge">{String(i + 1).padStart(2, '0')}</span>
+                                        <span className="text-[10px] font-semibold text-slate-500 bg-white border border-slate-200 rounded-full px-2.5 py-1 tracking-wide mt-1">{item.duration}</span>
+                                    </div>
+                                    <h3 className="text-[18px] font-black text-slate-950 tracking-tight mt-5 leading-tight" style={{ fontFamily: "'Inter', sans-serif" }}>{item.title}</h3>
+                                    <p className="text-sm text-slate-600 mt-2 leading-6">{item.text}</p>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="mt-8 sm:mt-12 text-center">
+                            <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm shadow-slate-200/40">
+                                <span className="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
+                                {copy.steps.cta}
+                            </div>
+                        </div>
+                        </div>
+                    </section>
+
+                    {/* ===== FORMULAIRE (réordonné en #6) ===== */}
+                    <section id="pro-access-form" className="reveal order-5 pro-v2-section-band py-12 sm:py-20" style={{ scrollMarginTop: '80px' }}>
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="grid xl:grid-cols-[1fr_1.15fr] gap-8 md:gap-12 items-start">
+                            <div className="xl:sticky xl:top-24">
                                 <SectionHeader eyebrow={copy.meta.formEyebrow} title={copy.form.title} text={copy.form.subtitle} />
-                                <div className="flex items-center gap-3 mt-6 rounded-xl bg-blue-50 border border-blue-100 px-4 py-3">
+                                <div className="flex items-center gap-3 mt-6 rounded-xl bg-white border border-blue-200 px-4 py-3 shadow-sm shadow-blue-600/5">
                                     <Icon icon="solar:bolt-bold" style={{ fontSize: '18px', color: '#1D4ED8' }} />
                                     <span className="text-sm font-semibold text-blue-800">{copy.form.urgency}</span>
                                 </div>
@@ -10240,7 +10802,7 @@
                             </div>
 
                             <div>
-                                <div className="bg-white rounded-[26px] border border-slate-200 p-6 md:p-8 shadow-md shadow-slate-200/30">
+                                <div className="pro-v2-form-card p-6 md:p-8">
                                     {authError && (
                                         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 mb-5">
                                             {authError}
@@ -10402,7 +10964,7 @@
                                                 )}
 
                                                 <div className="pt-2">
-                                                    <button type="submit" disabled={isSubmitting} className="pro-btn pro-btn-primary w-full justify-center py-3.5 text-[15px] gap-2">
+                                                    <button type="submit" disabled={isSubmitting} className="pro-btn pro-btn-primary pro-v2-shimmer-btn w-full justify-center py-3.5 text-[15px] gap-2">
                                                         {isSubmitting ? (
                                                             <>
                                                                 <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
@@ -10591,60 +11153,54 @@
                                 </div>
                             </div>
                         </div>
+                        </div>
                     </section>
 
-                    {/* ===== AUDIENCE ===== */}
-                    <section className="reveal border-y border-slate-200 bg-[linear-gradient(180deg,#F8FBFF_0%,#FFFFFF_100%)] py-8 sm:py-14">
+                    {/* ===== AUDIENCE (#4) ===== */}
+                    <section className="reveal order-3 pro-v2-band-sage py-12 sm:py-16">
                         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                             <SectionHeader eyebrow={copy.meta.targetsEyebrow} title={copy.trustBar.label} text={copy.trustBar.intro} centered={true} />
-                            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3 mt-8">
+                            <div className="pro-v2-rule mt-6 mx-auto max-w-[120px]"></div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4 mt-10">
                                 {copy.trustBar.items.map(item => (
-                                    <div key={item.label} className="rounded-xl border border-slate-200 bg-white px-4 py-4 shadow-sm shadow-slate-200/30 transition-colors hover:bg-white hover:border-slate-300">
-                                        <div className="w-10 h-10 rounded-xl bg-white text-blue-600 flex items-center justify-center border border-slate-200">
-                                            <Icon icon={item.icon} style={{ fontSize: '18px', color: '#1D4ED8' }} />
+                                    <div key={item.label} data-stagger-item className="pro-v2-card-lift group rounded-2xl border border-slate-200 bg-white px-5 py-5 shadow-sm shadow-slate-200/30 hover:border-emerald-300 hover:shadow-md hover:shadow-emerald-600/5">
+                                        <div className="pro-v2-role-icon pro-v2-role-icon-sage group-hover:bg-emerald-100 transition-colors">
+                                            <Icon icon={item.icon} style={{ fontSize: '20px', color: '#047857' }} />
                                         </div>
-                                        <div className="text-sm font-black text-slate-900 mt-3 tracking-tight leading-5">{item.label}</div>
-                                        <p className="text-sm text-slate-600 leading-6 mt-1.5">{item.text}</p>
+                                        <div className="text-[15px] font-black text-slate-950 mt-4 tracking-tight leading-snug">{item.label}</div>
+                                        <p className="text-sm text-slate-600 leading-6 mt-2">{item.text}</p>
                                     </div>
                                 ))}
                             </div>
                         </div>
                     </section>
 
-                    {/* ===== SOCIAL PROOF ===== */}
-                    <section className="reveal bg-white border-b border-slate-100 py-10 sm:py-14">
+                    {/* ===== SOCIAL PROOF (#5) ===== */}
+                    <section className="reveal order-4 pro-v2-band-peach py-12 sm:py-16">
                         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                             <SectionHeader eyebrow="Retours terrain" title={copy.proof.title} centered={true} />
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5 mt-6 sm:mt-8">
+                            <div className="pro-v2-rule mt-6 mx-auto max-w-[120px]"></div>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mt-10">
                                 {copy.proof.items.map((item, i) => (
-                                    <div
+                                    <figure
                                         key={item.name}
-                                        className={`rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm shadow-slate-200/30 ${i > 0 ? 'hidden sm:block' : ''}`}
-                                        style={{ borderLeft: `3px solid ${item.accentColor}`, transitionDelay: `${i * 100}ms` }}
+                                        data-stagger-item
+                                        className={`pro-v2-quote-card relative rounded-2xl border border-slate-200 bg-white p-6 sm:p-7 shadow-sm shadow-slate-200/30 ${i > 0 ? 'hidden sm:block' : ''}`}
                                     >
-                                        <p className="text-[15px] text-slate-600 leading-7 italic mb-4">"{item.quote}"</p>
-                                        <div className="text-sm font-black text-slate-900">{item.name}</div>
-                                        <div className="text-xs text-slate-500 mt-0.5">{item.role}</div>
-                                    </div>
+                                        <span className="pro-v2-quote-bar absolute left-0 top-6 bottom-6 w-1 rounded-r-full" style={{ background: item.accentColor }}></span>
+                                        <blockquote className="pro-v2-quote mb-5 pl-2">{item.quote}</blockquote>
+                                        <figcaption className="pt-4 mt-4 border-t border-slate-100 pl-2">
+                                            <div className="text-sm font-black text-slate-950 tracking-tight">{item.name}</div>
+                                            <div className="text-xs text-slate-500 mt-0.5">{item.role}</div>
+                                        </figcaption>
+                                    </figure>
                                 ))}
                             </div>
-                            <p className="text-xs text-slate-500 text-center mt-6">{copy.proof.disclaimer}</p>
+                            <p className="text-xs text-slate-500 text-center mt-8">{copy.proof.disclaimer}</p>
                         </div>
                     </section>
 
-                    {/* ===== BENEFITS ===== */}
-                    <section className="reveal max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
-                        <SectionHeader eyebrow={copy.meta.benefitsEyebrow} title={copy.benefits.title} centered={true} />
-                        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mt-8">
-                            {copy.benefits.items.map(item => (
-                                <div key={item.kpi} className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm shadow-slate-200/30">
-                                    <div className="text-[1.7rem] font-black tracking-[-0.03em]" style={{ fontFamily: "'Inter', sans-serif", color: item.kpiColor }}>{item.kpi}</div>
-                                    <h3 className="text-[15px] font-black text-slate-900 mt-3 tracking-tight leading-6">{item.title}</h3>
-                                    <p className="text-sm text-slate-600 mt-2 leading-6">{item.text}</p>
-                                </div>
-                            ))}
-                        </div>
-                    </section>
+                    </div>
                     {/* ===== FOOTER ===== */}
                     <footer className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 border-t border-slate-200">
                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs text-slate-400">

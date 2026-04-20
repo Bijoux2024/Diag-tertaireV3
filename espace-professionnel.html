@@ -40,11 +40,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DiagTertiaire Pro - Espace Professionnel</title>
     <meta name="description" content="Espace professionnel DiagTertiaire : accedez aux diagnostics energetiques de vos clients, gerez vos dossiers et generez des rapports tertiaires.">
-    <link rel="canonical" href="https://diag-tertiaire.fr/espace-professionnel.html">
+    <link rel="canonical" href="https://diag-tertiaire.fr/espace-professionnel">
     <meta property="og:title" content="DiagTertiaire Pro - Espace Professionnel">
     <meta property="og:description" content="Espace professionnel DiagTertiaire : diagnostics energetiques, gestion des dossiers et rapports tertiaires.">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://diag-tertiaire.fr/espace-professionnel.html">
+    <meta property="og:url" content="https://diag-tertiaire.fr/espace-professionnel">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="DiagTertiaire Pro - Espace Professionnel">
     <meta name="twitter:description" content="Espace professionnel DiagTertiaire : diagnostics energetiques, gestion des dossiers et rapports tertiaires.">
@@ -10008,7 +10008,7 @@
                             </div>
 
                             <div className="flex flex-col gap-2">
-                                <a href="index.html" className="flex items-center justify-center gap-2 text-xs font-semibold text-slate-500 hover:text-blue-600 px-3 py-2 rounded-lg hover:bg-blue-50 transition-all text-center">
+                                <a href="/" className="flex items-center justify-center gap-2 text-xs font-semibold text-slate-500 hover:text-blue-600 px-3 py-2 rounded-lg hover:bg-blue-50 transition-all text-center">
                                     <Icon icon="solar:round-alt-arrow-left-bold" /> Retour au site public
                                 </a>
                                 <button type="button" onClick={onLogout} className="flex items-center justify-center gap-2 text-xs font-semibold text-red-400 hover:text-red-300 px-3 py-2 rounded-lg hover:bg-red-500/10 border border-transparent hover:border-red-500/20 transition-all w-full">
@@ -10031,7 +10031,7 @@
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <a href="index.html" className="text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors hidden sm:flex items-center gap-1.5">
+                    <a href="/" className="text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors hidden sm:flex items-center gap-1.5">
                         Site public <Icon icon="solar:square-top-down-linear" className="rotate-90 mt-0.5" />
                     </a>
                 </div>
@@ -10480,7 +10480,7 @@
                                 </div>
                             </div>
                             <div className="flex items-center gap-2 sm:gap-4 sm:gap-5">
-                                <a href="index.html" className="hidden sm:inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-900 hover:border-slate-300 transition-colors">
+                                <a href="/" className="hidden sm:inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-900 hover:border-slate-300 transition-colors">
                                     <Icon icon="solar:alt-arrow-left-linear" style={{ fontSize: '16px' }} />
                                     Retour au site public
                                 </a>
@@ -10509,7 +10509,7 @@
                         {isMobileNavOpen && (
                             <div className="sm:hidden border-t border-slate-200 bg-white">
                                 <div className="max-w-7xl mx-auto px-4 py-3 flex flex-col gap-2">
-                                    <a href="index.html" className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors">
+                                    <a href="/" className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors">
                                         <Icon icon="solar:alt-arrow-left-linear" style={{ fontSize: '16px' }} />
                                         Retour au site public
                                     </a>
@@ -11091,8 +11091,8 @@
                             <div className="flex flex-wrap justify-start sm:justify-end gap-x-4 gap-y-2">
                                 <button type="button" onClick={() => onOpenLegalModal?.('mentions')} className="hover:text-slate-700 transition-colors">Mentions légales</button>
                                 <button type="button" onClick={() => onOpenLegalModal?.('privacy')} className="hover:text-slate-700 transition-colors">Politique de confidentialité</button>
-                                <a href="./conditions-generales-utilisation.html" className="hover:text-slate-700 transition-colors">CGU</a>
-                                <a href="./cookies.html" className="hover:text-slate-700 transition-colors">Cookies</a>
+                                <a href="/conditions-generales-utilisation" className="hover:text-slate-700 transition-colors">CGU</a>
+                                <a href="/cookies" className="hover:text-slate-700 transition-colors">Cookies</a>
                                 <button type="button" onClick={() => window.dtCookies && window.dtCookies.open()} className="hover:text-slate-700 transition-colors">Gestion des cookies</button>
                                 <button type="button" onClick={onClearPersonalData} className="hover:text-slate-700 transition-colors">Effacer mes données</button>
                             </div>
@@ -11106,7 +11106,7 @@
             if (sharedReport) {
                 return {
                     pageName: 'pro_shared_report',
-                    pagePath: '/espace-professionnel.html#shared-report',
+                    pagePath: '/espace-professionnel#shared-report',
                     pageTemplate: 'pro_space',
                     pageTitle: 'DiagTertiaire Pro - Rapport partage'
                 };
@@ -11115,7 +11115,7 @@
             if (!authReady) {
                 return {
                     pageName: 'pro_auth_loading',
-                    pagePath: '/espace-professionnel.html#auth-loading',
+                    pagePath: '/espace-professionnel#auth-loading',
                     pageTemplate: 'pro_space',
                     pageTitle: 'DiagTertiaire Pro - Verification session'
                 };
@@ -11126,8 +11126,8 @@
                     return {
                         pageName: authRecovery.mode === 'first_access' ? 'pro_first_access' : 'pro_recovery',
                         pagePath: authRecovery.mode === 'first_access'
-                            ? '/espace-professionnel.html#first-access'
-                            : '/espace-professionnel.html#recovery',
+                            ? '/espace-professionnel#first-access'
+                            : '/espace-professionnel#recovery',
                         pageTemplate: 'pro_space',
                         pageTitle: authRecovery.mode === 'first_access'
                             ? 'DiagTertiaire Pro - Premiere connexion'
@@ -11137,7 +11137,7 @@
 
                 return {
                     pageName: 'pro_landing',
-                    pagePath: '/espace-professionnel.html#landing',
+                    pagePath: '/espace-professionnel#landing',
                     pageTemplate: 'pro_space',
                     pageTitle: 'DiagTertiaire Pro - Acces professionnel'
                 };
@@ -11146,7 +11146,7 @@
             if (page && (page.indexOf('report-') === 0 || page.indexOf('case-report-') === 0)) {
                 return {
                     pageName: 'pro_report',
-                    pagePath: '/espace-professionnel.html#report',
+                    pagePath: '/espace-professionnel#report',
                     pageTemplate: 'pro_space',
                     pageTitle: 'DiagTertiaire Pro - Rapport detaille'
                 };
@@ -11163,7 +11163,7 @@
 
             return {
                 pageName: 'pro_' + normalizedPage,
-                pagePath: '/espace-professionnel.html#' + normalizedPage,
+                pagePath: '/espace-professionnel#' + normalizedPage,
                 pageTemplate: 'pro_space',
                 pageTitle: pageTitles[normalizedPage] || 'DiagTertiaire Pro'
             };
@@ -12134,8 +12134,8 @@
                                 <div className="flex flex-wrap items-center justify-center gap-4">
                                     <button type="button" onClick={() => setLegalModalKey('mentions')} className="hover:text-slate-600 transition-colors">Mentions légales</button>
                                     <button type="button" onClick={() => setLegalModalKey('privacy')} className="hover:text-slate-600 transition-colors">Politique de confidentialité</button>
-                                    <a href="./conditions-generales-utilisation.html" className="hover:text-slate-600 transition-colors">CGU</a>
-                                    <a href="./cookies.html" className="hover:text-slate-600 transition-colors">Cookies</a>
+                                    <a href="/conditions-generales-utilisation" className="hover:text-slate-600 transition-colors">CGU</a>
+                                    <a href="/cookies" className="hover:text-slate-600 transition-colors">Cookies</a>
                                     <button type="button" onClick={() => window.dtCookies && window.dtCookies.open()} className="hover:text-slate-600 transition-colors">Gestion des cookies</button>
                                     <button type="button" onClick={handleClearPersonalData} className="hover:text-slate-600 transition-colors">Effacer mes données</button>
                                 </div>

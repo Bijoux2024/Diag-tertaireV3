@@ -1,11 +1,9 @@
 {
+  "cleanUrls": true,
   "rewrites": [
     { "source": "/blog", "destination": "https://diag-tertiaire-blog.vercel.app/" },
     { "source": "/blog/", "destination": "https://diag-tertiaire-blog.vercel.app/" },
     { "source": "/blog/(.*)", "destination": "https://diag-tertiaire-blog.vercel.app/$1" },
-    { "source": "/diagnostic", "destination": "/diagnostic.html" },
-    { "source": "/exemple-rapport", "destination": "/exemple-rapport.html" },
-    { "source": "/espace-professionnel", "destination": "/espace-professionnel.html" },
     { "source": "/index.saaspro.html", "destination": "/espace-professionnel.html" }
   ],
   "headers": [
@@ -25,31 +23,31 @@
       ]
     },
     {
-      "source": "/partenaire.html",
+      "source": "/partenaire",
       "headers": [
         { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
       ]
     },
     {
-      "source": "/espace-professionnel.html",
+      "source": "/espace-professionnel",
       "headers": [
         { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
       ]
     },
     {
-      "source": "/diagtertiaire-pro-alpha.html",
+      "source": "/diagtertiaire-pro-alpha",
       "headers": [
         { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
       ]
     },
     {
-      "source": "/public-report-print.html",
+      "source": "/public-report-print",
       "headers": [
         { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
       ]
     },
     {
-      "source": "/diagnostic.html",
+      "source": "/diagnostic",
       "headers": [
         { "key": "X-Robots-Tag", "value": "noindex, follow" }
       ]

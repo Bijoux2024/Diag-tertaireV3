@@ -2276,7 +2276,7 @@
                                     </div>
 
                                     <a
-                                        href="espace-professionnel.html"
+                                        href="/espace-professionnel"
                                         className="inline-flex min-h-[46px] w-full shrink-0 items-center justify-center gap-1.5 self-start rounded-xl px-5 py-2.5 text-sm font-bold text-white no-underline transition-all sm:w-auto md:self-center"
                                         style={{ background: 'linear-gradient(135deg, #1D4ED8, #1E40AF)', boxShadow: '0 6px 20px rgba(29,78,216,0.25)' }}
                                     >
@@ -6707,7 +6707,7 @@
                             />
                             <div>
                                 <span className="text-sm text-neutral-700">
-                                    J'accepte la <a href="/politique-confidentialite.html" className="text-[#1D4ED8] underline" target="_blank">politique de confidentialité</a> — vos données ne sont jamais revendues <span className="text-red-500">*</span>
+                                    J'accepte la <a href="/politique-confidentialite" className="text-[#1D4ED8] underline" target="_blank">politique de confidentialité</a> — vos données ne sont jamais revendues <span className="text-red-500">*</span>
                                 </span>
                                 {errors.opt_in_politique && (
                                     <p className="text-xs text-red-500 mt-1">{errors.opt_in_politique}</p>
@@ -9552,7 +9552,7 @@
             const [currentPage, setCurrentPage] = useState(() => resolvePublicPageFromPath());
             const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-            const PAGE_URLS = { home: '/', diagnostic: '/diagnostic', exemple: '/exemple-rapport.html', methode: '/methode.html' };
+            const PAGE_URLS = { home: '/', diagnostic: '/diagnostic', exemple: '/exemple-rapport', methode: '/methode' };
 
             const navigate = (page) => {
                 setCurrentPage(page);
@@ -9575,7 +9575,7 @@
 
             const headerPages = [
                 { page: 'comment-ca-marche', label: 'Comment ça marche', href: '/#comment-ca-marche' },
-                { page: 'exemple', label: 'Exemple de rapport', href: '/exemple-rapport.html' },
+                { page: 'exemple', label: 'Exemple de rapport', href: '/exemple-rapport' },
                 { page: 'blog', label: 'Blog', href: '/blog/' }
             ];
 
@@ -9696,17 +9696,17 @@
                                         <h4 className="text-sm font-bold text-white mb-4">Outil</h4>
                                         <ul className="space-y-2.5">
                                             <li><a href="/diagnostic" onClick={(e) => { e.preventDefault(); navigate('diagnostic'); }} className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Obtenir mon comparatif</a></li>
-                                            <li><a href="/exemple-rapport.html" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Exemple de rapport</a></li>
+                                            <li><a href="/exemple-rapport" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Exemple de rapport</a></li>
                                         </ul>
                                     </div>
 
                                     <div>
                                         <h4 className="text-sm font-bold text-white mb-4">Légal</h4>
                                         <ul className="space-y-2.5">
-                                            <li><a href="./mentions-legales.html" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Mentions légales</a></li>
-                                            <li><a href="./politique-confidentialite.html" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Politique de confidentialité</a></li>
-                                            <li><a href="./conditions-generales-utilisation.html" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">CGU</a></li>
-                                            <li><a href="./cookies.html" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Politique cookies</a></li>
+                                            <li><a href="/mentions-legales" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Mentions légales</a></li>
+                                            <li><a href="/politique-confidentialite" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Politique de confidentialité</a></li>
+                                            <li><a href="/conditions-generales-utilisation" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">CGU</a></li>
+                                            <li><a href="/cookies" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Politique cookies</a></li>
                                             <li><button type="button" onClick={() => window.dtCookies && window.dtCookies.open()} className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Gestion des cookies</button></li>
                                         </ul>
                                     </div>
@@ -9714,7 +9714,7 @@
                                     <div>
                                         <h4 className="text-sm font-bold text-white mb-4">Professionnel</h4>
                                         <ul className="space-y-2.5 mb-6">
-                                            <li><a href="espace-professionnel.html" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Espace pro</a></li>
+                                            <li><a href="/espace-professionnel" className="text-sm text-slate-400 hover:text-white transition-colors font-medium">Espace pro</a></li>
                                         </ul>
                                         <p style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.13em', textTransform: 'uppercase', color: '#475569', marginBottom: '10px' }}>Projet soutenu par</p>
                                         <div style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: '10px', padding: '10px 16px', display: 'inline-flex', alignItems: 'center' }}>

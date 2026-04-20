@@ -1,10 +1,10 @@
 User-agent: *
 Allow: /
-Disallow: /espace-professionnel.html
-Disallow: /partenaire.html
-Disallow: /diagtertiaire-pro-alpha.html
-Disallow: /diagnostic.html
-Disallow: /public-report-print.html
+Disallow: /espace-professionnel
+Disallow: /partenaire
+Disallow: /diagtertiaire-pro-alpha
+Disallow: /diagnostic
+Disallow: /public-report-print
 Disallow: /api/
 
 Sitemap: https://diag-tertiaire.fr/sitemap.xml

@@ -35,4 +35,3 @@ search.js
 # Assets locaux (logos embarqués en base64, non nécessaires au déploiement)
 public/
 image.png
-logo-preview.html

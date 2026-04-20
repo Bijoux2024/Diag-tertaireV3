@@ -1,5 +1,28 @@
 # Changelog - DiagTertiaire V3
 
+## [style - Nouveau favicon flaticon-document (identite visuelle unifiee site + blog)] - 2026-04-20
+
+### Style
+
+- **Nouveau favicon** : remplacement du badge texte "DT" par l'icone flaticon-document (document violet avec graphiques camembert + barres) pour cohérence avec le blog diag-tertiaire.fr/blog.
+- **Source unique** : `favicon-source.png` (256x256) remplace par le PNG flaticon-document. Les 5 PNGs derives (16, 32, 180 apple-touch, 192, 512 android-chrome) sont regeneres via sharp depuis cette source (processus partage avec le blog, meme script `scripts/gen-favicons.mjs` cote blog).
+
+### Fichiers modifies
+
+- `favicon-source.png` : remplace (source flaticon-document).
+- `favicon-16x16.png`, `favicon-32x32.png`, `apple-touch-icon.png`, `android-chrome-192x192.png`, `android-chrome-512x512.png` : regenerees.
+- `favicon.ico` : supprime (navigateurs modernes + PNG favicons suffisent, aligne avec le blog).
+- `favicon.svg` : supprime (ancien badge "DT" qui aurait ete prefere par les navigateurs modernes au detriment du nouveau PNG).
+- `index.html`, `diagnostic.html`, `exemple-rapport.html`, `espace-professionnel.html`, `public-report-print.html`, `cookies.html`, `conditions-generales-utilisation.html`, `mentions-legales.html`, `methode.html`, `partenaire.html`, `politique-confidentialite.html`, `diagtertiaire-pro-alpha.html` (12 HTML) : bloc `<link rel="icon">` nettoye. Suppression des 2 lignes SVG et de la ligne ICO, `<link rel="apple-touch-icon">` reoriente vers `/apple-touch-icon.png` (180x180).
+- `site.webmanifest` : inchange (theme_color bleu `#2563EB` brand conserve, l'icone violette n'affecte que l'onglet).
+- `CHANGELOG.md` : cette entree.
+
+### Points de vigilance
+
+- **Cache navigateur** : les favicons sont tenaces, tester en fenetre privee apres deploiement Vercel.
+- **Pas de version SVG** : le flaticon-document n'est disponible qu'en PNG. Si un SVG vectoriel est souhaite plus tard, commander au designer.
+- **Fichier `logo-preview.html`** : non touche (page interne de preview, setup distinct).
+
 ## [style - Animations subtiles page Pro (stagger, count-up, progress bar)] - 2026-04-16
 
 ### Style

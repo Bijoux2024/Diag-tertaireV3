@@ -1,5 +1,9 @@
 {
   "cleanUrls": true,
+  "redirects": [
+    { "source": "/diagtertiaire-pro-alpha", "destination": "/espace-professionnel", "statusCode": 301 },
+    { "source": "/diagtertiaire-pro-alpha.html", "destination": "/espace-professionnel", "statusCode": 301 }
+  ],
   "rewrites": [
     { "source": "/blog", "destination": "https://diag-tertiaire-blog.vercel.app/" },
     { "source": "/blog/", "destination": "https://diag-tertiaire-blog.vercel.app/" },
@@ -30,12 +34,6 @@
     },
     {
       "source": "/espace-professionnel",
-      "headers": [
-        { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
-      ]
-    },
-    {
-      "source": "/diagtertiaire-pro-alpha",
       "headers": [
         { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
       ]

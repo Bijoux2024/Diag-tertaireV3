@@ -2,6 +2,11 @@
 
 Historique des modifications effectuees par des agents IA sur ce depot.
 
+## 2026-04-20 — Claude Code (findings post-SEO)
+
+- Suppression de `logo-preview.html` (fichier orphelin, 0 reference active, gitignored) + nettoyage de la ligne `.gitignore` devenue obsolete.
+- Remplacement de la page legacy `diagtertiaire-pro-alpha.html` par un redirect 301 server-side via `vercel.json` vers `/espace-professionnel`. Couverture des deux variantes d'URL (`/diagtertiaire-pro-alpha` et `/diagtertiaire-pro-alpha.html`) pour preserver tout backlink externe historique. Suppression du fichier HTML, du header `X-Robots-Tag` devenu sans objet, du `Disallow` dans `robots.txt`, et de la ligne descriptive dans `README.md`.
+
 ## 2026-04-20 — Claude Code
 
 - Activation de `"cleanUrls": true` dans vercel.json : Vercel emet desormais un 308 permanent de `/foo.html` vers `/foo` et sert l'URL sans extension depuis le meme fichier. Supprime les doublons GA4 `/` vs `/index.html` et `/diagnostic` vs `/diagnostic.html`.

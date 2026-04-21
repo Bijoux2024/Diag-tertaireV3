@@ -2,6 +2,15 @@
 
 Historique des modifications effectuees par des agents IA sur ce depot.
 
+## 2026-04-21 — Claude Code (GA4 funnel events)
+
+- Ajout de deux nouveaux business events dans `ga4.js` via `resolveBusinessEvent` : `diagnostic_form_start` (premiere saisie reelle dans le formulaire, distinct de `diagnostic_start` qui est declenche au mount) et `contact_opt_in` (envoye apres insertion partenaire reussie quand l'utilisateur coche la mise en relation). `diagnostic_form_start` est volontairement renomme depuis l'ancienne proposition `form_start` pour eviter tout conflit avec le nom reserve de l'Enhanced Measurement GA4.
+- Enrichissement de `resolveTrackedCta` dans `ga4.js` avec un parametre `cta_location` resolu via une nouvelle helper `resolveCtaLocation`. Priorite donnee a l'attribut explicite `data-dt-cta-location` (avec remontee `closest()` si le scope est un conteneur), fallback heuristique sur les selecteurs `.mobile-menu`, `nav/header`, `footer`, `main/section`.
+- Ajout de `data-dt-cta-location` sur les 5 CTAs d'entree de `index.html` : `nav`, `mobile_menu`, `hero`, `footer_section`, `footer_link`.
+- `diagnostic.html` : ajout d'un flag React `formStarted` dans `NewDiagnosticForm` + callback `handleFormStart(firstField)` qui fire `diagnostic_form_start` une seule fois par session (flag reset dans `handleReset`). Le callback est passe en prop `onFormStart` a `NewDiagnosticStep1Building` et appele depuis `handleAddressChange` des qu'un caractere non vide est saisi.
+- Enrichissement de `submit_form` (event GA4 `diagnostic_complete`) avec le parametre `partner_consent: !!formData.contactOptIn`, permettant de comparer directement les completions avec ou sans mise en relation.
+- Ajout de l'emission de `contact_opt_in` apres l'await `newDiagnosticSubmitPartnerLead` reussi (chemin succes uniquement), avec les 5 dimensions analytiques `activity`, `surface`, `objective` (= `projectObjective`), `budget` (= `budgetRange`), `role`. Pas d'ID unique envoye (eviter PII/cardinalite) — le lien email <-> diagnostic reste cote Supabase.
+
 ## 2026-04-20 — Claude Code (findings post-SEO)
 
 - Suppression de `logo-preview.html` (fichier orphelin, 0 reference active, gitignored) + nettoyage de la ligne `.gitignore` devenue obsolete.

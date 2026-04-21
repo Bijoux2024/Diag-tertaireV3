@@ -277,6 +277,20 @@
         return 'body';
     }
 
+    function resolveCtaLocation(element) {
+        if (!element || typeof element.closest !== 'function') return 'unknown';
+        var scoped = element.closest('[data-dt-cta-location]');
+        if (scoped) {
+            var explicit = scoped.getAttribute('data-dt-cta-location');
+            if (explicit) return explicit;
+        }
+        if (element.closest('.mobile-menu, #mobile-menu')) return 'mobile_menu';
+        if (element.closest('nav, header')) return 'nav';
+        if (element.closest('footer')) return 'footer_link';
+        if (element.closest('main, section')) return 'content';
+        return 'body';
+    }
+
     function getElementLabel(element) {
         if (!element) return '';
         var label = element.getAttribute('data-analytics-label')
@@ -306,6 +320,7 @@
         var baseParams = {
             button_type: element && element.tagName ? element.tagName.toLowerCase() : 'unknown',
             cta_label: label,
+            cta_location: resolveCtaLocation(element),
             destination_path: href || '',
             page: window.location.pathname,
             placement: resolvePlacement(element),
@@ -373,6 +388,24 @@
                     step: 0,
                     step_name: 'start'
                 })
+            };
+        }
+
+        if (name === 'diagnostic_form_start') {
+            return {
+                eventName: 'diagnostic_form_start',
+                params: cleanParams(Object.assign({}, baseParams, {
+                    page: currentPage
+                }))
+            };
+        }
+
+        if (name === 'contact_opt_in') {
+            return {
+                eventName: 'contact_opt_in',
+                params: cleanParams(Object.assign({}, baseParams, {
+                    page: currentPage
+                }))
             };
         }
 

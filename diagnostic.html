@@ -4835,7 +4835,7 @@
         };
 
         // Étape 1 : Identification
-        const NewDiagnosticStep1Building = ({ formData, setFormData, onNext }) => {
+        const NewDiagnosticStep1Building = ({ formData, setFormData, onNext, onFormStart }) => {
             const [errors, setErrors] = useState({});
             const [mixedTab, setMixedTab] = useState(0); // 0 = Usage 1, 1 = Usage 2
 
@@ -5041,6 +5041,7 @@
 
             const handleAddressChange = (e) => {
                 const val = e.target.value;
+                if (val && typeof onFormStart === 'function') onFormStart('address');
                 setQuery(val);
                 if (formData.addressIsValid && val !== formData.address) {
                     setFormData({
@@ -9266,6 +9267,13 @@
             const [reportPayload, setReportPayload] = useState(null);
             const [submitError, setSubmitError] = useState(null);
             const [isTransitioning, setIsTransitioning] = useState(false);
+            const [formStarted, setFormStarted] = useState(false);
+
+            const handleFormStart = (firstField) => {
+                if (formStarted) return;
+                setFormStarted(true);
+                newDiagnosticTrack('diagnostic_form_start', { first_field: firstField || 'address' });
+            };
 
             useEffect(() => {
                 newDiagnosticTrack('start_diagnostic');
@@ -9295,7 +9303,8 @@
                     newDiagnosticTrack('submit_form', {
                         activity: formData.activity,
                         role: formData.role,
-                        surface: formData.surface
+                        surface: formData.surface,
+                        partner_consent: !!formData.contactOptIn
                     });
 
                     const payload = newDiagnosticBuildReportData(formData);
@@ -9308,6 +9317,13 @@
 
                     if (leadPayload.partnerConsent) {
                         await newDiagnosticSubmitPartnerLead(leadPayload, leadSubmissionId);
+                        newDiagnosticTrack('contact_opt_in', {
+                            activity: formData.activity,
+                            surface: formData.surface,
+                            objective: formData.projectObjective,
+                            budget: formData.budgetRange,
+                            role: formData.role
+                        });
                     } else {
                         console.log('partner consent false, no partner insert');
                     }
@@ -9372,6 +9388,7 @@
                 setCurrentStep(1);
                 setReportPayload(null);
                 setSubmitError(null);
+                setFormStarted(false);
 
                 try {
                     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -9485,6 +9502,7 @@
                             <NewDiagnosticStep1Building
                                 formData={formData}
                                 setFormData={setFormData}
+                                onFormStart={handleFormStart}
                                 onNext={() => { setCurrentStep(2); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                             />
                         )}

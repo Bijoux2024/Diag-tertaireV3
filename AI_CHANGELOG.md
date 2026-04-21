@@ -2,12 +2,6 @@
 
 Historique des modifications effectuees par des agents IA sur ce depot.
 
-## 2026-04-21 — Claude Code (fix CSP GA4)
-
-- Extension de la directive `Content-Security-Policy` dans `vercel.json` pour autoriser Google Analytics / Tag Manager : ajout de `https://www.googletagmanager.com` dans `script-src`, nouvelle directive explicite `script-src-elem` (miroir de `script-src` pour clarifier le comportement Firefox/Safari qui ne fallback pas sur `script-src`), et ajout de `https://www.google-analytics.com`, `https://*.analytics.google.com`, `https://*.google-analytics.com`, `https://stats.g.doubleclick.net`, `https://www.googletagmanager.com` dans `connect-src` (beacons `/g/collect`). Domaines issus de la reco officielle Google (developers.google.com/tag-platform/security/guides/csp), aucun wildcard permissif.
-- **Regression pre-existante** : la CSP bloquait le chargement de `gtag.js` depuis l'ajout de ga4.js. Aucun event GA4 n'est parti en production depuis la mise en place du tracking — les ~76 pageviews initialement visibles dans le rapport GA4 viennent probablement d'autres sources (Search Console, referrers directs sur domaines non couverts par la CSP, ou tests locaux). Ce fix debloque le tracking de bout en bout et doit etre merge avant toute validation DebugView.
-- `img-src` inchange (deja couvert par le wildcard `https:` pour les pixels GA).
-
 ## 2026-04-21 — Claude Code (GA4 funnel events)
 
 - Ajout de deux nouveaux business events dans `ga4.js` via `resolveBusinessEvent` : `diagnostic_form_start` (premiere saisie reelle dans le formulaire, distinct de `diagnostic_start` qui est declenche au mount) et `contact_opt_in` (envoye apres insertion partenaire reussie quand l'utilisateur coche la mise en relation). `diagnostic_form_start` est volontairement renomme depuis l'ancienne proposition `form_start` pour eviter tout conflit avec le nom reserve de l'Enhanced Measurement GA4.

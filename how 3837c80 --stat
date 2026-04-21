@@ -1,0 +1,10 @@
+[33ma468658[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m chore(seo): aligne <title>, <meta description> et JSON-LD sur la terminologie "pre-diagnostic energetique"
+[33m3837c80[m feat(og): nouvelle image Open Graph harmonisee a la charte du site
+[33mcde371b[m fix(csp): autorise googletagmanager + google-analytics pour activer tracking GA4 (regression pre-existante)
+[33md9afa2b[m feat(analytics): funnel events GA4 - diagnostic_form_start, contact_opt_in, cta_location
+[33m7d17ab3[m refactor: diagtertiaire-pro-alpha -> 301 Vercel vers espace-professionnel
+[33mc51e764[m chore: supprime logo-preview.html orphelin (0 ref active)
+[33md65a598[m fix(seo): cleanUrls Vercel + canonicals sans .html pour supprimer doublons GA4
+[33mb3e0201[m style: favicon flaticon-document (identite visuelle unifiee site + blog)
+[33mdc20b96[m[33m ([m[1;32mworktree-agent-aee31efc[m[33m)[m style: retrait animation live sur mockup hero page Pro
+[33m0ec2c0a[m docs: V1.7.0 Phase 1 - alignement whitepaper composition par segment ADEME

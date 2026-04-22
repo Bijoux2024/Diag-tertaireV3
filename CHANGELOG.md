@@ -1,5 +1,95 @@
 # Changelog - DiagTertiaire V3
 
+## [Securite - Durcissement CSP, SRI, Origin check, scrubbing #report=] - 2026-04-22
+
+### Ajoute
+
+- **Origin/Referer check** sur les endpoints publics non-authentifies via
+  nouveau helper `assertAllowedOrigin` dans `api/_lib/request-guard.js`.
+  Applique sur `send-email`, `public-report-cover`,
+  `public-report-google-streetview`, `public-config`. Whitelist :
+  diag-tertiaire.fr, www, previews Vercel (regex tolere typo
+  `diag-tertaire`). Mode optional=true (backward compat si header absent).
+- **Rate limit** sur `api/public-config` (120 requetes / 10 min par
+  fingerprint, scope `public-config`).
+- **Endpoint `api/csp-report.js`** : POST only, rate limit 30/60s, log en
+  preview uniquement, retour 204. Recoit les violations via
+  `report-uri /api/csp-report` declaree dans la CSP globale.
+- **SRI sha384 + `crossorigin="anonymous"`** sur tous les scripts CDN
+  statiques : React 18.3.1 (prod/dev), ReactDOM 18.3.1 (prod/dev),
+  prop-types 15.8.1, Recharts 2.12.7, @babel/standalone 7.24.10,
+  @supabase/supabase-js 2.47.10 (jsdelivr).
+- **CSP durcie** (vercel.json bloc global) : ajout de `worker-src 'self'`,
+  `manifest-src 'self'`, `media-src 'self' data:`, `child-src 'none'`,
+  `frame-ancestors 'none'`, `upgrade-insecure-requests`,
+  `report-uri /api/csp-report`. Declaration explicite de
+  `fonts.googleapis.com`, `fonts.gstatic.com`, `maps.googleapis.com`.
+  Retrait de `https://*.supabase.io` (non utilise).
+- **Cross-Origin-Opener-Policy: same-origin** global (vercel.json).
+- **Referrer-Policy: no-referrer** par route sur `/espace-professionnel`,
+  `/diagnostic`, `/public-report-print`.
+- **COOP same-origin** specifique sur `/espace-professionnel`.
+- **AI-CONTEXT.md** : nouvelles sections "Securite - Restrictions Google
+  Cloud Console" (actions ops : API / IP / quota / billing) et "Securite
+  - CSP et SRI" (liste des directives + SRI pinnes vs non-SRI).
+
+### Modifie
+
+- **`handleShare` (`#report=`)** dans `espace-professionnel.html` :
+  remplacement des `delete` manuels par un `Set SHARE_FORBIDDEN_KEYS`
+  (19 cles sensibles) + walker recursif `scrubForShare` (profondeur
+  max 8). Nouvelles cles retirees : `adresse`, `address`, `site_name`,
+  `siteName`, `siret`, `raison_sociale`, `companyName`,
+  `organizationAddress`, `chauffage_consommation`, `elecKwh`, `gasKwh`
+  (+ toute cle dont le nom contient "adresse" ou "address"). Si
+  base64 > 6000 chars : `alert` bloquant + abort (pas de clipboard).
+- **`public-report-google-streetview.js`** : retour `503` + warning
+  unique via `global.__GSV_KEY_WARNED__` si `GOOGLE_STREETVIEW_SERVER_KEY`
+  absente (au lieu de `500` + repetition du log a chaque requete).
+- **`public-config.js`** : handler passe synchrone -> try/catch avec
+  rate limit + origin check + retour d'erreur structure.
+
+### Conserve (backward compat)
+
+- `parseSharedReportFromHash` (espace-professionnel.html l.4047-4066) :
+  inchange. Les anciens liens `#report=` (contenant adresse / siret /
+  consommations brutes) continuent de s'ouvrir - seuls les nouveaux liens
+  sont scrubes.
+- `'unsafe-inline'` conserve sur `script-src` et `style-src` : contrainte
+  buildless (Babel standalone + styles inline index.html). Dette
+  acceptee documentee.
+- Tailwind CDN (`cdn.tailwindcss.com`) et Iconify (`code.iconify.design`)
+  restent sans SRI : bundles dynamiques par domaine, SRI casserait le
+  chargement.
+
+### Tests effectues
+
+- **Lot 4** : 9/9 scenarios `assertAllowedOrigin` PASS (no origin, strict,
+  prod, www, preview vercel, preview typo, evil.com, referer fallback,
+  URL invalide).
+- **Lot 5** : 3/3 scenarios `csp-report` PASS (GET->405, POST object->204,
+  POST string body->204 sans crash).
+- **Lot 3** : scrub-test PASS (17 cles sensibles absentes, 7 cles utiles
+  preservees) + backward compat PASS (ancien lien avec adresse / siret /
+  elecKwh lisible par `parseSharedReportFromHash`).
+- **Lot 1** : validation JSON + presence des 10 directives critiques
+  dans la CSP + Referrer-Policy no-referrer x3 routes + COOP global + COOP
+  /espace-professionnel : tous OK.
+- **Lot 2** : 8/8 SRI hashes re-fetches et verifies coherents avec le
+  contenu actuel des CDN unpkg et jsdelivr.
+
+### Actions ops restantes (hors code)
+
+1. **Google Cloud Console** - restreindre la cle `GOOGLE_STREETVIEW_SERVER_KEY` :
+   - API restrictions : Street View Static API + Street View Metadata uniquement
+   - Application restrictions : IP addresses (plages Vercel) ou referrers vides
+   - Quota : cap 1000 requetes/jour
+   - Alerting Billing : alerte a 10 EUR/jour
+2. **Preview Vercel** : verifier qu'aucune violation `/api/csp-report` ne
+   remonte dans les logs pendant 48h apres deploy (faux positifs eventuels).
+3. **Test end-to-end** : parcours diagnostic + parcours Pro (login + creation
+   dossier + partage `#report=` + export PDF) sur preview avant promotion main.
+
 ## [style - Nouveau favicon flaticon-document (identite visuelle unifiee site + blog)] - 2026-04-20
 
 ### Style

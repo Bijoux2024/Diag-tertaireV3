@@ -37,8 +37,8 @@
     <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
     <link rel="dns-prefetch" href="https://unpkg.com">
     <link rel="dns-prefetch" href="https://cdn.tailwindcss.com">
-    <link rel="preload" href="https://unpkg.com/react@18/umd/react.production.min.js" as="script" crossorigin>
-    <link rel="preload" href="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" as="script" crossorigin>
+    <link rel="preload" href="https://unpkg.com/react@18.3.1/umd/react.production.min.js" as="script" crossorigin="anonymous">
+    <link rel="preload" href="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" as="script" crossorigin="anonymous">
     <link rel="preload" href="/fonts/plus-jakarta-sans-400-normal.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="/fonts/dm-serif-display-400-normal.woff2" as="font" type="font/woff2" crossorigin>
     <style>
@@ -55,19 +55,20 @@
     <!-- Bibliothèques externes -->
     <!-- TailwindCSS : framework CSS utilitaire (mode CDN, pas de build requis) -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- React 18 (version production : optimisée, sans avertissements dev) -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <!-- PropTypes : validation des props React (utilisé par des composants Recharts si présent) -->
-    <script src="https://unpkg.com/prop-types/prop-types.min.js"></script>
-    <!-- Recharts : graphiques interactifs (CDN UMD — ResponsiveContainer utilisé dans les rapports) -->
-    <!-- Les icônes Solar sont chargées depuis src/solar-icons.js (voir plus bas) -->
-    <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
+    <!-- React 18 (version production : optimisee, sans avertissements dev) -->
+    <!-- Versions pinnees + SRI sha384 pour reproductibilite et defense en profondeur -->
+    <script crossorigin="anonymous" integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z" src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+    <script crossorigin="anonymous" integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1" src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+    <!-- PropTypes : validation des props React (utilise par des composants Recharts si present) -->
+    <script crossorigin="anonymous" integrity="sha384-/AfDwVDXNopzPvhxMPQ11y1OCpR6mVkWx47qzSwIiquvxkcMkZddEzDNtIOtfCpk" src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
+    <!-- Recharts : graphiques interactifs (CDN UMD - ResponsiveContainer utilise dans les rapports) -->
+    <!-- Les icones Solar sont chargees depuis src/solar-icons.js (voir plus bas) -->
+    <script crossorigin="anonymous" integrity="sha384-d1XH4LhwLW8j0l6VXMP8yJabdGY9ZqtZk7k7PaPk5NoUCcZ/hDkL5aaKioKQbcZg" src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
 
     <!-- Babel Standalone : compile le JSX en JavaScript dans le navigateur -->
-    <!-- ⚠️ NOTE PERFORMANCE : Babel Standalone est utilisé pour éviter un build step.
-         En production à fort trafic, envisager une pré-compilation (Vite, esbuild). -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- NOTE PERFORMANCE : Babel Standalone est utilise pour eviter un build step.
+         En production a fort trafic, envisager une pre-compilation (Vite, esbuild). -->
+    <script crossorigin="anonymous" integrity="sha384-c1bviwIC1t4CS6/NX7vUKu+WuYyTtOGFA04iz87avZ6lnO+kTMTZUKawd3pPVHGH" src="https://unpkg.com/@babel/standalone@7.24.10/babel.min.js"></script>
     <style>
         /* Global & Reset */
         :root {

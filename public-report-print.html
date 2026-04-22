@@ -10,14 +10,15 @@
   <link rel="manifest" href="/site.webmanifest">
   <meta name="theme-color" content="#2563EB">
 
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <!-- Versions pinnees + SRI sha384 pour reproductibilite et defense en profondeur -->
+  <script crossorigin="anonymous" integrity="sha384-c1bviwIC1t4CS6/NX7vUKu+WuYyTtOGFA04iz87avZ6lnO+kTMTZUKawd3pPVHGH" src="https://unpkg.com/@babel/standalone@7.24.10/babel.min.js"></script>
+  <script crossorigin="anonymous" integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z" src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+  <script crossorigin="anonymous" integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1" src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
   <script>
     if (typeof PropTypes === 'undefined') window.PropTypes = { func: () => {}, bool: () => {}, node: () => {}, string: () => {}, number: () => {}, object: () => {}, array: () => {}, any: () => {}, arrayOf: () => () => {}, objectOf: () => () => {}, oneOf: () => () => {}, oneOfType: () => () => {}, shape: () => () => {}, exact: () => () => {}, instanceOf: () => () => {}, element: () => {}, elementType: () => {}, checkPropTypes: () => {} };
     if (typeof React !== 'undefined' && !React.PropTypes) React.PropTypes = window.PropTypes;
   </script>
-  <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
+  <script crossorigin="anonymous" integrity="sha384-d1XH4LhwLW8j0l6VXMP8yJabdGY9ZqtZk7k7PaPk5NoUCcZ/hDkL5aaKioKQbcZg" src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
 
   <style>
     /* ═══════════════════════════════════════

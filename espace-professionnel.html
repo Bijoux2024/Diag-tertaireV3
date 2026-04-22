@@ -7869,23 +7869,50 @@
             };
 
             const handleShare = () => {
-                const { phone, email, contact_telephone, telephone, contact_email, ...publicData } = c.formData || {};
-                const shareData = { ...c, id: c.id, clientName: c.clientName, engineResult: r, formData: publicData };
-                delete shareData.phone;
-                delete shareData.email;
-                // Données pro - JAMAIS dans le lien partagé
-                delete shareData.noteInterne;
-                delete shareData.scoreMaturite;
-                delete shareData.urgenceVerbatim;
-                if (shareData.contact) {
-                    const { phone: contactPhone, email: contactEmail, ...safeContact } = shareData.contact;
-                    shareData.contact = safeContact;
-                }
+                const SHARE_FORBIDDEN_KEYS = new Set([
+                    'phone', 'email', 'contact_telephone', 'telephone', 'contact_email',
+                    'adresse', 'address', 'site_name', 'siteName', 'siret',
+                    'raison_sociale', 'companyName', 'organizationAddress',
+                    'chauffage_consommation', 'elecKwh', 'gasKwh',
+                    'noteInterne', 'scoreMaturite', 'urgenceVerbatim'
+                ]);
+
+                const scrubForShare = (value, depth = 0) => {
+                    if (depth > 8 || value == null) return value;
+                    if (Array.isArray(value)) return value.map((item) => scrubForShare(item, depth + 1));
+                    if (typeof value !== 'object') return value;
+                    const cleaned = {};
+                    Object.keys(value).forEach((key) => {
+                        if (SHARE_FORBIDDEN_KEYS.has(key)) return;
+                        const lower = key.toLowerCase();
+                        if (lower.includes('adresse') || lower.includes('address')) return;
+                        cleaned[key] = scrubForShare(value[key], depth + 1);
+                    });
+                    return cleaned;
+                };
+
+                const publicFormData = scrubForShare(c.formData || {});
+                const rawShareData = { ...c, id: c.id, clientName: c.clientName, engineResult: r, formData: publicFormData };
+                const shareData = scrubForShare(rawShareData);
+
                 let encoded;
-                try { encoded = btoa(unescape(encodeURIComponent(JSON.stringify(shareData)))); } catch (e) { encoded = btoa(JSON.stringify(shareData)); }
+                try {
+                    encoded = btoa(unescape(encodeURIComponent(JSON.stringify(shareData))));
+                } catch (e) {
+                    encoded = btoa(JSON.stringify(shareData));
+                }
+
+                if (encoded.length > 6000) {
+                    alert("Lien trop long : votre rapport contient trop de donnees pour un partage direct. Utilisez l'export PDF.");
+                    return;
+                }
+
                 const url = window.location.href.split('#')[0] + '#report=' + encoded;
-                if (navigator.clipboard) navigator.clipboard.writeText(url).then(() => alert('Lien copié !')).catch(() => prompt('Lien :', url));
-                else prompt('Lien :', url);
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(url).then(() => alert('Lien copie !')).catch(() => prompt('Lien :', url));
+                } else {
+                    prompt('Lien :', url);
+                }
             };
 
             const handleDeleteLocalExample = async () => {

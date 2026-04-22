@@ -11,6 +11,7 @@ const {
   getRequiredServerSupabaseConfig
 } = require('./_lib/supabase-server');
 const {
+  assertAllowedOrigin,
   assertMaxBodyBytes,
   assertMaxContentLength,
   assertUuidLike,
@@ -348,6 +349,7 @@ module.exports = async function handler(req, res) {
       maxHits: 8,
       message: 'Too many cover generation requests. Please retry later.'
     });
+    assertAllowedOrigin(req, { optional: true });
     assertMaxContentLength(req, MAX_COVER_REQUEST_BYTES, 'Payload too large');
     assertMaxBodyBytes(req.body, MAX_COVER_REQUEST_BYTES, 'Payload too large');
 

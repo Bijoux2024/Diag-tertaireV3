@@ -1,5 +1,6 @@
 const {
   assertAllowedContentType,
+  assertAllowedOrigin,
   assertMaxBodyBytes,
   assertMaxContentLength,
   enforceRateLimit
@@ -341,6 +342,7 @@ module.exports = async function handler(req, res) {
       maxHits: 5,
       message: 'Too many email requests'
     });
+    assertAllowedOrigin(req, { optional: true });
     assertAllowedContentType(req.headers['content-type'] || 'application/json', ['application/json']);
     assertMaxContentLength(req, MAX_SEND_EMAIL_REQUEST_BYTES, 'Payload too large');
 

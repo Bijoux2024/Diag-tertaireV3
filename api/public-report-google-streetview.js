@@ -15,6 +15,7 @@
 
 const readEnv = (key) => String(process.env[key] || '').trim();
 const {
+  assertAllowedOrigin,
   assertNumberInRange,
   createHttpError,
   enforceRateLimit
@@ -48,6 +49,7 @@ module.exports = async function handler(req, res) {
       maxHits: action === 'image' ? 20 : 60,
       message: 'Too many Street View requests. Please retry later.'
     });
+    assertAllowedOrigin(req, { optional: true });
 
     const currentDay = new Date().getDate();
     if (currentDay !== svLastResetDay) {

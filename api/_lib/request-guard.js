@@ -219,9 +219,46 @@ const assertNumberInRange = (value, {
   return numberValue;
 };
 
+const ALLOWED_ORIGIN_HOSTS = [
+  'diag-tertiaire.fr',
+  'www.diag-tertiaire.fr',
+  (host) => /^diag-tertiaire.*\.vercel\.app$/.test(host),
+  (host) => /^diag-tertaire.*\.vercel\.app$/.test(host)
+];
+
+const assertAllowedOrigin = (req, {
+  optional = true,
+  statusCode = 403,
+  message = 'Origin not allowed'
+} = {}) => {
+  const origin = getHeader(req, 'origin');
+  const referer = getHeader(req, 'referer');
+  const candidate = origin || referer;
+
+  if (!candidate) {
+    if (optional) return null;
+    throw createHttpError(statusCode, message);
+  }
+
+  let host;
+  try {
+    host = new URL(candidate).host.toLowerCase();
+  } catch {
+    throw createHttpError(statusCode, message);
+  }
+
+  const allowed = ALLOWED_ORIGIN_HOSTS.some((rule) =>
+    typeof rule === 'string' ? rule === host : rule(host)
+  );
+
+  if (!allowed) throw createHttpError(statusCode, message);
+  return host;
+};
+
 module.exports = {
   approximateBodyBytes,
   assertAllowedContentType,
+  assertAllowedOrigin,
   assertHexToken,
   assertMaxBodyBytes,
   assertMaxContentLength,

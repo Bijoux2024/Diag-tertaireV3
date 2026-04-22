@@ -69,7 +69,11 @@ module.exports = async function handler(req, res) {
     svDailyCounter++;
     const apiKey = readEnv('GOOGLE_STREETVIEW_SERVER_KEY');
     if (!apiKey) {
-      throw createHttpError(500, 'GOOGLE_STREETVIEW_SERVER_KEY is not configured on server.');
+      if (!global.__GSV_KEY_WARNED__) {
+        console.warn('[public-report-google-streetview] GOOGLE_STREETVIEW_SERVER_KEY not configured - endpoint will return 503');
+        global.__GSV_KEY_WARNED__ = true;
+      }
+      throw createHttpError(503, 'Street View service temporarily unavailable');
     }
 
     if (action === 'meta') {

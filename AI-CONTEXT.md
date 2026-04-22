@@ -152,6 +152,68 @@ Note : `espace-professionnel.html` utilise son propre moteur (`ENGINE_PRO`, inli
 | `/api/pro-delete-case` | Suppression securisee dossier Pro |
 | `/api/send-email` | Envoi d'emails (leads, notifications) |
 
+## Securite — Restrictions Google Cloud Console
+
+Restrictions a appliquer manuellement dans Google Cloud Console sur la cle
+`GOOGLE_STREETVIEW_SERVER_KEY` (hors code, cote ops) :
+
+1. **API restrictions** : cocher uniquement "Street View Static API" et
+   "Street View Metadata" (retirer toutes les autres APIs).
+2. **Application restrictions** : "IP addresses" avec plages IP Vercel
+   (documentation : https://vercel.com/docs/edge-network). Si la config IP
+   est trop contraignante, laisser "HTTP referrers" vide et s'appuyer sur
+   le rate limit serveur + quota Google.
+3. **Quota quotidien** : definir un cap (exemple : 1000 requetes/jour) via
+   la page "Quotas" de l'API Street View pour plafonner le cout en cas de
+   fuite de cle.
+4. **Alerting Billing** : configurer une alerte a 10 EUR/jour sur le projet
+   GCP pour detecter un abus avant qu'il ne devienne couteux.
+
+Cote code, le handler `api/public-report-google-streetview.js` applique :
+- Rate limit ip+ua : 20 images / 10 min (60 pour metadata)
+- Soft cap container : 300 requetes / jour
+- Si la cle est absente : warning unique + 503 (plutot que crash 500)
+
+## Securite — CSP et SRI
+
+### Content-Security-Policy
+
+La CSP globale est declaree dans `vercel.json` (bloc global `/(.*)`).
+Directives actives :
+- `'unsafe-inline'` conserve sur `script-src` et `style-src` : contrainte
+  buildless (Babel standalone + styles inline index.html). Dette acceptee
+  documentee.
+- `worker-src`, `manifest-src`, `media-src`, `child-src`, `frame-src`,
+  `frame-ancestors`, `object-src`, `base-uri`, `form-action` explicites.
+- `upgrade-insecure-requests` : force HTTPS sur toute sous-requete.
+- `report-uri /api/csp-report` : collecte les violations (log preview
+  uniquement).
+
+Domaines whitelistes :
+- `script-src` : cdn.tailwindcss.com, unpkg.com, cdnjs.cloudflare.com,
+  cdn.jsdelivr.net, code.iconify.design
+- `style-src` : cdn.tailwindcss.com, fonts.googleapis.com
+- `font-src` : fonts.gstatic.com
+- `connect-src` : *.supabase.co, data.geopf.fr, panoramax.ign.fr,
+  maps.googleapis.com
+
+### SRI (Subresource Integrity)
+
+Scripts **avec SRI** (bundles statiques, version pinnee) :
+- React, ReactDOM (unpkg @18.3.1)
+- prop-types (unpkg @15.8.1)
+- Recharts (unpkg @2.12.7)
+- @babel/standalone (unpkg @7.24.10)
+- @supabase/supabase-js (jsdelivr, pinne)
+
+Scripts **sans SRI** (bundles dynamiques generes par domaine) :
+- Tailwind CDN (cdn.tailwindcss.com)
+- Iconify (code.iconify.design)
+
+Ajouter un SRI sur ces CDN casserait le chargement a chaque generation du
+bundle cote serveur. Le risque residuel est attenue par la whitelist
+script-src stricte et le rate limit cote client (Cloudflare).
+
 ## Avant de modifier quoi que ce soit
 
 1. Lire CE FICHIER en entier

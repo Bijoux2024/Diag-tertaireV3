@@ -1,5 +1,44 @@
 # Changelog - DiagTertiaire V3
 
+## [UX/A11y - Sprint 1 landing page : accessibilite et hygiene] - 2026-04-23
+
+### Ajoute
+
+- **`@media (prefers-reduced-motion: reduce)`** global en fin de `<style>`
+  dans `index.html` (WCAG 2.3.3). Neutralise `.cta-pulse`, `.sr`,
+  `.hero-cascade`, hover `.mockup-glow` et toute animation/transition
+  globale pour les utilisateurs ayant active la preference.
+
+### Modifie
+
+- **`index.html`** : `.cta-pulse` passe de `infinite` a
+  `animation-iteration-count: 3` (evite la fatigue visuelle sur mobile
+  et respecte mieux les environnements sensibles).
+- **`index.html`** : `:focus-visible` durci de `outline: 2px solid
+  rgba(29,78,216,0.45)` / offset 2px a `outline: 2px solid #1D4ED8` /
+  offset 3px (WCAG 2.4.11 AAA 2025).
+- **`cookie-consent.js`** : chargement passe en `defer` dans
+  `index.html` (deblocage du parsing HTML). Le script est defer-safe
+  car il detecte `document.readyState` et fallback sur
+  `DOMContentLoaded`.
+
+### Retire
+
+- **Question FAQ "C'est vraiment gratuit ? Pourquoi ?"** retiree du
+  DOM ET du JSON-LD `FAQPage` (decision produit : retrait complet,
+  pas de divergence DOM/structured-data). La FAQ compte desormais
+  5 questions cote DOM et 5 cote JSON-LD.
+
+### Notes
+
+- Sprint 1 = accessibilite et hygiene uniquement. Aucun changement de
+  contenu structurel ni de CTA. Zero JS ajoute, zero dependance npm.
+- Le logo BIC Montpellier a ete temporairement extrait en SVG externe
+  puis restaure en base64 inline sur decision produit (pas de changement
+  net par rapport a HEAD).
+- Sprints 2 (preuve au-dessus du fold) et 3 (architecture/animations
+  modernes) a livrer separement apres validation Lighthouse.
+
 ## [Securite - Durcissement CSP, SRI, Origin check, scrubbing #report=] - 2026-04-22
 
 ### Ajoute

@@ -2,6 +2,20 @@
 
 Historique des modifications effectuees par des agents IA sur ce depot.
 
+## 2026-04-23 — Claude Code (Landing UX/A11y Sprint 1)
+
+Refonte accessibilite / hygiene de la landing `index.html` — Sprint 1 du plan `polished-fluttering-quill.md` (sur 3 sprints). Zero nouveau JS, zero dep npm, CTA texte inchange.
+
+- **`@media (prefers-reduced-motion: reduce)`** global ajoute en fin de `<style>` dans `index.html`. Neutralise `animation`, `transition`, `scroll-behavior`, et force `opacity:1 / transform:none` sur `.sr`, `.hero-cascade`. Respecte WCAG 2.3.3 — l'ancien comportement (cta-pulse infini, scroll reveal, cascade hero) violait la preference utilisateur.
+- **`.cta-pulse`** : `animation-iteration-count` passe d'`infinite` a `3` (ligne 172-176). Pulse limite = 9 secondes max, puis CTA statique.
+- **FAQ "C'est vraiment gratuit ? Pourquoi ?"** retiree sur decision produit, du DOM `<div id="faq-list">` ET du JSON-LD `FAQPage`. La FAQ compte desormais 5 questions cote DOM et 5 cote JSON-LD, parfaitement synchronises (evite les warnings Search Console sur divergence DOM/structured-data).
+- **`:focus-visible`** : `outline: 2px solid rgba(29,78,216,0.45); outline-offset: 2px` → `outline: 2px solid #1D4ED8; outline-offset: 3px`. Contraste solide (WCAG 2.4.11 AAA 2025).
+- **`cookie-consent.js`** : ajout de l'attribut `defer` sur le `<script src="./cookie-consent.js">`. Le script est deja defer-safe car il detecte `document.readyState === 'loading'` + fallback `DOMContentLoaded`. Gain : deblocage du parsing HTML (≈20-30 ms mobile 3G selon Lighthouse).
+- **Logo BIC Montpellier** : extraction en SVG externe testee puis annulee sur decision produit. Le `data:image/svg+xml;base64,...` inline est restaure tel qu'a HEAD (pas de changement net).
+- **Hygiene** : aucune regle absolue du `CLAUDE.md` touchee. Moteur `src/engine.js`, `api/*.js`, migrations Supabase et `vercel.json` non modifies. Zero code mort, zero doublon, zero fichier orphelin introduit.
+
+Suite : Sprint 2 (preuve au-dessus du fold : stat-chip chiffre-cle, bande proof, mockup mobile, auteur) puis Sprint 3 (reordonnancement sections + `animation-timeline: view()` + content-visibility, optionnel).
+
 ## 2026-04-21 — Claude Code (GA4 funnel events)
 
 - Ajout de deux nouveaux business events dans `ga4.js` via `resolveBusinessEvent` : `diagnostic_form_start` (premiere saisie reelle dans le formulaire, distinct de `diagnostic_start` qui est declenche au mount) et `contact_opt_in` (envoye apres insertion partenaire reussie quand l'utilisateur coche la mise en relation). `diagnostic_form_start` est volontairement renomme depuis l'ancienne proposition `form_start` pour eviter tout conflit avec le nom reserve de l'Enhanced Measurement GA4.

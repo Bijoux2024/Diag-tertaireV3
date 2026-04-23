@@ -43,7 +43,7 @@
   <link rel="preload" href="/fonts/dm-serif-display-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- cookie-consent -->
-  <script src="./cookie-consent.js"></script>
+  <script src="./cookie-consent.js" defer></script>
 
   <!-- Schema.org -->
   <script type="application/ld+json">
@@ -56,7 +56,7 @@
   { "@context":"https://schema.org","@type":"SoftwareApplication","name":"DiagTertiaire","applicationCategory":"BusinessApplication","operatingSystem":"Web","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"description":"Comparatif énergétique gratuit pour locaux professionnels. Rapport PDF complet en 3 minutes avec estimation des économies et actions prioritaires.","url":"https://diag-tertiaire.fr","aggregateRating":{"@type":"AggregateRating","ratingValue":"4.8","ratingCount":"47"},"featureList":["Diagnostic énergétique gratuit","Rapport PDF personnalisé","Estimation des économies","Estimation du retour sur investissement","Recommandations d'actions"] }
   </script>
   <script type="application/ld+json">
-  { "@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"C'est vraiment gratuit ? Pourquoi ?","acceptedAnswer":{"@type":"Answer","text":"Oui. Le comparatif est 100% gratuit et le restera. L'outil est entièrement automatisé. Si vous le souhaitez, vous pouvez être mis en relation avec un professionnel de l'énergie : c'est cette mise en relation, facultative, qui finance le service."}},{"@type":"Question","name":"Qu'est-ce que je reçois exactement ?","acceptedAnswer":{"@type":"Answer","text":"Un rapport PDF avec : votre positionnement par rapport aux consommations moyennes de votre secteur, vos 3 actions prioritaires avec économies estimées en euros/an, une projection financière sur 10 ans, et les principales aides disponibles."}},{"@type":"Question","name":"Sur quoi se basent vos calculs ?","acceptedAnswer":{"@type":"Answer","text":"Sur des données de référence publiques officielles (consommations moyennes par type d'activité en France), croisées avec les informations que vous déclarez. La précision visée est de plus ou moins 20%."}},{"@type":"Question","name":"Mes données sont-elles protégées ?","acceptedAnswer":{"@type":"Answer","text":"Oui. Vos données sont traitées conformément au RGPD. Elles ne sont jamais transmises à un tiers sans votre consentement explicite."}},{"@type":"Question","name":"Est-ce que ça remplace un DPE ou un audit ?","acceptedAnswer":{"@type":"Answer","text":"Non. Ce comparatif est un outil d'orientation, pas un document réglementaire. Il vous aide à y voir clair avant de décider si un audit certifié est nécessaire."}},{"@type":"Question","name":"Combien coûte un vrai audit énergétique ?","acceptedAnswer":{"@type":"Answer","text":"Entre 800 et 3000 euros selon la taille du bâtiment. Notre comparatif gratuit vous aide à savoir si cet investissement est pertinent pour votre situation."}}] }
+  { "@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Qu'est-ce que je reçois exactement ?","acceptedAnswer":{"@type":"Answer","text":"Un rapport PDF avec : votre positionnement par rapport aux consommations moyennes de votre secteur, vos 3 actions prioritaires avec économies estimées en euros/an, une projection financière sur 10 ans, et les principales aides disponibles."}},{"@type":"Question","name":"Sur quoi se basent vos calculs ?","acceptedAnswer":{"@type":"Answer","text":"Sur des données de référence publiques officielles (consommations moyennes par type d'activité en France), croisées avec les informations que vous déclarez. La précision visée est de plus ou moins 20%."}},{"@type":"Question","name":"Mes données sont-elles protégées ?","acceptedAnswer":{"@type":"Answer","text":"Oui. Vos données sont traitées conformément au RGPD. Elles ne sont jamais transmises à un tiers sans votre consentement explicite."}},{"@type":"Question","name":"Est-ce que ça remplace un DPE ou un audit ?","acceptedAnswer":{"@type":"Answer","text":"Non. Ce comparatif est un outil d'orientation, pas un document réglementaire. Il vous aide à y voir clair avant de décider si un audit certifié est nécessaire."}},{"@type":"Question","name":"Combien coûte un vrai audit énergétique ?","acceptedAnswer":{"@type":"Answer","text":"Entre 800 et 3000 euros selon la taille du bâtiment. Notre comparatif gratuit vous aide à savoir si cet investissement est pertinent pour votre situation."}}] }
   </script>
   <script type="application/ld+json">
   { "@context":"https://schema.org","@type":"Organization","name":"DiagTertiaire","url":"https://diag-tertiaire.fr","logo":"https://diag-tertiaire.fr/android-chrome-512x512.png","sameAs":[],"contactPoint":{"@type":"ContactPoint","contactType":"Customer Service","availableLanguage":"French"} }
@@ -106,7 +106,7 @@
     @media (max-width: 768px) { body { font-size: 15px; } }
     img, svg, video { max-width: 100%; height: auto; }
     button, a, input, select, textarea { touch-action: manipulation; }
-    :focus-visible { outline: 2px solid rgba(29,78,216,0.45); outline-offset: 2px; }
+    :focus-visible { outline: 2px solid #1D4ED8; outline-offset: 3px; }
     :focus:not(:focus-visible) { outline: none; }
     a { color: inherit; text-decoration: none; }
 
@@ -170,7 +170,7 @@
 
     /* CTA amber (override inline sur le bouton hero) */
     .cta-pulse {
-      animation: ctaPulse 3s ease-in-out 1.5s infinite;
+      animation: ctaPulse 3s ease-in-out 1.5s 3;
       will-change: transform;
     }
     @keyframes ctaPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.025)} }
@@ -325,6 +325,20 @@
     .px-4 { padding-left: 1rem; padding-right: 1rem; }
     .px-6 { padding-left: 1.5rem; padding-right: 1.5rem; }
     .text-center { text-align: center; }
+
+    /* Respect prefers-reduced-motion (WCAG 2.3.3) */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+      .sr, .hero-cascade { opacity: 1 !important; transform: none !important; }
+      .cta-pulse { animation: none !important; }
+      .mockup-glow { transition: none !important; }
+      .mockup-glow:hover { transform: none !important; filter: drop-shadow(0 0 60px rgba(29,78,216,0.25)) drop-shadow(0 30px 60px rgba(10,22,40,0.5)); }
+    }
   </style>
 </head>
 <body>

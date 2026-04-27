@@ -1,5 +1,41 @@
 # Changelog - DiagTertiaire V3
 
+## [feat(geo) - FAQ Q6 disclaimer cible TPE/PME <1000 m²] - 2026-04-27
+
+### Modifie
+
+- **index.html ligne 108** : enrichissement de la reponse a la
+  question 6 du bloc JSON-LD `FAQPage` ("Mon batiment est-il concerne
+  par le Decret Tertiaire ?"). Ajout d'un disclaimer explicite en fin
+  de reponse : "Si vous gerez moins de 1 000 m2 de surface tertiaire
+  (TPE/PME), le Decret Tertiaire ne s'applique pas a vous. DiagTertiaire
+  est concu pour ce segment et vous propose une autre voie : optimiser
+  votre facture energetique sans contrainte reglementaire."
+
+### Effet
+
+- **Longueur Q6** : 110 mots -> 149 mots (dans la cible 130-160 mots
+  optimum citation LLM, voir GEO skill).
+- **Alignement cible produit** : la FAQ Q6 educative pour les visiteurs
+  qui cherchent "decret tertiaire" devient un signal de qualification :
+  les <1000 m² (cible commerciale) lisent qu'ils ne sont PAS concernes
+  ET que DiagTertiaire est l'outil pour eux. Les >=1000 m² (out of scope)
+  comprennent qu'ils sont concernes par le Decret mais pas par le pre-diag
+  (cas d'usage secondaire tolere : cadrage prealable audit certifie).
+- **Pas de rich result Google attendu** : FAQ rich results restreints
+  gov/sante depuis aout 2023. Benefice GEO uniquement (AI Overviews,
+  ChatGPT Search, Perplexity) - mais c'est exactement la cible visee
+  pour cette Q6 (visiteurs qui posent la question via assistant IA).
+
+### Coherence avec docs(seo) repositionnement
+
+Ce commit complete le commit precedent `docs(seo): repositionne Phase 4
+sur cible TPE/PME <1000 m²` qui avait modifie uniquement les documents
+d'audit. La FAQ Q6 est le seul fichier de production qui contient une
+reference au Decret Tertiaire. Le disclaimer ajoute aligne la FAQ
+sur la nouvelle position editoriale, sans toucher aux 9 autres Q&A
+ni aux autres blocs JSON-LD.
+
 ## [docs(seo) - Repositionne Phase 4 sur cible TPE/PME <1000 m²] - 2026-04-27
 
 ### Contexte

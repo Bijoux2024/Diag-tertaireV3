@@ -1,5 +1,56 @@
 # Changelog - DiagTertiaire V3
 
+## [Phase 5 SEO - TASK-028 : sitemap clean (lastmod reels git, retire changefreq/priority)] - 2026-04-27
+
+### Modifie
+
+- **`sitemap-pages.xml`** : refonte complete pour aligner sur les
+  bonnes pratiques Google 2026.
+  - Retrait integral des balises `<changefreq>` et `<priority>`
+    (ignorees par Google depuis ~2017, bruit inutile)
+  - `<lastmod>` mis a jour avec les dates ISO 8601 reelles + timezone
+    issues de `git log -1 --format='%aI' -- <fichier>` pour chaque
+    page.
+  - 8 URLs au total (incluant la nouvelle pillar
+    `/economies-energie-tertiaire-tpe-pme` ajoutee en TASK-019).
+- **`sitemap.xml`** (sitemapindex racine) : `lastmod` des 2 enfants
+  passe de `2026-04-14` figе a `2026-04-27` (date du dernier commit
+  significatif sur le perimetre V3 + blog).
+
+### Tableau lastmod reels
+
+| Page | lastmod |
+|---|---|
+| / | 2026-04-27T22:40:51+02:00 |
+| /methode | 2026-04-27T22:53:11+02:00 |
+| /economies-energie-tertiaire-tpe-pme | 2026-04-27T21:23:47+02:00 |
+| /exemple-rapport | 2026-04-27T17:45:02+02:00 |
+| /mentions-legales | 2026-04-27T16:34:19+02:00 |
+| /politique-confidentialite | 2026-04-27T16:34:19+02:00 |
+| /conditions-generales-utilisation | 2026-04-27T16:34:19+02:00 |
+| /cookies | 2026-04-27T16:34:19+02:00 |
+
+### Justification
+
+- **Google ignore changefreq/priority** depuis 2017 (confirme par
+  John Mueller plusieurs fois). Les retirer reduit le bruit dans le
+  fichier et evite de transmettre une fausse confiance.
+- **lastmod precis (ISO 8601 + timezone)** = signal de freshness
+  reel pour le crawl prioritization (Googlebot et autres). Inversement,
+  un `lastmod` fige fait perdre ce signal.
+- Methode reproductible : `git log -1 --format='%aI' -- <fichier>`
+  donne la date du dernier commit. Recommande de mettre a jour le
+  sitemap a chaque deploiement significatif (cf. recommandation
+  agent blog pour script post-build automatise).
+
+### Validations
+
+- Format ISO 8601 valide (avec timezone +02:00 conforme RFC 3339)
+- 0 em-dash, 0 en-dash dans le diff XML
+- HTTP 200 et Content-Type application/xml; charset=utf-8 deja
+  garantis par vercel.json header `(.*\.xml)` (verifie en TASK-031
+  prepa Mission 1)
+
 ## [Phase 5 SEO - TASK-027 : hamburger mobile sur /methode (parite avec landing)] - 2026-04-27
 
 ### Modifie

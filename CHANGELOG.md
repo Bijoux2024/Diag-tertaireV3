@@ -1,5 +1,18 @@
 # Changelog - DiagTertiaire V3
 
+## [Phase 2 SEO - TASK-006 : GovernmentService OPERAT/ADEME] - 2026-04-27
+
+### Ajoute
+
+- **TASK-006** : nouveau bloc JSON-LD `GovernmentService` dans `index.html`
+  apres le bloc `Organization`. Decrit la plateforme OPERAT (ADEME) avec
+  `@id` partage `https://diag-tertiaire.fr/#operat-service`, provider
+  `GovernmentOrganization` ADEME (lie a Wikidata Q2826025), reference
+  Legifrance (loi ELAN article 175). Renforce le signal d'autorite
+  reglementaire pour Bing Copilot et AI Overviews. Pas un rich result
+  Google standard, gain GEO sur les requetes "Decret Tertiaire", "OPERAT
+  ADEME", "obligation declaration tertiaire".
+
 ## [docs(seo) - Addendum GSC : TASK-031/032/033 + clarification redirects] - 2026-04-27
 
 ### Contexte

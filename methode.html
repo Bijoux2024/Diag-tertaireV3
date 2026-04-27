@@ -159,63 +159,142 @@
         </div>
     </header>
 
-    <main class="max-w-3xl mx-auto px-6 py-16">
-        <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight mb-6">Une estimation utile pour decider</h1>
+    <main class="max-w-3xl mx-auto px-6 py-12">
+        <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight mb-6 leading-tight">Méthodologie du pré-diagnostic énergétique tertiaire</h1>
         <p class="text-lg text-slate-600 leading-relaxed mb-10">
-            DiagTertiaire est un pre-diagnostic : un outil de cadrage rapide pour comprendre si la consommation
-            d'un batiment tertiaire est coherente, identifier les leviers les plus probables et decider s'il faut
-            lancer un audit complet.
+            DiagTertiaire est un outil de cadrage rapide pour estimer la consommation énergétique d'un local tertiaire, la comparer aux références sectorielles ADEME, identifier les leviers d'économies les plus probables et décider d'un investissement. Cette page détaille la méthodologie, les sources de données, les benchmarks chiffrés et les limites de précision.
         </p>
 
-        <section class="mb-12">
-            <h2 class="text-xl font-bold text-slate-900 mb-4">Comment ca fonctionne</h2>
+        <section class="mb-10">
+            <h2 class="text-xl font-bold text-slate-900 mb-4">Pour qui DiagTertiaire est-il conçu ?</h2>
+            <p class="text-slate-700 leading-relaxed mb-4">DiagTertiaire est principalement conçu pour les <strong>bâtiments tertiaires de moins de 1 000 m²</strong> : commerces, restaurants, hôtels indépendants, bureaux PME, cabinets médicaux. Ce segment n'est <strong>pas assujetti au Décret Tertiaire</strong> (<a href="https://www.legifrance.gouv.fr/loda/id/JORFTEXT000039118309" rel="noopener" class="text-blue-700 hover:underline">article L.111-10-3 du Code de la construction et de l'habitation</a>, seuil 1 000 m² inclusif) et n'a donc aucune obligation de déclaration sur la plateforme OPERAT (<a href="https://operat.ademe.fr" rel="noopener" class="text-blue-700 hover:underline">Observatoire ADEME</a>). La motivation est purement économique : optimiser la facture énergétique sans contrainte réglementaire, dans un contexte 2026 marqué par la fin de l'ARENH au 31 décembre 2025 et la nouvelle structure tarifaire TURPE 6 actée par la <a href="https://www.cre.fr" rel="noopener" class="text-blue-700 hover:underline">Commission de Régulation de l'Énergie</a>.</p>
+            <p class="text-slate-700 leading-relaxed">Le pré-diagnostic est également utilisable en <strong>cadrage préalable</strong> par les bâtiments de 1 000 m² ou plus assujettis au Décret Tertiaire, en complément (et non en remplacement) d'un audit réglementaire NF EN 16247. Le rapport sert alors à informer le cahier des charges du bureau d'études certifié OPQIBI 1905 ou LNE Audit Énergétique.</p>
+        </section>
+
+        <section class="mb-10">
+            <h2 class="text-xl font-bold text-slate-900 mb-4">Comment ça fonctionne, étape par étape</h2>
             <div class="space-y-4">
                 <div class="flex gap-4 items-start">
                     <span class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-sm">1</span>
-                    <p class="text-slate-600">Vous renseignez les informations de votre batiment : surface, activite, type de chauffage, annee de construction.</p>
+                    <p class="text-slate-700">Vous renseignez les informations de votre bâtiment : surface, activité (8 typologies CABS), année de construction, système de chauffage principal, présence de climatisation et système ECS.</p>
                 </div>
                 <div class="flex gap-4 items-start">
                     <span class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-sm">2</span>
-                    <p class="text-slate-600">Le moteur estime votre consommation energetique et la compare aux references sectorielles (CABS ADEME).</p>
+                    <p class="text-slate-700">Vous déclarez les consommations annuelles (électricité, gaz, fioul ou réseau de chaleur) en kWh, lisibles sur les factures fournisseur.</p>
                 </div>
                 <div class="flex gap-4 items-start">
                     <span class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-sm">3</span>
-                    <p class="text-slate-600">Vous recevez un score, un top 3 d'actions prioritaires avec gains estimes, et un rapport PDF telechargeable.</p>
+                    <p class="text-slate-700">Le moteur estime l'intensité énergétique en kWh/m²/an, la compare aux benchmarks sectoriels CABS ADEME et aux observations OID, et calcule l'écart absolu et relatif.</p>
+                </div>
+                <div class="flex gap-4 items-start">
+                    <span class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-sm">4</span>
+                    <p class="text-slate-700">Le rapport PDF identifie les 3 actions prioritaires avec économies estimées en €/an, projection sur 10 ans, capex indicatif et principales aides 2026 mobilisables (CEE, MaPrimeRénov' Tertiaire, BPI, ADEME).</p>
                 </div>
             </div>
         </section>
 
-        <section class="mb-12">
-            <h2 class="text-xl font-bold text-slate-900 mb-4">Ce que nous ne sommes pas</h2>
-            <div class="bg-amber-50 border border-amber-200 rounded-xl p-6">
-                <ul class="space-y-3 text-slate-700">
-                    <li class="flex gap-2 items-start">
-                        <span class="text-amber-500 font-bold mt-0.5">!</span>
-                        <span>DiagTertiaire n'est <strong>pas un audit energetique reglementaire</strong>. Il ne remplace pas un DPE, un audit energetique obligatoire ou une etude thermique.</span>
-                    </li>
-                    <li class="flex gap-2 items-start">
-                        <span class="text-amber-500 font-bold mt-0.5">!</span>
-                        <span>Les estimations sont <strong>indicatives</strong> et basees sur des ratios sectoriels. Elles ne tiennent pas compte de chaque specificite de votre batiment.</span>
-                    </li>
-                    <li class="flex gap-2 items-start">
-                        <span class="text-amber-500 font-bold mt-0.5">!</span>
-                        <span>L'objectif est de vous aider a <strong>decider si un audit approfondi est justifie</strong>, pas de s'y substituer.</span>
-                    </li>
-                </ul>
-            </div>
+        <section class="mb-10">
+            <h2 class="text-xl font-bold text-slate-900 mb-4">Sources de données utilisées</h2>
+            <p class="text-slate-700 leading-relaxed mb-3">Les calculs DiagTertiaire s'appuient sur trois bases de données officielles :</p>
+            <ul class="list-disc pl-6 space-y-2 text-slate-700">
+                <li><strong>Base CABS ADEME</strong> : Consommations et Activités du Bâtiment dans le Secteur tertiaire. Référence sectorielle nationale, mise à jour périodique. <a href="https://www.ademe.fr" rel="noopener" class="text-blue-700 hover:underline">www.ademe.fr</a></li>
+                <li><strong>OID</strong> : Observatoire de l'Immobilier Durable, baromètres et rapports annuels du parc tertiaire français. Complète CABS sur les variations par typologie et zone climatique. <a href="https://www.o-immobilierdurable.fr" rel="noopener" class="text-blue-700 hover:underline">o-immobilierdurable.fr</a></li>
+                <li><strong>Base Carbone ADEME 2024</strong> : facteur d'émission de l'électricité (mix français), du gaz, du fioul et des réseaux de chaleur. Utilisé pour la conversion kWh en kgCO2 équivalent.</li>
+            </ul>
+            <p class="text-slate-700 leading-relaxed mt-3">Ces données sont croisées avec les <strong>retours terrain</strong> de pré-diagnostics réalisés et les <strong>fiches CEE</strong> (opérations standardisées BAT-EN-XXX, BAT-EQ-XXX, BAT-TH-XXX) qui donnent des références chiffrées sur le coût et le gain de chaque action de rénovation.</p>
         </section>
 
-        <section class="mb-12">
-            <h2 class="text-xl font-bold text-slate-900 mb-4">Sources et references</h2>
-            <ul class="space-y-2 text-slate-600">
-                <li>Benchmarks sectoriels : CABS ADEME (Consommations et Activites du Batiment dans le Secteur tertiaire)</li>
-                <li>Facteur d'emission electricite : Base Carbone ADEME 2024</li>
-                <li>Actions de renovation : retours terrain et fiches CEE</li>
+        <section class="mb-10">
+            <h2 class="text-xl font-bold text-slate-900 mb-4">Benchmarks chiffrés par typologie</h2>
+            <p class="text-slate-700 leading-relaxed mb-3">Les références CABS ADEME utilisées comme repère sectoriel pour comparer votre intensité énergétique :</p>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm border-collapse mb-3">
+                    <thead class="bg-slate-100">
+                        <tr>
+                            <th class="border border-slate-200 p-2 text-left">Typologie</th>
+                            <th class="border border-slate-200 p-2 text-left">Intensité moyenne CABS</th>
+                            <th class="border border-slate-200 p-2 text-left">Postes dominants</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td class="border border-slate-200 p-2">Bureaux</td><td class="border border-slate-200 p-2">150 kWh/m²/an</td><td class="border border-slate-200 p-2">Chauffage + clim 35-50 %</td></tr>
+                        <tr><td class="border border-slate-200 p-2">Restaurants</td><td class="border border-slate-200 p-2">300 kWh/m²/an</td><td class="border border-slate-200 p-2">Cuisine 35-50 %</td></tr>
+                        <tr><td class="border border-slate-200 p-2">Hôtels</td><td class="border border-slate-200 p-2">200 kWh/m²/an</td><td class="border border-slate-200 p-2">Chauffage + ECS 40-55 %</td></tr>
+                        <tr><td class="border border-slate-200 p-2">Commerces alim.</td><td class="border border-slate-200 p-2">180 kWh/m²/an</td><td class="border border-slate-200 p-2">Froid commercial 30-40 %</td></tr>
+                        <tr><td class="border border-slate-200 p-2">Commerces non-alim.</td><td class="border border-slate-200 p-2">130 kWh/m²/an</td><td class="border border-slate-200 p-2">Éclairage 25-35 %</td></tr>
+                        <tr><td class="border border-slate-200 p-2">Entrepôts</td><td class="border border-slate-200 p-2">80 kWh/m²/an</td><td class="border border-slate-200 p-2">Chauffage + éclairage</td></tr>
+                        <tr><td class="border border-slate-200 p-2">Santé non hospitalière</td><td class="border border-slate-200 p-2">250 kWh/m²/an</td><td class="border border-slate-200 p-2">Chauffage + équipements</td></tr>
+                        <tr><td class="border border-slate-200 p-2">Enseignement</td><td class="border border-slate-200 p-2">110 kWh/m²/an</td><td class="border border-slate-200 p-2">Chauffage 50-60 %</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="text-xs text-slate-500 italic">Sources : ADEME base CABS, OID rapports 2024-2025. Variations selon zone climatique (H1 plus froide que H3) et année de construction (avant 1975, 1975-2000, 2001-2012, post-2012).</p>
+        </section>
+
+        <section class="mb-10">
+            <h2 class="text-xl font-bold text-slate-900 mb-4">Limites de précision et fiabilité</h2>
+            <p class="text-slate-700 leading-relaxed mb-3">La précision visée est <strong>plus ou moins 20 %</strong>. Cette marge se dégrade dans les cas suivants :</p>
+            <ul class="list-disc pl-6 space-y-2 text-slate-700 mb-3">
+                <li>Bâtiments à <strong>activités multiples</strong> (mix bureau/commerce, restaurant avec hébergement) : la base CABS catégorise par activité dominante, l'écart augmente.</li>
+                <li>Bâtiments en <strong>zone climatique extrême</strong> (très froide H1 nord, très chaude H3 sud) : les benchmarks moyens lissent les écarts régionaux.</li>
+                <li>Bâtiments <strong>très anciens</strong> (avant 1948) ou <strong>patrimoine atypique</strong> (monuments, bâtis spécifiques) : pertinents pour audit certifié spécialisé, pas pour pré-diagnostic.</li>
+                <li>Activités tertiaires <strong>non couvertes par les 8 typologies CABS</strong> : nous le signalons dans le rapport.</li>
             </ul>
+            <p class="text-slate-700 leading-relaxed">Pour les obligations réglementaires (Décret Tertiaire, audit L.233-1, certification ISO 50001), le pré-diagnostic ne suffit pas. Il faut faire appel à un bureau d'études certifié OPQIBI 1905 ou LNE Audit Énergétique pour produire un document opposable.</p>
+        </section>
+
+        <section class="mb-10">
+            <h2 class="text-xl font-bold text-slate-900 mb-4">Différence pré-diagnostic, DPE bail commercial et audit réglementaire</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm border-collapse">
+                    <thead class="bg-slate-100">
+                        <tr>
+                            <th class="border border-slate-200 p-2 text-left">Critère</th>
+                            <th class="border border-slate-200 p-2 text-left">Pré-diag DiagTertiaire</th>
+                            <th class="border border-slate-200 p-2 text-left">DPE bail commercial</th>
+                            <th class="border border-slate-200 p-2 text-left">Audit NF EN 16247</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td class="border border-slate-200 p-2">Durée</td><td class="border border-slate-200 p-2">3 minutes</td><td class="border border-slate-200 p-2">Demi-journée</td><td class="border border-slate-200 p-2">1 à 3 mois</td></tr>
+                        <tr><td class="border border-slate-200 p-2">Coût</td><td class="border border-slate-200 p-2">Gratuit</td><td class="border border-slate-200 p-2">200 à 400 €</td><td class="border border-slate-200 p-2">800 à 3 000 €</td></tr>
+                        <tr><td class="border border-slate-200 p-2">Opposabilité</td><td class="border border-slate-200 p-2">Non</td><td class="border border-slate-200 p-2">Oui (annexé bail)</td><td class="border border-slate-200 p-2">Oui</td></tr>
+                        <tr><td class="border border-slate-200 p-2">Précision</td><td class="border border-slate-200 p-2">+/- 20 %</td><td class="border border-slate-200 p-2">+/- 10 %</td><td class="border border-slate-200 p-2">+/- 5 %</td></tr>
+                        <tr><td class="border border-slate-200 p-2">Certification pro</td><td class="border border-slate-200 p-2">N/A</td><td class="border border-slate-200 p-2">OPQIBI 1330</td><td class="border border-slate-200 p-2">OPQIBI 1905 / LNE</td></tr>
+                        <tr><td class="border border-slate-200 p-2">Visite sur site</td><td class="border border-slate-200 p-2">Non</td><td class="border border-slate-200 p-2">Oui</td><td class="border border-slate-200 p-2">Oui (mesures)</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="text-sm text-slate-600 mt-3">Sources : norme NF EN 16247, article L.233-1 du Code de l'énergie (audit grandes entreprises), décret 2022-1272 du 29 septembre 2022 (DPE bail commercial obligatoire dès 50 m²).</p>
+        </section>
+
+        <section class="mb-10">
+            <h2 class="text-xl font-bold text-slate-900 mb-4">Méthodologie de cumul des gains</h2>
+            <p class="text-slate-700 leading-relaxed mb-3">Lorsque plusieurs actions de rénovation sont identifiées, leurs gains ne sont <strong>pas additifs mais séquentiels</strong>. Chaque action s'applique sur le résultat de la précédente, ce qui modélise correctement l'effet d'amortissement (un local déjà isolé tire moins de gain d'une régulation horaire qu'un local non isolé).</p>
+            <p class="text-slate-700 leading-relaxed mb-3">Exemple : un commerce avec un gisement potentiel théorique de 50 % cumulés sur trois actions (LED 25 %, isolation 20 %, régulation 15 %) ne génère pas 60 % d'économies finales mais environ 45 % séquentielles, ce qui est plus proche des retours terrain.</p>
+            <p class="text-slate-700 leading-relaxed">Le moteur de calcul applique également un <strong>plafond technique</strong> calé sur les retours ADEME pour éviter les optimismes irréalistes. Le gain total maximal sortable d'un pré-diagnostic est borné, indépendamment des actions cumulées.</p>
+        </section>
+
+        <section class="mb-10">
+            <h2 class="text-xl font-bold text-slate-900 mb-4">Quand passer à un audit énergétique certifié</h2>
+            <p class="text-slate-700 leading-relaxed mb-3">DiagTertiaire est suffisant pour <strong>environ 80 % des TPE/PME tertiaires</strong> qui veulent décider d'un investissement ou cadrer un cahier des charges. Un audit énergétique réglementaire NF EN 16247 devient nécessaire dans 4 cas :</p>
+            <ol class="list-decimal pl-6 space-y-2 text-slate-700 mb-3">
+                <li><strong>Grande entreprise</strong> (effectif supérieur ou égal à 250 ETP ou chiffre d'affaires supérieur ou égal à 50 M€) : obligation tous les 4 ans (article L.233-1 du Code de l'énergie).</li>
+                <li><strong>Cession ou acquisition</strong> avec exigence d'un document opposable.</li>
+                <li><strong>Certification ISO 50001</strong> (système de management de l'énergie).</li>
+                <li><strong>Candidature à un appel d'offres</strong> public ou privé exigeant une démarche énergétique formalisée.</li>
+            </ol>
+            <p class="text-slate-700 leading-relaxed">DiagTertiaire ne se substitue pas à cet audit dans ces cas, mais peut servir de <strong>cadrage préalable</strong> pour informer le cahier des charges du bureau d'études. Aucun partenariat commercial avec des bureaux d'études audit : la référence est neutre.</p>
+        </section>
+
+        <section class="mb-10 bg-amber-50 border border-amber-200 rounded-xl p-6">
+            <p class="font-semibold text-slate-900 mb-2">Disclaimer</p>
+            <p class="text-slate-700 leading-relaxed text-sm">DiagTertiaire est un pré-diagnostic à plus ou moins 20 % de précision, pas un audit certifié. Il ne remplace ni un DPE (décret 2022-1272 pour bail commercial dès 50 m²), ni une étude thermique réglementaire (RT 2012, RE 2020), ni la déclaration annuelle sur OPERAT (Décret Tertiaire pour les bâtiments de 1 000 m² ou plus). Pour ces obligations, faire appel à un professionnel certifié.</p>
         </section>
 
         <div class="text-center pt-4">
-            <a href="/" class="inline-block bg-gradient-to-br from-blue-700 to-blue-800 text-white rounded-xl px-10 py-4 font-bold text-lg no-underline hover:shadow-lg transition-shadow">Lancer mon diagnostic</a>
+            <a href="/" class="inline-block bg-gradient-to-br from-blue-700 to-blue-800 text-white rounded-xl px-10 py-4 font-bold text-lg no-underline hover:shadow-lg transition-shadow">Lancer mon pré-diagnostic gratuit</a>
+            <p class="text-sm text-slate-500 mt-3">3 minutes, sans inscription. Basé sur les références ADEME.</p>
         </div>
     </main>
 

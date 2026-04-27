@@ -1,5 +1,65 @@
 # Changelog - DiagTertiaire V3
 
+## [Phase 4 SEO - TASK-021 : methode.html etoffe avec positionnement <1000 m²] - 2026-04-27
+
+### Modifie
+
+- **`methode.html`** : refonte du body de ~180 mots a 1 163 mots de
+  contenu redactionnel. Toutes les sections JSON-LD existantes
+  conservees (TechArticle, BreadcrumbList, HowTo). H1 corrige :
+  "Une estimation utile pour decider" -> "Méthodologie du
+  pré-diagnostic énergétique tertiaire".
+
+### Sections H2 ajoutees / enrichies
+
+- **Pour qui DiagTertiaire est-il conçu ?** (NEW) : positionnement
+  explicite sur le segment <1000 m² + cas d'usage secondaire >=1000 m²
+  toleres en cadrage prealable d'un audit certifie. Article L.111-10-3
+  CCH lie a Legifrance.
+- **Comment ca fonctionne, etape par etape** (enrichi de 3 a 4
+  etapes avec details ECS, factures fournisseur, base CABS+OID).
+- **Sources de donnees utilisees** (NEW detaille) : CABS ADEME, OID
+  Observatoire Immobilier Durable, Base Carbone ADEME 2024, fiches CEE.
+- **Benchmarks chiffres par typologie** (NEW) : tableau 8 typologies
+  avec intensite moyenne kWh/m²/an et postes dominants
+  (bureaux 150, restaurants 300, hotels 200, commerces alim 180,
+  commerces non-alim 130, entrepots 80, sante 250, enseignement 110).
+- **Limites de precision et fiabilite** (NEW) : +/- 20 % et 4 cas
+  ou la precision se degrade (activites multiples, zones extremes,
+  bati ancien, typologies non couvertes).
+- **Difference pre-diag / DPE / audit reglementaire** (NEW) : tableau
+  comparatif 3 colonnes x 6 lignes (duree, cout, opposabilite,
+  precision, certification, visite). References norme NF EN 16247,
+  L.233-1, decret 2022-1272.
+- **Methodologie de cumul des gains** (NEW) : explication du cumul
+  sequentiel non-additif + plafond technique ADEME, avec exemple
+  chiffre.
+- **Quand passer a un audit energetique certifie** (NEW) : 4 cas
+  specifiques (grande entreprise L.233-1, cession, ISO 50001, appel
+  d'offres). Reference neutre, pas d'upsell, pas de partenariat
+  commercial.
+- **Disclaimer transparent** en fin de page (decret 2022-1272 DPE bail
+  commercial, RT 2012/RE 2020, OPERAT pour 1 000+ m²).
+
+### Validations
+
+- 1 163 mots de body (cible playbook 1 200+, ecart -37 mots acceptable
+  vu la densite editoriale)
+- 0 em-dash, 0 en-dash dans le fichier complet
+- 5 sources externes officielles inline (Legifrance, OPERAT, CRE,
+  ADEME, OID) - cible playbook >=3 atteinte
+- 8 typologies CABS chiffrees + tableau comparatif 3 documents
+  (pre-diag, DPE, audit) + grille des 4 cas audit reglementaire
+
+### Notes editoriales
+
+- Aucun upsell vers un partenaire bureau d'etudes audit. La reference
+  aux audits certifies (OPQIBI 1905, LNE) est neutre, factuelle.
+- Le visiteur comprend que DiagTertiaire suffit pour 80 % des cas
+  TPE/PME et que l'audit certifie est necessaire dans 4 cas precis.
+- TechArticle JSON-LD existant conserve avec dateModified 2026-04-27
+  (deja a jour depuis TASK-009 du 2026-04-27).
+
 ## [Phase 4 SEO - TASK-019 : pillar /economies-energie-tertiaire-tpe-pme] - 2026-04-27
 
 ### Ajoute

@@ -1,5 +1,17 @@
 # Changelog - DiagTertiaire V3
 
+## [Phase 2 SEO - TASK-011 : BreadcrumbList sur index.html] - 2026-04-27
+
+### Ajoute
+
+- **TASK-011** : nouveau bloc JSON-LD `BreadcrumbList` minimal sur
+  `index.html` apres `GovernmentService`. Une seule entree
+  `position: 1, Accueil`. Aligne avec la convention de
+  `methode.html` (qui a deja un BreadcrumbList 2 niveaux Accueil ->
+  Methodologie). Pas d'impact rich result Google sur la home (Google
+  ignore generalement les breadcrumbs sur l'URL racine), mais coherence
+  de structure pour les LLM crawlers.
+
 ## [Phase 2 SEO - TASK-010 : @id partages + sameAs + Knowledge Graph fusion] - 2026-04-27
 
 ### Modifie

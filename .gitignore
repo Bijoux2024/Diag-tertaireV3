@@ -32,6 +32,12 @@ search.js
 # Claude settings and worktrees
 .claude/
 
+# Agent runs et skills locaux (residus sessions IA, jamais commit)
+.agent/
+
 # Assets locaux (logos embarqués en base64, non nécessaires au déploiement)
 public/
 image.png
+
+# Audit SEO/GEO 2026-04 : caches HTML transients (les .md sont versionnes)
+seo-audit-2026-04/fetched/

@@ -1,5 +1,33 @@
 # Changelog - DiagTertiaire V3
 
+## [chore(docs) - Versionne livrables d'audit SEO/GEO 2026-04] - 2026-04-27
+
+### Ajoute
+
+- `seo-audit-2026-04/AUDIT-REPORT.md` : rapport decisionnel 360 deg
+  consolide (8 sous-agents specialistes), score initial 60/100, top 5
+  critiques, top 5 quick wins, matrice maturite, findings par categorie
+  (technical, content, schema, sitemap, performance, visual, GEO, SXO),
+  cross-reference Gemini Pro 2026, plan d'action consolide.
+- `seo-audit-2026-04/AGENT-EXECUTION-PLAN.md` : playbook agent (TASK-001
+  a TASK-030 + TASK-LOW), schema strict par tache (Priorite / Effort /
+  Categorie / Pre-lecture / Action / Code exact / Validation / Commit /
+  Hygiene), procedure validation finale.
+- `seo-audit-2026-04/ACTION-PLAN.md` : tableau priorise executif Critical
+  / High / Medium / Low, effort cumule par phase, roadmap 5 phases,
+  taches a valider avec Yannis (vercel.json), gains attendus par phase.
+- `.gitignore` : exclusion `.agent/` (residus sessions IA, anomalie
+  Phase 1 documentee) et `seo-audit-2026-04/fetched/` (caches HTML
+  transients, ~3 MB doublons git inutiles, les `.md` restent versionnes).
+
+### Note
+
+- Les commits Phase 1 (TASK-001/002/004/005) ont deja ete pushes sur
+  `origin/main` (V3) et propages en production via Vercel
+  (`https://diag-tertiaire.fr/llms.txt` 35 lignes, `/robots.txt`
+  47 lignes confirmes par curl). TASK-003 cote blog en attente de
+  rebase + push.
+
 ## [Phase 1 SEO - Quick wins playbook 2026-04-27] - 2026-04-27
 
 ### Ajoute

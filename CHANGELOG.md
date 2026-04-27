@@ -1,5 +1,35 @@
 # Changelog - DiagTertiaire V3
 
+## [docs(seo) - PHASE-EXECUTION-LOG + backlog SEO post-Phase 2] - 2026-04-27
+
+### Ajoute
+
+- **`seo-audit-2026-04/PHASE-EXECUTION-LOG.md`** : nouveau fichier
+  journal d'execution chronologique du playbook. Contient :
+  - Etat Phase 1 (5 commits + validations curl)
+  - Etat documents d'audit (chore + docs commits)
+  - Etat Phase 2 (8 commits + validations syntaxiques + propagation
+    prod + validator.schema.org sur 4 URLs)
+  - Detail des 2 erreurs schema.org legacy ProfessionalService
+    (`serviceType`, `inLanguage` UNKNOWN_FIELD)
+  - Anomalies tracees (desync blog x2, em-dash legacy)
+  - Roadmap Phase 3 / 4 / 5 / Addendum GSC
+- 5 nouvelles entrees dans `.claude/context/backlog.md` section
+  "SEO BACKLOG" :
+  - Enrichir FAQPage 10 Q&A a 130-160 mots/reponse (Phase 4, Medium)
+  - Aligner DOM FAQ sur JSON-LD 10 Q&A (Phase 4, Medium)
+  - Completer sameAs Organization avec SIREN data.gouv.fr (Low)
+  - Ajouter SearchAction WebSite quand recherche blog implementee (Low)
+  - Nettoyer ProfessionalService legacy fields (Low, TASK-LOW Phase 5)
+
+### Validations Phase 2 documentees
+
+- 8/8 blocs JSON-LD valides syntaxiquement (python json.loads)
+- 0 em-dash et 0 en-dash dans les 8 diffs Phase 2 (CLAUDE.md conforme)
+- 16 entites schema.org detectees sur 4 URLs (validator.schema.org API)
+- 2 erreurs UNKNOWN_FIELD legacy sur ProfessionalService (pre-Phase 2)
+- 0 erreur sur methode, exemple-rapport, blog/<article>
+
 ## [Phase 2 SEO - TASK-011 : BreadcrumbList sur index.html] - 2026-04-27
 
 ### Ajoute

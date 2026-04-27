@@ -1,5 +1,29 @@
 # Changelog - DiagTertiaire V3
 
+## [Phase 3 SEO - TASK-015 : React production build sur espace-pro] - 2026-04-27
+
+### Modifie
+
+- **TASK-015** : `espace-professionnel.html` lignes 78-79 - les
+  imports `react.development.js` et `react-dom.development.js` (UMD
+  builds avec warnings + propTypes runtime checks) sont remplaces par
+  les builds de production `react.production.min.js` et
+  `react-dom.production.min.js`.
+- SRI integrity hashes mis a jour (les builds dev et prod ont des
+  contenus differents donc des hashes sha384 differents) :
+  - react@18.3.1 prod : `sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z`
+  - react-dom@18.3.1 prod : `sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1`
+  (memes hashes que ceux deja deployes sur diagnostic.html et
+  exemple-rapport.html)
+
+### Comportement attendu
+
+- Bundle React ~3x plus leger : ~120 KB -> ~40 KB par script.
+- Console DevTools : zero warning React dev mode.
+- Aucun changement fonctionnel cote SPA Pro.
+- Mise a jour du commentaire HTML : "production builds, ~3x plus
+  leger que dev" au lieu de "dev React gardes pour devtools".
+
 ## [Phase 3 SEO - TASK-014 : defer chaine CDN React/Recharts/Babel/Tailwind] - 2026-04-27
 
 ### Modifie

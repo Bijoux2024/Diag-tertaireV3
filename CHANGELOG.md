@@ -1,5 +1,42 @@
 # Changelog - DiagTertiaire V3
 
+## [Phase 3 SEO - TASK-017 : self-host fonts Inter sur exemple-rapport] - 2026-04-27
+
+### Ajoute
+
+- 5 fichiers `fonts/inter-{300,400,500,600,700}.woff2` (latin subset
+  fontsource via `cdn.jsdelivr.net/npm/@fontsource/inter`, signatures
+  wOF2 verifiees, ~118 KB total). Format Google Fonts officiel
+  (fontsource extrait du repo Inter upstream).
+
+### Modifie
+
+- **TASK-017** : `exemple-rapport.html` lignes 57-60 - le bloc Google
+  Fonts CDN `Inter:wght@300;400;500;600;700` est remplace par :
+  - 2 `<link rel="preload">` sur `inter-400.woff2` et `inter-700.woff2`
+    (poids les plus critiques pour LCP : corpus 400 et titres 700)
+  - 5 `@font-face` declarations inline (poids 300/400/500/600/700) avec
+    `font-display: swap` pour eviter FOIT
+
+### Conformite playbook
+
+- Le playbook ciblait 2 poids (400 + 600). La page utilise effectivement
+  500, 700 et 800 dans son CSS (vérifié par grep). Self-host
+  uniquement 400+600 aurait force le navigateur a simuler les autres
+  poids en "faux gras" - dégradation visuelle inacceptable sur une page
+  marketing. Decision : self-host les 5 poids reellement utilises
+  (300, 400, 500, 600, 700). Le poids 800 utilise (3 occurrences) sera
+  fallback simulé sur 700, écart visuel acceptable. A reintroduire si
+  necessaire en backlog Phase 5.
+
+### Comportement attendu
+
+- Fin du render-blocking sur Google Fonts CDN.
+- Lighthouse mobile : "Eliminate render-blocking resources" ne mentionne
+  plus fonts.googleapis.com / fonts.gstatic.com.
+- Cache navigateur immutable (header `Cache-Control: max-age=31536000,
+  immutable` deja servi sur `/(.*\.woff2)` cf. vercel.json:48).
+
 ## [Phase 3 SEO - TASK-015 : React production build sur espace-pro] - 2026-04-27
 
 ### Modifie

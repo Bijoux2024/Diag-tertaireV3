@@ -1,5 +1,68 @@
 # Changelog - DiagTertiaire V3
 
+## [Phase 3 SEO - TASK-018 : IndexNow endpoint + cle racine] - 2026-04-27
+
+### Ajoute
+
+- **`api/indexnow.js`** : nouveau endpoint serverless Vercel ES module
+  pour notifier Bing/Yandex/Naver/Seznam via le protocole IndexNow.
+  - Method POST uniquement (405 sinon)
+  - Body : `{ "urls": [string] }`, 400 si vide/non array
+  - Lit la cle via `process.env.INDEXNOW_KEY` (jamais hardcodee)
+  - Filtrage defensif : seules les URLs `https://diag-tertiaire.fr/...`
+    sont acceptees (anti-detournement de l'endpoint)
+  - Forward vers `https://api.indexnow.org/IndexNow` POST batch
+  - 200 + `{"status":"ok","notified":N}` en cas de succes
+- **Fichier `<key>.txt` a la racine V3** : nom et contenu identiques
+  (la cle hex 32 chars). C'est le mecanisme de verification IndexNow
+  (le moteur de recherche fetche cette URL pour confirmer la propriete
+  du domaine).
+- **CSP `connect-src`** non modifiee : la requete sortante part du
+  serveur Vercel (api/indexnow.js cote node), pas du navigateur, donc
+  pas concernee par la CSP frontend.
+
+### Configuration externe requise (action Yannis)
+
+- Vercel Dashboard > Project diag-tertaireV3 > Settings > Environment
+  Variables : ajouter `INDEXNOW_KEY=<hex>` sur les 3 environnements
+  (Production + Preview + Development). La cle hex est celle deposee
+  dans `<key>.txt` a la racine.
+- Sans cette variable d'env, l'endpoint renvoie 500 + 
+  `{"error":"INDEXNOW_KEY not configured"}`.
+
+### Securite
+
+- Cle JAMAIS hardcodee dans le code source ni dans CHANGELOG ni dans
+  aucun .md du repo. Le seul endroit ou elle apparait dans le repo =
+  le nom et le contenu du fichier `<key>.txt`. Cette exposition est
+  par design (IndexNow exige le fichier public pour verification).
+- Variable d'env INDEXNOW_KEY isolee permettant rotation sans diff
+  code : nouveau `<key>.txt` deploye + variable d'env mise a jour.
+
+### Verification post-deploy
+
+```bash
+# 1. Cle accessible publiquement
+curl https://diag-tertiaire.fr/<key>.txt
+# doit retourner la cle hex 32 chars
+
+# 2. Endpoint accessible
+curl -X POST https://diag-tertiaire.fr/api/indexnow \
+  -H "Content-Type: application/json" \
+  -d '{"urls":["https://diag-tertiaire.fr/"]}'
+# doit retourner {"status":"ok","notified":1}
+
+# 3. Reception Bing Webmaster Tools (delai 24-48h)
+# Verifier dans BWT GUI : Outils > Submit URLs > IndexNow log
+```
+
+### Integration n8n future
+
+L'endpoint /api/indexnow est utilisable depuis n8n via un node HTTP
+Request POST. A integrer dans le workflow Notion -> Gemini -> GitHub
+-> Vercel deploy apres le node "Vercel deploy success" (avec retry 3
+fois car build Astro peut prendre 1-2 min avant status READY).
+
 ## [Phase 3 SEO - TASK-016 : HSTS preload sur vercel.json] - 2026-04-27
 
 ### Modifie

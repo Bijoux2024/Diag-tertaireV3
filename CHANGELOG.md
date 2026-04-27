@@ -1,5 +1,41 @@
 # Changelog - DiagTertiaire V3
 
+## [Phase 2 SEO - TASK-010 : @id partages + sameAs + Knowledge Graph fusion] - 2026-04-27
+
+### Modifie
+
+- **TASK-010** : 3 blocs JSON-LD d'`index.html` enrichis pour fusionner
+  les entites cote Knowledge Graph :
+  - `ProfessionalService` : ajout `@id`
+    `https://diag-tertiaire.fr/#service` + `parentOrganization` lie a
+    `#organization`
+  - `WebSite` : ajout `@id` `https://diag-tertiaire.fr/#website` +
+    `publisher` lie a `#organization`
+  - `Organization` : ajout `@id`
+    `https://diag-tertiaire.fr/#organization` + `sameAs` rempli avec
+    LinkedIn personnel (`https://www.linkedin.com/in/yannis-cherchali`,
+    coherent avec TASK-003 blog et TASK-009 author Person methode)
+
+### Choix d'implementation
+
+- **SearchAction non ajoute** sur WebSite : le blog Astro
+  (`diag-tertiaire-blog`) ne contient que 2 routes statiques
+  (`index.astro` + `[...slug].astro`), pas de moteur de recherche
+  (verifie : pas de pagefind/fuse/lunr, pas de page `/search`). Ajouter
+  un `SearchAction` non-fonctionnel serait trompeur pour les LLM. A
+  reintroduire si une recherche est ajoutee au blog.
+- **`sameAs` annuaire-entreprises non ajoute** : le SIREN n'est pas
+  fourni dans le contexte. A ajouter ulterieurement avec l'URL
+  `https://annuaire-entreprises.data.gouv.fr/entreprise/diag-tertiaire-XXXXXXXXX`.
+
+### Notes
+
+- Constate 1 em-dash legacy dans `index.html` ligne 459 (`aria-label`
+  du nav-logo : `"DiagTertiaire — accueil"`). Pre-existant aux commits
+  Phase 2, hors scope TASK-010. A traiter en TASK-LOW (corrections
+  mineures groupees Phase 5) ou commit dedie `style: purge em-dash
+  legacy`.
+
 ## [Phase 2 SEO - TASK-009 : TechArticle methode avec datePublished + author Person] - 2026-04-27
 
 ### Modifie

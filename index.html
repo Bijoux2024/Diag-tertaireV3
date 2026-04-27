@@ -47,10 +47,10 @@
 
   <!-- Schema.org -->
   <script type="application/ld+json">
-  { "@context":"https://schema.org","@type":"ProfessionalService","name":"Diag-Tertiaire","url":"https://diag-tertiaire.fr","description":"Pré-diagnostic énergétique bâtiments tertiaires pour TPE/PME","areaServed":"FR","serviceType":"Diagnostic énergétique","inLanguage":"fr" }
+  { "@context":"https://schema.org","@type":"ProfessionalService","@id":"https://diag-tertiaire.fr/#service","name":"Diag-Tertiaire","url":"https://diag-tertiaire.fr","description":"Pré-diagnostic énergétique bâtiments tertiaires pour TPE/PME","areaServed":"FR","serviceType":"Diagnostic énergétique","inLanguage":"fr","parentOrganization":{"@id":"https://diag-tertiaire.fr/#organization"} }
   </script>
   <script type="application/ld+json">
-  { "@context":"https://schema.org","@type":"WebSite","name":"DiagTertiaire","url":"https://diag-tertiaire.fr/","description":"Comparatif énergétique gratuit pour locaux professionnels","inLanguage":"fr" }
+  { "@context":"https://schema.org","@type":"WebSite","@id":"https://diag-tertiaire.fr/#website","name":"DiagTertiaire","url":"https://diag-tertiaire.fr/","description":"Comparatif énergétique gratuit pour locaux professionnels","inLanguage":"fr","publisher":{"@id":"https://diag-tertiaire.fr/#organization"} }
   </script>
   <script type="application/ld+json">
   { "@context":"https://schema.org","@type":"SoftwareApplication","name":"DiagTertiaire","applicationCategory":"BusinessApplication","operatingSystem":"Web","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"description":"Comparatif énergétique gratuit pour locaux professionnels. Rapport PDF complet en 3 minutes avec estimation des économies et actions prioritaires.","url":"https://diag-tertiaire.fr","featureList":["Diagnostic énergétique gratuit","Rapport PDF personnalisé","Estimation des économies","Estimation du retour sur investissement","Recommandations d'actions"] }
@@ -144,7 +144,7 @@
   }
   </script>
   <script type="application/ld+json">
-  { "@context":"https://schema.org","@type":"Organization","name":"DiagTertiaire","url":"https://diag-tertiaire.fr","logo":"https://diag-tertiaire.fr/android-chrome-512x512.png","sameAs":[],"contactPoint":{"@type":"ContactPoint","contactType":"Customer Service","availableLanguage":"French"} }
+  { "@context":"https://schema.org","@type":"Organization","@id":"https://diag-tertiaire.fr/#organization","name":"DiagTertiaire","url":"https://diag-tertiaire.fr","logo":"https://diag-tertiaire.fr/android-chrome-512x512.png","sameAs":["https://www.linkedin.com/in/yannis-cherchali"],"contactPoint":{"@type":"ContactPoint","contactType":"Customer Service","availableLanguage":"French"} }
   </script>
   <script type="application/ld+json">
   {

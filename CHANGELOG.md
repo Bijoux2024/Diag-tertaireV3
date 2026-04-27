@@ -11,6 +11,13 @@
   Search / Perplexity. Training-only bots bloques (CCBot, anthropic-ai,
   cohere-ai). Aucune valeur SEO pour ces derniers, uniquement training
   data. Header descriptif ajoute en debut de fichier.
+- **TASK-002** : `llms.txt` refondu avec densite factuelle pour
+  optimisation citation LLM (AI Overviews, ChatGPT Search, Perplexity).
+  Ajout du contexte reglementaire Decret Tertiaire (loi ELAN, OPERAT
+  ADEME, echeances 40/50/60 pourcent), description detaillee du service
+  (precision 20 pourcent, NF EN 16247, secteurs couverts) et liste des
+  11 articles de blog avec URLs cleanUrls (sans `.html`) pour eviter les
+  redirections 308. Migration des URLs legales en cleanUrls egalement.
 
 ## [UX/A11y - Sprint 1 landing page : accessibilite et hygiene] - 2026-04-23
 

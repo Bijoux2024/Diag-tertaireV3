@@ -1,15 +1,35 @@
 # DiagTertiaire
 
-> Pre-diagnostic energetique tertiaire oriente decision, base sur references sectorielles.
+> Pre-diagnostic energetique tertiaire gratuit pour TPE/PME et professionnels de l'immobilier. Rapport PDF en 3 minutes avec economies chiffrees et plan d'actions prioritaires base sur les references sectorielles ADEME (CABS).
 
-DiagTertiaire est un service numerique de pre-diagnostic energetique a destination des acteurs du tertiaire. Il permet de renseigner des informations relatives a un batiment ou a un site tertiaire, d'obtenir une estimation energetique indicative, d'identifier des premiers leviers d'action et de generer un rapport synthetique de pre-analyse.
+DiagTertiaire est un service numerique de pre-diagnostic energetique destine aux acteurs du secteur tertiaire francais : bureaux, commerces, restaurants, hotels, cabinets medicaux, entrepots. Il permet d'estimer l'intensite energetique d'un batiment, de la comparer aux benchmarks sectoriels officiels (base CABS ADEME), d'identifier les 3 actions prioritaires avec ROI calcule, et de generer un rapport PDF immediatement. La precision visee est plus ou moins 20 pourcent, suffisante pour decider si un audit reglementaire certifie (NF EN 16247) est justifie. Le service est gratuit, sans inscription, sans engagement.
 
-## URLs principales
+Contexte reglementaire : Le Decret Tertiaire (loi ELAN, decret 2019-771) impose aux surfaces tertiaires de plus de 1 000 m2 une reduction de consommation energetique de 40 pourcent d'ici 2030, 50 pourcent d'ici 2040, 60 pourcent d'ici 2050 par rapport a une annee de reference. La declaration se fait sur la plateforme OPERAT (ADEME). DiagTertiaire sert de premier cadrage avant la declaration OPERAT ou avant un audit obligatoire.
 
-- Page d'accueil : https://diag-tertiaire.fr/
-- Diagnostic : https://diag-tertiaire.fr/ (diagnostic.html redirige vers /)
-- Espace professionnel : https://diag-tertiaire.fr/espace-professionnel.html
-- Mentions legales : https://diag-tertiaire.fr/mentions-legales.html
-- Politique de confidentialite : https://diag-tertiaire.fr/politique-confidentialite.html
-- Conditions generales d'utilisation : https://diag-tertiaire.fr/conditions-generales-utilisation.html
-- Politique cookies : https://diag-tertiaire.fr/cookies.html
+## Pages principales
+
+- Accueil et outil de diagnostic : https://diag-tertiaire.fr/
+- Methodologie et sources : https://diag-tertiaire.fr/methode
+- Exemple de rapport PDF : https://diag-tertiaire.fr/exemple-rapport
+- Espace professionnel (diagnostiqueurs, bureaux d'etudes) : https://diag-tertiaire.fr/espace-professionnel
+
+## Articles de blog (ressources editoriales)
+
+- Reforme DPE 2026 : impact sur les locaux tertiaires : https://diag-tertiaire.fr/blog/reforme-dpe-2026-tertiaire/
+- Fin de l'ARENH : hausse facture electricite 2026 : https://diag-tertiaire.fr/blog/fin-arenh-impact-local-commercial-2026/
+- DPE bail commercial 2026 : obligations et sanctions : https://diag-tertiaire.fr/blog/dpe-bail-commercial-obligations-2026/
+- Crise energie 2026 : cout reel pour les entreprises : https://diag-tertiaire.fr/blog/crise-energie-2026-cout-entreprise/
+- Crise d'Ormuz 2026 : impact sur la facture energie : https://diag-tertiaire.fr/blog/crise-ormuz-2026-impact-facture-energie/
+- DPE local commercial : impact sur la valeur de vente : https://diag-tertiaire.fr/blog/dpe-local-commercial-impact-valeur-vente/
+- DPE et location de local commercial : https://diag-tertiaire.fr/blog/dpe-location-local-commercial/
+- Facture electricite local commercial : postes de depense : https://diag-tertiaire.fr/blog/facture-electricite-local-commercial-postes-depense/
+- Plan electrification 2026 : annonces et realite : https://diag-tertiaire.fr/blog/plan-electrification-2026-annonces-realite-facture/
+- Economies d'energie pour les hotels : https://diag-tertiaire.fr/blog/hotel-economies-energie-tertiaire/
+- Reduire la facture energetique d'un commerce : https://diag-tertiaire.fr/blog/reduire-facture-energetique-commerce/
+
+## Pages legales
+
+- Mentions legales : https://diag-tertiaire.fr/mentions-legales
+- Politique de confidentialite : https://diag-tertiaire.fr/politique-confidentialite
+- Conditions generales d'utilisation : https://diag-tertiaire.fr/conditions-generales-utilisation
+- Politique cookies : https://diag-tertiaire.fr/cookies

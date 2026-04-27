@@ -1,5 +1,60 @@
 # Changelog - DiagTertiaire V3
 
+## [style - Purge em-dash legacy user-facing (CLAUDE.md hygiene)] - 2026-04-27
+
+### Style
+
+- **Purge em-dash (U+2014) sur 7 fichiers HTML user-facing** :
+  - `index.html` ligne 459 : `aria-label="DiagTertiaire — accueil"`
+    -> `aria-label="DiagTertiaire - accueil"` (signaled in TASK-010
+    CHANGELOG entry)
+  - `methode.html` : meme pattern aria-label
+  - `politique-confidentialite.html` : meme pattern
+  - `mentions-legales.html` : meme pattern
+  - `conditions-generales-utilisation.html` : meme pattern
+  - `cookies.html` : meme pattern
+  - `404.html` ligne 6 : `<title>404 — Erreur systeme...</title>`
+    -> `<title>404 - Erreur systeme...</title>`
+
+### Conformite CLAUDE.md
+
+Regle absolue "Pas de tiret long (cadratin) dans le code ou le texte
+genere" appliquee aux 7 occurrences user-facing les plus critiques
+(aria-label expose aux lecteurs d'ecran + title de l'onglet 404).
+
+### Inventaire des em-dash restants (hors scope ce commit)
+
+Total restant : ~657 occurrences dans le repo (apres purge des 7).
+Top fichiers :
+
+| Fichier | Em-dash | Categorie | Recommandation |
+|---|---|---|---|
+| `simulation-output/audit-expert.md` | 72 | Doc historique | Laisser, archive |
+| `exemple-rapport.html` | 57 | UI strings + comments JSX | Commit dedie (UI-facing) |
+| `docs/qa-v1.6.1-report.md` | 50 | Tableaux QA "—" sentinel | Laisser, sentinel |
+| `public-report-print.html` | 44 | Template PDF (UI) | Commit dedie (PDF-facing) |
+| `FINDINGS.md` | 27 | Doc historique | Laisser, archive |
+| `docs/WHITEPAPER-METHODOLOGIE.md` | 26 | Doc methodologie | Laisser ou commit dedie |
+| `diagnostic.html` | 25 | UI strings + comments JSX | Commit dedie (UI-facing) |
+| `docs/qa-v1.6.1-consortium.md` | 20 | Doc QA | Laisser, archive |
+| `seo-audit-2026-04/AUDIT-REPORT.md` | 17 | Audit deliverable | Laisser, doc audit produit |
+| `docs/MOTEUR-CALCUL.md` | 10 | Doc methodologie | Laisser ou commit dedie |
+| `AI_CHANGELOG.md` | 8 | Doc historique | Laisser, archive |
+| `CHANGELOG.md` | 5 | Doc historique | Laisser, archive |
+| Fichiers <5 occurrences | reste | Mix | Selon contexte |
+
+**Decision recommandee** : laisser les em-dash dans les docs internes
+(CHANGELOG, AI_CHANGELOG, AI-CONTEXT, docs/qa-*, FINDINGS,
+audit-expert) car archive historique. Traiter les UI strings de
+`exemple-rapport.html` (57), `diagnostic.html` (25) et
+`public-report-print.html` (44) en commit dedie ulterieur car ce sont
+des chaines visibles utilisateur (placeholder `'—'` pour valeurs
+manquantes en tableau, hero subtitle, etc.). Effort ~30 min, a
+backloguer en TASK-LOW Phase 5.
+
+`node_modules/`, `seo-audit-2026-04/fetched/`, `.git/` exclus du
+decompte (gitignored).
+
 ## [docs(seo) - PHASE-EXECUTION-LOG + backlog SEO post-Phase 2] - 2026-04-27
 
 ### Ajoute

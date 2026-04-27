@@ -1,5 +1,35 @@
 # Changelog - DiagTertiaire V3
 
+## [Phase 2 SEO - TASK-007 : FAQPage enrichie 5 -> 10 Q&A pour GEO] - 2026-04-27
+
+### Modifie
+
+- **TASK-007** : bloc JSON-LD `FAQPage` dans `index.html` remplace
+  integralement (ancien : 5 Q&A minifiees, nouveau : 10 Q&A
+  pretty-printed). Les 5 nouvelles questions couvrent le Decret
+  Tertiaire, les aides 2026 (CEE, MaPrimeRenov Tertiaire, ADEME, BPI),
+  la difference pre-diagnostic vs audit reglementaire NF EN 16247, le
+  delai de generation du rapport et les types de batiments couverts
+  (bureaux, commerces, hotels, restaurants, entrepots, sante).
+- Densite factuelle : chiffres ancres sur sources (CABS ADEME 150-300
+  kWh/m2/an, audit 800-3000 EUR HT, Decret Tertiaire 1000 m2 / 40-50-60
+  pourcent, OPQIBI 1905, NF EN 16247, RT 2012, RE 2020).
+
+### Notes
+
+- **Longueur reponses** : 79-109 mots (moyenne 93). Le playbook visait
+  130-160 mots optimum LLM, atteint partiellement. Suffisant pour GEO
+  citation passages mais sous-optimum, a etoffer en Phase 4 si besoin.
+- **Divergence DOM / JSON-LD assumee** : la FAQ visible cote DOM
+  contient toujours 5 questions (cf. CHANGELOG Sprint 1 du 2026-04-23).
+  Le bloc JSON-LD passe a 10 questions = 5 questions GEO-only non
+  affichees a l'utilisateur. Trade-off accepte : optimisation citation
+  LLM (AI Overviews, ChatGPT Search, Perplexity) vs strict alignement
+  DOM/structured-data. Aligner DOM = Phase 4 (etoffe contenu) si decide.
+- **Pas de rich result Google attendu** : depuis aout 2023, FAQ rich
+  results restreints a sites gov/sante. Benefice attendu = AI Overviews,
+  ChatGPT Search, Perplexity et Bing Copilot uniquement.
+
 ## [Phase 2 SEO - TASK-006 : GovernmentService OPERAT/ADEME] - 2026-04-27
 
 ### Ajoute

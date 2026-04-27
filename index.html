@@ -56,7 +56,92 @@
   { "@context":"https://schema.org","@type":"SoftwareApplication","name":"DiagTertiaire","applicationCategory":"BusinessApplication","operatingSystem":"Web","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"description":"Comparatif énergétique gratuit pour locaux professionnels. Rapport PDF complet en 3 minutes avec estimation des économies et actions prioritaires.","url":"https://diag-tertiaire.fr","featureList":["Diagnostic énergétique gratuit","Rapport PDF personnalisé","Estimation des économies","Estimation du retour sur investissement","Recommandations d'actions"] }
   </script>
   <script type="application/ld+json">
-  { "@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Qu'est-ce que je reçois exactement ?","acceptedAnswer":{"@type":"Answer","text":"Un rapport PDF avec : votre positionnement par rapport aux consommations moyennes de votre secteur, vos 3 actions prioritaires avec économies estimées en euros/an, une projection financière sur 10 ans, et les principales aides disponibles."}},{"@type":"Question","name":"Sur quoi se basent vos calculs ?","acceptedAnswer":{"@type":"Answer","text":"Sur des données de référence publiques officielles (consommations moyennes par type d'activité en France), croisées avec les informations que vous déclarez. La précision visée est de plus ou moins 20%."}},{"@type":"Question","name":"Mes données sont-elles protégées ?","acceptedAnswer":{"@type":"Answer","text":"Oui. Vos données sont traitées conformément au RGPD. Elles ne sont jamais transmises à un tiers sans votre consentement explicite."}},{"@type":"Question","name":"Est-ce que ça remplace un DPE ou un audit ?","acceptedAnswer":{"@type":"Answer","text":"Non. Ce comparatif est un outil d'orientation, pas un document réglementaire. Il vous aide à y voir clair avant de décider si un audit certifié est nécessaire."}},{"@type":"Question","name":"Combien coûte un vrai audit énergétique ?","acceptedAnswer":{"@type":"Answer","text":"Entre 800 et 3000 euros selon la taille du bâtiment. Notre comparatif gratuit vous aide à savoir si cet investissement est pertinent pour votre situation."}}] }
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Qu'est-ce que je recois exactement avec le pre-diagnostic DiagTertiaire ?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Le rapport PDF DiagTertiaire contient 4 elements cles. D'abord, votre positionnement par rapport aux consommations moyennes de votre secteur (references CABS ADEME) en kWh/m2/an. Ensuite, vos 3 actions prioritaires avec economies estimees en euros par an et en pourcentage. Une projection financiere sur 10 ans incluant le retour sur investissement, et enfin les principales aides mobilisables (Certificats d'Economies d'Energie, MaPrimeRenov Tertiaire, ADEME, aides locales). Le rapport est genere en moins de 3 minutes apres saisie des informations de votre batiment, sans inscription requise."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Sur quoi se basent les calculs du pre-diagnostic energetique DiagTertiaire ?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Les calculs s'appuient sur la base CABS de l'ADEME (Consommations et Activites du Batiment dans le Secteur tertiaire), qui recense les consommations moyennes par type d'activite en France. Les references utilisees : 150 kWh/m2/an pour les bureaux, 300 kWh/m2/an pour les restaurants, 200 kWh/m2/an pour les hotels, 180 kWh/m2/an pour les commerces alimentaires. Ces donnees sont croisees avec les informations declarees par l'utilisateur (surface, type de chauffage, annee de construction, consommations reelles). Le facteur d'emission de l'electricite utilise est celui de la Base Carbone ADEME 2024. La precision visee est plus ou moins 20 pourcent, suffisante pour cadrer un projet avant audit certifie NF EN 16247."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Mes donnees sont-elles protegees ?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Vos donnees sont traitees conformement au Reglement General sur la Protection des Donnees (RGPD). Aucune donnee personnelle ou de consommation n'est transmise a un tiers sans votre consentement explicite. Vous pouvez obtenir votre rapport sans fournir d'email. Les donnees sont stockees sur des serveurs en Union europeenne. Vous disposez d'un droit d'acces, de rectification et de suppression conformement au RGPD. La politique de confidentialite complete est disponible sur https://diag-tertiaire.fr/politique-confidentialite. Aucun traceur publicitaire n'est depose avant consentement explicite via le bandeau cookies. Le service est conforme aux recommandations CNIL en vigueur."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Est-ce que ca remplace un DPE ou un audit energetique reglementaire ?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Non, DiagTertiaire ne remplace aucun document reglementaire. Le pre-diagnostic est un outil d'orientation strategique, pas un document opposable. Il ne remplace pas un Diagnostic de Performance Energetique (DPE), un audit energetique reglementaire (Article L.233-1 du Code de l'energie pour les grandes entreprises tous les 4 ans), une etude thermique reglementaire (RT 2012, RE 2020), ni la declaration annuelle sur la plateforme OPERAT (ADEME) imposee par le Decret Tertiaire. DiagTertiaire vous aide a decider si un audit certifie est necessaire et a en preparer la commande avec un cahier des charges informe."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Combien coute un vrai audit energetique tertiaire ?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Le cout d'un audit energetique reglementaire varie de 800 a 3 000 euros HT selon la taille et la complexite du batiment. Pour un batiment de 1 000 m2, comptez entre 1 500 et 2 500 euros HT. Pour un patrimoine multi-sites, des tarifs degressifs sont generalement appliques. L'audit est realise par un professionnel certifie OPQIBI 1905 ou LNE Audit Energetique. Le cout peut etre partiellement finance par les Certificats d'Economies d'Energie (CEE) ou par les aides regionales. DiagTertiaire vous aide a savoir si cet investissement est pertinent avant de le commander, en cadrant le gisement potentiel d'economies."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Mon batiment est-il concerne par le Decret Tertiaire ?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Le Decret Tertiaire (decret n 2019-771 du 23 juillet 2019, article 175 de la loi ELAN) s'applique a tout batiment ou ensemble de batiments a usage tertiaire dont la surface de plancher cumulee est superieure ou egale a 1 000 m2. Sont concernes : bureaux, commerces, restaurants, hotels, etablissements d'enseignement, etablissements de sante, batiments de l'administration. Les objectifs de reduction sont de 40 pourcent en 2030, 50 pourcent en 2040 et 60 pourcent en 2050 par rapport a une annee de reference choisie entre 2010 et 2019. La saisie annuelle des donnees se fait sur la plateforme OPERAT (Observatoire ADEME). Premiere echeance OPERAT : 30 septembre de chaque annee."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Quelles aides financieres existent pour la renovation energetique tertiaire ?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Les principales aides 2026 sont : les Certificats d'Economies d'Energie (CEE) verses par les fournisseurs d'energie, qui peuvent couvrir 20 a 60 pourcent du cout de travaux d'efficacite energetique selon le type. MaPrimeRenov Tertiaire pour certaines typologies (TPE/PME). Les aides de l'ADEME (AMI, appels a projets, dispositif Tremplin). Le dispositif Ecoenergie Tertiaire (subvention CEE bonifiee). Les aides des collectivites locales (regions, departements, EPCI) avec budgets variables. Les pretsbonifies BPI France pour la renovation energetique. Le rapport DiagTertiaire identifie les aides pertinentes pour votre situation et estime le reste a charge."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Quelle est la difference entre un pre-diagnostic et un audit energetique reglementaire ?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Un pre-diagnostic (comme DiagTertiaire) est un outil d'estimation rapide base sur des references sectorielles ADEME. Il prend 3 minutes, est gratuit, ne necessite aucune visite sur site, et fournit une estimation a plus ou moins 20 pourcent. Un audit energetique reglementaire est realise par un professionnel certifie (OPQIBI 1905, LNE), inclut une visite sur site, des mesures, un releve des equipements, une simulation thermique dynamique, et produit un rapport opposable conforme a la norme NF EN 16247. L'audit est obligatoire pour les grandes entreprises tous les 4 ans (Article L.233-1 du Code de l'energie). Le pre-diagnostic est complementaire et sert a cadrer la commande de l'audit."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "En combien de temps est genere le rapport ?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Le rapport PDF est genere en moins de 3 minutes apres la saisie des informations de votre batiment (surface, activite, consommations, type de chauffage). Aucune inscription, aucun email obligatoire, aucun engagement pour obtenir le rapport de base. Le rapport peut etre telecharge immediatement et partage librement. Pour les utilisateurs Pro (cabinets de diagnostic, bureaux d'etudes, property managers), un espace professionnel permet de stocker plusieurs dossiers, de personnaliser les rapports avec votre logo et vos coordonnees, et de generer des rapports PDF conformes a vos besoins clients."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Quels types de batiments tertiaires sont couverts ?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "DiagTertiaire couvre les principaux secteurs tertiaires : bureaux (administratif et commercial), commerces de detail non alimentaires, commerces alimentaires (supermarchats, superettes), hotels (toutes categories), restaurants (traditionnels et restauration rapide), entrepots et locaux logistiques, locaux d'activite mixte, etablissements de sante non hospitaliers (cabinets medicaux, pharmacies). Les references sectorielles sont issues des donnees ADEME (base CABS) et de l'Observatoire de l'Immobilier Durable (OID). Les benchmarks distinguent les batiments selon l'annee de construction (avant 1975, 1975-2000, 2000-2012, post 2012) pour ameliorer la precision."
+        }
+      }
+    ]
+  }
   </script>
   <script type="application/ld+json">
   { "@context":"https://schema.org","@type":"Organization","name":"DiagTertiaire","url":"https://diag-tertiaire.fr","logo":"https://diag-tertiaire.fr/android-chrome-512x512.png","sameAs":[],"contactPoint":{"@type":"ContactPoint","contactType":"Customer Service","availableLanguage":"French"} }

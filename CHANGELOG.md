@@ -1,5 +1,70 @@
 # Changelog - DiagTertiaire V3
 
+## [Phase 4 SEO - TASK-019 : pillar /economies-energie-tertiaire-tpe-pme] - 2026-04-27
+
+### Ajoute
+
+- **`economies-energie-tertiaire-tpe-pme.html`** : nouvelle page pillar
+  racine V3, 2 585 mots de contenu rédactionnel ciblé TPE/PME tertiaire
+  <1000 m². Structure :
+  - 1 H1 + 10 H2 + 4 H3 (sectoriels : commerce / restaurant / hôtel /
+    bureaux PME)
+  - TL;DR encadré bleu en début de page (160 mots disqualifiant
+    rapidement le Décret Tertiaire et synthétisant les drivers réels)
+  - 9 sections H2 : Êtes-vous concerné ? (disqualification Décret
+    Tertiaire en 2 paragraphes), Vrais drivers économiques 2026 (fin
+    ARENH + TURPE 6 + CEE + DPE bail commercial), 5 leviers majeurs
+    avec tableau ROI, Aides 2026 TPE/PME, DPE bail commercial,
+    Quand audit réglementaire pertinent (référence neutre, pas
+    d'upsell), Cas pratique chiffré (commerce 400 m² Bordeaux, capex
+    18 000 EUR, ROI net 3,75 ans), Comment commencer DiagTertiaire
+    (CTA), Spécificités sectorielles, Glossaire (5 termes : CABS
+    ADEME, CEE, ARENH, kWhEP, OPERAT)
+  - 7 liens sortants vers sources officielles (Légifrance, ADEME, CRE,
+    OID, AFNOR pour NF EN 16247, BPI France)
+  - Disclaimer transparent en fin de page (DiagTertiaire +/-20 %, pas
+    audit certifié, références OPQIBI 1905 / LNE pour audits)
+- **3 blocs JSON-LD** :
+  - `TechArticle` avec datePublished, dateModified, author Person
+    `@id` partagé `https://diag-tertiaire.fr/#author-yannis-cherchali`,
+    publisher Organization `@id` `https://diag-tertiaire.fr/#organization`,
+    `about` (3 entités : économies d'énergie, TPE/PME tertiaire,
+    rénovation énergétique)
+  - `BreadcrumbList` (Accueil > Économies d'énergie tertiaire TPE/PME)
+  - `FAQPage` (5 Q&A spécifiques TPE/PME : éligibilité Décret
+    Tertiaire, ROI moyens, aides 2026, DPE bail commercial,
+    quand audit NF EN 16247)
+
+### Modifie
+
+- **`sitemap-pages.xml`** : ajout de l'URL
+  `/economies-energie-tertiaire-tpe-pme` avec lastmod 2026-04-27,
+  priority 0.9 (deuxième après la home, devant les autres pages
+  legales et /exemple-rapport).
+
+### Validations
+
+- 2 585 mots (cible playbook 2 500+) - dépasse de 85 mots, OK
+- 0 em-dash (U+2014) et 0 en-dash (U+2013) dans tout le fichier
+- 3 JSON-LD blocs `python json.loads` OK
+- 7 sources officielles inline (cible playbook >=5)
+- 1 cas pratique chiffré principal (commerce 400 m² Bordeaux) +
+  4 mini-cas sectoriels (commerce détail, restaurant, hôtel, bureaux
+  PME) avec références CABS ADEME
+
+### Notes éditoriales
+
+- Disqualification rapide du Décret Tertiaire (2 paragraphes max H2
+  "Êtes-vous concerné ?") puis pivot immédiat vers les drivers réels
+  TPE/PME, conformément au repositionnement validé (cf. commit
+  `43a028c docs(seo): repositionne Phase 4 sur cible TPE/PME <1000 m²`).
+- "Quand audit réglementaire pertinent" formulée en référence neutre,
+  pas en upsell. Le visiteur doit comprendre que DiagTertiaire suffit
+  pour 80 % des cas TPE/PME et que l'audit certifié est nécessaire
+  uniquement dans 4 cas spécifiques listés.
+- Glossaire en bas de page format Q&A autonome (5 termes) pour
+  citation Perplexity / ChatGPT (recommandation skill `seo-geo`).
+
 ## [feat(geo) - FAQ Q6 disclaimer cible TPE/PME <1000 m²] - 2026-04-27
 
 ### Modifie

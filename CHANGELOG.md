@@ -1,5 +1,43 @@
 # Changelog - DiagTertiaire V3
 
+## [Phase 3 SEO - TASK-016 : HSTS preload sur vercel.json] - 2026-04-27
+
+### Modifie
+
+- **TASK-016** : `vercel.json` ligne 63 - le header
+  `Strict-Transport-Security` passe de
+  `max-age=63072000; includeSubDomains` a
+  `max-age=63072000; includeSubDomains; preload`.
+
+### Engagement long-terme
+
+- L'ajout de la directive `preload` (combinee a `includeSubDomains`
+  et `max-age >= 31536000`) rend `diag-tertiaire.fr` eligible a la
+  HSTS Preload List Chrome / Firefox / Safari / Edge.
+- Une fois soumis et accepte sur https://hstspreload.org/, **tous les
+  navigateurs modernes forceront HTTPS** sur le domaine et tous ses
+  sous-domaines, **avant meme la premiere requete reseau**.
+- **Procedure de retrait** : 6 semaines minimum (delai de propagation
+  Chrome) puis encore plusieurs mois pour les autres navigateurs.
+  Decision irreversible a court/moyen terme.
+- Tous les sous-domaines presents et futurs (preview Vercel,
+  *.vercel.app aliases, sous-domaines fonctionnels) doivent supporter
+  HTTPS valide. Confirme : seuls Vercel preview + apex utilises,
+  HTTPS-only natif.
+
+### Action externe Yannis post-deploy
+
+- Soumettre `diag-tertiaire.fr` sur https://hstspreload.org/.
+- Validation Chrome environ 2 semaines, integration Firefox/Safari/Edge
+  ensuite via leur synchronisation.
+
+### Verification post-deploy
+
+```bash
+curl -I https://diag-tertiaire.fr/ | grep -i strict-transport
+```
+Doit renvoyer : `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload`
+
 ## [Phase 3 SEO - TASK-017 : self-host fonts Inter sur exemple-rapport] - 2026-04-27
 
 ### Ajoute

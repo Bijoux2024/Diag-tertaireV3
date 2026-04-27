@@ -30,6 +30,16 @@
   valide schema.org. A reintroduire si une source de collecte tierce est
   mise en place (Trustpilot, Capterra, G2).
 
+### Modifie
+
+- **TASK-005** : `diagnostic.html` `.cta-pulse` passe d'animation
+  `infinite` a `animation-iteration-count: 3` (alignement avec la
+  landing page deja conforme depuis 2026-04-23). Conformite WCAG 2.3.3
+  Animation from Interactions : pas d'animation indefinie auto-jouee.
+  Reduit la fatigue visuelle sur mobile et respecte les environnements
+  sensibles (le `@media (prefers-reduced-motion: reduce)` global
+  neutralise toujours l'animation pour les utilisateurs concernes).
+
 ## [UX/A11y - Sprint 1 landing page : accessibilite et hygiene] - 2026-04-23
 
 ### Ajoute

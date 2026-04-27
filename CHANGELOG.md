@@ -19,6 +19,17 @@
   11 articles de blog avec URLs cleanUrls (sans `.html`) pour eviter les
   redirections 308. Migration des URLs legales en cleanUrls egalement.
 
+### Retire
+
+- **TASK-004** : `aggregateRating` supprime du bloc JSON-LD
+  `SoftwareApplication` dans `index.html` (ratingValue 4.8 / ratingCount
+  47). Avis non verifiables : aucune source de collecte exposee sur la
+  page (pas de Trustpilot, pas de Google Reviews, pas de bloc avis
+  visible) et ratingCount sous le seuil pratique des rich results.
+  Retrait conforme aux Quality Rater Guidelines Google. Bloc reste
+  valide schema.org. A reintroduire si une source de collecte tierce est
+  mise en place (Trustpilot, Capterra, G2).
+
 ## [UX/A11y - Sprint 1 landing page : accessibilite et hygiene] - 2026-04-23
 
 ### Ajoute

@@ -1,5 +1,30 @@
 # Changelog - DiagTertiaire V3
 
+## [Phase 5 SEO - TASK-030 : font-size mobile 15 -> 16px (lisibilite WCAG)] - 2026-04-27
+
+### Modifie
+
+CSS `@media (max-width: 768px) { body { font-size: 15px } }` remplace
+par `font-size: 16px` sur 3 pages :
+
+- `index.html` ligne 228
+- `exemple-rapport.html` ligne 178
+- `diagnostic.html` ligne 179
+
+### Justification
+
+- 16px est le seuil minimum recommande par les Web Content Accessibility
+  Guidelines (WCAG) pour la lisibilite mobile. En dessous, les
+  utilisateurs avec une vision moyenne peuvent rencontrer des
+  difficultes de lecture, et iOS Safari declenche un zoom auto sur les
+  champs `<input>` avec font-size < 16px, generant un comportement
+  desordonne sur les formulaires.
+- 15px etait trop petit. 16px est le standard du web mobile depuis
+  iOS Safari 4.
+
+CSS uniquement. Aucune copie ni texte modifie. 0 em-dash, 0 en-dash
+dans le diff.
+
 ## [Phase 5 SEO - TASK-028 : sitemap clean (lastmod reels git, retire changefreq/priority)] - 2026-04-27
 
 ### Modifie

@@ -1,5 +1,47 @@
 # Changelog - DiagTertiaire V3
 
+## [Phase 3 SEO - TASK-014 : defer chaine CDN React/Recharts/Babel/Tailwind] - 2026-04-27
+
+### Modifie
+
+- **TASK-014** : ajout de `defer` sur tous les scripts CDN externes
+  dans 4 pages SPA :
+  - `diagnostic.html` : Tailwind + React + ReactDOM + prop-types + Recharts + Babel
+  - `exemple-rapport.html` : meme chaine (6 scripts)
+  - `espace-professionnel.html` : meme chaine (6 scripts, dont
+    React/ReactDOM dev a passer en prod via TASK-015 suivant)
+  - `methode.html` : Tailwind seul
+
+### Ajoute (data-presets pour Babel)
+
+- `<script type="text/babel">` -> `<script type="text/babel"
+  data-presets="env,react">` dans :
+  - `diagnostic.html` : 1 occurrence reelle (ligne 1070) + 1 dans un
+    commentaire de documentation interne
+  - `espace-professionnel.html` : 1 occurrence reelle (ligne 1301)
+  - `exemple-rapport.html` : 1 occurrence reelle (ligne 962) + 1 dans
+    un commentaire de documentation interne
+
+### Comportement attendu
+
+- Babel Standalone respecte `defer` : il transpilera les scripts
+  inline `type="text/babel"` apres `DOMContentLoaded`. Le HTML
+  statique apparait avant l'hydratation React.
+- Gain LCP attendu : 0.5 a 1.5s sur `/diagnostic` et `/exemple-rapport`
+  (TBT ameliore de >30 pourcent selon playbook).
+- Cette tache est un palliatif. La solution definitive est la
+  pre-compilation JSX (suppression Babel Standalone), hors scope
+  playbook actuel.
+
+### Verifications
+
+- 0 em-dash dans tous les diffs HTML (`python count(U+2014)` sur
+  chaque fichier).
+- Modification SRI integrity preservee : `defer` ajoute SANS toucher
+  aux hashes sha384 existants.
+- Modification `crossorigin="anonymous"` preservee : pattern
+  `<script defer crossorigin="anonymous" integrity="..." src="...">`.
+
 ## [style - Purge em-dash legacy user-facing (CLAUDE.md hygiene)] - 2026-04-27
 
 ### Style

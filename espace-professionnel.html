@@ -73,20 +73,20 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap"
         rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.tailwindcss.com"></script>
     <!-- Versions pinnees + SRI sha384 (dev React gardes pour devtools) -->
-    <script crossorigin="anonymous" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" src="https://unpkg.com/react@18.3.1/umd/react.development.js"></script>
-    <script crossorigin="anonymous" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"></script>
-    <script crossorigin="anonymous" integrity="sha384-/AfDwVDXNopzPvhxMPQ11y1OCpR6mVkWx47qzSwIiquvxkcMkZddEzDNtIOtfCpk" src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
+    <script defer crossorigin="anonymous" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" src="https://unpkg.com/react@18.3.1/umd/react.development.js"></script>
+    <script defer crossorigin="anonymous" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"></script>
+    <script defer crossorigin="anonymous" integrity="sha384-/AfDwVDXNopzPvhxMPQ11y1OCpR6mVkWx47qzSwIiquvxkcMkZddEzDNtIOtfCpk" src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
     <script>
         // Shim PropTypes pour Recharts UMD - doit etre charge avant Recharts
         if (typeof PropTypes === 'undefined') window.PropTypes = { func: () => { }, bool: () => { }, node: () => { }, string: () => { }, number: () => { }, object: () => { }, array: () => { }, any: () => { }, arrayOf: () => () => { }, objectOf: () => () => { }, oneOf: () => () => { }, oneOfType: () => () => { }, shape: () => () => { }, exact: () => () => { }, instanceOf: () => () => { }, element: () => { }, elementType: () => { }, checkPropTypes: () => { } };
         if (typeof React !== 'undefined' && !React.PropTypes) React.PropTypes = window.PropTypes;
     </script>
-    <script crossorigin="anonymous" integrity="sha384-d1XH4LhwLW8j0l6VXMP8yJabdGY9ZqtZk7k7PaPk5NoUCcZ/hDkL5aaKioKQbcZg" src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
+    <script defer crossorigin="anonymous" integrity="sha384-d1XH4LhwLW8j0l6VXMP8yJabdGY9ZqtZk7k7PaPk5NoUCcZ/hDkL5aaKioKQbcZg" src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
 
     <script crossorigin="anonymous" integrity="sha384-z4iWwfGok6nwo14qorcgp9QHDhY0q4kM3S2mWKmdxg/N9+jiyxlx6oqp6vHl3t8V" src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.47.10"></script>
-    <script crossorigin="anonymous" integrity="sha384-c1bviwIC1t4CS6/NX7vUKu+WuYyTtOGFA04iz87avZ6lnO+kTMTZUKawd3pPVHGH" src="https://unpkg.com/@babel/standalone@7.24.10/babel.min.js"></script>
+    <script defer crossorigin="anonymous" integrity="sha384-c1bviwIC1t4CS6/NX7vUKu+WuYyTtOGFA04iz87avZ6lnO+kTMTZUKawd3pPVHGH" src="https://unpkg.com/@babel/standalone@7.24.10/babel.min.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -1298,7 +1298,7 @@
     <a href="#pro-main-content" class="sr-only" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0" onfocus="this.style.cssText='position:fixed;z-index:200;top:8px;left:8px;width:auto;height:auto;padding:8px 16px;margin:0;overflow:visible;clip:auto;border:0;background:#fff;color:#1D4ED8;border-radius:8px;font-weight:600;font-size:14px;box-shadow:0 4px 12px rgba(0,0,0,0.15)'" onblur="this.style.cssText='position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0'">Aller au contenu principal</a>
     <div id="pro-root"></div>
     <script src="/src/solar-icons.js"></script>
-    <script type="text/babel">
+    <script type="text/babel" data-presets="env,react">
         const { useState, useEffect, useRef, useMemo, useCallback } = React;
 
         /* ===== CONFIG ===== */

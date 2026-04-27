@@ -61,20 +61,20 @@
 
     <!-- Bibliothèques externes -->
     <!-- TailwindCSS : framework CSS utilitaire (mode CDN, pas de build requis) -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.tailwindcss.com"></script>
     <!-- React 18 (version production : optimisee, sans avertissements dev) -->
     <!-- Versions pinnees + SRI sha384 pour reproductibilite et defense en profondeur -->
-    <script crossorigin="anonymous" integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z" src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
-    <script crossorigin="anonymous" integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1" src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+    <script defer crossorigin="anonymous" integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z" src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+    <script defer crossorigin="anonymous" integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1" src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
     <!-- PropTypes : validation des props React (utilise par des composants Recharts si present) -->
-    <script crossorigin="anonymous" integrity="sha384-/AfDwVDXNopzPvhxMPQ11y1OCpR6mVkWx47qzSwIiquvxkcMkZddEzDNtIOtfCpk" src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
+    <script defer crossorigin="anonymous" integrity="sha384-/AfDwVDXNopzPvhxMPQ11y1OCpR6mVkWx47qzSwIiquvxkcMkZddEzDNtIOtfCpk" src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
     <!-- Recharts : graphiques UMD -->
-    <script crossorigin="anonymous" integrity="sha384-d1XH4LhwLW8j0l6VXMP8yJabdGY9ZqtZk7k7PaPk5NoUCcZ/hDkL5aaKioKQbcZg" src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
+    <script defer crossorigin="anonymous" integrity="sha384-d1XH4LhwLW8j0l6VXMP8yJabdGY9ZqtZk7k7PaPk5NoUCcZ/hDkL5aaKioKQbcZg" src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
 
     <!-- Babel Standalone : compile le JSX en JavaScript dans le navigateur -->
     <!-- NOTE PERFORMANCE : Babel Standalone est utilise pour eviter un build step.
          En production a fort trafic, envisager une pre-compilation (Vite, esbuild). -->
-    <script crossorigin="anonymous" integrity="sha384-c1bviwIC1t4CS6/NX7vUKu+WuYyTtOGFA04iz87avZ6lnO+kTMTZUKawd3pPVHGH" src="https://unpkg.com/@babel/standalone@7.24.10/babel.min.js"></script>
+    <script defer crossorigin="anonymous" integrity="sha384-c1bviwIC1t4CS6/NX7vUKu+WuYyTtOGFA04iz87avZ6lnO+kTMTZUKawd3pPVHGH" src="https://unpkg.com/@babel/standalone@7.24.10/babel.min.js"></script>
     <style>
         /* Global & Reset */
         :root {
@@ -959,7 +959,7 @@
     <noscript>Ce site nécessite JavaScript pour fonctionner pleinement.</noscript>
     <div id="root"></div>
 
-    <script type="text/babel">
+    <script type="text/babel" data-presets="env,react">
         /* ╔═══════════════════════════════════════════════════════════════════════════╗
            ║                           DIAGTERTIAIRE                                   ║
            ║                   Pré-diagnostic énergétique tertiaire                    ║
@@ -3180,7 +3180,7 @@
 
         /* ─────────────────────────────────────────────────────────────────────────
            BLOC NOUVEAU FORMULAIRE (NAMESPACE SAFE)
-           À coller dans le <script type="text/babel">, avant const App = () => {
+           À coller dans le <script type="text/babel" data-presets="env,react">, avant const App = () => {
            Puis remplacer le placeholder de la page diagnostic par :
            <NewDiagnosticForm onComplete={(data) => console.log('Nouveau formulaire', data)} />
            ───────────────────────────────────────────────────────────────────────── */

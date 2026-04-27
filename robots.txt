@@ -1,3 +1,6 @@
+# robots.txt - DiagTertiaire
+# Politique de crawl explicite (web + IA)
+
 User-agent: *
 Allow: /
 Disallow: /espace-professionnel
@@ -5,5 +8,40 @@ Disallow: /partenaire
 Disallow: /diagnostic
 Disallow: /public-report-print
 Disallow: /api/
+
+# Search-time AI crawlers - autorises (visibilite AI Overviews / ChatGPT Search / Perplexity)
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: Bytespider
+Allow: /
+
+# Training-only crawlers - bloques (aucune valeur pour la visibilite, uniquement training data)
+User-agent: CCBot
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: cohere-ai
+Disallow: /
 
 Sitemap: https://diag-tertiaire.fr/sitemap.xml

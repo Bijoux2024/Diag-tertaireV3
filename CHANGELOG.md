@@ -1,5 +1,17 @@
 # Changelog - DiagTertiaire V3
 
+## [Phase 1 SEO - Quick wins playbook 2026-04-27] - 2026-04-27
+
+### Ajoute
+
+- **TASK-001** : `robots.txt` enrichi avec directives explicites pour les
+  crawlers IA. Search-time bots autorises (GPTBot, OAI-SearchBot,
+  ChatGPT-User, ClaudeBot, PerplexityBot, Google-Extended,
+  Applebot-Extended, Bytespider) pour visibilite AI Overviews / ChatGPT
+  Search / Perplexity. Training-only bots bloques (CCBot, anthropic-ai,
+  cohere-ai). Aucune valeur SEO pour ces derniers, uniquement training
+  data. Header descriptif ajoute en debut de fichier.
+
 ## [UX/A11y - Sprint 1 landing page : accessibilite et hygiene] - 2026-04-23
 
 ### Ajoute

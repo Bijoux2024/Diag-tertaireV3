@@ -1,5 +1,51 @@
 # Changelog - DiagTertiaire V3
 
+## [Phase 5 SEO - TASK-027 : hamburger mobile sur /methode (parite avec landing)] - 2026-04-27
+
+### Modifie
+
+- **`methode.html`** : remplacement integral du `<header>` Tailwind
+  par une copie 1:1 du `<nav class="main-nav">` de `index.html` :
+  - Logo DiagTertiaire identique (SVG inline, classes `.nav-logo`)
+  - 3 liens desktop : Exemple de rapport, Blog (lien "Comment ca
+    marche" retire car ancre `#comment-ca-marche` inexistante sur
+    /methode, conformement a la directive user)
+  - CTA "Obtenir mon comparatif gratuit" -> /diagnostic
+  - Bouton hamburger mobile avec icone open/close
+  - Menu mobile sticky (display:none -> .open) avec liens identiques
+- **CSS nav inline** ajoute dans `<head>` de `methode.html` (apres
+  Tailwind CDN) : variables `--nav-height-mobile/desktop`, classes
+  `.main-nav`, `.nav-inner`, `.nav-logo`, `.nav-links`, `.nav-right`,
+  `.nav-cta-btn`, `.hamburger`, `.mobile-menu`, `.mobile-cta-link`,
+  `@media (max-width: 768px)` pour l'apparition du hamburger.
+- **JS hamburger inline** ajoute avant `</body>` de `methode.html` :
+  toggle .open sur mobile-menu + swap icones + setAttribute
+  aria-expanded. IIFE pour eviter la pollution scope global.
+  `window.closeMobileMenu` expose pour onclick (pattern equivalent au
+  `index.html`).
+
+### Justification suppression "Comment ca marche"
+
+La nav landing contient un lien `<a href="#comment-ca-marche">` qui
+pointe vers une ancre interne a la home. Sur /methode cette ancre
+n'existe pas. Conformement a la directive user "Si la nav landing
+contient un libelle qui n'a pas de sens sur /methode, tu retires le
+lien (pas de modification de wording, juste suppression)".
+
+### Effet utilisateur mobile
+
+L'utilisateur mobile sur /methode dispose maintenant d'un hamburger
+fonctionnel (avant : aucune navigation visible sur mobile, le `<nav
+class="hidden md:flex">` Tailwind cachait toute la nav < 768px).
+Parite UX avec la landing assuree.
+
+### Validations
+
+- 0 em-dash, 0 en-dash dans `methode.html` apres edit
+- 1 occurrence `nav.main-nav`, 1 hamburger, 1 mobile-menu (idempotence)
+- Aucune modification de wording, uniquement structure UI + styles +
+  script
+
 ## [Phase 5 SEO - TASK-026 : CTA primaires en bleu unifie (cohérence marque)] - 2026-04-27
 
 ### Style

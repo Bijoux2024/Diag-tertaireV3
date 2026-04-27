@@ -1,5 +1,29 @@
 # Changelog - DiagTertiaire V3
 
+## [Phase 2 SEO - TASK-009 : TechArticle methode avec datePublished + author Person] - 2026-04-27
+
+### Modifie
+
+- **TASK-009** : bloc JSON-LD `Article` de `methode.html` mis a niveau :
+  - `@type` : `Article` -> `TechArticle` (plus precis pour une page methodologique)
+  - `datePublished` ajoute : `2026-04-02` (date reelle de creation, verifiee `git log`)
+  - `dateModified` ajoute : `2026-04-27` (date de cette mise a jour)
+  - `mainEntityOfPage` ajoute pointant sur `/methode`
+  - `author` ajoute typee `Person` avec `@id` partage
+    `https://diag-tertiaire.fr/#author-yannis-cherchali` (compatible avec
+    le sameAs LinkedIn deja deploye sur le blog cote BlogPost.astro
+    TASK-003) et `url` LinkedIn personnel
+  - `publisher.Organization` enrichi avec `@id` partage
+    `https://diag-tertiaire.fr/#organization` (compatible avec TASK-010
+    qui propagera ce `@id` sur l'Organization de la landing)
+
+### Notes
+
+- L'`@id` author Person sera reutilise dans tous les futurs schemas
+  Article / BlogPosting / TechArticle pour fusionner les entites cote
+  Knowledge Graph.
+- Aucun changement de copy editoriale, uniquement metadata structuree.
+
 ## [Phase 2 SEO - TASK-008 : HowTo schema sur methode.html] - 2026-04-27
 
 ### Ajoute

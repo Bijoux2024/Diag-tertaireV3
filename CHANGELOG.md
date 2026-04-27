@@ -1,5 +1,21 @@
 # Changelog - DiagTertiaire V3
 
+## [Phase 2 SEO - TASK-008 : HowTo schema sur methode.html] - 2026-04-27
+
+### Ajoute
+
+- **TASK-008** : nouveau bloc JSON-LD `HowTo` dans `methode.html` apres
+  le bloc `BreadcrumbList`. 4 etapes pretty-printed couvrant le parcours
+  utilisateur du pre-diagnostic : renseigner batiment / declarer
+  consommations / recevoir positionnement sectoriel / consulter actions
+  prioritaires + rapport PDF. `totalTime: PT3M`. Outil reference
+  HowToTool. Publisher Organization DiagTertiaire.
+- **Note rich result** : depuis sept 2023, Google a retire les rich
+  results HowTo. Le schema reste utile pour AI Overviews, ChatGPT
+  Search et Perplexity qui consomment activement les structures HowTo
+  pour generer des reponses pas-a-pas. Pas un signal SEO classique,
+  signal GEO uniquement.
+
 ## [Phase 2 SEO - TASK-007 : FAQPage enrichie 5 -> 10 Q&A pour GEO] - 2026-04-27
 
 ### Modifie

@@ -1022,64 +1022,122 @@ export default async function handler(req, res) {
 
 ## Phase 4 - Content pillar (1-2 semaines)
 
-### TASK-019 - Creer page pilier /decret-tertiaire (2 500+ mots)
+### Positionnement produit (lecture obligatoire avant Phase 4)
 
-**Priorite** : Critical (impact SXO maximum)
+**Cible primaire** : TPE/PME tertiaires **<1000 m²** (commerces, restaurants, hotels independants, bureaux PME, cabinets medicaux).
+
+**Cible secondaire** : Property Managers multi-sites avec dossiers <1000 m² majoritaires.
+
+**Out of scope** : >=1000 m² assujettis au Decret Tertiaire (besoin d'audits NF EN 16247 certifies a 8 000-30 000 EUR, pas d'un pre-diag a +/- 20 %).
+
+**Cas d'usage secondaire tolere** : visiteur >=1000 m² qui utilise DiagTertiaire en cadrage prealable a son audit certifie. Overflow naturel, pas une cible commerciale.
+
+**Conformite editoriale Phase 4** :
+- Disclaimer transparent recurrent dans chaque article : "DiagTertiaire est un pre-diagnostic a +/- 20 % de precision, pas un audit certifie. Pour les obligations reglementaires (Decret Tertiaire >=1000 m², audits L.233-1), faire appel a un bureau d'etudes certifie OPQIBI 1905 ou LNE."
+- Cas pratique chiffre dans CHAQUE article (surface, conso kWh/an, economies EUR/an, ROI). Format "exemple type" ou "simulation indicative" - pas de pseudo-cas client (pas de donnees proprietaires fournies).
+- Glossary box en bas de chaque article (4-5 termes cles) : CABS ADEME, CEE, ARENH, kWhEP, OPERAT. Format Q&A autonome pour citation Perplexity / ChatGPT.
+- Cible mots-cles sur la longue traine de conversion : "economies energie tertiaire TPE", "audit energetique commerce", "facture energie entreprise 2026", "reduire charges energie petite entreprise". Pas de focus "decret tertiaire" (vanity).
+
+**Reformulation TASK-019, TASK-020, TASK-021, TASK-023** : voir versions ci-dessous (post-correction du 2026-04-27, voir AUDIT-REPORT.md section 4.1 pour la justification).
+
+**TASK-022 enrichir 5 articles** : INCHANGE (les 5 articles cibles sont deja alignes <1000 m²).
+
+---
+
+### TASK-019 - Creer page pilier /economies-energie-tertiaire-tpe-pme (2 500+ mots)
+
+**Priorite** : Critical (impact SXO maximum sur cible commerciale reelle)
 **Effort** : 8 h (redaction + integration + schema)
 **Categorie** : content / sxo / geo
 **Pre-lecture** :
-- `c:\Users\yanni\Downloads\Diag-tertaireV3\methode.html` (pattern de page editoriale courte)
+- `c:\Users\yanni\Downloads\Diag-tertaireV3\methode.html` (pattern de page editoriale)
 - `c:\Users\yanni\Downloads\Diag-tertaireV3\index.html` (head pattern, fonts, CSS)
 - `c:\Users\yanni\Downloads\Diag-tertaireV3\sitemap-pages.xml`
+- AUDIT-REPORT.md section 4.1 (justification du repositionnement)
 
-**Action** : Write nouveau fichier `c:\Users\yanni\Downloads\Diag-tertaireV3\decret-tertiaire.html`
+**Action** : Write nouveau fichier `c:\Users\yanni\Downloads\Diag-tertaireV3\economies-energie-tertiaire-tpe-pme.html`
 
-**Plan editorial** (a executer avec un sous-agent specialise content si possible) :
+**Plan editorial** :
 
-- **H1** : "Decret Tertiaire 2030 / 2040 / 2050 : obligations, sanctions, declaration OPERAT"
-- **TL;DR** (160 mots, debut de page) : surface concernee 1 000 m2, objectifs -40 / -50 / -60 pourcent, plateforme OPERAT, sanctions, lien vers le pre-diagnostic comme premier jalon
-- **H2** : "Quels batiments sont concernes par le Decret Tertiaire ?"
-  - Surface, type d'activite, regime locataire/proprietaire (responsabilite OPERAT)
-  - Tableau HTML : seuils + exemples concrets (bureau 1500 m2, hotel 1200 m2, etc.)
-- **H2** : "Quels sont les objectifs chiffres et les echeances ?"
-  - Tableau echeances 2030 / 2040 / 2050 avec pourcentages
-  - Methodes de calcul (valeur absolue Cabs vs valeur relative Crelat)
-- **H2** : "Comment declarer sur OPERAT ?" (lien interne vers TASK-020 article guide)
-  - Etapes synthetiques avec lien externe vers operat.ademe.fr
-- **H2** : "Quelles sanctions en cas de non-conformite ?"
-  - Mise en demeure, name and shame, amendes 1 500 EUR PME / 7 500 EUR ETI/GE
-  - Reference Legifrance (article L.111-10-3 CCH)
-- **H2** : "Quels sont les modulations possibles ? (Cm, Cmj)"
-  - Cas patrimonial, contraintes techniques, cout disproportionne
-- **H2** : "Comment commencer : pre-diagnostic gratuit DiagTertiaire"
-  - CTA contextuel positionnant le pre-diag comme premier jalon avant audit/OPERAT
+- **H1** : "Reduire la facture energie d'un local tertiaire de moins de 1 000 m² : leviers, aides, retour sur investissement"
+- **TL;DR** (160 mots, encadre bleu en debut de page) : segment cible, drivers economiques 2026 (CRE, fin ARENH, hausses CEE), gisement typique 15-30 % de baisse facture, aides mobilisables, CTA pre-diagnostic. Mention explicite "Si vous gerez moins de 1 000 m² de surface tertiaire, le Decret Tertiaire ne s'applique pas a vous".
+- **H2 : Etes-vous concerne ?** (2 paragraphes max - DISQUALIFICATION RAPIDE du Decret Tertiaire)
+  - "Le Decret Tertiaire (loi ELAN, decret 2019-771) impose une reduction de consommation aux batiments tertiaires de **plus de 1 000 m²** uniquement. Si vous gerez moins de 1 000 m², ce decret ne vous concerne pas."
+  - "En revanche, en 2026, voici les vrais drivers economiques qui pesent sur votre facture energetique : [bullet list courte vers H2 suivant]"
+- **H2 : Les vrais drivers economiques en 2026 pour les TPE/PME tertiaires**
+  - Fin ARENH 31 dec 2025 : impact +30 a 50 EUR/MWh sur le prix de l'electricite professionnelle
+  - TURPE 6 (CRE deliberation 2025) : evolution composante acheminement
+  - Hausses CEE 5e periode (2025-2030) : objectifs releves
+  - DPE bail commercial >= 6 ans (article L.134-3-1 CCH) : obligation existante depuis 2022, ignoree par 70% des bailleurs (chiffre INSEE/ADEME)
+  - Sources : CRE.fr, ADEME, Legifrance
+- **H2 : Les 5 leviers majeurs sous 1 000 m²** (avec ROI typique chiffre)
+  - LED + commande presence : ROI 1-2 ans, gain 30-50 % poste eclairage
+  - Isolation parois opaques + menuiseries : ROI 5-8 ans selon batiment
+  - PAC air-eau (substitution chaudiere gaz/fioul) : ROI 4-7 ans
+  - GTB (gestion technique batiment) : ROI 3-5 ans, gain 10-15 % chauffage/clim
+  - Sensibilisation occupants + planning programmateurs : gain 5-10 % zero capex
+  - Tableau recap : levier / surface min recommandee / capex typique / gain annuel / ROI
+- **H2 : Aides 2026 accessibles aux TPE/PME tertiaires** (lien interne TASK-020)
+  - CEE Tertiaire 5e periode (BAT-EN-XXX standardises)
+  - MaPrimeRenov' Tertiaire (TPE/PME, plafonds, conditions)
+  - BPI prets verts
+  - ADEME Tremplin (selon AMI sectoriels)
+  - Aides regionales (5 regions principales)
+  - Cumul des aides : regles, plafonds
+  - Lien interne vers TASK-020 pour le detail complet
+- **H2 : DPE bail commercial : l'obligation qui vous concerne deja**
+  - Decret 2022-1272 du 29 sept 2022 : DPE obligatoire pour toute mise en location ou vente d'un local commercial >= 50 m²
+  - Sanctions : amende administrative jusqu'a 3 000 EUR (personne physique) / 15 000 EUR (personne morale)
+  - Reference Legifrance article L.134-3-1 CCH
+  - Liens vers articles blog DiagTertiaire deja ecrits sur DPE bail commercial
+- **H2 : Quand un audit reglementaire devient pertinent**
+  - Article L.233-1 Code de l'energie : grandes entreprises tertiaires (>= 250 ETP ou >= 50 M EUR CA) tous les 4 ans
+  - Audit volontaire NF EN 16247 : si vous voulez un document opposable (cession, certification ISO 50001, candidature appels d'offres)
+  - Bureaux d'etudes certifies OPQIBI 1905 ou LNE Audit Energetique
+  - Reference neutre, pas un upsell : DiagTertiaire couvre le besoin pour 80 % des TPE/PME
+- **H2 : Comment commencer avec DiagTertiaire**
+  - 3 minutes, gratuit, sans inscription
+  - Base CABS ADEME (la meme que celle d'OPERAT)
+  - Precision +/- 20 %, suffisant pour decider d'un investissement
+  - CTA pre-diagnostic
+- **Glossary box bas de page** (5 termes) : CABS ADEME, CEE, ARENH, kWhEP, DPE bail commercial. Format Q&A autonome.
 
-**Sources obligatoires inline** (au moins 5) : Legifrance, ADEME, ecologie.gouv.fr, OPERAT.ademe.fr, OID
+**Sources obligatoires inline** (>=5) :
+- Legifrance article L.111-10-3 CCH (Decret Tertiaire pour disqualification)
+- Legifrance article L.134-3-1 CCH (DPE bail commercial)
+- Legifrance article L.233-1 Code energie (audit grande entreprise)
+- ADEME page CABS / Tremplin
+- CRE.fr deliberations TURPE 6 + fin ARENH
+- ecologie.gouv.fr communiques 2026
+
+**Cas pratique chiffre obligatoire** : exemple type "commerce de detail 400 m² Bordeaux, conso 90 kWh/m²/an gaz + 60 kWh/m²/an elec, simulation gain LED + GTB + isolation = 18 % de baisse facture, ROI cumule 3,5 ans".
+
+**Disclaimer transparent** : "DiagTertiaire est un pre-diagnostic a +/- 20 % de precision, pas un audit certifie. Pour les obligations reglementaires (Decret Tertiaire >=1000 m², audits L.233-1), faire appel a un bureau d'etudes certifie OPQIBI 1905 ou LNE."
 
 **JSON-LD a inclure** :
-- `Article` ou `WebPage` avec datePublished/dateModified
-- `FAQPage` (5 questions sur le Decret Tertiaire)
-- `BreadcrumbList`
+- `Article` (TechArticle plus precis) avec datePublished, dateModified, author Person `@id` partage `https://diag-tertiaire.fr/#author-yannis-cherchali`, publisher Organization `@id` `https://diag-tertiaire.fr/#organization`
+- `FAQPage` (5 Q&A specifiques TPE/PME : eligibilite, ROI typique, aides, DPE bail, audit obligatoire)
+- `BreadcrumbList` (Accueil > Economies energie tertiaire TPE/PME)
 
-**Ajouter URL au sitemap** : completer `sitemap-pages.xml` avec une entree :
+**Ajouter URL au sitemap-pages.xml** :
 ```xml
 <url>
-  <loc>https://diag-tertiaire.fr/decret-tertiaire</loc>
-  <lastmod>2026-04-27</lastmod>
+  <loc>https://diag-tertiaire.fr/economies-energie-tertiaire-tpe-pme</loc>
+  <lastmod>2026-XX-XX</lastmod>
 </url>
 ```
 
 **Validation** :
 - Lighthouse SEO 100/100
-- https://validator.schema.org/ valide
-- Densite factuelle : >= 5 chiffres + 5 sources officielles
-- Mot-cle "decret tertiaire" en H1 + slug + meta description
+- https://validator.schema.org/ : 0 erreur
+- Densite factuelle : >= 8 chiffres + 5 sources officielles inline
+- Mots-cles principaux en H1 + slug + meta description : "economies energie tertiaire", "TPE PME", "facture energie"
 
-**Commit** : `feat(content): cree page pilier /decret-tertiaire (SXO + GEO)`
+**Commit** : `feat(content): cree page pilier /economies-energie-tertiaire-tpe-pme (SXO TPE/PME)`
 
 ---
 
-### TASK-020 - Creer article guide "Declaration OPERAT step-by-step"
+### TASK-020 - Creer article guide "Aides renovation energetique tertiaire 2026 TPE/PME"
 
 **Priorite** : High
 **Effort** : 4 h
@@ -1087,55 +1145,142 @@ export default async function handler(req, res) {
 **Pre-lecture** :
 - `c:\Users\yanni\Documents\GitHub\diag-tertiaire-blog\src\content\blog\` (pattern frontmatter, longueur)
 - `c:\Users\yanni\Documents\GitHub\diag-tertiaire-blog\src\layouts\BlogPost.astro`
+- AUDIT-REPORT.md section 4.1 (justification cible TPE/PME)
 
-**Action** : Write nouveau fichier `c:\Users\yanni\Documents\GitHub\diag-tertiaire-blog\src\content\blog\declaration-operat-guide-complet.md`
+**Action** : Write nouveau fichier `c:\Users\yanni\Documents\GitHub\diag-tertiaire-blog\src\content\blog\aides-renovation-energetique-tertiaire-2026-tpe-pme.md`
 
-**Plan** :
-- Frontmatter : `title`, `description`, `date`, `author: "Yannis Cherchali"`, `imageAlt`, `faq` (array de Q&A pour le schema FAQPage genere)
+**Plan editorial** :
+- Frontmatter : `title`, `description` (155 chars max), `date`, `author: "Yannis Cherchali"`, `image: "/blog/aides-renovation-energetique-tertiaire-2026-tpe-pme.webp"` (image hero a creer cote blog dans `public/<slug>.webp` racine), `imageAlt`, `tags: [aides 2026, CEE, MaPrimeRenov, BPI, ADEME, TPE PME]`, `faq` (array 5 Q&A pour FAQPage genere)
 - 1 800+ mots
-- Structure step-by-step avec captures d'ecran (screenshots OPERAT a fournir par Yannis ou recreer)
-- Schema HowTo (genere par BlogPost.astro si supporte, sinon ajouter inline)
-- Densite factuelle : 5+ chiffres, 3+ sources officielles (operat.ademe.fr, legifrance, ADEME)
-- CTA contextuel vers le pre-diagnostic (positionnement : "preparer la collecte de donnees OPERAT")
+- **Position de fond** : focus exclusif sur les aides applicables au segment <1000 m² TPE/PME. Toute aide listee doit avoir un seuil d'eligibilite couvrant TPE/PME.
+
+**Structure H2** :
+- Intro (150 mots) : pourquoi se poser la question des aides en 2026 (drivers economiques + plafond aide cumulee)
+- **H2 : CEE Tertiaire 5e periode (2025-2030)**
+  - Operations standardisees BAT-EN-XXX accessibles aux TPE/PME
+  - Bonifications "coups de pouce" (CDP)
+  - Comment valoriser : plateforme obliges (EDF, Engie, Total, etc.) ou delegataire
+  - Exemple chiffre : commerce 400 m² installation LED + GTB = 4 000-7 000 EUR de prime CEE
+- **H2 : MaPrimeRenov' Tertiaire**
+  - Conditions d'eligibilite TPE/PME : critere effectif (< 250 ETP), critere CA (< 50 M EUR), critere total bilan
+  - Plafonds par operation et par batiment
+  - Operations couvertes (isolation, chauffage, ECS, ventilation, audit energetique)
+  - Cumul possible avec CEE
+- **H2 : BPI France prets verts (Pret Vert ADEME)**
+  - Montants : 50 000 EUR - 1 M EUR
+  - Duree 3-10 ans, taux bonifie
+  - Eligibilite TPE/PME : tres ouvert, juste critere de solvabilite
+  - Cumul avec CEE et MaPrimeRenov possible
+- **H2 : ADEME Tremplin et AMI sectoriels**
+  - Tremplin pour les TPE/PME (subvention forfaitaire jusqu'a 200 000 EUR pour les economies d'energie)
+  - AMI sectoriels (CHR / commerce / sante) selon calendrier ADEME
+- **H2 : Aides regionales (focus 5 regions)**
+  - Ile-de-France : aides Region IDF, fonds Climat
+  - Auvergne-Rhone-Alpes : Eco Energie Tertiaire AURA
+  - Hauts-de-France : aides energie pour TPE
+  - Occitanie : Eco-Energie Tertiaire Occitanie
+  - PACA : aides energie + transition ecologique
+  - Renvoi vers AMI regionaux pour les autres regions
+- **H2 : Cumul des aides - les regles a connaitre**
+  - Plafond global aide publique (regime de minimis : 200 000 EUR sur 3 ans glissants)
+  - Cumul CEE + MaPrimeRenov : OUI sous conditions
+  - Cumul aide regionale + nationale : verifier doublons
+  - Tableau de synthese cumul autorise / interdit
+- **H2 : Cas pratique chiffre - commerce 400 m² Bordeaux**
+  - Surface, conso annuelle, scenario travaux (LED + GTB + isolation toiture)
+  - Capex total HT : 18 000 EUR
+  - CEE estime : 4 200 EUR
+  - MaPrimeRenov estimee : 1 800 EUR
+  - Reste a charge : 12 000 EUR
+  - Economies annuelles : 3 200 EUR/an
+  - ROI net (apres aides) : 3,75 ans
+  - Mention "Exemple type, pas un cas client reel"
+- **H2 : Comment cadrer les aides avec DiagTertiaire**
+  - Le pre-diagnostic identifie les actions prioritaires + estime les aides mobilisables
+  - Le rapport PDF sert de base au cahier des charges du bureau d'etudes
+  - CTA pre-diagnostic
+- **Glossary box bas de page** : CEE, BAT-EN-XXX, regime de minimis, MaPrimeRenov Tertiaire, AMI ADEME
+
+**Sources obligatoires inline** (>=4) :
+- ADEME page CEE 5e periode
+- ADEME page MaPrimeRenov Tertiaire
+- bpifrance.fr page Pret Vert
+- ecologie.gouv.fr communiques aides 2026
+- Legifrance regime de minimis (reglement UE 1407/2013)
+
+**Densite factuelle cible** : >= 10 chiffres + 4 sources officielles.
+
+**Disclaimer transparent** : "Les montants et conditions des aides 2026 sont indicatifs au [date publication]. Verifier les conditions actualisees aupres de l'organisme avant tout engagement."
+
+**Schema** : BlogPosting (auto via BlogPost.astro), FAQPage (auto si frontmatter `faq` rempli).
 
 **Validation** :
-- Build local Astro reussi, article visible en `/blog/declaration-operat-guide-complet/`
-- HTML genere contient le schema HowTo + FAQPage
+- Build local Astro reussi, article visible en `/blog/aides-renovation-energetique-tertiaire-2026-tpe-pme/`
+- HTML genere contient les 2 schemas
 - Lighthouse SEO 100/100
+- Image hero `public/aides-renovation-energetique-tertiaire-2026-tpe-pme.webp` (racine, pas /blog/ - cf. convention agent blog) deposee a la racine du repo blog AVANT publication
+- Validateur em-dash `python scripts/validate_article.py <slug>.md` retourne 0
 
-**Commit** : `feat(content): article guide complet declaration OPERAT step-by-step`
+**Commit** : `feat(content): article aides renovation energetique tertiaire 2026 TPE/PME`
 
 ---
 
-### TASK-021 - Etoffer methode.html (1 200+ mots)
+### TASK-021 - Etoffer methode.html (1 200+ mots) avec positionnement <1000 m²
 
 **Priorite** : High
 **Effort** : 3 h
 **Categorie** : content
-**Pre-lecture** : `c:\Users\yanni\Downloads\Diag-tertaireV3\methode.html` (~180 mots actuellement)
+**Pre-lecture** :
+- `c:\Users\yanni\Downloads\Diag-tertaireV3\methode.html` (~180 mots actuellement)
+- AUDIT-REPORT.md section 4.1 (positionnement cible)
 
-**Action** : Edit pour enrichir le contenu existant
+**Action** : Edit pour enrichir le contenu existant en positionnant explicitement DiagTertiaire sur le segment <1000 m² + cas d'usage secondaire >=1000 m² (cadrage prealable audit certifie).
 
-**Sections a developper** :
-- Sources de donnees (CABS ADEME, OID, Base Carbone) avec liens directs
-- Benchmarks chiffres par typologie (bureaux, restaurants, hotels, commerces) avec sources
-- Limites de precision (+/- 20 pourcent, conditions)
-- Lien explicite vers le Decret Tertiaire (TASK-019) et OPERAT
-- Difference pre-diag vs DPE vs audit reglementaire (tableau comparatif HTML)
-- Methodologie de cumul des gains (sequentielle non-additive, reference engine.js sans copie)
+**Corriger H1** : "Une estimation utile pour decider" -> "Methodologie du pre-diagnostic energetique tertiaire" (gain keyword + accent ajoute)
+
+**H2 nouveau (a inserer en debut, juste apres l'intro) - "Pour qui DiagTertiaire est-il concu ?"** :
+- "Principalement pour les batiments tertiaires de moins de 1 000 m² : commerces, restaurants, hotels independants, bureaux PME, cabinets medicaux."
+- "Utilisable egalement en cadrage prealable par les batiments >= 1 000 m² assujettis au Decret Tertiaire, en complement (et non en remplacement) d'un audit reglementaire NF EN 16247."
+- "DiagTertiaire ne remplace pas un audit certifie, un DPE ou une etude thermique reglementaire. C'est un outil d'estimation rapide pour decider d'un investissement ou cadrer un cahier des charges."
+
+**Sections a developper / enrichir** :
+- **H2 : Sources de donnees** (CABS ADEME, OID Observatoire Immobilier Durable, Base Carbone ADEME 2024) avec liens directs et reference chronologique des MAJ
+- **H2 : Benchmarks chiffres par typologie** :
+  - Tableau HTML : bureaux 150 kWh/m²/an, restaurants 300 kWh/m²/an, hotels 200 kWh/m²/an, commerces alim 180 kWh/m²/an, commerces non-alim 130 kWh/m²/an, entrepots 80 kWh/m²/an, sante 250 kWh/m²/an, enseignement 110 kWh/m²/an
+  - Sources par typologie (CABS sectoriel + OID)
+- **H2 : Limites de precision et fiabilite**
+  - Precision +/- 20 % attendue
+  - Conditions ou la precision se degrade : batiments mixtes activites multiples, zones climatiques extremes, batiments tres anciens (avant 1948), patrimoine atypique
+  - Cas ou le pre-diag ne se substitue PAS a un audit
+- **H2 : Difference pre-diagnostic / DPE / audit reglementaire** :
+  - Tableau comparatif HTML : type document / duree / cout / opposabilite / certification professionnelle / domaine d'application
+  - Pre-diagnostic DiagTertiaire : 3 min / gratuit / non opposable / + ou - 20 %
+  - DPE bail commercial : 1 jour / 200-400 EUR / opposable (annexe au bail) / certifie OPQIBI 1330
+  - Audit reglementaire NF EN 16247 : 1-3 mois / 800-3000 EUR / opposable / certifie OPQIBI 1905 ou LNE
+  - Reference NF EN 16247 + Article L.233-1 Code energie + Decret 2022-1272 (DPE bail commercial)
+- **H2 : Methodologie de cumul des gains**
+  - Cumul sequentiel (non additif), reflete l'effet d'amortissement
+  - Reference fichier source `src/engine.js` (lien GitHub si public, sinon mention "moteur de calcul source unique")
+  - Plafond technique MAX_TOTAL_SAVINGS_PCT (cap ADEME)
+- **H2 : Quand passer a un audit certifie** (reference neutre, pas un upsell)
+  - Article L.233-1 Code energie : grandes entreprises (>= 250 ETP ou >= 50 M EUR CA) tous les 4 ans
+  - Audit volontaire NF EN 16247 utile : cession, certification ISO 50001, candidature appels d'offres, montage projet > 50 000 EUR HT
+  - Bureaux d'etudes certifies OPQIBI 1905 / LNE Audit Energetique
+  - **Position editoriale claire** : "DiagTertiaire est suffisant pour 80 % des TPE/PME tertiaires. Si vous remplissez un des criteres ci-dessus, faites appel a un bureau d'etudes certifie."
+  - PAS d'upsell vers un partenaire commercial. Reference neutre uniquement.
 
 **Garder** :
 - Layout et CSS existants
 - HowTo schema (TASK-008)
-- Article TechArticle schema (TASK-009)
-
-**Corriger H1** : "Une estimation utile pour decider" -> "Methodologie du pre-diagnostic energetique tertiaire" (gain keyword + accent ajoute)
+- TechArticle schema (TASK-009) - mais mettre a jour `dateModified` apres edition
 
 **Validation** :
 - Lighthouse SEO 100
-- Densite factuelle : >= 3 chiffres + 2 sources officielles
+- Densite factuelle : >= 5 chiffres + 3 sources officielles
+- Mention explicite "moins de 1 000 m²" en H2 dedie
+- Pas d'upsell commercial
 
-**Commit** : `feat(content): etoffe methode.html avec benchmarks chiffres et sources officielles`
+**Commit** : `feat(content): etoffe methode avec positionnement <1000 m² + benchmarks + sources`
 
 ---
 
@@ -1170,17 +1315,17 @@ Pour chaque article :
 **Priorite** : Medium
 **Effort** : 2 h
 **Categorie** : content / sxo
-**Pre-lecture** : 11 articles + page pillar `/decret-tertiaire` (TASK-019)
+**Pre-lecture** : 11 articles + page pillar `/economies-energie-tertiaire-tpe-pme` (TASK-019)
 
 **Action** : pour chaque article, ajouter 2-3 liens internes contextuels :
-- Vers la page pilier `/decret-tertiaire` (apparait quand "Decret Tertiaire" est mentionne)
+- Vers la page pilier `/economies-energie-tertiaire-tpe-pme` (apparait quand "economies energie", "TPE/PME", "facture energie tertiaire" ou contexte equivalent est mentionne)
 - Vers `/methode` (apparait quand methodologie est mentionnee)
 - Vers `/exemple-rapport` (apparait quand "rapport PDF" ou exemple est mentionne)
-- Vers le futur article OPERAT (TASK-020) (quand OPERAT est mentionne)
+- Vers le futur article aides 2026 (TASK-020) (quand "aides", "CEE", "MaPrimeRenov" ou "BPI" est mentionne)
 
 Exemple de transformation :
-- Avant : "Le Decret Tertiaire impose des reductions de 40 pourcent."
-- Apres : "Le [Decret Tertiaire](https://diag-tertiaire.fr/decret-tertiaire) impose des reductions de 40 pourcent."
+- Avant : "Reduire la facture energie d'un commerce passe par plusieurs leviers (LED, isolation, GTB)."
+- Apres : "Reduire la [facture energie d'un commerce](https://diag-tertiaire.fr/economies-energie-tertiaire-tpe-pme) passe par plusieurs leviers (LED, isolation, GTB)."
 
 **Validation** : verifier que chaque article a >= 2 liens internes contextuels (pas un simple CTA bouton).
 

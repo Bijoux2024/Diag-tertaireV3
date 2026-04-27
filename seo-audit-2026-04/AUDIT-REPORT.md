@@ -228,6 +228,37 @@ Property Manager est le persona le moins servi, alors que c'est probablement le 
 - Visual révèle l'animation `cta-pulse infinite` qui viole WCAG 2.3.3.
 - Content révèle 5 articles sous le seuil Gemini avec liste précise.
 
+### 4.1 Correction post-audit : repositionnement cible produit (TPE/PME <1000 m²)
+
+**Erreur d'audit detectee apres cloture** : le rapport Gemini Pro 2026 et l'analyse SXO ont recommande un pillar `/decret-tertiaire` (TASK-019 du playbook initial) sur le keyword "decret tertiaire" (10k+ req/mois). Ce repositionnement est **misaligne avec la cible commerciale reelle de DiagTertiaire**.
+
+**Realite produit** :
+- Cible primaire : batiments tertiaires **sous le seuil de 1 000 m²** (TPE/PME, commerces, restaurants, hotels independants, bureaux PME, cabinets medicaux)
+- Le Decret Tertiaire **ne s'applique pas** a ce segment (article L.111-10-3 CCH, seuil 1000 m² inclusif)
+- La declaration OPERAT n'est **pas une obligation** pour les utilisateurs cibles
+- Pas d'objectif -40/-50/-60 % impose sur ce segment
+
+**Consequence SEO/SXO** :
+- Le keyword "decret tertiaire" attire un trafic **non-convertissant** : les visiteurs avec >=1000 m² ont besoin d'audits NF EN 16247 certifies (8 000-30 000 EUR), pas d'un pre-diag gratuit a +/- 20 % de precision.
+- Le pillar `/decret-tertiaire` aurait genere du trafic vanity sans valeur business + risque de mauvaise experience marque pour les bailleurs >=1000 m² qui decouvrent un outil <1000 m² apres recherche.
+- L'audit SXO scoring 34/100 etait base sur "intent reglementaire" alors que le produit sert un **intent economies / preparation** sans contrainte reglementaire pour le segment cible.
+
+**Decision (post-audit, 2026-04-27)** :
+- Pivot Phase 4 : pillar `/economies-energie-tertiaire-tpe-pme` au lieu de `/decret-tertiaire`
+- Article aides 2026 TPE/PME au lieu de l'article guide OPERAT (qui ne sert pas le segment cible)
+- methode.html positionnee explicitement sur le seuil <1000 m²
+- Reformulation TASK-019, TASK-020, TASK-021, TASK-023 dans `AGENT-EXECUTION-PLAN.md` section "Positionnement produit (Phase 4)"
+- **TASK-022 enrichir 5 articles inchange** (les articles cibles sont deja alignes <1000 m²)
+- TASK-006 GovernmentService OPERAT et FAQ Q6 (TASK-007) **conserves** comme signaux d'autorite reglementaire et d'education, mais avec disclaimer explicite "Si vous gerez moins de 1 000 m², le Decret Tertiaire ne s'applique pas a vous"
+
+**Cas d'usage secondaire toleres mais non marketes** :
+- Bailleur >=1000 m² qui utilise DiagTertiaire en cadrage prealable a son audit certifie : overflow naturel, pas une cible.
+
+**Apport propre de cette correction** :
+- Re-orientation Phase 4 vers les 5 personas reels (Bailleur PME 200-800 m², Restaurateur independant, Hotelier 30-80 chambres, Commercant detail 100-500 m², Property Manager TPE multi-sites)
+- Effort Phase 4 inchange (~21 h)
+- Score SXO projete revu : ne plus viser le keyword vanity "decret tertiaire" mais "economies energie tertiaire TPE", "audit energetique commerce", "facture energie entreprise 2026", "reduire charges energie petite entreprise" (volumes plus faibles individuellement mais conversion >> vanity).
+
 ---
 
 ## 5. Diagnostic GSC : Page avec redirection (clarification post-audit)

@@ -17,7 +17,7 @@
 | TASK-003 | Corriger author Person + sameAs LinkedIn dans BlogPost.astro | 20 min | schema/content | Débloquer rich result Article + signal E-E-A-T Person |
 | TASK-004 | Supprimer aggregateRating non vérifiable | 5 min | schema | Évite pénalty Google QRG fake reviews |
 | TASK-005 | Corriger cta-pulse infinite (WCAG 2.3.3) | 5 min | visual/a11y | Conformité accessibilité |
-| TASK-019 | Créer page pilier /decret-tertiaire (2 500+ mots) | 8 h | content/sxo | Capter keyword 10k+ req/mois (impact SXO maximum) |
+| TASK-019 | Créer page pilier /economies-energie-tertiaire-tpe-pme (2 500+ mots) | 8 h | content/sxo | Capter cible commerciale réelle TPE/PME <1000 m² (impact SXO maximum aligné produit, voir AUDIT-REPORT.md §4.1) |
 
 **Effort cumulé Critical : ~9,5 h**
 
@@ -35,8 +35,8 @@
 | TASK-015 | React production build sur espace-pro | 5 min | performance | Bundle ~3x plus léger |
 | TASK-016 | HSTS preload (DEMANDER YANNIS - vercel.json) | 10 min | security | Inscription HSTS Preload List |
 | TASK-018 | Implémenter IndexNow (DEMANDER YANNIS - api/) | 2 h | technical | Notification temps réel Bing/Yandex |
-| TASK-020 | Article guide Déclaration OPERAT step-by-step | 4 h | content/sxo/geo | Capter keyword "déclaration operat" sans concurrence SaaS |
-| TASK-021 | Étoffer methode.html (1 200+ mots) | 3 h | content | Thin content corrigé, gain SXO |
+| TASK-020 | Article guide Aides rénovation énergétique tertiaire 2026 TPE/PME | 4 h | content/sxo/geo | Capter intent commercial "aides énergie 2026 entreprise" (CEE, MaPrimeRénov, BPI) sur cible <1000 m² |
+| TASK-021 | Étoffer methode.html (1 200+ mots) avec positionnement <1000 m² | 3 h | content | Thin content corrigé + positionnement explicite sur cible commerciale (gain SXO + transparence) |
 | TASK-022 | Enrichir 5 articles blog non conformes Gemini | 4 h | content | Densité factuelle ≥ 3+2 sur 11/11 articles |
 | TASK-024 | Bloc "Décret Tertiaire vous concerne" landing | 2 h | sxo | Match intent réglementaire on-page |
 | TASK-031 | Forcer politique trailing-slash unique (DEMANDER YANNIS - vercel.json) | 10 min | technical | Eviter duplicate content sur tous chemins clean URL |
@@ -158,8 +158,8 @@ Conformément à CLAUDE.md (fichiers verrouillés sans validation) :
 | IndexNow | TASK-018 |
 | GovernmentService JSON-LD | TASK-006 |
 | FAQPage zero-click | TASK-007 |
-| Densité factuelle ≥ 3+2 | TASK-022 (5 articles à enrichir), TASK-019 (page pillar), TASK-021 (methode) |
-| Maillage sémantique Décret/OPERAT/Secteurs | TASK-019, TASK-020, TASK-023 |
+| Densité factuelle ≥ 3+2 | TASK-022 (5 articles à enrichir), TASK-019 (page pillar TPE/PME), TASK-021 (methode <1000 m²) |
+| Maillage sémantique économies/aides/secteurs TPE/PME | TASK-019, TASK-020, TASK-023 |
 | llms.txt enrichi | TASK-002 |
 | INP < 200ms | TASK-014 (palliatif) - solution complète = pré-compilation JSX (hors playbook) |
 

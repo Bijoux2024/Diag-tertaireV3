@@ -1,5 +1,83 @@
 # Changelog - DiagTertiaire V3
 
+## [docs(seo) - Repositionne Phase 4 sur cible TPE/PME <1000 m²] - 2026-04-27
+
+### Contexte
+
+Le rapport Gemini Pro 2026 et l'audit SEO/GEO du 2026-04-27 avaient
+recommande un pillar `/decret-tertiaire` (TASK-019) sur le keyword
+"decret tertiaire" (10k+ req/mois). Apres validation cible produit
+avec Yannis, ce repositionnement est **misaligne** : DiagTertiaire
+cible les batiments tertiaires **<1000 m²** (TPE/PME, commerces,
+restaurants, hotels independants, bureaux PME, cabinets medicaux),
+segment qui n'est **pas** assujetti au Decret Tertiaire (seuil 1000 m²
+inclusif, article L.111-10-3 CCH).
+
+Capter le keyword "decret tertiaire" aurait genere du trafic vanity
+non-convertissant et risque de mauvaise experience marque.
+
+### Modifie
+
+- **AUDIT-REPORT.md** : ajout d'une sous-section 4.1 "Correction
+  post-audit : repositionnement cible produit (TPE/PME <1000 m²)"
+  expliquant le desalignement, la decision pivot et les nouvelles
+  taches Phase 4.
+- **AGENT-EXECUTION-PLAN.md** :
+  - Ajout d'un bloc "Positionnement produit (lecture obligatoire avant
+    Phase 4)" en tete de Phase 4 avec cible primaire/secondaire/out of
+    scope + conformite editoriale (disclaimer recurrent + cas pratique
+    chiffre + glossary box).
+  - **TASK-019 reformulee** : pillar `/economies-energie-tertiaire-tpe-pme`
+    (au lieu de `/decret-tertiaire`). H1 oriente "facture energie
+    <1000 m²", H2 disqualification rapide du Decret Tertiaire (2 paragraphes
+    max), 5 leviers majeurs sous 1000 m² avec ROI chiffre, aides 2026
+    TPE/PME, DPE bail commercial (vraie obligation existante), audit
+    reglementaire en reference neutre, CTA pre-diag.
+  - **TASK-020 reformulee** : article
+    `/blog/aides-renovation-energetique-tertiaire-2026-tpe-pme` (au lieu
+    de l'article guide OPERAT). Focus exclusif aides applicables TPE/PME
+    (CEE 5e periode, MaPrimeRenov Tertiaire, BPI prets verts, ADEME
+    Tremplin, aides regionales, regles de cumul). Cas pratique chiffre
+    obligatoire (commerce 400 m² Bordeaux, capex 18k EUR, aides 6k EUR,
+    ROI net 3,75 ans).
+  - **TASK-021 reformulee** : methode.html etoffee avec H2 dedie "Pour
+    qui DiagTertiaire est-il concu ?" (positionnement explicite <1000 m²
+    + cas d'usage secondaire >=1000 m² toleres). Tableau comparatif
+    pre-diag / DPE bail commercial / audit NF EN 16247 (cout, duree,
+    opposabilite). Position editoriale claire : pas d'upsell vers audit
+    paye, juste reference neutre quand pertinent.
+  - **TASK-023 ajustee** : maillage interne cible le nouveau pillar
+    `/economies-energie-tertiaire-tpe-pme`. Triggers contextuels mis
+    a jour ("economies energie", "TPE/PME", "facture energie tertiaire",
+    "aides energie") + lien article aides 2026 quand "CEE / MaPrimeRenov /
+    BPI" est mentionne.
+  - **TASK-022 inchangee** : les 5 articles cibles sont deja alignes
+    <1000 m² (commerces, hotels, factures electricite). RAS.
+- **ACTION-PLAN.md** :
+  - Titres et impacts attendus de TASK-019, TASK-020, TASK-021 mis a
+    jour pour refleter le pivot TPE/PME <1000 m².
+  - Cross-reference Gemini : ligne "Maillage semantique
+    Decret/OPERAT/Secteurs" remplacee par "Maillage semantique
+    economies/aides/secteurs TPE/PME".
+
+### Conserve
+
+- **TASK-006 GovernmentService OPERAT** : reste pertinent comme signal
+  d'autorite reglementaire et d'education. Le schema definit OPERAT,
+  il ne dit pas "DiagTertiaire = OPERAT".
+- **FAQ Q6 (TASK-007 question 6 sur le Decret Tertiaire)** : reste
+  educative pour les visiteurs en doute sur leur statut. Sera enrichie
+  d'un disclaimer explicite "Si vous gerez moins de 1 000 m², le
+  Decret Tertiaire ne s'applique pas a vous - DiagTertiaire est concu
+  pour ce segment" via un commit feat(geo) dedie.
+- **Effort Phase 4 total inchange** : ~21 h.
+
+### Note
+
+Aucun fichier de production n'est touche dans ce commit (uniquement
+3 documents d'audit md + CHANGELOG). La FAQ Q6 sera ajustee dans un
+commit dedie feat(geo) immediatement apres pour garder le scope clair.
+
 ## [Phase 3 SEO - TASK-018 : IndexNow endpoint + cle racine] - 2026-04-27
 
 ### Ajoute

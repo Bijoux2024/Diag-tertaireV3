@@ -290,10 +290,9 @@
     .btn-primary:hover { background: linear-gradient(135deg, #1E40AF 0%, #1E3A8A 100%); transform: translateY(-2px); box-shadow: 0 14px 32px rgba(29,78,216,0.28), 0 6px 14px rgba(29,78,216,0.14); }
     .btn-primary:active { transform: translateY(0); box-shadow: 0 4px 12px rgba(29,78,216,0.32); }
 
-    /* CTA amber (override inline sur le bouton hero) */
+    /* CTA pulse - 3 iterations max, will-change retire (transform suffisamment optimise par le navigateur sur animation finie) */
     .cta-pulse {
       animation: ctaPulse 3s ease-in-out 1.5s 3;
-      will-change: transform;
     }
     @keyframes ctaPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.025)} }
 

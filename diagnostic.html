@@ -376,10 +376,9 @@
             font-weight: 700;
         }
 
-        /* CTA pulse subtil */
+        /* CTA pulse - 3 iterations max, will-change retire (perf TASK-LOW) */
         .cta-pulse {
             animation: ctaPulse 3s ease-in-out 1.5s 3;
-            will-change: transform;
         }
         @keyframes ctaPulse {
             0%, 100% { transform: scale(1); }
@@ -9738,7 +9737,7 @@
                                         <p style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.13em', textTransform: 'uppercase', color: '#475569', marginBottom: '10px' }}>Projet soutenu par</p>
                                         <div style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: '10px', padding: '10px 16px', display: 'inline-flex', alignItems: 'center' }}>
                                             <img
-                                                src="/public/bic-montpellier.svg"
+                                                src="/bic-montpellier.svg"
                                                 alt="BIC Montpellier - Business & Innovation Centre"
                                                 style={{ height: '32px', width: 'auto', filter: 'brightness(0) invert(1)', opacity: 0.75 }}
                                             />

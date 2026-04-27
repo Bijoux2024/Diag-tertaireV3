@@ -1,5 +1,45 @@
 # Changelog - DiagTertiaire V3
 
+## [Phase 5 SEO - TASK-LOW technique : will-change + path bic + preconnect unpkg] - 2026-04-27
+
+### Modifie
+
+3 corrections techniques mineures groupees (perimetre Phase 5
+TASK-LOW selon arbitrage Q1) :
+
+1. **`will-change: transform` retire de `.cta-pulse`** sur :
+   - `index.html:296`
+   - `diagnostic.html:382`
+   Justification : `will-change: transform` persistant force le
+   navigateur a reserver une layer GPU en permanence, meme apres la
+   fin de l'animation (3 iterations max). Le navigateur optimise deja
+   les `transform` en mouvement sans cette directive. Suppression =
+   moins de reservation de memoire GPU.
+
+2. **Path `/public/bic-montpellier.svg` -> `/bic-montpellier.svg`**
+   dans `diagnostic.html:9740`. Le segment `/public/` etait parasite
+   (Vercel ne sert pas le segment `public/` du repo, il prefixe
+   automatiquement la racine).
+   **Note importante** : l'asset reste 404 en prod meme apres ce fix
+   parce que `public/` est gitignored dans le repo V3. Ce qui veut
+   dire que Vercel ne recoit pas le fichier au build. Pour rendre
+   l'asset disponible : Yannis doit soit deplacer
+   `public/bic-montpellier.svg` a la racine du repo et commiter, soit
+   inliner en base64 dans le HTML, soit retirer `public/` du
+   `.gitignore` selectivement. Action externe dans le recap final.
+
+3. **`<link rel="preconnect" href="https://unpkg.com" crossorigin>`**
+   ajoute dans `exemple-rapport.html` (deja present sur
+   `diagnostic.html:36`). Reduit le RTT TLS handshake initial vers
+   `unpkg.com` qui sert React, ReactDOM, Recharts, Babel via les 5
+   `<script defer>` du fichier (TASK-014). Gain attendu LCP ~50-150ms
+   sur connexion lente.
+
+### Validation
+
+- 0 em-dash, 0 en-dash dans les 3 modifications
+- CSS et HTML uniquement, aucune copie ni texte modifie
+
 ## [Phase 5 SEO - TASK-030 : font-size mobile 15 -> 16px (lisibilite WCAG)] - 2026-04-27
 
 ### Modifie

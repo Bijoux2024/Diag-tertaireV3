@@ -54,6 +54,9 @@
     <link rel="manifest" href="/site.webmanifest">
     <meta name="theme-color" content="#2563EB">
 
+    <!-- Preconnect CDN unpkg pour reduire RTT (defer scripts) -->
+    <link rel="preconnect" href="https://unpkg.com" crossorigin>
+
     <!-- Polices Inter self-hosted (5 poids latin via fontsource jsdelivr) -->
     <link rel="preload" href="/fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="/fonts/inter-700.woff2" as="font" type="font/woff2" crossorigin>

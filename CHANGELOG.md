@@ -1,5 +1,40 @@
 # Changelog - DiagTertiaire V3
 
+## [Phase 5 SEO - TASK-026 : CTA primaires en bleu unifie (cohérence marque)] - 2026-04-27
+
+### Style
+
+- **CTA hero landing `index.html:541`** : gradient amber
+  `#D97706 -> #B45309` remplace par gradient bleu
+  `#1D4ED8 -> #1E40AF` (couleur primaire utilisee partout ailleurs).
+  box-shadow ajustee a `rgba(29,78,216,...)`.
+- **CTA section finale `index.html:776`** : meme remplacement
+  amber -> bleu.
+- **CTA hero diagnostic.html:1807** : meme remplacement amber -> bleu
+  (cohérence inter-pages V3).
+- **CTA secondaire diagnostic.html:2258** : meme remplacement.
+
+### Conserve (accents fonctionnels amber)
+
+Le user a explicitement autorise "amber peut rester comme accent
+(badge, highlight d'un chiffre, separateur visuel)". Conserve donc :
+
+- Variable CSS `--amber: #D97706` dans `index.html:213` et
+  `diagnostic.html:89`
+- Badge "7-12 ans" pour PAC dans `index.html:630` (couleur texte)
+- Badge numero etape "2" Comment ca marche `index.html:674`
+- Couleurs benchmark mediane (positioning C) dans
+  `exemple-rapport.html`, `public-report-print.html`, `diagnostic.html`
+- Couleur serie graphique "Isolation toiture ROI moyen"
+- Accent espace-professionnel.html "Beta gratuite" KPI
+
+### Rationale audit
+
+- Audit visuel FV-H1 : amber sur hero seul = discontinuite de marque
+  (bleu partout apres clic CTA)
+- Convention SaaS B2B : couleur primaire constante sur le funnel pour
+  reconnaissance et confiance
+
 ## [Phase 4 SEO - TASK-021 : methode.html etoffe avec positionnement <1000 m²] - 2026-04-27
 
 ### Modifie

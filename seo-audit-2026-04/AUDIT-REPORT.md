@@ -230,7 +230,35 @@ Property Manager est le persona le moins servi, alors que c'est probablement le 
 
 ---
 
-## 5. Plan d'action consolidé
+## 5. Diagnostic GSC : Page avec redirection (clarification post-audit)
+
+**Contexte** : suite a un signal "Page avec redirection - validation echouee" remonte par Google Search Console sur `http://diag-tertiaire.fr/` et `https://diag-tertiaire.fr/methode.html`, un diagnostic complementaire a ete realise apres la cloture de l'audit principal. Trois constats structurels ont ete identifies, dont deux non couverts par les TASK-001 a TASK-030 du playbook initial.
+
+### 5.1 Redirections HTTP -> HTTPS et `.html` -> clean URL : voulues, NE PAS revalider
+
+Les 308 emis par Vercel sur les anciennes URLs (`http://...`, `*.html`) sont la consequence directe de `cleanUrls: true` (vercel.json) et de la redirection HTTPS automatique, deux configurations CORRECTES. Le statut "Page avec redirection - validation echouee" sur ces URLs est ATTENDU : Google les considere comme non-canoniques et n'a pas a les indexer. C'est la canonique en aval (apres 308) qui doit etre indexee.
+
+**Action** : ne PAS relancer "Valider la correction" en boucle sur les URLs en redirection - c'est contre-productif. Verifier plutot que la canonique cible (apres 308) est indexee via "Inspecter l'URL en direct" sur la canonique uniquement. Procedure detaillee : TASK-033.
+
+### 5.2 Politique trailing-slash non unique (duplicate content)
+
+Constat : `https://diag-tertiaire.fr/methode/` ET `https://diag-tertiaire.fr/methode` retournent toutes deux 200 sans redirection vers une canonique unique. Resultat : duplicate content potentiel sur tous les chemins propres servis par Vercel, dilution du PageRank entre deux variantes pour chaque page.
+
+**Action** : forcer `"trailingSlash": false` au top-level de `vercel.json` (TASK-031). Validation post-deploy : `curl -I https://diag-tertiaire.fr/methode/` doit renvoyer 308 vers `/methode`.
+
+### 5.3 Sous-domaine www. en dead-end (risque GSC futur)
+
+Constat : `https://www.diag-tertiaire.fr/` ne resout pas (timeout). Si ce sous-domaine est soumis a GSC ou cite par un backlink mal forme, il declenchera "Erreur de serveur" et degradera la perception du site.
+
+**Action** : configurer dans Vercel Dashboard `www.diag-tertiaire.fr` en redirect 301 vers l'apex `diag-tertiaire.fr` (TASK-032, action manuelle Yannis).
+
+### 5.4 Suite operationnelle
+
+Les 3 nouvelles taches sont integrees a `AGENT-EXECUTION-PLAN.md` (section "Addendum GSC (post-Phase 1)") et au tableau priorise de `ACTION-PLAN.md` (TASK-031 High, TASK-032 Medium, TASK-033 Medium). Effort cumule additionnel : 55 min (10 + 15 + 30).
+
+---
+
+## 6. Plan d'action consolidé
 
 Voir `ACTION-PLAN.md` pour le tableau priorisé exécutif et `AGENT-EXECUTION-PLAN.md` pour les tâches atomiques exécutables par un agent Claude downstream.
 

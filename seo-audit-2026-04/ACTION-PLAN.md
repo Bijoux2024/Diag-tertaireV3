@@ -39,8 +39,9 @@
 | TASK-021 | Étoffer methode.html (1 200+ mots) | 3 h | content | Thin content corrigé, gain SXO |
 | TASK-022 | Enrichir 5 articles blog non conformes Gemini | 4 h | content | Densité factuelle ≥ 3+2 sur 11/11 articles |
 | TASK-024 | Bloc "Décret Tertiaire vous concerne" landing | 2 h | sxo | Match intent réglementaire on-page |
+| TASK-031 | Forcer politique trailing-slash unique (DEMANDER YANNIS - vercel.json) | 10 min | technical | Eviter duplicate content sur tous chemins clean URL |
 
-**Effort cumulé High : ~16,3 h**
+**Effort cumulé High : ~16,5 h**
 
 ---
 
@@ -58,8 +59,10 @@
 | TASK-026 | Couleur CTA cohérente (amber → bleu) | 30 min | brand/visual |
 | TASK-027 | Hamburger menu mobile sur /methode | 1 h | mobile UX |
 | TASK-029 | SSR/noscript fallback exemple-rapport | 2 h | seo/visual |
+| TASK-032 | Gérer www -> apex en redirect 301 (config Vercel Dashboard manuelle) | 15 min | technical |
+| TASK-033 | Audit GSC backlog "Page avec redirection" + GSC-REDIRECT-AUDIT.md | 30 min | seo/monitoring |
 
-**Effort cumulé Medium : ~7,5 h**
+**Effort cumulé Medium : ~8,3 h**
 
 ---
 
@@ -80,11 +83,11 @@
 | Priorité | Effort | Cumul |
 |---|---|---|
 | Critical | 9,5 h | 9,5 h |
-| High | 16,3 h | 25,8 h |
-| Medium | 7,5 h | 33,3 h |
-| Low | 1 h | 34,3 h |
+| High | 16,5 h | 26,0 h |
+| Medium | 8,3 h | 34,3 h |
+| Low | 1 h | 35,3 h |
 
-**Total** : ~34 heures de travail effectif (hors pré-compilation JSX qui demanderait 1-2 j supplémentaires si on retire Babel Standalone).
+**Total** : ~35 heures de travail effectif (incluant les 3 tâches addendum GSC, soit ~55 min cumulés). Hors pré-compilation JSX qui demanderait 1-2 j supplémentaires si on retire Babel Standalone.
 
 ---
 
@@ -130,8 +133,9 @@ Conformément à CLAUDE.md (fichiers verrouillés sans validation) :
 |---|---|---|
 | TASK-016 | vercel.json | Ajout `; preload` à HSTS |
 | TASK-018 | vercel.json + api/indexnow.js | Création endpoint serverless + variable env |
+| TASK-031 | vercel.json | Ajout `"trailingSlash": false` au top-level |
 
-**Action requise** : avant exécution Phase 3, Yannis confirme l'ouverture de ces 2 fichiers à l'agent applicateur.
+**Action requise** : avant exécution Phase 3 et Addendum GSC, Yannis confirme l'ouverture de ces 2 fichiers à l'agent applicateur. Présenter le diff exact avant chaque modification.
 
 ---
 

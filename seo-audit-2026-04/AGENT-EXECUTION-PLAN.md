@@ -1421,6 +1421,100 @@ Format ISO 8601 : `2026-04-20T15:30:00+02:00`.
 
 ---
 
+## Addendum GSC (post-Phase 1)
+
+Trois taches structurelles identifiees apres le deploiement de la Phase 1, suite a un signal "Page avec redirection - validation echouee" remonte par Google Search Console. Voir `AUDIT-REPORT.md` section 5 pour le contexte complet.
+
+### TASK-031 - Forcer politique trailing-slash unique
+
+**Priorite** : High
+**Effort** : 10 min
+**Categorie** : technical / seo
+**Pre-lecture** : `c:\Users\yanni\Downloads\Diag-tertaireV3\vercel.json`
+
+**Note CLAUDE.md** : `vercel.json` est dans la liste des fichiers a ne pas modifier sans validation explicite. **DEMANDER A YANNIS AVANT D'EXECUTER** cette tache. Presenter le diff exact propose et attendre l'accord.
+
+**Constat** : `https://diag-tertiaire.fr/methode/` ET `https://diag-tertiaire.fr/methode` retournent toutes deux 200 sans redirection vers une canonique unique. Duplicate content sur tous les chemins propres.
+
+**Action propose** : Edit dans `vercel.json` - ajouter `"trailingSlash": false` au top-level (a cote de `"cleanUrls": true`).
+
+**Diff attendu** :
+```json
+{
+  "cleanUrls": true,
+  "trailingSlash": false,
+  ...
+}
+```
+
+**Validation post-deploy** :
+- `curl -I https://diag-tertiaire.fr/methode/` doit renvoyer `308 -> /methode`
+- `curl -I https://diag-tertiaire.fr/methode` doit renvoyer `200`
+- Egalement valider sur `/`, `/exemple-rapport`, `/espace-professionnel`, `/blog/<slug>`
+
+**Commit** : `feat(seo): force politique trailing-slash unique (no-slash) pour eviter duplicate content`
+
+**Hygiene** : OK, ajout d'une cle dans vercel.json. CHANGELOG.md a synchroniser. Pas de code mort, pas de doublon.
+
+---
+
+### TASK-032 - Gerer www -> apex en redirect 301 (configuration externe)
+
+**Priorite** : Medium
+**Effort** : 15 min (manipulation Vercel Dashboard)
+**Categorie** : technical
+**Pre-lecture** : DNS CNAME courant et configuration domaine Vercel.
+
+**Constat** : `https://www.diag-tertiaire.fr/` ne resout pas (timeout). Si ce sous-domaine est soumis a GSC ou cite par un backlink mal forme, il declenchera "Erreur de serveur".
+
+**Action manuelle Yannis** (non applicable par l'agent Claude) :
+
+1. Vercel Dashboard > Project `diag-tertaireV3` > Settings > Domains
+2. Add domain `www.diag-tertiaire.fr` (ou selectionner s'il est deja la)
+3. Configurer en "Redirect to" -> selectionner `diag-tertiaire.fr` (HTTP 301 permanent)
+4. Verifier DNS chez le registrar : CNAME `www -> cname.vercel-dns.com` (ou ALIAS apex selon registrar)
+5. Attendre propagation (jusqu'a 24h max, generalement < 5 min Vercel)
+
+**Validation** : `curl -ILs https://www.diag-tertiaire.fr/` doit renvoyer `301 -> https://diag-tertiaire.fr/`. Tester aussi sur `https://www.diag-tertiaire.fr/methode`.
+
+**Commit** : N/A (configuration externe Vercel, pas de fichier projet impacte). Documenter le changement dans `CHANGELOG.md` apres validation deployment, sous une entree `chore(infra)`.
+
+---
+
+### TASK-033 - Audit GSC backlog "Page avec redirection" (manuel + documentation)
+
+**Priorite** : Medium
+**Effort** : 30 min (manipulation Google Search Console + redaction)
+**Categorie** : seo / monitoring
+**Pre-lecture** : etat courant Search Console > Indexation > Pages > "Page avec redirection".
+
+**Constat** : les redirections HTTP -> HTTPS et `.html` -> clean URL sont CORRECTES. Les URLs en "validation echouee" doivent etre laissees en l'etat. Cliquer "Valider la correction" en boucle est contre-productif et peut etre interprete comme du spam de l'API GSC.
+
+**Action manuelle Yannis** (non applicable par l'agent Claude) :
+
+1. Ouvrir Google Search Console > Indexation > Pages > filtre "Page avec redirection - validation echouee"
+2. Pour chaque URL listee, identifier la canonique cible (apres le 308) :
+   - `http://...` -> `https://...`
+   - `https://...page.html` -> `https://.../page` (cleanUrls)
+   - `https://.../page/` -> `https://.../page` (apres TASK-031)
+3. Tester chaque canonique via "Inspecter l'URL en direct" sur la canonique :
+   - Si la canonique est `Indexee` : ne PAS relancer de validation, le statut est attendu et conforme
+   - Si la canonique n'est PAS indexee : "Demander une indexation" sur la canonique uniquement (pas sur l'URL en redirection)
+4. Documenter dans un nouveau fichier `c:\Users\yanni\Downloads\Diag-tertaireV3\seo-audit-2026-04\GSC-REDIRECT-AUDIT.md` :
+   - Liste des URLs vues en "Page avec redirection"
+   - Canonique cible deduite
+   - Statut indexation de la canonique (Indexee / Decouverte / Exclue)
+   - Action realisee (rien / demande indexation)
+   - Date du check
+
+**Validation** : presence du fichier `GSC-REDIRECT-AUDIT.md` dans `seo-audit-2026-04/` apres l'audit. Aucune action GSC retentee sur les URLs en redirection.
+
+**Commit** : `docs(seo): documente l'audit GSC redirect backlog`
+
+**Hygiene** : N/A (creation de doc), CHANGELOG.md a synchroniser.
+
+---
+
 ## Validation finale globale
 
 Apres execution de toutes les phases :

@@ -1,5 +1,61 @@
 # Changelog - DiagTertiaire V3
 
+## [docs(seo) - Addendum GSC : TASK-031/032/033 + clarification redirects] - 2026-04-27
+
+### Contexte
+
+Suite a un signal "Page avec redirection - validation echouee" remonte par
+Google Search Console sur `http://diag-tertiaire.fr/` et
+`https://diag-tertiaire.fr/methode.html`, un diagnostic complementaire a
+ete realise apres la cloture de l'audit SEO/GEO 360 deg du 2026-04-27.
+Trois constats structurels ont ete identifies, dont deux non couverts par
+les TASK-001 a TASK-030 du playbook initial.
+
+### Ajoute (3 nouvelles taches d'audit)
+
+- **TASK-031** (High, 10 min, technical) : forcer politique trailing-slash
+  unique via `"trailingSlash": false` dans `vercel.json` (top-level, a cote
+  de `cleanUrls: true`). Constat : `/methode/` ET `/methode` retournent
+  toutes deux 200 sans canonique unique = duplicate content. Fichier
+  verrouille CLAUDE.md, presentation du diff requise avant execution.
+- **TASK-032** (Medium, 15 min, technical) : configurer `www.diag-tertiaire.fr`
+  en redirect 301 vers l'apex via Vercel Dashboard. Constat : sous-domaine
+  www. en timeout (dead-end), risque GSC futur si soumis ou backlinke.
+  Action manuelle Yannis (configuration externe, pas de fichier projet).
+- **TASK-033** (Medium, 30 min, seo/monitoring) : auditer le backlog GSC
+  "Page avec redirection" et documenter dans nouveau fichier
+  `seo-audit-2026-04/GSC-REDIRECT-AUDIT.md`. Confirme que les 308 sur
+  anciennes URLs (HTTP, .html) sont VOULUS et qu'il ne faut PAS relancer
+  "Valider la correction" en boucle. Action manuelle Yannis.
+
+### Modifie
+
+- `seo-audit-2026-04/AUDIT-REPORT.md` : nouvelle section 5 "Diagnostic GSC :
+  Page avec redirection (clarification post-audit)" avec 3 sous-sections
+  (5.1 redirections voulues, 5.2 trailing-slash, 5.3 www. dead-end, 5.4
+  suite operationnelle). Plan d'action consolide renumerote en section 6.
+- `seo-audit-2026-04/AGENT-EXECUTION-PLAN.md` : nouvelle section "Addendum
+  GSC (post-Phase 1)" inseree entre "Tasks groupees Low" et "Validation
+  finale globale", contenant les 3 taches TASK-031/032/033 au format
+  strict du playbook (Priorite / Effort / Categorie / Pre-lecture / Action
+  / Validation / Commit / Hygiene).
+- `seo-audit-2026-04/ACTION-PLAN.md` :
+  - TASK-031 ajoutee dans le tableau High (10 min, technical)
+  - TASK-032 + TASK-033 ajoutees dans le tableau Medium (15 + 30 min)
+  - Effort cumule High recalcule : 16,3 h -> 16,5 h
+  - Effort cumule Medium recalcule : 7,5 h -> 8,3 h
+  - Total recalcule : 34,3 h -> 35,3 h (incluant les ~55 min addendum)
+  - Section "Taches necessitant validation explicite Yannis" : ajout de
+    TASK-031 (vercel.json verrouille)
+
+### Note
+
+- Aucune action prod n'a ete executee dans ce commit : il s'agit
+  uniquement de la mise a jour des livrables d'audit pour integrer
+  l'addendum GSC. Les 3 taches sont en backlog et seront executees aux
+  checkpoints prevus (TASK-031 demande accord vercel.json, TASK-032 +
+  TASK-033 sont manuelles cote Yannis).
+
 ## [chore(docs) - Versionne livrables d'audit SEO/GEO 2026-04] - 2026-04-27
 
 ### Ajoute

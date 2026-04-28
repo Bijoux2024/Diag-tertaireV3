@@ -1,5 +1,47 @@
 # Changelog - DiagTertiaire V3
 
+## [post-Phase 5 - Tache A : asset bic-montpellier.svg deplace a la racine] - 2026-04-28
+
+### Ajoute
+
+- **`bic-montpellier.svg`** a la racine du repo V3 (18 024 bytes,
+  format SVG Adobe Illustrator). Resoud le 404 actif sur
+  `https://diag-tertiaire.fr/bic-montpellier.svg` cause par la
+  presence du fichier uniquement dans `public/` (gitignored).
+
+### Justification du choix d'option
+
+Le playbook proposait 2 options selon la taille :
+- Option (a) : deplacer le fichier a la racine si > 4 KB
+- Option (b) : inline base64 dans diagnostic.html si <= 4 KB
+
+`bic-montpellier.svg` fait **18 KB**, donc option (a) retenue.
+L'inline base64 aurait alourdi `diagnostic.html` de ~24 KB
+(base64 ratio 1.33x) inutilement, et duplique la donnee si l'asset
+est referencee a un autre endroit du site.
+
+### Approche technique
+
+`public/` est ignore par `.gitignore` ligne 36 (`public/`). Le
+fichier reste donc en local sous `public/bic-montpellier.svg`
+(invisible cote git) ET est maintenant aussi a la racine du repo
+sous `bic-montpellier.svg` (versionne git). Vercel servira le
+fichier racine via `https://diag-tertiaire.fr/bic-montpellier.svg`.
+
+Aucune modification de `diagnostic.html` necessaire : le path `src="/bic-montpellier.svg"`
+deja corrige en TASK-LOW commit `02edecc` pointe maintenant vers
+un asset disponible.
+
+### Validation post-deploy
+
+```bash
+curl -I https://diag-tertiaire.fr/bic-montpellier.svg
+# Doit retourner HTTP 200 + Content-Type: image/svg+xml
+```
+
+DevTools Network sur `https://diag-tertiaire.fr/diagnostic` :
+asset `bic-montpellier.svg` charge sans 404.
+
 ## [Phase 5 SEO - TASK-LOW technique : will-change + path bic + preconnect unpkg] - 2026-04-27
 
 ### Modifie

@@ -1,5 +1,49 @@
 # Changelog - DiagTertiaire V3
 
+## [post-Phase 5 - Tache B : cleanup ProfessionalService legacy fields] - 2026-04-28
+
+### Retire
+
+- **`index.html` ligne 50** bloc JSON-LD `ProfessionalService` :
+  - `"serviceType": "Diagnostic énergétique"` retire
+  - `"inLanguage": "fr"` retire
+
+### Justification
+
+Validator.schema.org reportait 2 erreurs **UNKNOWN_FIELD** sur ces
+2 champs lors de la validation post-Phase 2 (cf.
+PHASE-EXECUTION-LOG.md section validation Phase 2). Origine pre-Phase
+2, hors scope TASK-010 (qui n'avait ajoute que `@id` et
+`parentOrganization`).
+
+Analyse Schema.org :
+- `serviceType` : valide en theorie via heritage Service mais le
+  validateur strict refuse sur ProfessionalService directement.
+  Chemin pour exposer l'information : description textuelle
+  ("Pre-diagnostic energetique batiments tertiaires pour TPE/PME"
+  conserve dans `description`).
+- `inLanguage` : non valide sur Service. Valide sur
+  CreativeWork (et donc WebSite, Article, BlogPosting). Conserve
+  uniquement sur les blocs WebSite (`index.html:53`) et autres types
+  qui en heritent legitimement.
+
+### Conserve par autres blocs (verification)
+
+- `inLanguage` sur `WebSite` (L53) : **valide**, conserve.
+- `serviceType` sur `GovernmentService` (L163) : **valide**, conserve
+  (Service hierarchy pour OPERAT/ADEME).
+
+### Validation post-deploy
+
+Apres push, validator.schema.org sur `https://diag-tertiaire.fr/`
+doit retourner :
+- ProfessionalService : 0 erreur, 0 warning UNKNOWN_FIELD
+- 6 types detectes (au lieu de 6 avec 2 erreurs avant)
+
+ProfessionalService final keys : `@context`, `@type`, `@id`, `name`,
+`url`, `description`, `areaServed`, `parentOrganization` (8 props
+valides, JSON parse OK).
+
 ## [post-Phase 5 - Tache A : asset bic-montpellier.svg deplace a la racine] - 2026-04-28
 
 ### Ajoute

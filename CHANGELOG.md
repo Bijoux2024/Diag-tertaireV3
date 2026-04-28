@@ -1,5 +1,46 @@
 # Changelog - DiagTertiaire V3
 
+## [post-Phase 5 - Tache C : echec mesure Lighthouse documente] - 2026-04-28
+
+### Modifie
+
+- **`seo-audit-2026-04/PHASE-EXECUTION-LOG.md`** : nouvelle section
+  "Validation finale Lighthouse - 2026-04-28" qui documente l'echec
+  des 2 options de mesure (Option 1 PSI API quota daily, Option 2
+  WebFetch SPA non-renderable) + script `pagespeed_check.py`
+  introuvable cote skill seo-audit local.
+
+### Cause echec
+
+- **PSI API HTTP 429** : "Quota exceeded for quota metric 'Queries'
+  and limit 'Queries per day'". L'IP utilisee depuis Claude Code est
+  partagee dans le quota mutualise. Pas de cle API disponible pour
+  augmenter le quota dedie.
+- **WebFetch pagespeed.web.dev** : page rend les metriques cote
+  client via JS apres appel API. WebFetch capture seulement le HTML
+  initial avec spinner "Running analysis".
+- **`pagespeed_check.py`** : script reference par le playbook mais
+  absent de la skill `seo-audit` locale (`C:\Users\yanni\.claude\skills\seo-audit\scripts\`).
+
+### Decision
+
+Conformement au playbook ("Si Option 1 et Option 2 echouent,
+documente l'echec... je gererai en mesure manuelle"), la mesure
+Lighthouse devient une action externe Yannis. Procedure detaillee
+documentee dans PHASE-EXECUTION-LOG.md avec :
+- 4 URLs cibles (diagnostic, exemple-rapport, pillar TPE/PME, methode)
+- Format de tableau attendu (LCP, INP, CLS, FCP, TTFB, score perf,
+  score SEO)
+- Baseline pre-Phase 3 pour comparaison
+- Cibles attendues post-Phase 3+5
+
+### Action requise Yannis
+
+Mesure manuelle via https://pagespeed.web.dev/ dans un navigateur
+(PC ou mobile) sur les 4 URLs en strategy mobile + desktop. Reporter
+les valeurs au tableau pour mise a jour PHASE-EXECUTION-LOG.md
+ulterieure.
+
 ## [post-Phase 5 - Tache B : cleanup ProfessionalService legacy fields] - 2026-04-28
 
 ### Retire

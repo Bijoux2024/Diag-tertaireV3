@@ -171,3 +171,93 @@ A venir : TASK-024 a TASK-030, TASK-LOW (corrections mineures groupees + em-dash
 ## Addendum GSC (planifie)
 
 A venir : TASK-031 (vercel.json trailingSlash, verrouille), TASK-032 (Vercel Dashboard www -> apex, manuel), TASK-033 (audit GSC + GSC-REDIRECT-AUDIT.md, manuel).
+
+---
+
+## Validation finale Lighthouse - 2026-04-28
+
+**Statut** : ECHEC. Mesure Lighthouse via PSI non realisable depuis l'environnement Claude Code.
+
+### Tentatives
+
+#### Option 1 - PSI API directe
+
+Commande tentee :
+```bash
+curl -sS "https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=https%3A%2F%2Fdiag-tertiaire.fr%2Fdiagnostic&strategy=mobile"
+```
+
+Resultat : `HTTP 429`
+Erreur API :
+```
+"Quota exceeded for quota metric 'Queries' and limit 'Queries per day' of service 'pagespeedonline.googleapis.com'"
+```
+
+Cause probable : l'IP utilisee partagee dans le quota PSI public sans cle API. Le quota daily de 25 000 requetes est mutualise et probablement consomme par d'autres utilisateurs Claude Code en parallele. Reset 00:00 PT (~9h CET) sans garantie de disponibilite immediate.
+
+Tentative de retry apres 30+ min : meme 429. Probablement IP throttled au-dela du daily quota standard.
+
+#### Option 2 - WebFetch sur pagespeed.web.dev
+
+Commande tentee (et le 2026-04-27) :
+```
+WebFetch https://pagespeed.web.dev/analysis?url=https%3A%2F%2Fdiag-tertaire.fr%2Fdiagnostic&form_factor=mobile
+```
+
+Resultat : `not yet rendered, loading state only`. La page pagespeed.web.dev rend les metriques cote client via JS apres appel API. WebFetch capture le HTML initial qui contient juste un spinner "Running analysis".
+
+#### Script local pagespeed_check.py
+
+Script reference par le playbook (`C:\Users\yanni\.claude\skills\seo-audit\scripts\pagespeed_check.py`). **Introuvable** sur l'environnement actuel. La skill seo-audit ne fournit pas ce script localement.
+
+### Decision
+
+Les 2 options du playbook ayant echoue, la mesure Lighthouse devient une action externe Yannis :
+
+**Action requise Yannis** :
+1. Ouvrir https://pagespeed.web.dev/ dans un navigateur (PC, mobile ou Chrome DevTools)
+2. Lancer une mesure mobile + desktop sur les 4 URLs critiques :
+   - https://diag-tertiaire.fr/diagnostic
+   - https://diag-tertiaire.fr/exemple-rapport
+   - https://diag-tertiaire.fr/economies-energie-tertiaire-tpe-pme
+   - https://diag-tertiaire.fr/methode
+3. Reporter les valeurs (LCP, INP, CLS, FCP, TTFB, score perf mobile, score perf desktop) et m'envoyer le tableau au format suivant :
+
+| URL | Strategy | LCP | INP | CLS | FCP | TTFB | Score perf | Score SEO |
+|---|---|---|---|---|---|---|---|---|
+
+### Reference baseline pre-Phase 3 (audit 2026-04-27)
+
+Pour comparaison post-mesure :
+
+| URL | LCP avant | INP avant | CLS avant | Score perf avant |
+|---|---|---|---|---|
+| `/diagnostic` | 4,6 s | ~520 ms | 0,08 | 41 |
+| `/exemple-rapport` | 5,2 s | ~600 ms | 0,12 | 38 |
+| `/` | 2,8 s | ~180 ms | 0,05 | 72 |
+| `/methode` | 1,6 s | ~90 ms | 0,02 | 85 |
+
+### Cibles attendues post-Phase 3 + 5
+
+- TBT ameliore >30 % sur `/diagnostic` et `/exemple-rapport` (cible playbook TASK-014)
+- LCP -0,5 a -1,5 s sur les memes pages (TASK-014 + TASK-017 self-host fonts + TASK-LOW preconnect unpkg)
+- Bundle React `/espace-pro` 3x plus leger (TASK-015 dev->prod, mais espace-pro non dans la liste 4 URLs validation)
+- Aucune regression sur `/` et `/methode` (qui n'ont pas Babel/Recharts)
+- Pillar `/economies-energie-tertiaire-tpe-pme` doit obtenir score perf >= 90 (page statique sans React/Babel)
+
+### Action de re-mesure si quota reset confirme
+
+Si quota PSI reset confirme par Yannis dans les heures qui viennent (probable apres 09:00 UTC du jour suivant), re-tenter la mesure depuis Claude Code via :
+
+```python
+python -c "
+import requests, json
+for url in ['https://diag-tertiaire.fr/diagnostic', 'https://diag-tertiaire.fr/exemple-rapport', 'https://diag-tertiaire.fr/economies-energie-tertiaire-tpe-pme', 'https://diag-tertiaire.fr/methode']:
+    for strat in ['mobile', 'desktop']:
+        r = requests.get(f'https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url={url}&strategy={strat}', timeout=120)
+        print(url, strat, r.status_code)
+"
+```
+
+Si succes, completer le tableau ci-dessus et committer
+`docs(seo): documente mesures Lighthouse post-Phase 3+5`.

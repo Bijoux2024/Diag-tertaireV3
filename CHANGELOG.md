@@ -1,5 +1,56 @@
 # Changelog - DiagTertiaire V3
 
+## [post-Phase 5 - Tache D : spec hero image article aides 2026] - 2026-04-28
+
+### Ajoute
+
+- **`seo-audit-2026-04/HERO-IMAGE-SPEC-aides-2026.md`** : nouveau
+  fichier de specification pour la generation externe Yannis du hero
+  image manquant de l'article TASK-020 `aides-renovation-energetique-tertiaire-2026-tpe-pme.md`
+  actuellement en `draft: true`.
+
+### Contenu du SPEC
+
+- Section 1 : fichier final attendu (`public/<slug>.webp`,
+  1200 x 675 px, 15-25 KB, format WebP)
+- Section 2 : frontmatter article a flipper (`draft: false`)
+- Section 3 : charte visuelle FIXE blog (fond #0B1E2D, accent bleu
+  #2563EB, DM Sans, badge DT, footer domaine) - reference SKILL.seo.md
+  S12.2 du blog
+- Section 4 : type retenu **TYPE 1 (chiffre EUR)** - article centre
+  sur des montants concrets (CEE 4 200 EUR, MaPrimeRenov 1 800 EUR,
+  capex 18 000 EUR, ROI 3,75 ans)
+- Section 5 : format machine recommande pour le champ Notion
+  `Prompt Image` :
+  ```
+  1|6 000 €|d'aides recuperables sur un projet TPE/PME de 18 000 €|Et vous, vous savez combien ?
+  ```
+  + 2 variantes acceptables (33 % de prise en charge / 200 000 EUR
+  minimis 3 ans) a arbitrer editorialement.
+- Section 6 : procedure de generation via pipeline Puppeteer existant
+  du blog (cf. commits Codex `fba5def` + `48e9654`)
+- Section 7 : anti-pattern a eviter (illustration AI Midjourney/DALL-E
+  qui casserait l'uniformite des 15 hero existants tous en format
+  texte-typographique)
+- Section 8 : checklist validation post-publication
+- Section 9 : ressources de reference
+
+### Divergence playbook brief signale
+
+Le brief Tache D mentionnait "1200 x 630 px (ratio OG 1.91:1)" qui
+est la convention OG generique. La charte blog DiagTertiaire impose
+**1200 x 675 px** (ratio 16:9), validee en production le 2026-04-09
+score 9.6/10 (5 experts). Le SPEC suit la charte blog.
+
+### Note pipeline existant
+
+Le hero image n'est PAS a generer via AI illustration externe. Le
+pipeline existant du blog utilise Puppeteer Node.js avec viewport
+1200x675 et la charte visuelle FIXE de SKILL.seo.md S12. Yannis
+declenche via le workflow Notion -> Gemini -> GitHub commit ->
+Vercel deploy en renseignant le champ `Prompt Image` Notion au format
+machine documente.
+
 ## [post-Phase 5 - Tache C : echec mesure Lighthouse documente] - 2026-04-28
 
 ### Modifie

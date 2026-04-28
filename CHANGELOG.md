@@ -1,5 +1,37 @@
 # Changelog - DiagTertiaire V3
 
+## [style - Revert CTA hero index.html en amber (decision finale Yannis)] - 2026-04-28
+
+### Modifie
+
+- **`index.html` ligne 541** : CTA hero (`cta-pulse`, data-dt-cta-location
+  `hero`) revert du gradient bleu `#1D4ED8 -> #1E40AF` au gradient
+  amber `#D97706 -> #B45309`. box-shadow ajustee a
+  `rgba(217,119,6,...)`.
+
+### Justification
+
+Decision finale Yannis post-clôture mission : conserver la signature
+amber sur le seul CTA hero "above the fold" de la home pour
+differenciation visuelle. Les 3 autres CTAs primaires modifies en
+TASK-026 restent en bleu (coherence intra-funnel) :
+
+- `index.html:776` (CTA section finale, data-dt-cta-location
+  `footer_section`) : bleu conserve
+- `diagnostic.html:1807` (CTA hero diagnostic page) : bleu conserve
+- `diagnostic.html:2258` (CTA secondaire diagnostic page) : bleu
+  conserve
+
+### Etat final cohesion brand
+
+- CTA hero home : **amber** (signature visuelle differenciante)
+- CTAs nav (`.nav-cta-btn`) : **bleu** (CSS, inchange)
+- CTAs section finale + diagnostic page : **bleu** (TASK-026
+  partiellement maintenu)
+- Accents fonctionnels (badges PAC, etape 2, benchmarks mediane,
+  KPI Beta gratuite, series graphiques) : **amber** (conservation
+  validee TASK-026)
+
 ## [post-Phase 5 - Tache D : spec hero image article aides 2026] - 2026-04-28
 
 ### Ajoute

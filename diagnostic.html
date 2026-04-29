@@ -9296,6 +9296,74 @@
                 } catch (e) { /* silent */ }
             }, []);
 
+            // === BRIDGE URL PARAMS (Chantier B - Diag-Tertiaire blog calculators)
+            // Lit ?secteur=hotel&surface=200&etat=mid au chargement et pre-remplit
+            // formData. Aucun side-effect si pas de params (preserve comportement existant).
+            useEffect(() => {
+                try {
+                    const params = new URLSearchParams(window.location.search);
+                    if (!params.toString()) return;
+
+                    const prefill = {};
+
+                    // Mapping secteur (calculator.js) -> activity (diagnostic)
+                    const secteurMap = {
+                        hotel: 'hotel',
+                        commerce: 'retail',
+                        retail: 'retail',
+                        restaurant: 'restaurant',
+                        bureau: 'offices',
+                        offices: 'offices',
+                        sante: 'health_local',
+                        health: 'health_local',
+                    };
+                    if (params.has('secteur')) {
+                        const s = params.get('secteur');
+                        if (secteurMap[s]) prefill.activity = secteurMap[s];
+                    }
+
+                    // Surface : commerce envoie surface directe, hotel envoie chambres
+                    if (params.has('surface')) {
+                        const n = parseInt(params.get('surface'), 10);
+                        if (!isNaN(n) && n >= 10 && n <= 50000) {
+                            prefill.surface = String(n);
+                        }
+                    }
+                    if (params.has('chambres')) {
+                        const n = parseInt(params.get('chambres'), 10);
+                        if (!isNaN(n) && n >= 1 && n <= 500) {
+                            // Convention article hotel : 25 m2 par chambre (parties communes incluses)
+                            prefill.surface = String(n * 25);
+                        }
+                    }
+
+                    // Etat batiment -> buildingAge (mapping approximatif)
+                    if (params.has('etat')) {
+                        const e = params.get('etat');
+                        const ageMap = {
+                            low: 'post2012', recent: 'post2012',
+                            mid: '1975_2000', standard: '1975_2000',
+                            high: 'pre1975', ancien: 'pre1975',
+                        };
+                        if (ageMap[e]) prefill.buildingAge = ageMap[e];
+                    }
+
+                    if (Object.keys(prefill).length === 0) return;
+
+                    setFormData(prev => ({ ...prev, ...prefill }));
+
+                    // Tracking optionnel
+                    try {
+                        if (typeof newDiagnosticTrack === 'function') {
+                            newDiagnosticTrack('diagnostic_prefill_applied', {
+                                source: params.get('source') || 'unknown',
+                                fields: Object.keys(prefill).join(','),
+                            });
+                        }
+                    } catch (e) { /* silent */ }
+                } catch (e) { /* silent */ }
+            }, []);
+
             const handleComplete = async () => {
                 setSubmitError(null);
 
